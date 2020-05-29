@@ -20,12 +20,10 @@ object Server extends App {
 
   implicit val runtime: Runtime[ZEnv] = Runtime.default
 
-  case class KGSGraph(data: String) //FIXME placeholder arg
+  val queryEndpoint: ZEndpoint[(Int, KGSQueryGraph), String, String] =
+    endpoint.post.in("query").in(query[Int]("limit")).in(jsonBody[KGSQueryGraph]).errorOut(stringBody).out(jsonBody[String])
 
-  val queryEndpoint: ZEndpoint[KGSGraph, String, String] =
-    endpoint.post.in("query").in(jsonBody[KGSGraph]).errorOut(stringBody).out(jsonBody[String])
-
-  val routes: HttpRoutes[Task] = queryEndpoint.toRoutes { queryGraph =>
+  val routes: HttpRoutes[Task] = queryEndpoint.toRoutes { case (limit, queryGraph) =>
     //do stuff with queryGraph
     ZIO.succeed(queryGraph.toString)
   }
