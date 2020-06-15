@@ -1,14 +1,14 @@
 enablePlugins(JavaAppPackaging)
 
-organization  := "org.renci"
+organization := "org.renci"
 
-name          := "cam-kp-api"
+name := "cam-kp-api"
 
-version       := "0.1"
+version := "0.1"
 
 licenses := Seq("MIT license" -> url("https://opensource.org/licenses/MIT"))
 
-scalaVersion  := "2.12.11"
+scalaVersion := "2.12.11"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-Ypartial-unification")
 
@@ -32,7 +32,7 @@ libraryDependencies ++= {
     "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"  % tapirVersion,
     "org.http4s"                  %% "http4s-blaze-server"      % http4sVersion,
-    "org.apache.jena"             %  "apache-jena-libs"         % "3.15.0",
+    "org.apache.jena"              % "apache-jena-libs"         % "3.15.0",
     "org.phenoscape"              %% "sparql-utils"             % "1.2",
     "io.circe"                    %% "circe-core"               % circeVersion,
     "io.circe"                    %% "circe-generic"            % circeVersion,
