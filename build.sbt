@@ -24,25 +24,25 @@ val logbackVersion = "1.2.3"
 
 libraryDependencies ++= {
   Seq(
-    "dev.zio" %% "zio" % zioVersion,
-    "dev.zio" %% "zio-interop-cats" % "1.0.0-RC8-12",
-    "com.softwaremill.sttp.tapir" %% "tapir-core" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-zio" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-json-circe" % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs" % tapirVersion,
+    "dev.zio"                     %% "zio"                      % zioVersion,
+    "dev.zio"                     %% "zio-interop-cats"         % "1.0.0-RC8-12",
+    "com.softwaremill.sttp.tapir" %% "tapir-core"               % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-zio"                % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server"  % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-json-circe"         % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"       % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"  % tapirVersion,
     "org.http4s"                  %% "http4s-blaze-server"      % http4sVersion,
-    "org.http4s" 		  %% "http4s-blaze-client" 	% http4sVersion,
+    "org.http4s"                  %% "http4s-blaze-client"      % http4sVersion,
     "org.apache.jena"              % "apache-jena-libs"         % "3.15.0",
     "org.phenoscape"              %% "sparql-utils"             % "1.2",
     "io.circe"                    %% "circe-core"               % circeVersion,
     "io.circe"                    %% "circe-generic"            % circeVersion,
     "io.circe"                    %% "circe-parser"             % circeVersion,
     "dev.zio"                     %% "zio-test"                 % zioVersion % Test,
-    "dev.zio"                     %% "zio-test-sbt"             % zioVersion % Test
-    "org.apache.commons" 	  % "commons-text" 		% "1.8",
-    "ch.qos.logback" 		  % "logback-classic" 		% logbackVersion
+    "dev.zio"                     %% "zio-test-sbt"             % zioVersion % Test,
+    "org.apache.commons"           % "commons-text"             % "1.8",
+    "ch.qos.logback"               % "logback-classic"          % logbackVersion
   )
 }
