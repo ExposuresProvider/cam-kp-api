@@ -14,7 +14,7 @@ import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio.{App, ExitCode, Runtime, Task, UIO, ZEnv, ZIO}
+import zio.{App, ExitCode, Runtime, Task, ZEnv, ZIO}
 
 object Server extends App {
 
@@ -44,8 +44,6 @@ object Server extends App {
       .serve
       .compile
       .drain
-      .as(ExitCode.success)
-      .catchAllCause(cause => UIO(println(cause.prettyPrint)))
-      .as(ExitCode.failure)
+      .exitCode
 
 }
