@@ -48,14 +48,14 @@ object Server extends App {
     case (limit, queryGraph) =>
       print(limit)
       val query = StringBuilder.newBuilder
-      val nodeTypes = queryGraph.nodes collect {
+      val nodeTypes = queryGraph.nodes.collect {
         case (node) if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
-      } toMap
+      }.toMap
 
-      nodeTypes.++(queryGraph.nodes collect { case (node) if node.curie.nonEmpty => (node.id, node.curie.get) } toMap)
+      nodeTypes ++ queryGraph.nodes.collect { case (node) if node.curie.nonEmpty => (node.id, node.curie.get) }.toMap
 
-      queryGraph.nodes foreach {
-        case (node) => query.append(String.format("  ?%1$s sesame:directType ?%1$s_type .%n", node.`type`))
+      queryGraph.nodes.foreach {
+        case node => query.append(String.format("  ?%1$s sesame:directType ?%1$s_type .%n", node.`type`))
       }
 
       var instanceVars: Set[String] = Set()
@@ -109,8 +109,8 @@ object Server extends App {
         prequel.append(s"PREFIX $key: <$value>\n")
 
       val ids = instanceVars.map(a => s"?$a").toList :::
-        queryGraph.nodes.map(a => s"?${a.id}_type").toList :::
-        queryGraph.edges.map(a => s"?${a.id}").toList
+        queryGraph.nodes.map(a => s"?${a.id}_type") :::
+        queryGraph.edges.map(a => s"?${a.id}")
 
       prequel.append(s"\nSELECT DISTINCT ${ids.mkString(" ")} WHERE {\n")
 
