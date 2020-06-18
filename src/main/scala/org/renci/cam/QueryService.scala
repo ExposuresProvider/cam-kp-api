@@ -122,10 +122,7 @@ object QueryService {
 
   def makeHttpClient: UIO[TaskManaged[Client[Task]]] =
     ZIO.runtime[Any].map { implicit rts =>
-      BlazeClientBuilder
-        .apply[Task](Implicits.global)
-        .resource
-        .toManaged
+      BlazeClientBuilder[Task](rts.platform.executor.asEC).resource.toManaged
     }
 
 }
