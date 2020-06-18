@@ -30,6 +30,7 @@ import java.nio.charset.StandardCharsets
 // import org.apache.jena.sparql.core.Var;
 // import org.apache.jena.sparql.engine.binding.Binding;
 import org.http4s.server.middleware.Logger
+import scala.collection.JavaConverters._
 
 object Server extends App {
 
@@ -79,19 +80,11 @@ object Server extends App {
               is.close()
               ZIO.effect(rs)
             }
-            predicates <- {
-              val bindingList: List[String] = List()
-              while (resultSet.hasNext()) {
-                val binding = resultSet.nextBinding
-                val varIter = binding.vars
-                while (varIter.hasNext()) {
-                  val nodeVar = varIter.next()
-                  val node = binding.get(nodeVar)
-                  bindingList :+ node.toString
-                }
-              }
-              ZIO.effect(bindingList.map(a => String.format("<%s>")).mkString(" "))
-            }
+            predicates = (for {
+                solution <- resultSet.asScala
+                v <- solution.varNames.asScala
+                node = solution.get(v)
+              } yield s"<$node>").mkString(" ")
           } yield predicates
 
           query.append(String.format("VALUES ?%s { %s }%n", edge.`type`, predicates))
