@@ -2,6 +2,7 @@ package org.renci.cam
 
 import org.http4s._
 import org.http4s.headers._
+import org.http4s.implicits._
 import zio._
 import zio.interop.catz._
 import zio.test.Assertion.equalTo
@@ -41,7 +42,7 @@ object ServerTest extends DefaultRunnableSpec {
 
         for {
           clientManaged <- QueryService.makeHttpClient
-          request = Request[Task](Method.POST, Uri.uri("http://127.0.0.1:8080/query?limit=1&"))
+          request = Request[Task](Method.POST, uri"http://127.0.0.1:8080/query?limit=1&")
             .withHeaders(Accept(MediaType.application.json),
                          `Content-Type`(MediaType.application.`x-www-form-urlencoded`))
             .withEntity(body)

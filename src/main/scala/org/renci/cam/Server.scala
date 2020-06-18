@@ -9,9 +9,9 @@ import org.apache.commons.text.CaseUtils
 import org.apache.jena.query.ResultSetFactory
 import org.http4s._
 import org.http4s.headers._
+import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.syntax.kleisli._
 import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
@@ -67,7 +67,7 @@ object Server extends App {
             httpClientManaged <- QueryService.makeHttpClient
             predicate_query = s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
               SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
-            request = Request[Task](Method.POST, Uri.uri("http://152.54.9.207:9999/blazegraph/sparql"))
+            request = Request[Task](Method.POST, uri"http://152.54.9.207:9999/blazegraph/sparql")
               .withHeaders(
                 Accept(MediaType.application.json),
                 `Content-Type`(MediaType.application.`sparql-query`)
