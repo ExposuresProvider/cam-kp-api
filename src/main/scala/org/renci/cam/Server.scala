@@ -62,22 +62,17 @@ object Server extends App {
 
       for ((edge, idx) <- queryGraph.edges.view.zipWithIndex)
         if (edge.`type`.nonEmpty) {
-
           val predicates = for {
-            predicate_query <- ZIO.effect(
-              s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
+            httpClientManaged <- QueryService.makeHttpClient
+            predicate_query = s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
               SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
-            )
-            // httpClient <- QueryService.makeHttpClient
-            request <- ZIO.effect(
-              Request[Task](Method.POST, Uri.uri("http://152.54.9.207:9999/blazegraph/sparql"))
-                .withHeaders(Accept.parse("application/json").toOption.get,
-                             `Content-Type`.parse("application/sparql-query").toOption.get)
-                .withEntity(predicate_query)
-            )
-            response <- BlazeClientBuilder[Task](ExecutionContext.global).resource.use { httpClient =>
-              httpClient.expect[String](request)
-            }
+            request = Request[Task](Method.POST, Uri.uri("http://152.54.9.207:9999/blazegraph/sparql"))
+              .withHeaders(
+                Accept(MediaType.application.json),
+                `Content-Type`(MediaType.application.`sparql-query`)
+              )
+              .withEntity(predicate_query)
+            response <- httpClientManaged.use(_.expect[String](request))
             resultSet <- {
               val is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
               val rs = ResultSetFactory.fromJSON(is)
