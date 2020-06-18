@@ -21,11 +21,17 @@ object Server extends App {
   implicit val runtime: Runtime[ZEnv] = Runtime.default
 
   val queryEndpoint: ZEndpoint[(Int, KGSQueryGraph), String, String] =
-    endpoint.post.in("query").in(query[Int]("limit")).in(jsonBody[KGSQueryGraph]).errorOut(stringBody).out(jsonBody[String])
+    endpoint.post
+      .in("query")
+      .in(query[Int]("limit"))
+      .in(jsonBody[KGSQueryGraph])
+      .errorOut(stringBody)
+      .out(jsonBody[String])
 
-  val routes: HttpRoutes[Task] = queryEndpoint.toRoutes { case (limit, queryGraph) =>
-    //do stuff with queryGraph
-    ZIO.succeed(queryGraph.toString)
+  val routes: HttpRoutes[Task] = queryEndpoint.toRoutes {
+    case (limit, queryGraph) =>
+      //do stuff with queryGraph
+      ZIO.succeed(queryGraph.toString)
   }
 
   // will be available at /docs
@@ -39,6 +45,7 @@ object Server extends App {
       .compile
       .drain
       .as(ExitCode.success)
-      .catchAllCause(cause => UIO(println(cause.prettyPrint))).as(ExitCode.failure)
+      .catchAllCause(cause => UIO(println(cause.prettyPrint)))
+      .as(ExitCode.failure)
 
 }
