@@ -87,8 +87,8 @@ object Server extends App {
               } yield s"<$node>").mkString(" ")
           } yield predicates
 
-          query.append(String.format("VALUES ?%s { %s }%n", edge.`type`, predicates))
-          query.append(String.format("  ?%s ?%s ?%s .%n)", edge.source_id, edge.id, edge.target_id))
+          query.append(s"VALUES ?${edge.`type`} { $predicates }\n")
+          query.append(s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} .\n)")
 
           instanceVars += (edge.source_id, edge.target_id)
           instanceVarsToTypes += (edge.source_id -> edge.source_id, edge.target_id -> edge.target_id)
@@ -97,22 +97,22 @@ object Server extends App {
 
       for ((key, value) <- instanceVarsToTypes) {
         val varType = nodeTypes.get(value)
-        query.append(String.format("?%s rdf:type %s .%n", key, varType))
+        query.append(s"?$key rdf:type $varType .\n")
       }
 
       query.append("}")
 
-      if (limit > 0) query.append(String.format(" LIMIT %s", limit.toString()))
+      if (limit > 0) query.append(s" LIMIT $limit")
 
       val prequel = StringBuilder.newBuilder
       for ((key, value) <- QueryService.PREFIXES)
-        prequel.append(String.format("PREFIX %s: <%s>%n", key, value))
+        prequel.append(s"PREFIX $key: <$value>\n")
 
-      val ids = instanceVars.map(a => String.format("?%s", a)).toList :::
-        queryGraph.nodes.map(a => String.format("?%s_type", a.id)).toList :::
-        queryGraph.edges.map(a => String.format("?%s", a.id)).toList
+      val ids = instanceVars.map(a => s"?$a").toList :::
+        queryGraph.nodes.map(a => s"?${a.id}_type").toList :::
+        queryGraph.edges.map(a => s"?${a.id}").toList
 
-      prequel.append(String.format("%nSELECT DISTINCT %s WHERE { %n", ids.mkString(" ")))
+      prequel.append(s"\nSELECT DISTINCT ${ids.mkString(" ")} WHERE {\n")
 
       val full_query = prequel.toString() + query.toString()
       // for {
