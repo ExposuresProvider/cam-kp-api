@@ -58,8 +58,8 @@ object ServerTest extends DefaultRunnableSpec {
         for {
           clientManaged <- QueryService.makeHttpClient
           request = Request[Task](Method.POST, Uri.uri("http://127.0.0.1:8080/query?limit=1&"))
-            .withHeaders(Accept.parse("application/json").toOption.get,
-                         `Content-Type`.parse("application/x-www-form-urlencoded").toOption.get)
+            .withHeaders(Accept(MediaType.application.json),
+                         `Content-Type`(MediaType.application.`x-www-form-urlencoded`))
             .withEntity(body)
           response <- clientManaged.use(_.expect[String](request))
         } yield assert(response)(equalTo(""))
