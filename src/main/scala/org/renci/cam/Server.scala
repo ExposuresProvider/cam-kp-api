@@ -1,14 +1,18 @@
 package org.renci.cam
 
-import org.renci.cam.domain._
+import java.nio.charset.StandardCharsets
+
 import cats.implicits._
 import io.circe.generic.auto._
+import org.apache.commons.io.IOUtils
+import org.apache.commons.text.CaseUtils
+import org.apache.jena.query.ResultSetFactory
 import org.http4s._
-import org.http4s.client._
-import org.http4s.client.blaze.BlazeClientBuilder
+import org.http4s.headers._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.syntax.kleisli._
+import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._
@@ -18,18 +22,14 @@ import sttp.tapir.ztapir._
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio.{App, ExitCode, Runtime, Task, UIO, ZEnv, ZIO}
-import scala.concurrent.ExecutionContext
-import org.http4s.headers._
-import org.apache.jena.query.ResultSetFactory
-import org.apache.commons.io.IOUtils
-import org.apache.commons.text.CaseUtils
-import java.nio.charset.StandardCharsets
 // import org.apache.jena.graph.Node;
 // import org.apache.jena.query.ResultSet;
 // import org.apache.jena.query.ResultSetFactory;
 // import org.apache.jena.sparql.core.Var;
 // import org.apache.jena.sparql.engine.binding.Binding;
 import org.http4s.server.middleware.Logger
+import zio.ZIO.ZIOAutocloseableOps
+
 import scala.collection.JavaConverters._
 
 object Server extends App {
@@ -74,11 +74,8 @@ object Server extends App {
               )
               .withEntity(predicate_query)
             response <- httpClientManaged.use(_.expect[String](request))
-            resultSet <- {
-              val is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
-              val rs = ResultSetFactory.fromJSON(is)
-              is.close()
-              ZIO.effect(rs)
+            resultSet <- ZIO.effect(IOUtils.toInputStream(response, StandardCharsets.UTF_8)).bracketAuto { is =>
+              ZIO.effect(ResultSetFactory.fromJSON(is))
             }
             predicates = (for {
                 solution <- resultSet.asScala
