@@ -1,27 +1,11 @@
 package org.renci.cam
 
-import cats.implicits._
-import zio._
-import zio.console._
-import zio.test._
-import zio.test.Assertion._
-import zio.test.environment._
-import io.circe._
-import zio.interop.catz._
-import zio.interop.catz.implicits._
-import cats.effect.Blocker
 import org.http4s._
 import org.http4s.headers._
+import zio._
+import zio.interop.catz._
 import zio.test.Assertion.equalTo
 import zio.test._
-import org.http4s.client.blaze.BlazeClientBuilder
-import scala.concurrent.ExecutionContext.Implicits
-import scala.concurrent.ExecutionContext
-import java.util.concurrent.Executors
-import org.http4s.client.blaze._
-import org.http4s.client._
-import cats.effect.Blocker
-import java.util.concurrent._
 
 object ServerTest extends DefaultRunnableSpec {
 
