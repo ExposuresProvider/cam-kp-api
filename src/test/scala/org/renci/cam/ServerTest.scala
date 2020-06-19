@@ -56,8 +56,7 @@ object ServerTest extends DefaultRunnableSpec {
           }
           uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1)
           request = Request[Task](Method.POST, uri)
-            .withHeaders(Accept(MediaType.application.json),
-                         `Content-Type`(MediaType.application.`x-www-form-urlencoded`))
+            .withHeaders(Accept(MediaType.application.json))
             .withEntity(body)
           response <- httpClient.expect[String](request)
         } yield response
