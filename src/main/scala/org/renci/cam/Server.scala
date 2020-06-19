@@ -52,10 +52,11 @@ object Server extends App {
       for ((edge, idx) <- queryGraph.edges.view.zipWithIndex)
         if (edge.`type`.nonEmpty) {
           val predicates = for {
-            httpClientManaged <- QueryService.makeHttpClient
-            predicate_query = s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
+            response <- QueryService.runBlazegraphQuery(
+              s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
               SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
-            resultSet <- QueryService.runBlazegraphQuery(predicate_query)
+            )
+            resultSet <- QueryService.jsonToResultSet(response)
             predicates = (for {
                 solution <- resultSet.asScala
                 v <- solution.varNames.asScala
@@ -94,8 +95,7 @@ object Server extends App {
 
       val queryResponse = QueryService.runBlazegraphQuery(full_query)
 
-      //queryResponse
-      ZIO.succeed("")
+      queryResponse
   }
 
   // will be available at /docs
