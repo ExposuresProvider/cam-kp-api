@@ -20,7 +20,7 @@ import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio.{App, ExitCode, Runtime, Task, UIO, ZEnv, ZIO}
+import zio.{App, ExitCode, Runtime, Task, ZEnv, ZIO}
 
 import scala.collection.JavaConverters._
 
@@ -128,17 +128,13 @@ object Server extends App {
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = {
     val httpApp = Router("/" -> (queryRoute <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound
     val finalHttpApp = Logger.httpApp(true, true)(httpApp)
-
     BlazeServerBuilder[Task](runtime.platform.executor.asEC)
       .bindHttp(8080, "localhost")
       .withHttpApp(finalHttpApp)
       .serve
       .compile
       .drain
-      .as(ExitCode.success)
-      .catchAllCause(cause => UIO(println(cause.prettyPrint)))
-      .as(ExitCode.failure)
-
+      .exitCode
   }
 
 }
