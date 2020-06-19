@@ -1,10 +1,16 @@
 package org.renci.cam
 
-import zio._
-import zio.interop.catz._
+import java.nio.charset.StandardCharsets
+
+import org.apache.commons.io.IOUtils
+import org.apache.jena.query.{ResultSet, ResultSetFactory}
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
-import scala.concurrent.ExecutionContext.Implicits
+import org.http4s.{DecodeResult, EntityDecoder, MalformedMessageBodyFailure}
+import zio._
+import zio.interop.catz._
+
+import scala.util.{Failure, Success, Try}
 
 object QueryService {
 
@@ -124,5 +130,14 @@ object QueryService {
     ZIO.runtime[Any].map { implicit rts =>
       BlazeClientBuilder[Task](rts.platform.executor.asEC).resource.toManaged
     }
+
+  implicit val sparqlJsonDecoder: EntityDecoder[Task, ResultSet] = EntityDecoder[Task, String].flatMapR { jsonText =>
+    Try(ResultSetFactory.fromJSON(IOUtils.toInputStream(jsonText, StandardCharsets.UTF_8))) match {
+      //IntelliJ shows false compile errors here; check with SBT
+      //Requires import of ZIO-Cats interop typeclasses to compile
+      case Success(resultSet) => DecodeResult.success(resultSet)
+      case Failure(e) => DecodeResult.failure(MalformedMessageBodyFailure("Invalid JSON for SPARQL results", Some(e)))
+    }
+  }
 
 }

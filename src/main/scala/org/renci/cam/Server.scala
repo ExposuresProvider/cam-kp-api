@@ -1,17 +1,16 @@
 package org.renci.cam
 
-import java.nio.charset.StandardCharsets
-
 import cats.implicits._
 import io.circe.generic.auto._
-import org.apache.commons.io.IOUtils
 import org.apache.commons.text.CaseUtils
-import org.apache.jena.query.ResultSetFactory
+import org.apache.jena.query.ResultSet
 import org.http4s._
 import org.http4s.headers._
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.server.middleware.Logger
+import org.renci.cam.QueryService.sparqlJsonDecoder
 import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
@@ -22,13 +21,6 @@ import sttp.tapir.ztapir._
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio.{App, ExitCode, Runtime, Task, UIO, ZEnv, ZIO}
-// import org.apache.jena.graph.Node;
-// import org.apache.jena.query.ResultSet;
-// import org.apache.jena.query.ResultSetFactory;
-// import org.apache.jena.sparql.core.Var;
-// import org.apache.jena.sparql.engine.binding.Binding;
-import org.http4s.server.middleware.Logger
-import zio.ZIO.ZIOAutocloseableOps
 
 import scala.collection.JavaConverters._
 
@@ -73,10 +65,7 @@ object Server extends App {
                 `Content-Type`(MediaType.application.`sparql-query`)
               )
               .withEntity(predicate_query)
-            response <- httpClientManaged.use(_.expect[String](request))
-            resultSet <- ZIO.effect(IOUtils.toInputStream(response, StandardCharsets.UTF_8)).bracketAuto { is =>
-              ZIO.effect(ResultSetFactory.fromJSON(is))
-            }
+            resultSet <- httpClientManaged.use(_.expect[ResultSet](request))
             predicates = (for {
                 solution <- resultSet.asScala
                 v <- solution.varNames.asScala
