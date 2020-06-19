@@ -9,6 +9,7 @@ import org.apache.jena.query.ResultSetFactory
 import org.renci.cam.domain._
 import zio.test.Assertion.{equalTo, _}
 import zio.test._
+import org.renci.cam.QueryService.sparqlJsonDecoder
 
 import scala.collection.mutable
 
@@ -80,6 +81,12 @@ object SerializationTest extends DefaultRunnableSpec {
         val is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
         val resultSet = ResultSetFactory.fromJSON(is)
         is.close()
+
+        // val bindings = (for {
+        //   solution <- resultSet.asScala
+        //   v <- solution.varNames.asScala
+        //   node = solution.get(v)
+        // } yield s"<$node>").mkString(" ")
 
         var bindings = new mutable.ListBuffer[String]()
         while (resultSet.hasNext()) {

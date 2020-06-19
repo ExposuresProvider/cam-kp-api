@@ -25,16 +25,16 @@ object BlazegraphTest extends DefaultRunnableSpec {
               SELECT DISTINCT ?predicate WHERE { bl:has_participant <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
 
         val program = for {
-          uri <- zio.ZIO.effect(uri"http://152.54.9.207:9999/blazegraph/sparql" withQueryParam ("query", query))
-          request <- zio.ZIO.effect(
-            Request[Task](Method.POST, uri).withHeaders(Accept.parse("application/sparql-results+json").toOption.get)
-          )
-          response <- {
+          httpClient <- {
             val blockingPool = Executors.newFixedThreadPool(5)
             val blocker = Blocker.liftExecutorService(blockingPool)
             val httpClient: Client[zio.Task] = JavaNetClientBuilder[zio.Task](blocker).create
-            httpClient.expect[String](request)
+            zio.ZIO.effect(httpClient)
           }
+          uri = uri"http://152.54.9.207:9999/blazegraph/sparql".withQueryParam("query", query)
+          request =
+            Request[Task](Method.POST, uri).withHeaders(Accept.parse("application/sparql-results+json").toOption.get)
+          response <- httpClient.expect[String](request)
         } yield response
 
         val ret = runtime.unsafeRun(program)

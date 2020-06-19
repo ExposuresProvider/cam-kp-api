@@ -8,7 +8,7 @@ import org.http4s._
 import org.http4s.client._
 import org.http4s.headers._
 import org.http4s.implicits._
-import zio.{Runtime, Task, ZEnv, }
+import zio.{Runtime, Task, ZEnv}
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
