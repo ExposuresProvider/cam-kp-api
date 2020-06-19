@@ -3,16 +3,15 @@ package org.renci.cam
 import java.util.concurrent.Executors
 
 import cats.effect.Blocker
+
 import org.http4s._
 import org.http4s.client._
 import org.http4s.headers._
 import org.http4s.implicits._
+import zio.{Runtime, Task, ZEnv, }
 import zio.interop.catz._
-import zio.test.Assertion.equalTo
+import zio.test.Assertion._
 import zio.test._
-import zio.{Runtime, ZEnv}
-
-import scala.concurrent.ExecutionContext
 
 object ServerTest extends DefaultRunnableSpec {
 
@@ -48,32 +47,25 @@ object ServerTest extends DefaultRunnableSpec {
   }
 }"""
 
-        val acceptHeader = Accept(MediaType.application.json)
-        val contentTypeHeader = `Content-Type`(MediaType.application.json)
-
         val program = for {
-          uri <- zio.ZIO.effect(uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1))
-          request <- zio.ZIO.effect(
-            Request[zio.Task](Method.POST, uri)
-              .withHeaders(acceptHeader, contentTypeHeader)
-              .withEntity(body))
-          response <- {
+          httpClient <- {
             val blockingPool = Executors.newFixedThreadPool(5)
             val blocker = Blocker.liftExecutorService(blockingPool)
             val httpClient: Client[zio.Task] = JavaNetClientBuilder[zio.Task](blocker).create
-            httpClient.expect[String](request)
+            zio.ZIO.effect(httpClient)
           }
+          uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1)
+          request = Request[Task](Method.POST, uri)
+            .withHeaders(Accept(MediaType.application.json),
+                         `Content-Type`(MediaType.application.`x-www-form-urlencoded`))
+            .withEntity(body)
+          response <- httpClient.expect[String](request)
         } yield response
 
         val ret = runtime.unsafeRun(program)
-        assert("")(equalTo(ret))
-
+        println("ret: " + ret)
+        assert(ret)(isNonEmptyString)
       }
     )
 
-}
-
-object TestHelpers {
-  val blockingEC = ExecutionContext.fromExecutorService(Executors.newFixedThreadPool(5))
-  val blocker = Blocker.liftExecutionContext(blockingEC)
 }

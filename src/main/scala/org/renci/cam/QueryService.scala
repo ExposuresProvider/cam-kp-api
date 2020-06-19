@@ -1,14 +1,24 @@
 package org.renci.cam
 
-import org.apache.commons.text.CaseUtils
-import org.http4s.{MediaType, Method, Request}
+import java.nio.charset.StandardCharsets
+
+import org.apache.commons.io.IOUtils
+import org.apache.jena.query.{ResultSet, ResultSetFactory}
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers._
 import org.http4s.implicits._
-import org.renci.cam.domain.KGSNode
+import org.http4s.{DecodeResult, EntityDecoder, MalformedMessageBodyFailure}
 import zio._
 import zio.interop.catz._
+
+import scala.util.{Failure, Success, Try}
+import org.http4s.headers._
+import org.http4s.MediaType
+import org.renci.cam.domain._
+import org.apache.commons.text.CaseUtils
+import org.http4s.Request
+import org.http4s.Method
 
 object QueryService {
 
@@ -132,26 +142,30 @@ object QueryService {
       BlazeClientBuilder[Task](rts.platform.executor.asEC).resource.toManaged
     }
 
+  implicit val sparqlJsonDecoder: EntityDecoder[Task, ResultSet] = EntityDecoder[Task, String].flatMapR { jsonText =>
+    Try(ResultSetFactory.fromJSON(IOUtils.toInputStream(jsonText, StandardCharsets.UTF_8))) match {
+      //IntelliJ shows false compile errors here; check with SBT
+      //Requires import of ZIO-Cats interop typeclasses to compile
+      case Success(resultSet) => DecodeResult.success(resultSet)
+      case Failure(e) => DecodeResult.failure(MalformedMessageBodyFailure("Invalid JSON for SPARQL results", Some(e)))
+    }
+  }
+
   def getNodeTypes(nodes: List[KGSNode]): Map[String, String] = {
-    val nodeTypes = nodes collect {
+    val nodeTypes = nodes.collect {
       case (node) if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
-    } toMap
-
-    nodeTypes.++(nodes collect {
-      case (node) if node.curie.nonEmpty => (node.id, node.curie.get)
-    } toMap)
-
+    }.toMap
+    nodeTypes ++ nodes.collect { case (node) if node.curie.nonEmpty => (node.id, node.curie.get) }.toMap
     nodeTypes
   }
 
-  def runBlazegraphQuery(query: String): IO[String, String] =
+  def runBlazegraphQuery(query: String): Task[ResultSet] =
     for {
       clientManaged <- makeHttpClient
-      uri <- ZIO.effect(uri"http://152.54.9.207:9999/blazegraph/sparql".withQueryParam("query", query))
-      request <- ZIO.effect(
+      uri = uri"http://152.54.9.207:9999/blazegraph/sparql".withQueryParam("query", query)
+      request =
         Request[Task](Method.POST, uri).withHeaders(Accept.parse("application/sparql-results+json").toOption.get)
-      )
-      response <- clientManaged.use(_.expect[String](request))
+      response <- clientManaged.use(_.expect[ResultSet](request))
     } yield response
 
 }
