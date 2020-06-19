@@ -1,14 +1,17 @@
 package org.renci.cam
 
-import org.renci.cam.domain._
+import java.nio.charset.StandardCharsets
+
 import cats.implicits._
 import io.circe.generic.auto._
+import org.apache.commons.io.IOUtils
+import org.apache.jena.query.ResultSetFactory
 import org.http4s._
-import org.http4s.client._
-import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.server.middleware.Logger
 import org.http4s.syntax.kleisli._
+import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._
@@ -17,42 +20,28 @@ import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio.{App, ExitCode, Runtime, Task, UIO, ZEnv, ZIO}
-import scala.concurrent.ExecutionContext
-import org.http4s.headers._
-import org.apache.jena.query.ResultSetFactory
-import org.apache.commons.io.IOUtils
-import org.apache.commons.text.CaseUtils
-import java.nio.charset.StandardCharsets
-// import org.apache.jena.graph.Node;
-// import org.apache.jena.query.ResultSet;
-// import org.apache.jena.query.ResultSetFactory;
-// import org.apache.jena.sparql.core.Var;
-// import org.apache.jena.sparql.engine.binding.Binding;
-import org.http4s.server.middleware.Logger
+import zio.{App, ExitCode, Runtime, Task, ZEnv, ZIO}
+
+import scala.collection.mutable
 
 object Server extends App {
 
   implicit val runtime: Runtime[ZEnv] = Runtime.default
 
-  val queryEndpoint: ZEndpoint[(Int, KGSQueryGraph), String, String] =
+  val queryEndpoint: ZEndpoint[(Int, KGSQueryRequestBody), String, String] =
     endpoint.post
       .in("query")
       .in(query[Int]("limit"))
-      .in(jsonBody[KGSQueryGraph])
+      .in(jsonBody[KGSQueryRequestBody])
       .errorOut(stringBody)
       .out(jsonBody[String])
 
   val queryRoute: HttpRoutes[Task] = queryEndpoint.toRoutes {
-    case (limit, queryGraph) =>
-      print(limit)
+    case (limit, body) =>
+      val queryGraph: KGSQueryGraph = body.message.query_graph
+      val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
+
       val query = StringBuilder.newBuilder
-      val nodeTypes = queryGraph.nodes collect {
-        case (node) if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
-      } toMap
-
-      nodeTypes.++(queryGraph.nodes collect { case (node) if node.curie.nonEmpty => (node.id, node.curie.get) } toMap)
-
       queryGraph.nodes foreach {
         case (node) => query.append(String.format("  ?%1$s sesame:directType ?%1$s_type .%n", node.`type`))
       }
@@ -62,44 +51,37 @@ object Server extends App {
 
       for ((edge, idx) <- queryGraph.edges.view.zipWithIndex)
         if (edge.`type`.nonEmpty) {
-
-          val predicates = for {
-            predicate_query <- ZIO.effect(
-              s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
+          val predicateQuery = s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
               SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
-            )
-            // httpClient <- QueryService.makeHttpClient
-            request <- ZIO.effect(
-              Request[Task](Method.POST, Uri.uri("http://152.54.9.207:9999/blazegraph/sparql"))
-                .withHeaders(Accept.parse("application/json").toOption.get,
-                             `Content-Type`.parse("application/sparql-query").toOption.get)
-                .withEntity(predicate_query)
-            )
-            response <- BlazeClientBuilder[Task](ExecutionContext.global).resource.use { httpClient =>
-              httpClient.expect[String](request)
-            }
+          val predicatesProgram = for {
+            response <- QueryService.runBlazegraphQuery(predicateQuery)
             resultSet <- {
               val is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
               val rs = ResultSetFactory.fromJSON(is)
               is.close()
               ZIO.effect(rs)
             }
-            predicates <- {
-              val bindingList: List[String] = List()
+            bindings <- {
+
+              var bindingList = new mutable.ListBuffer[String]()
               while (resultSet.hasNext()) {
                 val binding = resultSet.nextBinding
                 val varIter = binding.vars
                 while (varIter.hasNext()) {
                   val nodeVar = varIter.next()
                   val node = binding.get(nodeVar)
-                  bindingList :+ node.toString
+                  bindingList += node.toString
                 }
               }
-              ZIO.effect(bindingList.map(a => String.format("<%s>")).mkString(" "))
-            }
-          } yield predicates
 
-          query.append(String.format("VALUES ?%s { %s }%n", edge.`type`, predicates))
+              ZIO.effect(bindingList.toList.map(a => String.format("<%s>", a)).mkString(" "))
+            }
+          } yield bindings
+
+          val predicates = runtime.unsafeRun(predicatesProgram)
+
+          query
+            .append(String.format("VALUES ?%s { %s }%n", edge.`type`, predicates))
           query.append(String.format("  ?%s ?%s ?%s .%n)", edge.source_id, edge.id, edge.target_id))
 
           instanceVars += (edge.source_id, edge.target_id)
@@ -127,25 +109,10 @@ object Server extends App {
       prequel.append(String.format("%nSELECT DISTINCT %s WHERE { %n", ids.mkString(" ")))
 
       val full_query = prequel.toString() + query.toString()
-      // for {
-      //   request <- ZIO.effect(
-      //     Request[Task](Method.POST, Uri.uri("http://152.54.9.207:9999/blazegraph/sparql"))
-      //       .withHeaders(Accept.parse("application/json").toOption.get,
-      //                    `Content-Type`.parse("application/sparql-query").toOption.get)
-      //       .withEntity(full_query)
-      //   )
-      //   serviceResults <- BlazeClientBuilder[Task](ExecutionContext.global).resource.use { httpClient =>
-      //     httpClient.expect[String](request)
-      //   }
-      //   resultSet <- {
-      //     val is = IOUtils.toInputStream(serviceResults, StandardCharsets.UTF_8)
-      //     val rs = ResultSetFactory.fromJSON(is)
-      //     is.close()
-      //     ZIO.effect(rs)
-      //   }
-      // } ZIO.succeed("")
 
-      ZIO.succeed("asdfasdf")
+      val queryResponse = QueryService.runBlazegraphQuery(full_query)
+
+      queryResponse
   }
 
   // will be available at /docs
@@ -161,9 +128,7 @@ object Server extends App {
       .serve
       .compile
       .drain
-      .as(ExitCode.success)
-      .catchAllCause(cause => UIO(println(cause.prettyPrint)))
-      .as(ExitCode.failure)
+      .exitCode
 
   }
 

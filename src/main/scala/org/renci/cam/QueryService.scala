@@ -1,10 +1,14 @@
 package org.renci.cam
 
-import zio._
-import zio.interop.catz._
+import org.apache.commons.text.CaseUtils
+import org.http4s.{MediaType, Method, Request}
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
-import scala.concurrent.ExecutionContext.Implicits
+import org.http4s.headers._
+import org.http4s.implicits._
+import org.renci.cam.domain.KGSNode
+import zio._
+import zio.interop.catz._
 
 object QueryService {
 
@@ -120,12 +124,34 @@ object QueryService {
     "MESH" -> "http://id.nlm.nih.gov/mesh/"
   )
 
+  val acceptHeader = Accept(MediaType.application.json)
+  val contentTypeHeader = `Content-Type`(MediaType.application.json)
+
   def makeHttpClient: UIO[TaskManaged[Client[Task]]] =
     ZIO.runtime[Any].map { implicit rts =>
-      BlazeClientBuilder
-        .apply[Task](Implicits.global)
-        .resource
-        .toManaged
+      BlazeClientBuilder[Task](rts.platform.executor.asEC).resource.toManaged
     }
+
+  def getNodeTypes(nodes: List[KGSNode]): Map[String, String] = {
+    val nodeTypes = nodes collect {
+      case (node) if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
+    } toMap
+
+    nodeTypes.++(nodes collect {
+      case (node) if node.curie.nonEmpty => (node.id, node.curie.get)
+    } toMap)
+
+    nodeTypes
+  }
+
+  def runBlazegraphQuery(query: String): IO[String, String] =
+    for {
+      clientManaged <- makeHttpClient
+      uri <- ZIO.effect(uri"http://152.54.9.207:9999/blazegraph/sparql".withQueryParam("query", query))
+      request <- ZIO.effect(
+        Request[Task](Method.POST, uri).withHeaders(Accept.parse("application/sparql-results+json").toOption.get)
+      )
+      response <- clientManaged.use(_.expect[String](request))
+    } yield response
 
 }
