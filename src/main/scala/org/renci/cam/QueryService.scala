@@ -8,17 +8,14 @@ import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers._
 import org.http4s.implicits._
-import org.http4s.{DecodeResult, EntityDecoder, MalformedMessageBodyFailure}
+import org.http4s.{DecodeResult, EntityDecoder, EntityEncoder, MalformedMessageBodyFailure, MediaType, Method, Request}
 import zio._
 import zio.interop.catz._
 
 import scala.util.{Failure, Success, Try}
 import org.http4s.headers._
-import org.http4s.MediaType
 import org.renci.cam.domain._
 import org.apache.commons.text.CaseUtils
-import org.http4s.Request
-import org.http4s.Method
 
 object QueryService {
 
@@ -151,6 +148,12 @@ object QueryService {
     }
   }
 
+  def jsonToResultSet(jsonText: String): Task[ResultSet] =
+    Task
+      .effect(IOUtils.toInputStream(jsonText, StandardCharsets.UTF_8))
+      .bracket(is => ZIO.effectTotal(is.close()))(is => Task.effect(ResultSetFactory.fromJSON(is)))
+      .orDie
+
   def getNodeTypes(nodes: List[KGSNode]): Map[String, String] = {
     val nodeTypes = nodes.collect {
       case (node) if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
@@ -159,13 +162,13 @@ object QueryService {
     nodeTypes
   }
 
-  def runBlazegraphQuery(query: String): Task[ResultSet] =
+  def runBlazegraphQuery(query: String): Task[String] =
     for {
       clientManaged <- makeHttpClient
       uri = uri"http://152.54.9.207:9999/blazegraph/sparql".withQueryParam("query", query)
       request =
         Request[Task](Method.POST, uri).withHeaders(Accept.parse("application/sparql-results+json").toOption.get)
-      response <- clientManaged.use(_.expect[ResultSet](request))
+      response <- clientManaged.use(_.expect[String](request))
     } yield response
 
 }
