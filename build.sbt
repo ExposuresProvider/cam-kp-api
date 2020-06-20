@@ -24,6 +24,8 @@ val circeVersion = "0.13.0"
 libraryDependencies ++= {
   Seq(
     "dev.zio"                     %% "zio"                      % zioVersion,
+    "dev.zio"                     %% "zio-config"               % zioVersion,
+    "dev.zio"                     %% "zio-config-magnolia"      % zioVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-core"               % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio"                % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server"  % tapirVersion,
