@@ -15,11 +15,9 @@ import sttp.tapir.ztapir._
 import zio.config.{Config, _}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio.{App, ExitCode, Runtime, Task, URIO, ZEnv, ZIO}
+import zio.{config => _, _}
 
 object Server extends App {
-
-  implicit val runtime: Runtime[ZEnv] = Runtime.default
 
   val queryEndpoint: ZEndpoint[(Int, KGSQueryGraph), String, String] =
     endpoint.post
@@ -41,17 +39,19 @@ object Server extends App {
   val openAPI: String = List(queryEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
 
   val server: ZIO[Config[AppConfig], Throwable, Unit] =
-    for {
-      routes <- routesR
-      appConfig <- config[AppConfig]
-      servr <-
-        BlazeServerBuilder[Task](runtime.platform.executor.asEC)
-          .bindHttp(appConfig.port, appConfig.host)
-          .withHttpApp(Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound)
-          .serve
-          .compile
-          .drain
-    } yield servr
+    ZIO.runtime[Any].flatMap { implicit runtime =>
+      for {
+        routes <- routesR
+        appConfig <- config[AppConfig]
+        servr <-
+          BlazeServerBuilder[Task](runtime.platform.executor.asEC)
+            .bindHttp(appConfig.port, appConfig.host)
+            .withHttpApp(Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound)
+            .serve
+            .compile
+            .drain
+      } yield servr
+    }
 
   // this is a temporary map-based config; it can be replaced with a property- or file-based config
   val configLayer =
