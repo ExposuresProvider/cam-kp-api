@@ -3,21 +3,23 @@ package org.renci.cam
 import java.nio.charset.StandardCharsets
 
 import org.apache.commons.io.IOUtils
+import org.apache.commons.text.CaseUtils
 import org.apache.jena.query.{ResultSet, ResultSetFactory}
+import org.http4s._
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers._
 import org.http4s.implicits._
-import org.http4s.{DecodeResult, EntityDecoder, EntityEncoder, MalformedMessageBodyFailure, MediaType, Method, Request}
+import org.renci.cam.domain._
 import zio._
 import zio.interop.catz._
 
+import scala.collection.JavaConverters._
 import scala.util.{Failure, Success, Try}
-import org.http4s.headers._
-import org.renci.cam.domain._
-import org.apache.commons.text.CaseUtils
 
 object QueryService {
+
+  implicit val runtime: Runtime[ZEnv] = Runtime.default
 
   val PREFIXES: Map[String, String] = Map(
     "BFO" -> "http://purl.obolibrary.org/obo/BFO_",
@@ -131,9 +133,6 @@ object QueryService {
     "MESH" -> "http://id.nlm.nih.gov/mesh/"
   )
 
-  val acceptHeader = Accept(MediaType.application.json)
-  val contentTypeHeader = `Content-Type`(MediaType.application.json)
-
   def makeHttpClient: UIO[TaskManaged[Client[Task]]] =
     ZIO.runtime[Any].map { implicit rts =>
       BlazeClientBuilder[Task](rts.platform.executor.asEC).resource.toManaged
@@ -165,10 +164,80 @@ object QueryService {
   def runBlazegraphQuery(query: String): Task[String] =
     for {
       clientManaged <- makeHttpClient
-      uri = uri"http://152.54.9.207:9999/blazegraph/sparql".withQueryParam("query", query)
-      request =
-        Request[Task](Method.POST, uri).withHeaders(Accept.parse("application/sparql-results+json").toOption.get)
+      uri =
+        uri"http://152.54.9.207:9999/blazegraph/sparql".withQueryParam("query", query).withQueryParam("format", "json")
+      request = Request[Task](Method.POST, uri)
+        .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
       response <- clientManaged.use(_.expect[String](request))
     } yield response
+
+  def run(limit: Int, queryGraph: KGSQueryGraph): Task[String] = {
+
+    val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
+
+    val query = StringBuilder.newBuilder
+    queryGraph.nodes.foreach(node =>
+      query.append(String.format("  ?%1$s sesame:directType ?%1$s_type .%n", node.`type`)))
+
+    var instanceVars: Set[String] = Set()
+    var instanceVarsToTypes: Map[String, String] = Map()
+
+    for ((edge, idx) <- queryGraph.edges.view.zipWithIndex)
+      if (edge.`type`.nonEmpty) {
+        val getPredicates = for {
+          response <- runBlazegraphQuery(
+            s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
+              SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
+          )
+          resultSet <- jsonToResultSet(response)
+//          bindings = {
+//            var tmp = new mutable.ListBuffer[String]()
+//            while (resultSet.hasNext()) {
+//              val solution = resultSet.nextSolution
+//              solution.varNames.forEachRemaining(a => tmp += s"<${solution.get(a)}>")
+//            }
+//            tmp.mkString(" ")
+//          }
+          bindings = (for {
+              solution <- resultSet.asScala
+              v <- solution.varNames.asScala
+              node = solution.get(v)
+            } yield s"<$node>").mkString(" ")
+        } yield bindings
+
+        val predicates = runtime.unsafeRun(getPredicates)
+        query.append(s"VALUES ?${edge.`type`} { $predicates }\n")
+        query.append(s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} .\n")
+
+        instanceVars += (edge.source_id, edge.target_id)
+        instanceVarsToTypes += (edge.source_id -> edge.source_id, edge.target_id -> edge.target_id)
+
+      }
+
+    for ((key, value) <- instanceVarsToTypes)
+      nodeTypes.get(value) match {
+        case Some(v) => query.append(s"?$key rdf:type $v .\n")
+        case None => query.append("") // how to do nothing here?
+      }
+
+    query.append("}")
+    println("query: " + query)
+    if (limit > 0) query.append(s" LIMIT $limit")
+
+    val prequel = StringBuilder.newBuilder
+    for ((key, value) <- PREFIXES)
+      prequel.append(s"PREFIX $key: <$value>\n")
+
+    val ids = instanceVars.map(a => s"?$a").toList :::
+      queryGraph.nodes.map(a => s"?${a.id}_type") :::
+      queryGraph.edges.map(a => s"?${a.id}")
+
+    prequel.append(s"\nSELECT DISTINCT ${ids.mkString(" ")} WHERE {\n")
+
+    val full_query = prequel.toString() + query.toString()
+    println("full_query: " + full_query)
+    val queryResponse = runBlazegraphQuery(full_query)
+    queryResponse
+  }
 
 }
