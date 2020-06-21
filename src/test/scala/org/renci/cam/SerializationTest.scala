@@ -11,6 +11,8 @@ import zio.test.Assertion.{equalTo, _}
 import zio.test._
 import org.renci.cam.QueryService.sparqlJsonDecoder
 
+import scala.collection.JavaConverters._
+
 import scala.collection.mutable
 
 object SerializationTest extends DefaultRunnableSpec {
@@ -78,31 +80,42 @@ object SerializationTest extends DefaultRunnableSpec {
       } ]
     }
   }"""
-        val is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
-        val resultSet = ResultSetFactory.fromJSON(is)
+//        val resultSet = QueryService.jsonToResultSet(response)
+        var is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
+        var resultSet = ResultSetFactory.fromJSON(is)
         is.close()
 
-        // val bindings = (for {
-        //   solution <- resultSet.asScala
-        //   v <- solution.varNames.asScala
-        //   node = solution.get(v)
-        // } yield s"<$node>").mkString(" ")
+//        val bindings1 = (for {
+//          solution <- resultSet.asScala
+//          v <- solution.varNames.asScala
+//          node = solution.get(v)
+//        } yield s"<$node> ").mkString("")
+//        println("bindings1: " + bindings1.mkString(" "))
 
-        var bindings = new mutable.ListBuffer[String]()
+        var bindings1 = new mutable.ListBuffer[String]()
+        while (resultSet.hasNext()) {
+          val solution = resultSet.nextSolution
+          solution.varNames.forEachRemaining(a => bindings1 += s"<${solution.get(a)}>")
+        }
+        println("bindings1: " + bindings1.mkString(" "))
+
+        is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
+        resultSet = ResultSetFactory.fromJSON(is)
+        is.close()
+
+        var bindings2 = new mutable.ListBuffer[String]()
         while (resultSet.hasNext()) {
           val binding = resultSet.nextBinding
-          println("binding.size(): " + binding.size())
           val varIter = binding.vars
           while (varIter.hasNext()) {
             val nodeVar = varIter.next()
-            println("nodeVar.getVarName(): " + nodeVar.getVarName())
             val node = binding.get(nodeVar)
-            println("node.toString(): " + node.toString())
-            bindings += node.toString()
+            bindings2 += s"<${node}>"
           }
         }
+        println("bindings2: " + bindings2.mkString(" "))
 
-        assert(bindings.toList)(isNonEmpty)
+        assert(bindings2.toList)(isNonEmpty)
 
       }
     )
