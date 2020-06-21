@@ -31,9 +31,14 @@ object BlazegraphTest extends DefaultRunnableSpec {
             val httpClient: Client[zio.Task] = JavaNetClientBuilder[zio.Task](blocker).create
             zio.ZIO.effect(httpClient)
           }
-          uri = uri"http://152.54.9.207:9999/blazegraph/sparql".withQueryParam("query", query)
-          request =
-            Request[Task](Method.POST, uri).withHeaders(Accept.parse("application/sparql-results+json").toOption.get)
+          uri =
+            uri"http://152.54.9.207:9999/blazegraph/sparql"
+              .withQueryParam("query", query)
+              .withQueryParam("format", "json")
+          request = Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json),
+                                                                `Content-Type`(MediaType.application.json))
+//          request =
+//            Request[Task](Method.POST, uri).withHeaders(Accept.parse("application/sparql-results+json").toOption.get)
           response <- httpClient.expect[String](request)
         } yield response
 
