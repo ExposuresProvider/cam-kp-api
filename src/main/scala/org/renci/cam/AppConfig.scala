@@ -3,7 +3,7 @@ package org.renci.cam
 import zio.config._
 import zio.config.magnolia.DeriveConfigDescriptor.descriptor
 
-final case class AppConfig(host: String, port: Int, `sparql-endpoint`: String)
+final case class AppConfig(host: String, port: Int, `sparql-host`: String, `sparql-port`: Int)
 
 object AppConfig {
 
