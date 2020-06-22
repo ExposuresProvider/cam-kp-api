@@ -18,7 +18,7 @@ object BlazegraphTest extends DefaultRunnableSpec {
 
   def spec =
     suite("BlazegraphTestSpec")(
-      test("qwer") {
+      test("bindings") {
 
         val query =
           """PREFIX bl: <https://w3id.org/biolink/vocab/>
@@ -37,8 +37,6 @@ object BlazegraphTest extends DefaultRunnableSpec {
               .withQueryParam("format", "json")
           request = Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json),
                                                                 `Content-Type`(MediaType.application.json))
-//          request =
-//            Request[Task](Method.POST, uri).withHeaders(Accept.parse("application/sparql-results+json").toOption.get)
           response <- httpClient.expect[String](request)
         } yield response
 
