@@ -36,10 +36,11 @@ object Server extends App {
     case (limit, body) =>
       //do stuff with queryGraph
       val queryGraph: KGSQueryGraph = body.message.query_graph
-      for {
+      val program = for {
         appConfig <- config[AppConfig]
-        queryResponse = QueryService.run(limit, queryGraph)
-      } yield queryResponse.mapError(error => error.getMessage)
+        queryResponse <- QueryService.run(limit, queryGraph, appConfig)
+      } yield queryResponse
+      program.mapError(error => error.getMessage)
   }
 
   // will be available at /docs
@@ -50,14 +51,19 @@ object Server extends App {
       for {
         routes <- routesR
         appConfig <- config[AppConfig]
+        httpApp = Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound
+        httpAppWithLogging = Logger.httpApp(true, true)(httpApp)
         servr <-
           BlazeServerBuilder[Task](runtime.platform.executor.asEC)
             .bindHttp(appConfig.port, appConfig.host)
-            .withHttpApp(Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound)
+            .withHttpApp(httpAppWithLogging)
             .serve
             .compile
             .drain
-      } yield servr
+      } yield {
+        println(appConfig)
+        servr
+      }
     }
 
   val configLayer: Layer[Throwable, Config[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
