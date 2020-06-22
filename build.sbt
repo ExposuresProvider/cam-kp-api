@@ -25,7 +25,7 @@ val logbackVersion = "1.2.3"
 libraryDependencies ++= {
   Seq(
     "dev.zio"                     %% "zio"                      % zioVersion,
-    "dev.zio"                     %% "zio-interop-cats"         % "1.0.0-RC8-12",
+    "dev.zio"                     %% "zio-interop-cats"         % "2.1.3.0-RC16",
     "dev.zio"                     %% "zio-config"               % zioVersion,
     "dev.zio"                     %% "zio-config-magnolia"      % zioVersion,
     "dev.zio"                     %% "zio-config-typesafe"      % zioVersion,
@@ -46,6 +46,7 @@ libraryDependencies ++= {
     "dev.zio"                     %% "zio-test"                 % zioVersion % Test,
     "dev.zio"                     %% "zio-test-sbt"             % zioVersion % Test,
     "org.apache.commons"           % "commons-text"             % "1.8",
-    "ch.qos.logback"               % "logback-classic"          % logbackVersion
+    "ch.qos.logback"               % "logback-classic"          % logbackVersion,
+    "com.typesafe.scala-logging"  %% "scala-logging"            % "3.9.2"
   )
 }
