@@ -3,18 +3,17 @@ package org.renci.cam
 import java.util.concurrent.Executors
 
 import cats.effect.Blocker
-
+import io.circe.generic.auto._
+import io.circe.syntax._
 import org.http4s._
 import org.http4s.client._
 import org.http4s.headers._
 import org.http4s.implicits._
-import zio.{Runtime, Task, ZEnv}
+import org.renci.cam.domain._
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
-import org.renci.cam.domain._
-import io.circe.generic.auto._
-import io.circe.syntax._
+import zio.{Runtime, Task, ZEnv}
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
