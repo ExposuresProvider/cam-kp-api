@@ -2,6 +2,7 @@ package org.renci.cam
 
 import java.nio.charset.StandardCharsets
 
+import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
 import org.apache.commons.text.CaseUtils
 import org.apache.jena.query.{ResultSet, ResultSetFactory}
@@ -13,11 +14,13 @@ import org.http4s.implicits._
 import org.renci.cam.domain._
 import zio._
 import zio.interop.catz._
+import zio.config.{Config, _}
 
 import scala.collection.JavaConverters._
+import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
-object QueryService {
+object QueryService extends LazyLogging {
 
   implicit val runtime: Runtime[ZEnv] = Runtime.default
 
@@ -135,7 +138,7 @@ object QueryService {
 
   def makeHttpClient: UIO[TaskManaged[Client[Task]]] =
     ZIO.runtime[Any].map { implicit rts =>
-      BlazeClientBuilder[Task](rts.platform.executor.asEC).resource.toManaged
+      BlazeClientBuilder[Task](rts.platform.executor.asEC).withConnectTimeout(Duration(3, MINUTES)).resource.toManaged
     }
 
   implicit val sparqlJsonDecoder: EntityDecoder[Task, ResultSet] = EntityDecoder[Task, String].flatMapR { jsonText =>
@@ -161,20 +164,24 @@ object QueryService {
     nodeTypes
   }
 
-  def runBlazegraphQuery(query: String): Task[String] =
+  def runBlazegraphQuery(query: String, appConfig: AppConfig): Task[String] =
     for {
       clientManaged <- makeHttpClient
-      uri =
-        uri"http://152.54.9.207:9999/blazegraph/sparql".withQueryParam("query", query).withQueryParam("format", "json")
+      //building a uri from config shouldn't be this verbose...any better way to do this?
+      uri = Uri(
+        scheme = Some(Uri.Scheme.http),
+        authority =
+          Some(Uri.Authority(host = Uri.RegName(appConfig.`sparql-host`), port = Some(appConfig.`sparql-port`))),
+        path = "/blazegraph/sparql"
+      ).withQueryParam("query", query).withQueryParam("format", "json")
       request = Request[Task](Method.POST, uri)
         .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
       response <- clientManaged.use(_.expect[String](request))
     } yield response
 
-  def run(limit: Int, queryGraph: KGSQueryGraph): Task[String] = {
-
+  def run(limit: Int, queryGraph: KGSQueryGraph, appConfig: AppConfig): Task[String] = {
     val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
-
+    logger.info("appConfig: {}", appConfig)
     val query = StringBuilder.newBuilder
     queryGraph.nodes.foreach(node =>
       query.append(String.format("  ?%1$s sesame:directType ?%1$s_type .%n", node.`type`)))
@@ -187,17 +194,10 @@ object QueryService {
         val getPredicates = for {
           response <- runBlazegraphQuery(
             s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
-              SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
+              SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }""",
+            appConfig
           )
           resultSet <- jsonToResultSet(response)
-//          bindings = {
-//            var tmp = new mutable.ListBuffer[String]()
-//            while (resultSet.hasNext()) {
-//              val solution = resultSet.nextSolution
-//              solution.varNames.forEachRemaining(a => tmp += s"<${solution.get(a)}>")
-//            }
-//            tmp.mkString(" ")
-//          }
           bindings = (for {
               solution <- resultSet.asScala
               v <- solution.varNames.asScala
@@ -221,7 +221,7 @@ object QueryService {
       }
 
     query.append("}")
-    println("query: " + query)
+    logger.debug("query: {}", query)
     if (limit > 0) query.append(s" LIMIT $limit")
 
     val prequel = StringBuilder.newBuilder
@@ -235,8 +235,8 @@ object QueryService {
     prequel.append(s"\nSELECT DISTINCT ${ids.mkString(" ")} WHERE {\n")
 
     val full_query = prequel.toString() + query.toString()
-    println("full_query: " + full_query)
-    val queryResponse = runBlazegraphQuery(full_query)
+    logger.debug("full_query: {}", full_query)
+    val queryResponse = runBlazegraphQuery(full_query, appConfig)
     queryResponse
   }
 
