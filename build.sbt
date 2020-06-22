@@ -26,6 +26,7 @@ libraryDependencies ++= {
     "dev.zio"                     %% "zio"                      % zioVersion,
     "dev.zio"                     %% "zio-config"               % zioVersion,
     "dev.zio"                     %% "zio-config-magnolia"      % zioVersion,
+    "dev.zio"                     %% "zio-config-typesafe"      % zioVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-core"               % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio"                % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server"  % tapirVersion,

@@ -12,6 +12,7 @@ import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
+import zio.config.typesafe.TypesafeConfig
 import zio.config.{Config, _}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
@@ -32,7 +33,10 @@ object Server extends App {
       //do stuff with queryGraph
       for {
         appConfig <- config[AppConfig]
-      } yield queryGraph.toString
+      } yield {
+        println(appConfig)
+        queryGraph.toString
+      }
   }
 
   // will be available at /docs
@@ -53,10 +57,7 @@ object Server extends App {
       } yield servr
     }
 
-  // this is a temporary map-based config; it can be replaced with a property- or file-based config
-  val configLayer =
-    Config.fromMap(Map("host" -> "localhost", "port" -> "8080", "sparqlEndpoint" -> "http://example.org/sparql"),
-                   AppConfig.config)
+  val configLayer: Layer[Throwable, Config[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = server.provideLayer(configLayer).exitCode
 
