@@ -12,13 +12,13 @@ import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
+import zio.config.typesafe.TypesafeConfig
+import zio.config.{Config, _}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio.{App, ExitCode, Runtime, Task, ZEnv, ZIO}
+import zio.{config => _, _}
 
 object Server extends App {
-
-  implicit val runtime: Runtime[ZEnv] = Runtime.default
 
   val queryEndpoint: ZEndpoint[(Int, KGSQueryGraph), String, String] =
     endpoint.post
@@ -28,22 +28,37 @@ object Server extends App {
       .errorOut(stringBody)
       .out(jsonBody[String])
 
-  val routes: HttpRoutes[Task] = queryEndpoint.toRoutes {
+  val routesR: URIO[Config[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
     case (limit, queryGraph) =>
       //do stuff with queryGraph
-      ZIO.succeed(queryGraph.toString)
+      for {
+        appConfig <- config[AppConfig]
+      } yield {
+        println(appConfig)
+        queryGraph.toString
+      }
   }
 
   // will be available at /docs
   val openAPI: String = List(queryEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
 
-  override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] =
-    BlazeServerBuilder[Task](runtime.platform.executor.asEC)
-      .bindHttp(8080, "localhost")
-      .withHttpApp(Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound)
-      .serve
-      .compile
-      .drain
-      .exitCode
+  val server: ZIO[Config[AppConfig], Throwable, Unit] =
+    ZIO.runtime[Any].flatMap { implicit runtime =>
+      for {
+        routes <- routesR
+        appConfig <- config[AppConfig]
+        servr <-
+          BlazeServerBuilder[Task](runtime.platform.executor.asEC)
+            .bindHttp(appConfig.port, appConfig.host)
+            .withHttpApp(Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound)
+            .serve
+            .compile
+            .drain
+      } yield servr
+    }
+
+  val configLayer: Layer[Throwable, Config[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
+
+  override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = server.provideLayer(configLayer).exitCode
 
 }
