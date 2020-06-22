@@ -9,9 +9,6 @@ import org.apache.jena.query.ResultSetFactory
 import org.renci.cam.domain._
 import zio.test.Assertion.{equalTo, _}
 import zio.test._
-import org.renci.cam.QueryService.sparqlJsonDecoder
-
-import scala.collection.JavaConverters._
 
 import scala.collection.mutable
 
@@ -116,7 +113,6 @@ object SerializationTest extends DefaultRunnableSpec {
         println("bindings2: " + bindings2.mkString(" "))
 
         assert(bindings2.toList)(isNonEmpty)
-
       }
     )
 
