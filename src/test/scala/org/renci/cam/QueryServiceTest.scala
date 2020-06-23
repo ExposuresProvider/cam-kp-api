@@ -13,6 +13,7 @@ import org.renci.cam.domain._
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
+import zio.test.TestAspect._
 import zio.{Runtime, Task, ZEnv}
 
 object QueryServiceTest extends DefaultRunnableSpec {
@@ -49,7 +50,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val ret = runtime.unsafeRun(program)
         println("ret: " + ret)
         assert(ret)(isNonEmptyString)
-      }
+      } @@ ignore
     )
 
 }

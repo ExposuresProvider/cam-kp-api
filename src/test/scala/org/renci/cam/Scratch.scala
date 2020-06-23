@@ -2,6 +2,7 @@ package org.renci.cam
 
 import zio.test.Assertion.equalTo
 import zio.test._
+import zio.test.TestAspect._
 import zio.{Runtime, ZEnv}
 
 object Scratch extends DefaultRunnableSpec {
@@ -16,7 +17,7 @@ object Scratch extends DefaultRunnableSpec {
         } yield list
         val d = runtime.unsafeRun(asdf)
         assert(d)(equalTo(List(1, 2, 3)))
-      }
+      } @@ ignore
     )
 
 }

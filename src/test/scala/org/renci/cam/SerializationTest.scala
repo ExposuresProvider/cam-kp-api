@@ -8,6 +8,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.jena.query.ResultSetFactory
 import org.renci.cam.domain._
 import zio.test.Assertion.{equalTo, _}
+import zio.test.TestAspect._
 import zio.test._
 
 import scala.collection.mutable
@@ -31,7 +32,7 @@ object SerializationTest extends DefaultRunnableSpec {
         println("encoded: " + encoded)
         println("expected: " + expected)
         assert(expected)(equalTo(encoded))
-      },
+      } @@ ignore,
       test("2") {
 
         val response = s"""{
@@ -113,7 +114,7 @@ object SerializationTest extends DefaultRunnableSpec {
         println("bindings2: " + bindings2.mkString(" "))
 
         assert(bindings2.toList)(isNonEmpty)
-      }
+      } @@ ignore
     )
 
 }

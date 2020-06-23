@@ -10,6 +10,7 @@ import org.http4s.implicits._
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
+import zio.test.TestAspect._
 import zio.{Runtime, Task, ZEnv}
 
 object BlazegraphTest extends DefaultRunnableSpec {
@@ -43,7 +44,7 @@ object BlazegraphTest extends DefaultRunnableSpec {
         val ret = runtime.unsafeRun(program)
         println("ret: " + ret)
         assert(ret)(isNonEmptyString)
-      }
+      } @@ ignore
     )
 
 }
