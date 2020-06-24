@@ -151,11 +151,6 @@ object QueryService extends LazyLogging {
     }
   }
 
-  def jsonToResultSet(jsonText: String): Task[ResultSet] =
-    Task
-      .effect(IOUtils.toInputStream(jsonText, StandardCharsets.UTF_8))
-      .bracketAuto(is => Task.effect(ResultSetFactory.fromJSON(is)))
-
   def getNodeTypes(nodes: List[KGSNode]): Map[String, String] = {
     val nodeTypes = nodes.collect {
       case (node) if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
@@ -164,7 +159,7 @@ object QueryService extends LazyLogging {
     nodeTypes
   }
 
-  def runBlazegraphQuery(query: String, appConfig: AppConfig): Task[String] =
+  def runSPARQLSelectQuery(query: String, appConfig: AppConfig): Task[ResultSet] =
     for {
       clientManaged <- makeHttpClient
       //building a uri from config shouldn't be this verbose...any better way to do this?
@@ -176,10 +171,10 @@ object QueryService extends LazyLogging {
       ).withQueryParam("query", query).withQueryParam("format", "json")
       request = Request[Task](Method.POST, uri)
         .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-      response <- clientManaged.use(_.expect[String](request))
+      response <- clientManaged.use(_.expect[ResultSet](request))
     } yield response
 
-  def run(limit: Int, queryGraph: KGSQueryGraph, appConfig: AppConfig): Task[String] = {
+  def run(limit: Int, queryGraph: KGSQueryGraph, appConfig: AppConfig): Task[ResultSet] = {
     val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
     logger.info("appConfig: {}", appConfig)
     val query = StringBuilder.newBuilder
@@ -192,12 +187,11 @@ object QueryService extends LazyLogging {
     for ((edge, idx) <- queryGraph.edges.view.zipWithIndex)
       if (edge.`type`.nonEmpty) {
         val getPredicates = for {
-          response <- runBlazegraphQuery(
+          resultSet <- runSPARQLSelectQuery(
             s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
               SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }""",
             appConfig
           )
-          resultSet <- jsonToResultSet(response)
           bindings = (for {
               solution <- resultSet.asScala
               v <- solution.varNames.asScala
@@ -236,7 +230,7 @@ object QueryService extends LazyLogging {
 
     val full_query = prequel.toString() + query.toString()
     logger.debug("full_query: {}", full_query)
-    val queryResponse = runBlazegraphQuery(full_query, appConfig)
+    val queryResponse = runSPARQLSelectQuery(full_query, appConfig)
     queryResponse
   }
 
