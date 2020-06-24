@@ -155,7 +155,8 @@ object QueryService extends LazyLogging {
     val nodeTypes = nodes.collect {
       case (node) if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
     }.toMap
-    nodeTypes ++ nodes.collect { case (node) if node.curie.nonEmpty => (node.id, node.curie.get) }.toMap
+    //FIXME this value is not being returned, should it be? either remove code or use as return value
+    nodeTypes ++ nodes.flatMap(node => node.curie.map(node.id -> _)).toMap
     nodeTypes
   }
 
