@@ -14,6 +14,7 @@ import org.http4s.implicits._
 import org.renci.cam.domain._
 import zio._
 import zio.interop.catz._
+import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.{Config, _}
 
 import scala.collection.JavaConverters._
@@ -153,8 +154,7 @@ object QueryService extends LazyLogging {
   def jsonToResultSet(jsonText: String): Task[ResultSet] =
     Task
       .effect(IOUtils.toInputStream(jsonText, StandardCharsets.UTF_8))
-      .bracket(is => ZIO.effectTotal(is.close()))(is => Task.effect(ResultSetFactory.fromJSON(is)))
-      .orDie
+      .bracketAuto(is => Task.effect(ResultSetFactory.fromJSON(is)))
 
   def getNodeTypes(nodes: List[KGSNode]): Map[String, String] = {
     val nodeTypes = nodes.collect {
