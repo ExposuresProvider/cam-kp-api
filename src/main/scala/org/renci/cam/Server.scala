@@ -37,8 +37,7 @@ object Server extends App {
       //do stuff with queryGraph
       val queryGraph: KGSQueryGraph = body.message.query_graph
       val program = for {
-        appConfig <- config[AppConfig]
-        queryResponse <- QueryService.run(limit, queryGraph, appConfig)
+        queryResponse <- QueryService.run(limit, queryGraph)
       } yield queryResponse.toString
       program.mapError(error => error.getMessage)
   }
