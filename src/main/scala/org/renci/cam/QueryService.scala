@@ -10,12 +10,10 @@ import org.http4s._
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers._
-import org.http4s.implicits._
 import org.renci.cam.domain._
-import zio._
+import zio.config.Config
 import zio.interop.catz._
-import zio.ZIO.ZIOAutoCloseableOps
-import zio.config.{Config, _}
+import zio.{config => _, _}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
@@ -160,31 +158,33 @@ object QueryService extends LazyLogging {
     newNodeTypes
   }
 
-  def runSPARQLSelectQuery(query: String, appConfig: AppConfig): Task[ResultSet] =
+  def runSPARQLSelectQuery(query: String): RIO[Config[AppConfig], ResultSet] =
     for {
+      appConfig <- zio.config.config[AppConfig]
       clientManaged <- makeHttpClient
-      _ = logger.debug("query: {}", query)
-      //building a uri from config shouldn't be this verbose...any better way to do this?
-      uri = Uri(
-        scheme = Some(Uri.Scheme.http),
-        authority =
-          Some(Uri.Authority(host = Uri.RegName(appConfig.`sparql-host`), port = Some(appConfig.`sparql-port`))),
-        path = "/blazegraph/sparql"
-      ).withQueryParam("query", query).withQueryParam("format", "json")
-      _ = logger.debug("uri: {}", uri.toString())
+      uri =
+        Uri
+          .fromString(appConfig.`sparql-endpoint`)
+          .toOption
+          .get
+          .withQueryParam("query", query)
+          .withQueryParam("format", "json")
+      _ = {
+        logger.debug("uri: {}", uri.toString())
+        logger.debug("query: {}", query)
+      }
       request = Request[Task](Method.POST, uri)
         .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
       response <- clientManaged.use(_.expect[ResultSet](request))
     } yield response
 
-  def run(limit: Int, queryGraph: KGSQueryGraph, appConfig: AppConfig): Task[ResultSet] = {
+  def run(limit: Int, queryGraph: KGSQueryGraph): RIO[Config[AppConfig], ResultSet] = {
     val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
     val getPredicates = ZIO.foreach(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
       for {
         resultSet <- runSPARQLSelectQuery(
           s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
-              SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }""",
-          appConfig
+              SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
         )
         predicates = (for {
             solution <- resultSet.asScala
@@ -222,14 +222,14 @@ object QueryService extends LazyLogging {
             }))
         s"${bindings.mkString("\n")}"
       }
-      moreSparqlLines =
-        instanceVarsToTypes.toSet.flatten
-          .map { case (key, value) => s"?$key rdf:type $value ." }
-          .mkString("\n")
+//      moreSparqlLines =
+//        instanceVarsToTypes.toSet.flatten
+//          .map { case (key, value) => s"?$key rdf:type $value ." }
+//          .mkString("\n")
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
 //      query = s"${prefixes}\n${selectClause}\n${whereClause}\n${valuesClause} ${moreSparqlLines}\n } $limitSparql"
       query = s"${prefixes}\n${selectClause}\n${whereClause}\n${valuesClause} \n } $limitSparql"
-      response <- runSPARQLSelectQuery(query, appConfig)
+      response <- runSPARQLSelectQuery(query)
     } yield response
   }
 
