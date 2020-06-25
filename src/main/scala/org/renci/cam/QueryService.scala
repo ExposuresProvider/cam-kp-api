@@ -156,9 +156,8 @@ object QueryService extends LazyLogging {
     val nodeTypes = nodes.collect {
       case (node) if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
     }.toMap
-    //FIXME this value is not being returned, should it be? either remove code or use as return value
-    nodeTypes ++ nodes.flatMap(node => node.curie.map(node.id -> _)).toMap
-    nodeTypes
+    val newNodeTypes = nodeTypes ++ nodes.flatMap(node => node.curie.map(node.id -> _)).toMap
+    newNodeTypes
   }
 
   def runSPARQLSelectQuery(query: String, appConfig: AppConfig): Task[ResultSet] =
