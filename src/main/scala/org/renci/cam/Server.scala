@@ -39,7 +39,7 @@ object Server extends App {
       val program = for {
         appConfig <- config[AppConfig]
         queryResponse <- QueryService.run(limit, queryGraph, appConfig)
-      } yield queryResponse
+      } yield queryResponse.toString
       program.mapError(error => error.getMessage)
   }
 
