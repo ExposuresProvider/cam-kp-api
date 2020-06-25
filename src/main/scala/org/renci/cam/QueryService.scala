@@ -176,63 +176,53 @@ object QueryService extends LazyLogging {
     } yield response
 
   def run(limit: Int, queryGraph: KGSQueryGraph, appConfig: AppConfig): Task[ResultSet] = {
-    val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
-    logger.info("appConfig: {}", appConfig)
-    val query = StringBuilder.newBuilder
-    queryGraph.nodes.foreach(node =>
-      query.append(String.format("  ?%1$s sesame:directType ?%1$s_type .%n", node.`type`)))
-
-    var instanceVars: Set[String] = Set()
-    var instanceVarsToTypes: Map[String, String] = Map()
-
-    for ((edge, idx) <- queryGraph.edges.view.zipWithIndex)
-      if (edge.`type`.nonEmpty) {
-        val getPredicates = for {
-          resultSet <- runSPARQLSelectQuery(
-            s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
+    val getPredicates = ZIO.foreach(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
+      for {
+        resultSet <- runSPARQLSelectQuery(
+          s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
               SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }""",
-            appConfig
-          )
-          bindings = (for {
-              solution <- resultSet.asScala
-              v <- solution.varNames.asScala
-              node = solution.get(v)
-            } yield s"<$node>").mkString(" ")
-        } yield bindings
-
-        val predicates = runtime.unsafeRun(getPredicates)
-        query.append(s"VALUES ?${edge.`type`} { $predicates }\n")
-        query.append(s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} .\n")
-
-        instanceVars += (edge.source_id, edge.target_id)
-        instanceVarsToTypes += (edge.source_id -> edge.source_id, edge.target_id -> edge.target_id)
-
-      }
-
-    for ((key, value) <- instanceVarsToTypes)
-      nodeTypes.get(value) match {
-        case Some(v) => query.append(s"?$key rdf:type $v .\n")
-        case None => query.append("") // how to do nothing here?
-      }
-
-    query.append("}")
-    logger.debug("query: {}", query)
-    if (limit > 0) query.append(s" LIMIT $limit")
-
-    val prequel = StringBuilder.newBuilder
-    for ((key, value) <- PREFIXES)
-      prequel.append(s"PREFIX $key: <$value>\n")
-
-    val ids = instanceVars.map(a => s"?$a").toList :::
-      queryGraph.nodes.map(a => s"?${a.id}_type") :::
-      queryGraph.edges.map(a => s"?${a.id}")
-
-    prequel.append(s"\nSELECT DISTINCT ${ids.mkString(" ")} WHERE {\n")
-
-    val full_query = prequel.toString() + query.toString()
-    logger.debug("full_query: {}", full_query)
-    val queryResponse = runSPARQLSelectQuery(full_query, appConfig)
-    queryResponse
+          appConfig
+        )
+        predicates = (for {
+            solution <- resultSet.asScala
+            v <- solution.varNames.asScala
+            node = solution.get(v)
+          } yield s"<$node>").mkString(" ")
+        predicateValuesBlock = s"VALUES ?${edge.`type`} { $predicates }\n"
+        triple = s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} .\n"
+      } yield (Set(edge.source_id, edge.target_id),
+               Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id),
+               s"$predicateValuesBlock\n$triple")
+    }
+    for {
+      predicates <- getPredicates
+      prefixes = PREFIXES.map { case (key, value) => s"PREFIX $key: <$value>\n" }
+      queryStart =
+        queryGraph.nodes.map(node => String.format("  ?%1$s sesame:directType ?%1$s_type .%n", node.`type`)).mkString
+      (instanceVars, instanceVarsToTypes, sparqlLines) = predicates.unzip3
+      ids =
+        instanceVars.toSet.flatten.map(a => s"?$a").toList :::
+          queryGraph.nodes.map(a => s"?${a.id}_type") :::
+          queryGraph.edges.map(a => s"?${a.id}")
+      select = s"\nSELECT DISTINCT ${ids.mkString(" ")} WHERE {\n"
+      moreSparqlLines =
+        instanceVarsToTypes.toSet.flatten
+          .map {
+            case (key, value) => s"?$key rdf:type $value .\n"
+          }
+          .mkString("\n")
+      limitSparql = if (limit > 0) s" LIMIT $limit" else ""
+      query = s"""
+                $prefixes
+                $queryStart
+                $select
+                $moreSparqlLines
+                }
+                $limitSparql
+               """
+      _ = logger.debug("full_query: {}", query)
+      response <- runSPARQLSelectQuery(query, appConfig)
+    } yield response
   }
 
 }
