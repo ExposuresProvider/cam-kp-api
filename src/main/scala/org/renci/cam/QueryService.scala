@@ -18,6 +18,7 @@ import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.{Config, _}
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
 
@@ -163,6 +164,7 @@ object QueryService extends LazyLogging {
   def runSPARQLSelectQuery(query: String, appConfig: AppConfig): Task[ResultSet] =
     for {
       clientManaged <- makeHttpClient
+      _ = logger.debug("query: {}", query)
       //building a uri from config shouldn't be this verbose...any better way to do this?
       uri = Uri(
         scheme = Some(Uri.Scheme.http),
@@ -170,12 +172,14 @@ object QueryService extends LazyLogging {
           Some(Uri.Authority(host = Uri.RegName(appConfig.`sparql-host`), port = Some(appConfig.`sparql-port`))),
         path = "/blazegraph/sparql"
       ).withQueryParam("query", query).withQueryParam("format", "json")
+      _ = logger.debug("uri: {}", uri.toString())
       request = Request[Task](Method.POST, uri)
         .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
       response <- clientManaged.use(_.expect[ResultSet](request))
     } yield response
 
   def run(limit: Int, queryGraph: KGSQueryGraph, appConfig: AppConfig): Task[ResultSet] = {
+    val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
     val getPredicates = ZIO.foreach(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
       for {
         resultSet <- runSPARQLSelectQuery(
@@ -188,39 +192,44 @@ object QueryService extends LazyLogging {
             v <- solution.varNames.asScala
             node = solution.get(v)
           } yield s"<$node>").mkString(" ")
-        predicateValuesBlock = s"VALUES ?${edge.`type`} { $predicates }\n"
-        triple = s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} .\n"
+        predicateValuesBlock = s"VALUES ?${edge.`type`} { $predicates }"
+        triple = s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} ."
       } yield (Set(edge.source_id, edge.target_id),
                Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id),
                s"$predicateValuesBlock\n$triple")
     }
     for {
       predicates <- getPredicates
-      prefixes = PREFIXES.map { case (key, value) => s"PREFIX $key: <$value>\n" }
-      queryStart =
-        queryGraph.nodes.map(node => String.format("  ?%1$s sesame:directType ?%1$s_type .%n", node.`type`)).mkString
+      prefixes = PREFIXES.map { case (key, value) => s"PREFIX $key: <$value>" } mkString ("\n")
+      whereClauseParts =
+        queryGraph.nodes
+          .map(node => String.format("  ?%1$s sesame:directType ?%1$s_type .", node.`type`))
+          .mkString("\n")
+      whereClause = s"WHERE { \n${whereClauseParts}"
       (instanceVars, instanceVarsToTypes, sparqlLines) = predicates.unzip3
       ids =
         instanceVars.toSet.flatten.map(a => s"?$a").toList :::
           queryGraph.nodes.map(a => s"?${a.id}_type") :::
           queryGraph.edges.map(a => s"?${a.id}")
-      select = s"\nSELECT DISTINCT ${ids.mkString(" ")} WHERE {\n"
+      selectClause = s"SELECT DISTINCT ${ids.mkString(" ")} "
+      valuesClause = {
+        var bindings = new ListBuffer[String]()
+        bindings += sparqlLines.mkString("")
+        instanceVarsToTypes.foreach(a =>
+          a.foreach(b =>
+            nodeTypes.get(b._2) match {
+              case Some(v) => bindings += s"?${b._1} rdf:type $v ."
+              case None => bindings += ""
+            }))
+        s"${bindings.mkString("\n")}"
+      }
       moreSparqlLines =
         instanceVarsToTypes.toSet.flatten
-          .map {
-            case (key, value) => s"?$key rdf:type $value .\n"
-          }
+          .map { case (key, value) => s"?$key rdf:type $value ." }
           .mkString("\n")
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
-      query = s"""
-                $prefixes
-                $queryStart
-                $select
-                $moreSparqlLines
-                }
-                $limitSparql
-               """
-      _ = logger.debug("full_query: {}", query)
+//      query = s"${prefixes}\n${selectClause}\n${whereClause}\n${valuesClause} ${moreSparqlLines}\n } $limitSparql"
+      query = s"${prefixes}\n${selectClause}\n${whereClause}\n${valuesClause} \n } $limitSparql"
       response <- runSPARQLSelectQuery(query, appConfig)
     } yield response
   }
