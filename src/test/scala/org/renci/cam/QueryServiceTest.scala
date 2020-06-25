@@ -62,7 +62,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val ret = runtime.unsafeRun(program)
         println("ret: " + ret)
         assert(ret)(isNonEmptyString)
-      } //@@ ignore
+      } @@ ignore
     )
 
 }
