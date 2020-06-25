@@ -22,6 +22,18 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   def spec =
     suite("QueryServiceSpec")(
+      test("testGetNodeTypes") {
+        val n0Node = KGSNode("n0", "gene", Some("NCBIGENE:558"))
+        val n1Node = KGSNode("n1", "biological_process", None)
+        val e0Edge = KGSEdge("e0", "n1", "n0", "has_participant")
+
+        val queryGraph = KGSQueryGraph(List(n0Node, n1Node), List(e0Edge))
+
+        val map = QueryService.getNodeTypes(queryGraph.nodes)
+        map.foreach(a => printf("k: %s, v: %s%n", a._1, a._2))
+
+        assert(map)(isNonEmpty)
+      } @@ ignore,
       test("query service") {
 
         val n0Node = KGSNode("n0", "gene", Some("NCBIGENE:558"))
@@ -50,7 +62,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val ret = runtime.unsafeRun(program)
         println("ret: " + ret)
         assert(ret)(isNonEmptyString)
-      } @@ ignore
+      } //@@ ignore
     )
 
 }
