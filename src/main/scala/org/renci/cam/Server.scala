@@ -21,9 +21,7 @@ import zio.interop.catz.implicits._
 import zio.{config => _, _}
 
 object Server extends App {
-
-  implicit val runtime: Runtime[ZEnv] = Runtime.default
-
+  
   val queryEndpoint: ZEndpoint[(Int, KGSQueryRequestBody), String, String] =
     endpoint.post
       .in("query")
@@ -45,7 +43,7 @@ object Server extends App {
   // will be available at /docs
   val openAPI: String = List(queryEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
 
-  val server: ZIO[Config[AppConfig], Throwable, Unit] =
+  val server: RIO[Config[AppConfig], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         routes <- routesR
