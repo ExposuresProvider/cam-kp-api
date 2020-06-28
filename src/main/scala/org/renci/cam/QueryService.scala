@@ -162,7 +162,7 @@ object QueryService extends LazyLogging {
     for {
       appConfig <- zio.config.config[AppConfig]
       clientManaged <- makeHttpClient
-      endpoint <- ZIO.fromEither(Uri.fromString(appConfig.`sparql-endpoint`))
+      endpoint = appConfig.sparqlEndpoint
       requestUri = endpoint.withQueryParam("query", query).withQueryParam("format", "json")
       _ = {
         logger.debug("uri: {}", requestUri.toString())

@@ -59,10 +59,7 @@ object Server extends App {
             .serve
             .compile
             .drain
-      } yield {
-        println(appConfig)
-        servr
-      }
+      } yield servr
     }
 
   val configLayer: Layer[Throwable, Config[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
