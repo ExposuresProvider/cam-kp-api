@@ -44,16 +44,12 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
 
         for {
-          httpClient <- zio.ZIO.effect {
-            val blockingPool = Executors.newFixedThreadPool(5)
-            val blocker = Blocker.liftExecutorService(blockingPool)
-            JavaNetClientBuilder[zio.Task](blocker).create
-          }
+          httpClient <- QueryService.makeHttpClient
           uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1)
           request = Request[Task](Method.POST, uri)
             .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
             .withEntity(encoded)
-          response <- httpClient.expect[String](request)
+          response <- httpClient.use(_.expect[String](request))
         } yield assert(response)(isNonEmptyString)
       } @@ ignore
     )

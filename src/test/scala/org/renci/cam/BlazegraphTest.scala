@@ -24,18 +24,14 @@ object BlazegraphTest extends DefaultRunnableSpec {
               SELECT DISTINCT ?predicate WHERE { bl:has_participant <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
 
         for {
-          httpClient <- zio.ZIO.effect {
-            val blockingPool = Executors.newFixedThreadPool(5)
-            val blocker = Blocker.liftExecutorService(blockingPool)
-            JavaNetClientBuilder[zio.Task](blocker).create
-          }
+          httpClient <- QueryService.makeHttpClient
           uri =
             uri"http://152.54.9.207:9999/blazegraph/sparql"
               .withQueryParam("query", query)
               .withQueryParam("format", "json")
           request = Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json),
                                                                 `Content-Type`(MediaType.application.json))
-          response <- httpClient.expect[String](request)
+          response <- httpClient.use(_.expect[String](request))
         } yield assert(response)(isNonEmptyString)
       } @@ ignore
     )
