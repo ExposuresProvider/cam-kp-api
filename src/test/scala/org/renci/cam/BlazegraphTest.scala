@@ -15,17 +15,15 @@ import zio.{Runtime, Task, ZEnv}
 
 object BlazegraphTest extends DefaultRunnableSpec {
 
-  implicit val runtime: Runtime[ZEnv] = Runtime.default
-
   def spec =
     suite("BlazegraphTestSpec")(
-      test("bindings") {
+      testM("bindings") {
 
         val query =
           """PREFIX bl: <https://w3id.org/biolink/vocab/>
               SELECT DISTINCT ?predicate WHERE { bl:has_participant <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
 
-        val program = for {
+        for {
           httpClient <- {
             val blockingPool = Executors.newFixedThreadPool(5)
             val blocker = Blocker.liftExecutorService(blockingPool)
@@ -39,11 +37,7 @@ object BlazegraphTest extends DefaultRunnableSpec {
           request = Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json),
                                                                 `Content-Type`(MediaType.application.json))
           response <- httpClient.expect[String](request)
-        } yield response
-
-        val ret = runtime.unsafeRun(program)
-        println("ret: " + ret)
-        assert(ret)(isNonEmptyString)
+        } yield assert(response)(isNonEmptyString)
       } @@ ignore
     )
 

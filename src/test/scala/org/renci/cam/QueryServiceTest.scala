@@ -18,8 +18,6 @@ import zio.{Runtime, Task, ZEnv}
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
-  implicit val runtime: Runtime[ZEnv] = Runtime.default
-
   def spec =
     suite("QueryServiceSpec")(
       test("testGetNodeTypes") {
@@ -34,7 +32,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
         assert(map)(isNonEmpty)
       } @@ ignore,
-      test("query service") {
+      testM("query service") {
 
         val n0Node = KGSNode("n0", "gene", Some("NCBIGENE:558"))
         val n1Node = KGSNode("n1", "biological_process", None)
@@ -45,7 +43,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val requestBody = KGSQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
 
-        val program = for {
+        for {
           httpClient <- {
             val blockingPool = Executors.newFixedThreadPool(5)
             val blocker = Blocker.liftExecutorService(blockingPool)
@@ -57,11 +55,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
             .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
             .withEntity(encoded)
           response <- httpClient.expect[String](request)
-        } yield response
-
-        val ret = runtime.unsafeRun(program)
-        println("ret: " + ret)
-        assert(ret)(isNonEmptyString)
+        } yield assert(response)(isNonEmptyString)
       } @@ ignore
     )
 

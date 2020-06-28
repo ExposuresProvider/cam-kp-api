@@ -7,16 +7,12 @@ import zio.{Runtime, ZEnv}
 
 object Scratch extends DefaultRunnableSpec {
 
-  implicit val runtime: Runtime[ZEnv] = Runtime.default
-
   def spec =
     suite("ScratchSpec")(
-      test("1") {
-        val asdf = for {
+      testM("1") {
+        for {
           list <- zio.ZIO.effect(List(1, 2, 3))
-        } yield list
-        val d = runtime.unsafeRun(asdf)
-        assert(d)(equalTo(List(1, 2, 3)))
+        } yield assert(list)(equalTo(List(1, 2, 3)))
       } @@ ignore
     )
 
