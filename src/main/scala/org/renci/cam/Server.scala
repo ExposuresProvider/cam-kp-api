@@ -3,9 +3,11 @@ package org.renci.cam
 import cats.implicits._
 import io.circe.generic.auto._
 import org.http4s._
+import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.syntax.kleisli._
+import org.http4s.server.middleware.Logger
+import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._
@@ -19,38 +21,39 @@ import zio.interop.catz.implicits._
 import zio.{config => _, _}
 
 object Server extends App {
-
-  val queryEndpoint: ZEndpoint[(Int, KGSQueryGraph), String, String] =
+  
+  val queryEndpoint: ZEndpoint[(Int, KGSQueryRequestBody), String, String] =
     endpoint.post
       .in("query")
       .in(query[Int]("limit"))
-      .in(jsonBody[KGSQueryGraph])
+      .in(jsonBody[KGSQueryRequestBody])
       .errorOut(stringBody)
       .out(jsonBody[String])
 
   val routesR: URIO[Config[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
-    case (limit, queryGraph) =>
+    case (limit, body) =>
       //do stuff with queryGraph
-      for {
-        appConfig <- config[AppConfig]
-      } yield {
-        println(appConfig)
-        queryGraph.toString
-      }
+      val queryGraph: KGSQueryGraph = body.message.query_graph
+      val program = for {
+        queryResponse <- QueryService.run(limit, queryGraph)
+      } yield queryResponse.toString
+      program.mapError(error => error.getMessage)
   }
 
   // will be available at /docs
   val openAPI: String = List(queryEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
 
-  val server: ZIO[Config[AppConfig], Throwable, Unit] =
+  val server: RIO[Config[AppConfig], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         routes <- routesR
         appConfig <- config[AppConfig]
+        httpApp = Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound
+        httpAppWithLogging = Logger.httpApp(true, true)(httpApp)
         servr <-
           BlazeServerBuilder[Task](runtime.platform.executor.asEC)
             .bindHttp(appConfig.port, appConfig.host)
-            .withHttpApp(Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound)
+            .withHttpApp(httpAppWithLogging)
             .serve
             .compile
             .drain
