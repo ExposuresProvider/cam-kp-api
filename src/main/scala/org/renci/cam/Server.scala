@@ -4,6 +4,7 @@ import cats.implicits._
 import io.circe.generic.auto._
 import org.http4s._
 import org.http4s.server.Router
+import org.http4s.server.middleware._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.syntax.kleisli._
 import sttp.tapir.docs.openapi._
@@ -21,11 +22,17 @@ object Server extends App {
   implicit val runtime: Runtime[ZEnv] = Runtime.default
 
   val queryEndpoint: ZEndpoint[(Int, KGSQueryGraph), String, String] =
-    endpoint.post.in("query").in(query[Int]("limit")).in(jsonBody[KGSQueryGraph]).errorOut(stringBody).out(jsonBody[String])
+    endpoint.post
+      .in("query")
+      .in(query[Int]("limit"))
+      .in(jsonBody[KGSQueryGraph])
+      .errorOut(stringBody)
+      .out(jsonBody[String])
 
-  val routes: HttpRoutes[Task] = queryEndpoint.toRoutes { case (limit, queryGraph) =>
-    //do stuff with queryGraph
-    ZIO.succeed(queryGraph.toString)
+  val routes: HttpRoutes[Task] = queryEndpoint.toRoutes {
+    case (limit, queryGraph) =>
+      //do stuff with queryGraph
+      ZIO.succeed(queryGraph.toString)
   }
 
   // will be available at /docs
@@ -34,11 +41,12 @@ object Server extends App {
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] =
     BlazeServerBuilder[Task](runtime.platform.executor.asEC)
       .bindHttp(8080, "localhost")
-      .withHttpApp(Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound)
+      .withHttpApp(CORS.httpApp(Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound))
       .serve
       .compile
       .drain
       .as(ExitCode.success)
-      .catchAllCause(cause => UIO(println(cause.prettyPrint))).as(ExitCode.failure)
+      .catchAllCause(cause => UIO(println(cause.prettyPrint)))
+      .as(ExitCode.failure)
 
 }
