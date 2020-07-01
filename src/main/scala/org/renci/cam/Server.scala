@@ -22,7 +22,7 @@ import zio.interop.catz.implicits._
 import zio.{config => _, _}
 
 object Server extends App {
-  
+
   val queryEndpoint: ZEndpoint[(Int, KGSQueryRequestBody), String, String] =
     endpoint.post
       .in("query")
@@ -30,7 +30,6 @@ object Server extends App {
       .in(jsonBody[KGSQueryRequestBody])
       .errorOut(stringBody)
       .out(jsonBody[String])
-
 
   val routesR: URIO[Config[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
     case (limit, body) =>
@@ -45,7 +44,6 @@ object Server extends App {
   // will be available at /docs
   val openAPI: String = List(queryEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
 
-
   val server: RIO[Config[AppConfig], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
@@ -56,7 +54,7 @@ object Server extends App {
         servr <-
           BlazeServerBuilder[Task](runtime.platform.executor.asEC)
             .bindHttp(appConfig.port, appConfig.host)
-            .withHttpApp(CORS.httpApp(httpAppWithLogging))
+            .withHttpApp(CORS(httpAppWithLogging))
             .serve
             .compile
             .drain
