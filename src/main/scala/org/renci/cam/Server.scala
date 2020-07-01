@@ -5,6 +5,7 @@ import io.circe.generic.auto._
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.server.Router
+import org.http4s.server.middleware._
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.Logger
 import org.renci.cam.domain._
@@ -21,7 +22,7 @@ import zio.interop.catz.implicits._
 import zio.{config => _, _}
 
 object Server extends App {
-  
+
   val queryEndpoint: ZEndpoint[(Int, KGSQueryRequestBody), String, String] =
     endpoint.post
       .in("query")
@@ -53,7 +54,7 @@ object Server extends App {
         servr <-
           BlazeServerBuilder[Task](runtime.platform.executor.asEC)
             .bindHttp(appConfig.port, appConfig.host)
-            .withHttpApp(httpAppWithLogging)
+            .withHttpApp(CORS(httpAppWithLogging))
             .serve
             .compile
             .drain

@@ -38,6 +38,8 @@ libraryDependencies ++= {
     "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml" % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"  % tapirVersion,
     "org.http4s"                  %% "http4s-blaze-server"      % http4sVersion,
+    "org.http4s"                  %% "http4s-dsl"               % http4sVersion,
+    "org.http4s"                  %% "http4s-server"            % http4sVersion,
     "org.http4s"                  %% "http4s-blaze-client"      % http4sVersion,
     "org.apache.jena"              % "apache-jena-libs"         % "3.15.0",
     "org.phenoscape"              %% "sparql-utils"             % "1.2",
