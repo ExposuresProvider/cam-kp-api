@@ -152,7 +152,7 @@ object QueryService extends LazyLogging {
 
   def getNodeTypes(nodes: List[KGSNode]): Map[String, String] = {
     val nodeTypes = nodes.collect {
-      case (node) if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
+      case node if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
     }.toMap
     val newNodeTypes = nodeTypes ++ nodes.flatMap(node => node.curie.map(node.id -> _)).toMap
     newNodeTypes
@@ -194,12 +194,12 @@ object QueryService extends LazyLogging {
     }
     for {
       predicates <- getPredicates
-      prefixes = PREFIXES.map { case (key, value) => s"PREFIX $key: <$value>" } mkString ("\n")
+      prefixes = PREFIXES.map { case (key, value) => s"PREFIX $key: <$value>" }.mkString("\n")
       whereClauseParts =
         queryGraph.nodes
           .map(node => String.format("  ?%1$s sesame:directType ?%1$s_type .", node.`type`))
           .mkString("\n")
-      whereClause = s"WHERE { \n${whereClauseParts}"
+      whereClause = s"WHERE { \n$whereClauseParts"
       (instanceVars, instanceVarsToTypes, sparqlLines) = predicates.unzip3
       ids =
         instanceVars.toSet.flatten.map(a => s"?$a").toList :::
@@ -223,7 +223,7 @@ object QueryService extends LazyLogging {
 //          .mkString("\n")
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
 //      query = s"${prefixes}\n${selectClause}\n${whereClause}\n${valuesClause} ${moreSparqlLines}\n } $limitSparql"
-      query = s"${prefixes}\n${selectClause}\n${whereClause}\n${valuesClause} \n } $limitSparql"
+      query = s"$prefixes\n$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"
       response <- runSPARQLSelectQuery(query)
     } yield response
   }
