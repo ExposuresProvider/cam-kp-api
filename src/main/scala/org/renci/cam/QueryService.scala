@@ -5,11 +5,12 @@ import java.nio.charset.StandardCharsets
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
 import org.apache.commons.text.CaseUtils
-import org.apache.jena.query.{ResultSet, ResultSetFactory}
+import org.apache.jena.query.{Query, QueryFactory, ResultSet, ResultSetFactory}
 import org.http4s._
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers._
+import org.http4s.implicits._
 import org.renci.cam.domain._
 import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.Config
@@ -139,13 +140,18 @@ object QueryService extends LazyLogging {
       BlazeClientBuilder[Task](rts.platform.executor.asEC).withConnectTimeout(Duration(3, MINUTES)).resource.toManaged
     }
 
-  implicit val sparqlJsonDecoder: EntityDecoder[Task, ResultSet] = EntityDecoder[Task, String].flatMapR { jsonText =>
+  implicit val sparqlJsonDecoder: EntityDecoder[Task, ResultSet] = EntityDecoder.decodeBy(mediaType"application/sparql-results+json") { media =>
     DecodeResult(
-      Task.effect(IOUtils.toInputStream(jsonText, StandardCharsets.UTF_8)).bracketAuto(input => Task.effect(ResultSetFactory.fromJSON(input)))
-      .mapError[DecodeFailure](e => MalformedMessageBodyFailure("Invalid JSON for SPARQL results", Some(e)))
-      .either
+      EntityDecoder.decodeText(media)
+        .map(jsonText =>IOUtils.toInputStream(jsonText, StandardCharsets.UTF_8))
+        .bracketAuto(input => Task.effect(ResultSetFactory.fromJSON(input)))
+        .mapError[DecodeFailure](e => MalformedMessageBodyFailure("Invalid JSON for SPARQL results", Some(e)))
+        .either
     )
   }
+
+  implicit val sparqlQueryEncoder: EntityEncoder[Task, Query] = EntityEncoder[Task, String]
+    .withContentType(`Content-Type`(MediaType.application.`sparql-query`)).contramap(_.toString)
 
   def getNodeTypes(nodes: List[KGSNode]): Map[String, String] = {
     val nodeTypes = nodes.collect {
@@ -155,18 +161,11 @@ object QueryService extends LazyLogging {
     newNodeTypes
   }
 
-  def runSPARQLSelectQuery(query: String): RIO[Config[AppConfig], ResultSet] =
+  def runSPARQLSelectQuery(query: Query): RIO[Config[AppConfig], ResultSet] =
     for {
       appConfig <- zio.config.config[AppConfig]
       clientManaged <- makeHttpClient
-      endpoint = appConfig.sparqlEndpoint
-      requestUri = endpoint.withQueryParam("query", query).withQueryParam("format", "json")
-      _ = {
-        logger.debug("uri: {}", requestUri.toString())
-        logger.debug("query: {}", query)
-      }
-      request = Request[Task](Method.POST, requestUri)
-        .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
+      request = Request[Task](Method.POST, appConfig.sparqlEndpoint).withEntity(query)
       response <- clientManaged.use(_.expect[ResultSet](request))
     } yield response
 
@@ -174,10 +173,10 @@ object QueryService extends LazyLogging {
     val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
     val getPredicates = ZIO.foreach(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
       for {
-        resultSet <- runSPARQLSelectQuery(
-          s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
-              SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
-        )
+        query <- Task.effect(QueryFactory.create(
+             s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
+                 SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""))
+        resultSet <- runSPARQLSelectQuery(query)
         predicates = (for {
             solution <- resultSet.asScala
             v <- solution.varNames.asScala
@@ -220,7 +219,7 @@ object QueryService extends LazyLogging {
 //          .mkString("\n")
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
 //      query = s"${prefixes}\n${selectClause}\n${whereClause}\n${valuesClause} ${moreSparqlLines}\n } $limitSparql"
-      query = s"${prefixes}\n${selectClause}\n${whereClause}\n${valuesClause} \n } $limitSparql"
+      query <- Task.effect(QueryFactory.create(s"${prefixes}\n${selectClause}\n${whereClause}\n${valuesClause} \n } $limitSparql"))
       response <- runSPARQLSelectQuery(query)
     } yield response
   }
