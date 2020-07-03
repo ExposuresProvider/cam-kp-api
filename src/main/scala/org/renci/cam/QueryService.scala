@@ -22,8 +22,6 @@ import scala.concurrent.duration._
 
 object QueryService extends LazyLogging {
 
-  implicit val runtime: Runtime[ZEnv] = Runtime.default
-
   val PREFIXES: Map[String, String] = Map(
     "BFO" -> "http://purl.obolibrary.org/obo/BFO_",
     "BIOGRID" -> "http://thebiogrid.org/",
