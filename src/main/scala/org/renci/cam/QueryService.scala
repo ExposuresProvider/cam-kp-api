@@ -11,6 +11,7 @@ import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers._
 import org.renci.cam.domain._
+import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.Config
 import zio.interop.catz._
 import zio.{config => _, _}
@@ -18,11 +19,8 @@ import zio.{config => _, _}
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
 import scala.concurrent.duration._
-import scala.util.{Failure, Success, Try}
 
 object QueryService extends LazyLogging {
-
-  implicit val runtime: Runtime[ZEnv] = Runtime.default
 
   val PREFIXES: Map[String, String] = Map(
     "BFO" -> "http://purl.obolibrary.org/obo/BFO_",
@@ -142,12 +140,11 @@ object QueryService extends LazyLogging {
     }
 
   implicit val sparqlJsonDecoder: EntityDecoder[Task, ResultSet] = EntityDecoder[Task, String].flatMapR { jsonText =>
-    Try(ResultSetFactory.fromJSON(IOUtils.toInputStream(jsonText, StandardCharsets.UTF_8))) match {
-      //IntelliJ shows false compile errors here; check with SBT
-      //Requires import of ZIO-Cats interop typeclasses to compile
-      case Success(resultSet) => DecodeResult.success(resultSet)
-      case Failure(e) => DecodeResult.failure(MalformedMessageBodyFailure("Invalid JSON for SPARQL results", Some(e)))
-    }
+    DecodeResult(
+      Task.effect(IOUtils.toInputStream(jsonText, StandardCharsets.UTF_8)).bracketAuto(input => Task.effect(ResultSetFactory.fromJSON(input)))
+      .mapError[DecodeFailure](e => MalformedMessageBodyFailure("Invalid JSON for SPARQL results", Some(e)))
+      .either
+    )
   }
 
   def getNodeTypes(nodes: List[KGSNode]): Map[String, String] = {
