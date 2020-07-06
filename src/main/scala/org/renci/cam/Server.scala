@@ -51,14 +51,14 @@ object Server extends App {
         appConfig <- config[AppConfig]
         httpApp = Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound
         httpAppWithLogging = Logger.httpApp(true, true)(httpApp)
-        servr <-
+        result <-
           BlazeServerBuilder[Task](runtime.platform.executor.asEC)
             .bindHttp(appConfig.port, appConfig.host)
             .withHttpApp(CORS(httpAppWithLogging))
             .serve
             .compile
             .drain
-      } yield servr
+      } yield result
     }
 
   val configLayer: Layer[Throwable, Config[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
