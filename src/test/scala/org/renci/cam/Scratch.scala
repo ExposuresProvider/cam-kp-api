@@ -1,9 +1,8 @@
 package org.renci.cam
 
 import zio.test.Assertion.equalTo
-import zio.test._
 import zio.test.TestAspect._
-import zio.{Runtime, ZEnv}
+import zio.test._
 
 object Scratch extends DefaultRunnableSpec {
 
