@@ -1,25 +1,14 @@
 package org.renci.cam
 
-import java.nio.charset.StandardCharsets
-
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.commons.io.IOUtils
 import org.apache.commons.text.CaseUtils
-import org.apache.jena.query.{Query, QueryFactory, ResultSet, ResultSetFactory}
-import org.http4s._
-import org.http4s.client.Client
-import org.http4s.client.blaze.BlazeClientBuilder
-import org.http4s.headers._
-import org.http4s.implicits._
+import org.apache.jena.query.{QueryFactory, ResultSet}
 import org.renci.cam.domain._
-import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.Config
-import zio.interop.catz._
-import zio.{config => _, _}
+import zio.{RIO, Task, ZIO, config => _}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable.ListBuffer
-import scala.concurrent.duration._
 
 object QueryService extends LazyLogging {
 
@@ -135,27 +124,6 @@ object QueryService extends LazyLogging {
     "MESH" -> "http://id.nlm.nih.gov/mesh/"
   )
 
-  def makeHttpClient: UIO[TaskManaged[Client[Task]]] =
-    ZIO.runtime[Any].map { implicit rts =>
-      BlazeClientBuilder[Task](rts.platform.executor.asEC).withConnectTimeout(Duration(3, MINUTES)).resource.toManaged
-    }
-
-  implicit val sparqlJsonDecoder: EntityDecoder[Task, ResultSet] =
-    EntityDecoder.decodeBy(mediaType"application/sparql-results+json") { media =>
-      DecodeResult(
-        EntityDecoder
-          .decodeText(media)
-          .map(jsonText => IOUtils.toInputStream(jsonText, StandardCharsets.UTF_8))
-          .bracketAuto(input => Task.effect(ResultSetFactory.fromJSON(input)))
-          .mapError[DecodeFailure](e => MalformedMessageBodyFailure("Invalid JSON for SPARQL results", Some(e)))
-          .either
-      )
-    }
-
-  implicit val sparqlQueryEncoder: EntityEncoder[Task, Query] = EntityEncoder[Task, String]
-    .withContentType(`Content-Type`(MediaType.application.`sparql-query`))
-    .contramap(_.toString)
-
   def getNodeTypes(nodes: List[KGSNode]): Map[String, String] = {
     val nodeTypes = nodes.collect {
       case node if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
@@ -163,14 +131,6 @@ object QueryService extends LazyLogging {
     val newNodeTypes = nodeTypes ++ nodes.flatMap(node => node.curie.map(node.id -> _)).toMap
     newNodeTypes
   }
-
-  def runSPARQLSelectQuery(query: Query): RIO[Config[AppConfig], ResultSet] =
-    for {
-      appConfig <- zio.config.config[AppConfig]
-      clientManaged <- makeHttpClient
-      request = Request[Task](Method.POST, appConfig.sparqlEndpoint).withEntity(query)
-      response <- clientManaged.use(_.expect[ResultSet](request))
-    } yield response
 
   def run(limit: Int, queryGraph: KGSQueryGraph): RIO[Config[AppConfig], ResultSet] = {
     val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
@@ -182,7 +142,8 @@ object QueryService extends LazyLogging {
                 SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
           )
         )
-        resultSet <- runSPARQLSelectQuery(query)
+        _ = logger.debug("query: {}", query)
+        resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
         predicates = (for {
             solution <- resultSet.asScala
             v <- solution.varNames.asScala
@@ -222,7 +183,8 @@ object QueryService extends LazyLogging {
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
       query <- Task.effect(
         QueryFactory.create(s"$prefixes\n$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"))
-      response <- runSPARQLSelectQuery(query)
+      _ = logger.debug("query: {}", query)
+      response <- SPARQLQueryExecutor.runSelectQuery(query)
     } yield response
   }
 
