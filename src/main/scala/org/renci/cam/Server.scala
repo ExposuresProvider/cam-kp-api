@@ -2,12 +2,13 @@ package org.renci.cam
 
 import cats.implicits._
 import io.circe.generic.auto._
+import org.apache.jena.riot.ResultSetMgr
+import org.apache.jena.riot.resultset.ResultSetLang
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.server.Router
-import org.http4s.server.middleware._
 import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.server.middleware.Logger
+import org.http4s.server.middleware.{Logger, _}
 import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
@@ -36,8 +37,9 @@ object Server extends App {
       //do stuff with queryGraph
       val queryGraph: KGSQueryGraph = body.message.query_graph
       val program = for {
-        queryResponse <- QueryService.run(limit, queryGraph)
-      } yield queryResponse.toString
+        resultSet <- QueryService.run(limit, queryGraph)
+        response <- Task.effect(ResultSetMgr.asString(resultSet, ResultSetLang.SPARQLResultSetJSON))
+      } yield response
       program.mapError(error => error.getMessage)
   }
 
