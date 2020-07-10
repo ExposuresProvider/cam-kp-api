@@ -6,6 +6,7 @@ import org.http4s.implicits._
 import zio.Task
 import zio.interop.catz._
 import zio.test.Assertion._
+import zio.test.TestAspect._
 import zio.test._
 
 object BlazegraphTest extends DefaultRunnableSpec {
