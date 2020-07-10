@@ -10,12 +10,14 @@ import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
+import org.phenoscape.sparql.FromQuerySolution
 import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.Config
 import zio.interop.catz._
 import zio.{RIO, Task, TaskManaged, UIO, ZIO, config => _}
 
 import scala.concurrent.duration.{Duration, MINUTES}
+import scala.collection.JavaConverters._
 
 object SPARQLQueryExecutor extends LazyLogging {
 
@@ -39,6 +41,13 @@ object SPARQLQueryExecutor extends LazyLogging {
     ZIO.runtime[Any].map { implicit rts =>
       BlazeClientBuilder[Task](rts.platform.executor.asEC).withConnectTimeout(Duration(3, MINUTES)).resource.toManaged
     }
+
+  def runSelectQueryAs[T: FromQuerySolution](query: Query): RIO[Config[AppConfig], List[T]] =
+    for {
+      resultSet <- runSelectQuery(query)
+      results = resultSet.asScala.map(FromQuerySolution.mapSolution[T]).toIterable
+      validResults <- ZIO.foreach(results)(ZIO.fromTry(_))
+    } yield validResults
 
   def runSelectQuery(query: Query): RIO[Config[AppConfig], ResultSet] =
     for {
