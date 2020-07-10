@@ -11,6 +11,7 @@ import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers._
 import org.http4s.implicits._
+import org.phenoscape.sparql.FromQuerySolution
 import org.renci.cam.domain._
 import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.Config
@@ -163,6 +164,13 @@ object QueryService extends LazyLogging {
     val newNodeTypes = nodeTypes ++ nodes.flatMap(node => node.curie.map(node.id -> _)).toMap
     newNodeTypes
   }
+
+  def runSPARQLSelectQueryAs[T: FromQuerySolution](query: Query): RIO[Config[AppConfig], List[T]] =
+    for {
+      resultSet <- runSPARQLSelectQuery(query)
+      results = resultSet.asScala.map(FromQuerySolution.mapSolution[T]).toIterable
+      validResults <- ZIO.foreach(results)(ZIO.fromTry(_))
+    } yield validResults
 
   def runSPARQLSelectQuery(query: Query): RIO[Config[AppConfig], ResultSet] =
     for {
