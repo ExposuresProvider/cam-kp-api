@@ -1,20 +1,16 @@
 package org.renci.cam
 
-import java.util.concurrent.Executors
-
-import cats.effect.Blocker
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.http4s._
-import org.http4s.client._
 import org.http4s.headers._
 import org.http4s.implicits._
 import org.renci.cam.domain._
+import zio.Task
 import zio.interop.catz._
 import zio.test.Assertion._
-import zio.test._
 import zio.test.TestAspect._
-import zio.{Runtime, Task, ZEnv}
+import zio.test._
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
@@ -42,15 +38,18 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val message = KGSMessage(queryGraph)
         val requestBody = KGSQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
-
         for {
-          httpClient <- QueryService.makeHttpClient
+          httpClient <- SPARQLQueryExecutor.makeHttpClient
           uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1)
           request = Request[Task](Method.POST, uri)
             .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
             .withEntity(encoded)
-          response <- httpClient.use(_.expect[String](request))
-        } yield assert(response)(isNonEmptyString)
+          resultSet <- httpClient.use(_.expect[String](request))
+          output <- {
+            println("resultSet: " + resultSet)
+            Task.effect(resultSet)
+          }
+        } yield assert(output)(isNonEmptyString)
       } @@ ignore
     )
 
