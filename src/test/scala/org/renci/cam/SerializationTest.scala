@@ -1,11 +1,12 @@
 package org.renci.cam
 
+import java.io.ByteArrayOutputStream
 import java.nio.charset.StandardCharsets
 
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.apache.commons.io.IOUtils
-import org.apache.jena.query.ResultSetFactory
+import org.apache.jena.query.{ResultSetFactory, ResultSetFormatter}
 import org.renci.cam.domain._
 import zio.test.Assertion.{equalTo, _}
 import zio.test.TestAspect._
@@ -114,6 +115,27 @@ object SerializationTest extends DefaultRunnableSpec {
         println("bindings2: " + bindings2.mkString(" "))
 
         assert(bindings2.toList)(isNonEmpty)
+      } @@ ignore,
+      test("test empty results") {
+
+        val response = s"""{ "head": {
+    "vars": [ "n1" , "n0" , "n0_type" , "n1_type" , "e0" ]
+  } ,
+  "results": {
+    "bindings": [ ]
+  }
+}"""
+        var is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
+        var resultSet = ResultSetFactory.fromJSON(is)
+        is.close()
+
+        var baos = new ByteArrayOutputStream()
+        ResultSetFormatter.outputAsJSON(baos, resultSet)
+        baos.close();
+        val json = new String(baos.toByteArray)
+
+        println("json: " + json)
+        assert(json)(isNonEmptyString)
       } @@ ignore
     )
 

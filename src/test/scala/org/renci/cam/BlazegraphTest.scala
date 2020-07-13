@@ -1,17 +1,13 @@
 package org.renci.cam
 
-import java.util.concurrent.Executors
-
-import cats.effect.Blocker
 import org.http4s._
-import org.http4s.client._
 import org.http4s.headers._
 import org.http4s.implicits._
+import zio.Task
 import zio.interop.catz._
 import zio.test.Assertion._
-import zio.test._
 import zio.test.TestAspect._
-import zio.{Runtime, Task, ZEnv}
+import zio.test._
 
 object BlazegraphTest extends DefaultRunnableSpec {
 
@@ -24,7 +20,7 @@ object BlazegraphTest extends DefaultRunnableSpec {
               SELECT DISTINCT ?predicate WHERE { bl:has_participant <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
 
         for {
-          httpClient <- QueryService.makeHttpClient
+          httpClient <- SPARQLQueryExecutor.makeHttpClient
           uri =
             uri"http://152.54.9.207:9999/blazegraph/sparql"
               .withQueryParam("query", query)
