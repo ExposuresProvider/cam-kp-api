@@ -22,13 +22,13 @@ object SerializationTest extends DefaultRunnableSpec {
         val expected =
           """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"gene","curie":"NCBIGENE:558"},{"id":"n1","type":"biological_process"}],"edges":[{"id":"e0","source_id":"n1","target_id":"n0","type":"has_participant"}]}}}"""
 
-        val n0Node = KGSNode("n0", "gene", Some("NCBIGENE:558"))
-        val n1Node = KGSNode("n1", "biological_process", None)
-        val e0Edge = KGSEdge("e0", "n1", "n0", "has_participant")
+        val n0Node = TranslatorQueryNode("n0", "gene", Some("NCBIGENE:558"))
+        val n1Node = TranslatorQueryNode("n1", "biological_process", None)
+        val e0Edge = TranslatorQueryEdge("e0", "n1", "n0", "has_participant")
 
-        val queryGraph = KGSQueryGraph(List(n0Node, n1Node), List(e0Edge))
-        val message = KGSMessage(queryGraph)
-        val requestBody = KGSQueryRequestBody(message)
+        val queryGraph = TranslatorQueryGraph(List(n0Node, n1Node), List(e0Edge))
+        val message = TranslatorMessage(None, Some(queryGraph), None)
+        val requestBody = TranslatorQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         println("encoded: " + encoded)
         println("expected: " + expected)
