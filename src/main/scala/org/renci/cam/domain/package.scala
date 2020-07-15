@@ -2,14 +2,28 @@ package org.renci.cam
 
 package object domain {
 
-  case class KGSQueryRequestBody(message: KGSMessage)
+  case class TranslatorQueryNode(id: String, `type`: String, curie: Option[String])
 
-  case class KGSMessage(query_graph: KGSQueryGraph)
+  case class TranslatorQueryEdge(id: String, source_id: String, target_id: String, `type`: String)
 
-  case class KGSQueryGraph(nodes: List[KGSNode], edges: List[KGSEdge])
+  case class TranslatorQueryGraph(nodes: List[TranslatorQueryNode], edges: List[TranslatorQueryEdge])
 
-  case class KGSNode(id: String, `type`: String, curie: Option[String])
+  case class TranslatorNodeAttribute(name: String, value: String, `type`: String, url: Option[String], source: Option[String])
 
-  case class KGSEdge(id: String, source_id: String, target_id: String, `type`: String)
+  case class TranslatorNode(`type`: String, name: Option[String], attributes: Option[List[TranslatorNodeAttribute]])
+
+  case class TranslatorEdge(id: String, source_id: String, target_id: String, `type`: Option[String])
+
+  case class TranslatorKnowledgeGraph(nodes: List[TranslatorNode], edges: List[TranslatorEdge])
+
+  case class TranslatorNodeBinding(qg_id: String, kg_id: String)
+
+  case class TranslatorEdgeBinding(qg_id: String, kg_id: String)
+
+  case class TranslatorResult(node_bindings: List[TranslatorNodeBinding], edge_bindings: List[TranslatorEdgeBinding])
+
+  case class TranslatorMessage(results: Option[List[TranslatorResult]], query_graph: Option[TranslatorQueryGraph], knowledge_graph: Option[TranslatorKnowledgeGraph])
+
+  case class TranslatorQueryRequestBody(message: TranslatorMessage)
 
 }
