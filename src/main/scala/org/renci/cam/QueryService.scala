@@ -8,6 +8,7 @@ import zio.config.Config
 import zio.{RIO, Task, ZIO, config => _}
 
 import scala.collection.JavaConverters._
+import scala.collection.mutable
 import scala.collection.mutable.ListBuffer
 
 object QueryService extends LazyLogging {
@@ -124,7 +125,7 @@ object QueryService extends LazyLogging {
     "MESH" -> "http://id.nlm.nih.gov/mesh/"
   )
 
-  def getNodeTypes(nodes: List[KGSNode]): Map[String, String] = {
+  def getNodeTypes(nodes: List[TranslatorQueryNode]): Map[String, String] = {
     val nodeTypes = nodes.collect {
       case node if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
     }.toMap
@@ -132,7 +133,7 @@ object QueryService extends LazyLogging {
     newNodeTypes
   }
 
-  def run(limit: Int, queryGraph: KGSQueryGraph): RIO[Config[AppConfig], ResultSet] = {
+  def run(limit: Int, queryGraph: TranslatorQueryGraph): RIO[Config[AppConfig], ResultSet] = {
     val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
     val getPredicates = ZIO.foreach(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
       for {
@@ -149,7 +150,7 @@ object QueryService extends LazyLogging {
             v <- solution.varNames.asScala
             node = solution.get(v)
           } yield s"<$node>").mkString(" ")
-        predicateValuesBlock = s"VALUES ?${edge.`type`} { $predicates }"
+        predicateValuesBlock = s"VALUES ?${edge.id} { $predicates }"
         triple = s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} ."
       } yield (Set(edge.source_id, edge.target_id),
                Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id),
@@ -160,7 +161,7 @@ object QueryService extends LazyLogging {
       prefixes = PREFIXES.map { case (key, value) => s"PREFIX $key: <$value>" }.mkString("\n")
       whereClauseParts =
         queryGraph.nodes
-          .map(node => String.format("  ?%1$s sesame:directType ?%1$s_type .", node.`type`))
+          .map(node => String.format("  ?%1$s sesame:directType ?%1$s_type .", node.id))
           .mkString("\n")
       whereClause = s"WHERE { \n$whereClauseParts"
       (instanceVars, instanceVarsToTypes, sparqlLines) = predicates.unzip3
@@ -181,11 +182,52 @@ object QueryService extends LazyLogging {
         s"${bindings.mkString("\n")}"
       }
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
-      query <- Task.effect(
-        QueryFactory.create(s"$prefixes\n$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"))
+      queryString = s"$prefixes\n$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"
+      _ = logger.debug("queryString: {}", queryString)
+      query <- Task.effect(QueryFactory.create(queryString))
       _ = logger.debug("query: {}", query)
       response <- SPARQLQueryExecutor.runSelectQuery(query)
     } yield response
+  }
+
+  def applyPrefix(value: String): String = {
+    val entries = PREFIXES.filter(entry => value.startsWith(entry._2)).map(entry => s"$entry._1:" + value.substring(entry._2.length, value.length)).iterator;
+    if (entries.nonEmpty) {
+      return entries.next
+    }
+    value
+  }
+
+  def parseResultSet(queryGraph: TranslatorQueryGraph, resultSet: ResultSet): RIO[Config[AppConfig], TranslatorMessage] = {
+    var results = mutable.ListBuffer[TranslatorResult]()
+
+    var nodes = mutable.ListBuffer[TranslatorNode]()
+    var edges = mutable.ListBuffer[TranslatorEdge]()
+
+    while (resultSet.hasNext) {
+      val querySolution = resultSet.nextSolution
+
+      var nodeBindings = mutable.ListBuffer[TranslatorNodeBinding]()
+      var edgeBindings = mutable.ListBuffer[TranslatorEdgeBinding]()
+
+      queryGraph.nodes.foreach(n => {
+        logger.info("n: {}", n.toString)
+        val rdfNode = querySolution.get(s"${n.id}_type")
+        if (rdfNode != null) {
+          logger.info("rdfNode: {}", rdfNode)
+          val nodeId = applyPrefix(rdfNode.toString)
+          nodes += TranslatorNode(nodeId, None, None)
+          nodeBindings += TranslatorNodeBinding(n.id, nodeId)
+        } else {
+          logger.warn("rdfNode by {} is null", n.toString)
+        }
+      })
+
+      results += TranslatorResult(nodeBindings.toList, edgeBindings.toList)
+
+    }
+    val knowledgeGraph = TranslatorKnowledgeGraph(nodes.toList, edges.toList)
+    ZIO.succeed(TranslatorMessage(Some(results.toList), Some(queryGraph), Some(knowledgeGraph)))
   }
 
 }
