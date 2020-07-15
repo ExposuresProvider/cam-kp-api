@@ -2,8 +2,6 @@ package org.renci.cam
 
 import cats.implicits._
 import io.circe.generic.auto._
-import org.apache.jena.riot.ResultSetMgr
-import org.apache.jena.riot.resultset.ResultSetLang
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -21,24 +19,37 @@ import zio.config.{Config, _}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio.{config => _, _}
+import io.circe.generic.auto._
+import io.circe.syntax._
 
 object Server extends App {
 
-  val queryEndpoint: ZEndpoint[(Int, KGSQueryRequestBody), String, String] =
+  val predicatesEndpoint: ZEndpoint[Unit, String, String] = endpoint.get.errorOut(stringBody).out(jsonBody[String])
+
+  val predicatesRouteR: URIO[Config[AppConfig], HttpRoutes[Task]] = predicatesEndpoint.toRoutesR {
+    case () =>
+      val program = for {
+        response <- Task.effect("")
+      } yield response
+      program.mapError(error => error.getMessage)
+  }
+
+  val queryEndpoint: ZEndpoint[(Int, TranslatorQueryRequestBody), String, String] =
     endpoint.post
       .in("query")
       .in(query[Int]("limit"))
-      .in(jsonBody[KGSQueryRequestBody])
+      .in(jsonBody[TranslatorQueryRequestBody])
       .errorOut(stringBody)
       .out(jsonBody[String])
 
-  val routesR: URIO[Config[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
+  val queryRouteR: URIO[Config[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
     case (limit, body) =>
       //do stuff with queryGraph
-      val queryGraph: KGSQueryGraph = body.message.query_graph
       val program = for {
+        queryGraph <- Task.effect(body.message.query_graph.get)
         resultSet <- QueryService.run(limit, queryGraph)
-        response <- Task.effect(ResultSetMgr.asString(resultSet, ResultSetLang.SPARQLResultSetJSON))
+        message <- QueryService.parseResultSet(queryGraph, resultSet)
+        response <- Task.effect(message.asJson.deepDropNullValues.noSpaces)
       } yield response
       program.mapError(error => error.getMessage)
   }
@@ -49,8 +60,8 @@ object Server extends App {
   val server: RIO[Config[AppConfig], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
-        routes <- routesR
         appConfig <- config[AppConfig]
+        routes <- queryRouteR // add predicatesRouteR here
         httpApp = Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound
         httpAppWithLogging = Logger.httpApp(true, true)(httpApp)
         result <-
