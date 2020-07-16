@@ -47,7 +47,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
           response <- httpClient.use(_.expect[String](request))
           _ = println("response: " + response)
         } yield assert(response)(isNonEmptyString)
-      } //@@ ignore
+      } @@ ignore
     )
 
 }
