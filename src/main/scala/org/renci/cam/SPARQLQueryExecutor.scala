@@ -11,6 +11,7 @@ import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.phenoscape.sparql.FromQuerySolution
+import org.renci.cam.QueryService.logger
 import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.Config
 import zio.interop.catz._
@@ -54,6 +55,7 @@ object SPARQLQueryExecutor extends LazyLogging {
       appConfig <- zio.config.config[AppConfig]
       clientManaged <- makeHttpClient
       uri = appConfig.sparqlEndpoint
+      _ = logger.debug("query: {}", query)
       request = Request[Task](Method.POST, uri).withEntity(query)
       response <- clientManaged.use(_.expect[ResultSet](request))
     } yield response
