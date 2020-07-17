@@ -25,7 +25,7 @@ import zio.{config => _, _}
 
 object Server extends App {
 
-  val predicatesEndpoint: ZEndpoint[Unit, String, String] = endpoint.get.errorOut(stringBody).out(jsonBody[String])
+  val predicatesEndpoint: ZEndpoint[Unit, String, String] = endpoint.get.in("predicates").errorOut(stringBody).out(jsonBody[String])
 
   val predicatesRouteR: URIO[Config[AppConfig], HttpRoutes[Task]] = predicatesEndpoint.toRoutesR {
     case () =>
@@ -65,7 +65,7 @@ object Server extends App {
         predicatesRoute <- predicatesRouteR
         queryRoute <- queryRouteR
         docsRoute = new SwaggerHttp4s(openAPI).routes[Task]
-        httpApp = Router("/" -> (queryRoute <+> predicatesRoute <+> docsRoute)).orNotFound
+        httpApp = Router("/" -> queryRoute, "/" -> predicatesRoute, "/" -> docsRoute).orNotFound
         httpAppWithLogging = Logger.httpApp(true, true)(httpApp)
         result <-
           BlazeServerBuilder[Task](runtime.platform.executor.asEC)
