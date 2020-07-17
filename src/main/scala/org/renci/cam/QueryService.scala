@@ -132,6 +132,8 @@ object QueryService extends LazyLogging {
     "MESH" -> "http://id.nlm.nih.gov/mesh/"
   )
 
+  case class NewTranslatorEdge(`type`: String, source_id: String, target_id: String)
+
   def getNodeTypes(nodes: List[TranslatorQueryNode]): Map[String, String] = {
     val nodeTypes = nodes.collect {
       case node if node.`type`.nonEmpty => (node.id, "bl:" + CaseUtils.toCamelCase(node.`type`, true, '_'))
@@ -207,7 +209,7 @@ object QueryService extends LazyLogging {
         results <- ZIO.foreach(resultSet.asScala.toList) { querySolution => {
             for {
               nodeMap <- Task.effect(queryGraph.nodes.map(n => (n.id, applyPrefix(querySolution.get(s"${n.id}_type").toString))).toMap)
-              _ = nodeMap.foreach(a => nodes += TranslatorNode(a._2, None, None))
+              _ = nodeMap.foreach(a => nodes += TranslatorNode(a._2, None, None, None))
               nodeBindings <- Task.effect(nodeMap.map(a => TranslatorNodeBinding(a._1, a._2)).toList)
 
               edgeBindings <- ZIO.foreach(queryGraph.edges) { e => {
@@ -215,8 +217,8 @@ object QueryService extends LazyLogging {
                     predicateRDFNode <- Task.effect(querySolution.get(e.id).toString)
                     sourceRDFNode <- Task.effect(querySolution.get(e.source_id).toString)
                     targetRDFNode <- Task.effect(querySolution.get(e.target_id).toString)
-                    translatorEdge <- Task.effect(TranslatorEdge(e.id, e.source_id, e.target_id, Some(applyPrefix(querySolution.get(e.id).toString))))
-                    _ = edges += translatorEdge
+                    newTranslatorEdge <- Task.effect(NewTranslatorEdge(e.`type`, e.source_id, e.target_id))
+                    knowledgeGraphId = String.format("%064x", new BigInteger(1, MessageDigest.getInstance("SHA-256").digest(newTranslatorEdge.asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8))))
                     prefixes <- Task.effect(PREFIXES.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
                     queryString = s"""$prefixes
 SELECT ?g ?other WHERE {
@@ -232,8 +234,7 @@ SELECT ?g ?other WHERE {
                     } catch {
                       case e: Exception => Left(nextSolution.get("g").toString)
                     }
-                    translatorEdgeJson = translatorEdge.asJson.deepDropNullValues.noSpaces
-                    knowledgeGraphId = String.format("%064x", new BigInteger(1, MessageDigest.getInstance("SHA-256").digest(translatorEdgeJson.getBytes(StandardCharsets.UTF_8))))
+                    _ = edges += TranslatorEdge(knowledgeGraphId, Some(e.`type`), nodeMap.get(e.source_id).get, nodeMap.get(e.target_id).get)
                   } yield TranslatorEdgeBinding(e.id, knowledgeGraphId)
               }
               }
@@ -241,6 +242,6 @@ SELECT ?g ?other WHERE {
           }
         }
 
-    } yield TranslatorMessage(Some(results), Some(queryGraph), Some(TranslatorKnowledgeGraph(nodes.toList, edges.toList)))
+    } yield TranslatorMessage(Some(queryGraph), Some(TranslatorKnowledgeGraph(nodes.toList, edges.toList)), Some(results))
 
 }
