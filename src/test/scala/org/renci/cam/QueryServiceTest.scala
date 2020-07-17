@@ -19,7 +19,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       test("testGetNodeTypes") {
         val n0Node = TranslatorQueryNode("n0", "gene", Some("NCBIGENE:558"))
         val n1Node = TranslatorQueryNode("n1", "biological_process", None)
-        val e0Edge = TranslatorQueryEdge("e0", "n1", "n0", "has_participant")
+        val e0Edge = TranslatorQueryEdge("e0", "has_participant", "n1", "n0")
 
         val queryGraph = TranslatorQueryGraph(List(n0Node, n1Node), List(e0Edge))
 
@@ -32,15 +32,16 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
         val n0Node = TranslatorQueryNode("n0", "gene", None/*Some("NCBIGENE:558")*/)
         val n1Node = TranslatorQueryNode("n1", "biological_process", None)
-        val e0Edge = TranslatorQueryEdge("e0", "n1", "n0", "has_participant")
+        val e0Edge = TranslatorQueryEdge("e0", "has_participant", "n1", "n0")
 
         val queryGraph = TranslatorQueryGraph(List(n0Node, n1Node), List(e0Edge))
-        val message = TranslatorMessage(None, Some(queryGraph), None)
+        val message = TranslatorMessage(Some(queryGraph), None, None)
         val requestBody = TranslatorQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
           httpClient <- SPARQLQueryExecutor.makeHttpClient
           uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1)
+          //uri = uri"http://127.0.0.1:6434/query".withQueryParam("limit", 1)
           request = Request[Task](Method.POST, uri)
             .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
             .withEntity(encoded)
