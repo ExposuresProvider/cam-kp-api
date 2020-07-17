@@ -24,10 +24,10 @@ object SerializationTest extends DefaultRunnableSpec {
 
         val n0Node = TranslatorQueryNode("n0", "gene", Some("NCBIGENE:558"))
         val n1Node = TranslatorQueryNode("n1", "biological_process", None)
-        val e0Edge = TranslatorQueryEdge("e0", "n1", "n0", "has_participant")
+        val e0Edge = TranslatorQueryEdge("e0", "has_participant", "n1", "n0")
 
         val queryGraph = TranslatorQueryGraph(List(n0Node, n1Node), List(e0Edge))
-        val message = TranslatorMessage(None, Some(queryGraph), None)
+        val message = TranslatorMessage(Some(queryGraph), None, None)
         val requestBody = TranslatorQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         println("encoded: " + encoded)
