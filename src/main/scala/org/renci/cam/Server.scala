@@ -2,7 +2,10 @@ package org.renci.cam
 
 import cats.implicits._
 import io.circe.generic.auto._
+import io.circe.syntax._
 import org.http4s._
+import org.http4s.dsl.Http4sDsl
+import org.http4s.dsl.impl.Root
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -19,8 +22,6 @@ import zio.config.{Config, _}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio.{config => _, _}
-import io.circe.generic.auto._
-import io.circe.syntax._
 
 object Server extends App {
 
@@ -55,14 +56,16 @@ object Server extends App {
   }
 
   // will be available at /docs
-  val openAPI: String = List(queryEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
+  val openAPI: String = List(queryEndpoint, predicatesEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
 
   val server: RIO[Config[AppConfig], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- config[AppConfig]
-        routes <- queryRouteR // add predicatesRouteR here
-        httpApp = Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound
+        predicatesRoute <- predicatesRouteR
+        queryRoute <- queryRouteR
+        docsRoute = new SwaggerHttp4s(openAPI).routes[Task]
+        httpApp = Router("/" -> (queryRoute <+> predicatesRoute <+> docsRoute)).orNotFound
         httpAppWithLogging = Logger.httpApp(true, true)(httpApp)
         result <-
           BlazeServerBuilder[Task](runtime.platform.executor.asEC)
