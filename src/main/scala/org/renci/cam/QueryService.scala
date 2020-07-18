@@ -193,7 +193,6 @@ object QueryService extends LazyLogging {
       }
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
       queryString = s"$prefixes\n$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"
-      _ = logger.debug("queryString: {}", queryString)
       query <- Task.effect(QueryFactory.create(queryString))
       response <- SPARQLQueryExecutor.runSelectQuery(query)
     } yield response
@@ -211,7 +210,6 @@ object QueryService extends LazyLogging {
               nodeMap <- Task.effect(queryGraph.nodes.map(n => (n.id, applyPrefix(querySolution.get(s"${n.id}_type").toString))).toMap)
               _ = nodeMap.foreach(a => nodes += TranslatorNode(a._2, None, None, None))
               nodeBindings <- Task.effect(nodeMap.map(a => TranslatorNodeBinding(a._1, a._2)).toList)
-
               edgeBindings <- ZIO.foreach(queryGraph.edges) { e => {
                   for {
                     predicateRDFNode <- Task.effect(querySolution.get(e.id).toString)
@@ -225,19 +223,17 @@ SELECT ?g ?other WHERE {
   GRAPH ?g { <${sourceRDFNode}> <${predicateRDFNode}> <${targetRDFNode}> }
   OPTIONAL { ?g prov:wasDerivedFrom ?other . }
 }"""
-                    _ = logger.debug("queryString: {}", queryString)
                     query <- Task.effect(QueryFactory.create(queryString))
                     bindings <- SPARQLQueryExecutor.runSelectQuery(query)
                     nextSolution = bindings.nextSolution()
                     graph <- Task.effect(nextSolution.get("g")).orElse(Task.effect(nextSolution.get("other")))
                     _ = edges += TranslatorEdge(knowledgeGraphId, Some(e.`type`), nodeMap.get(e.source_id).get, nodeMap.get(e.target_id).get)
                   } yield TranslatorEdgeBinding(e.id, knowledgeGraphId, Some(graph.toString))
-              }
+                }
               }
             } yield TranslatorResult(nodeBindings, edgeBindings)
           }
         }
-
     } yield TranslatorMessage(Some(queryGraph), Some(TranslatorKnowledgeGraph(nodes.toList, edges.toList)), Some(results))
 
 }
