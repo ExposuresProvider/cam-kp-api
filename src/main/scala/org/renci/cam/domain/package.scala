@@ -18,7 +18,7 @@ package object domain {
 
   case class TranslatorNodeBinding(qg_id: String, kg_id: String)
 
-  case class TranslatorEdgeBinding(qg_id: String, kg_id: String)
+  case class TranslatorEdgeBinding(qg_id: String, kg_id: String, provenance: Option[String])
 
   case class TranslatorResult(node_bindings: List[TranslatorNodeBinding], edge_bindings: List[TranslatorEdgeBinding])
 
