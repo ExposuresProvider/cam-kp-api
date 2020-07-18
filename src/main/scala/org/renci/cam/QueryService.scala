@@ -229,13 +229,9 @@ SELECT ?g ?other WHERE {
                     query <- Task.effect(QueryFactory.create(queryString))
                     bindings <- SPARQLQueryExecutor.runSelectQuery(query)
                     nextSolution = bindings.nextSolution()
-                    graph = try {
-                      Right(nextSolution.get("other").toString)
-                    } catch {
-                      case e: Exception => Left(nextSolution.get("g").toString)
-                    }
+                    graph <- Task.effect(nextSolution.get("g")).orElse(Task.effect(nextSolution.get("other")))
                     _ = edges += TranslatorEdge(knowledgeGraphId, Some(e.`type`), nodeMap.get(e.source_id).get, nodeMap.get(e.target_id).get)
-                  } yield TranslatorEdgeBinding(e.id, knowledgeGraphId)
+                  } yield TranslatorEdgeBinding(e.id, knowledgeGraphId, Some(graph.toString))
               }
               }
             } yield TranslatorResult(nodeBindings, edgeBindings)
