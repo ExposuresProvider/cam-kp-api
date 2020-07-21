@@ -1,11 +1,8 @@
 package org.renci.cam
 
-import cats.implicits._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.http4s._
-import org.http4s.dsl.Http4sDsl
-import org.http4s.dsl.impl.Root
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder

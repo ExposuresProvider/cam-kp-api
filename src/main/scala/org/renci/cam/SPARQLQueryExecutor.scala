@@ -11,14 +11,13 @@ import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.phenoscape.sparql.FromQuerySolution
-import org.renci.cam.QueryService.logger
 import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.Config
 import zio.interop.catz._
 import zio.{RIO, Task, TaskManaged, UIO, ZIO, config => _}
 
-import scala.concurrent.duration.{Duration, MINUTES}
 import scala.collection.JavaConverters._
+import scala.concurrent.duration.{Duration, MINUTES}
 
 object SPARQLQueryExecutor extends LazyLogging {
 

@@ -5,19 +5,16 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 import com.typesafe.scalalogging.LazyLogging
-import org.apache.commons.text.CaseUtils
+import io.circe.generic.auto._
+import io.circe.syntax._
+import org.apache.jena.ext.com.google.common.base.CaseFormat
 import org.apache.jena.query.{QueryFactory, ResultSet}
-import org.apache.jena.rdf.model.RDFNode
 import org.renci.cam.domain._
 import zio.config.Config
 import zio.{RIO, Task, ZIO, config => _}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
-import io.circe.generic.auto._
-import io.circe.syntax._
-import org.apache.jena.ext.com.google.common.base.CaseFormat
-import org.renci.cam.QueryService.{applyPrefix, getProvenance}
 
 object QueryService extends LazyLogging {
 
@@ -139,7 +136,6 @@ object QueryService extends LazyLogging {
     val nodeTypes = nodes.collect {
       case node if node.`type`.nonEmpty => (node.id, "bl:" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, node.`type`))
     }.toMap
-    //CaseUtils.toCamelCase(node.`type`, true, '_')
     val newNodeTypes = nodeTypes ++ nodes.flatMap(node => node.curie.map(node.id -> _)).toMap
     newNodeTypes
   }
