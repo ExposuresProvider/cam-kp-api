@@ -30,7 +30,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       } @@ ignore,
       testM("query service") {
 
-        val n0Node = TranslatorQueryNode("n0", "gene", None/*Some("NCBIGENE:558")*/)
+        val n0Node = TranslatorQueryNode("n0", "gene", None /*Some("NCBIGENE:558")*/ )
         val n1Node = TranslatorQueryNode("n1", "biological_process", None)
         val e0Edge = TranslatorQueryEdge("e0", "has_participant", "n1", "n0")
 
