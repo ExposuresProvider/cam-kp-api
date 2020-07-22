@@ -216,7 +216,7 @@ object QueryService extends LazyLogging {
               abbreviatedNodeType <- Task.effect(applyPrefix(nodeMap.get(n.id).get))
               nodeDetails <- getKnowledgeGraphNodeDetails(String.format("<%s>", nodeMap.get(n.id).get))
               nodeDetailsHead <- Task.effect(nodeDetails.head)
-              _ = kgNodes += TranslatorNode(abbreviatedNodeType, Some(nodeDetailsHead._1), Some(nodeDetailsHead._2), None)
+              _ = kgNodes += TranslatorNode(abbreviatedNodeType, Some(nodeDetailsHead._1), nodeDetailsHead._2, List[TranslatorNodeAttribute]())
               nodeBinding <- Task.effect(TranslatorNodeBinding(n.id, abbreviatedNodeType))
             } yield nodeBinding
           }
@@ -242,7 +242,7 @@ object QueryService extends LazyLogging {
 
         } yield TranslatorResult(nodeBindings, edgeBindings)
       }
-    } yield TranslatorMessage(Some(queryGraph), Some(TranslatorKnowledgeGraph(kgNodes.toList, kgEdges.toList)), Some(results))
+    } yield TranslatorMessage(Some(queryGraph), Some(TranslatorKnowledgeGraph(kgNodes.toList, kgEdges.toList)), results)
 
   def getProvenance(source: String, predicate: String, target: String): RIO[Config[AppConfig], String] =
     for {
