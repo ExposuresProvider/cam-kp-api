@@ -140,17 +140,27 @@ object QueryService extends LazyLogging {
     newNodeTypes
   }
 
+  def prefixes = PREFIXES.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n")
+
+  def applyPrefix(value: String): String =
+    PREFIXES
+      .filter(entry => value.startsWith(entry._2))
+      .map(entry => s"${entry._1}:" + value.substring(entry._2.length, value.length))
+      .headOption
+      .getOrElse(value);
+
   def run(limit: Int, queryGraph: TranslatorQueryGraph): RIO[Config[AppConfig], ResultSet] = {
     val nodeTypes = QueryService.getNodeTypes(queryGraph.nodes)
 
     val getPredicates = ZIO.foreach(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
       for {
-        query <- Task.effect(
-          QueryFactory.create(
-            s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
-                SELECT DISTINCT ?predicate WHERE { bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
-          )
+        queryText <- Task.effect(
+          s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
+                |SELECT DISTINCT ?predicate WHERE {
+                |bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate .
+                |}""".stripMargin
         )
+        query <- Task.effect(QueryFactory.create(queryText))
         resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
         predicates = (for {
             solution <- resultSet.asScala
@@ -165,7 +175,6 @@ object QueryService extends LazyLogging {
     }
     for {
       predicates <- getPredicates
-      prefixes = PREFIXES.map { case (key, value) => s"PREFIX $key: <$value>" }.mkString("\n")
       whereClauseParts =
         queryGraph.nodes
           .map(node => String.format("  ?%1$s sesame:directType ?%1$s_type .", node.id))
@@ -195,25 +204,17 @@ object QueryService extends LazyLogging {
     } yield response
   }
 
-  def applyPrefix(value: String): String =
-    PREFIXES
-      .filter(entry => value.startsWith(entry._2))
-      .map(entry => s"${entry._1}:" + value.substring(entry._2.length, value.length))
-      .headOption
-      .getOrElse(value);
-
   def parseResultSet(queryGraph: TranslatorQueryGraph, resultSet: ResultSet): RIO[Config[AppConfig], TranslatorMessage] =
     for {
       kgNodes <- Task.effect(mutable.ListBuffer[TranslatorNode]())
       kgEdges <- Task.effect(mutable.ListBuffer[TranslatorEdge]())
-      prefixes <- Task.effect(PREFIXES.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
       results <- ZIO.foreach(resultSet.asScala.toList) { querySolution =>
         for {
           nodeMap <- Task.effect(queryGraph.nodes.map(n => (n.id, querySolution.get(s"${n.id}_type").toString)).toMap)
           nodeBindings <- ZIO.foreach(queryGraph.nodes) { n =>
             for {
               abbreviatedNodeType <- Task.effect(applyPrefix(nodeMap.get(n.id).get))
-              nodeDetails <- getKnowledgeGraphNodeDetails(prefixes, String.format("<%s>", nodeMap.get(n.id).get))
+              nodeDetails <- getKnowledgeGraphNodeDetails(String.format("<%s>", nodeMap.get(n.id).get))
               nodeDetailsHead <- Task.effect(nodeDetails.head)
               _ = kgNodes += TranslatorNode(abbreviatedNodeType, Some(nodeDetailsHead._1), Some(nodeDetailsHead._2), None)
               nodeBinding <- Task.effect(TranslatorNodeBinding(n.id, abbreviatedNodeType))
@@ -235,7 +236,7 @@ object QueryService extends LazyLogging {
                                             Some(e.`type`),
                                             applyPrefix(nodeMap.get(e.source_id).get),
                                             applyPrefix(nodeMap.get(e.target_id).get))
-              prov <- getProvenance(prefixes, sourceRDFNode, predicateRDFNode, targetRDFNode)
+              prov <- getProvenance(sourceRDFNode, predicateRDFNode, targetRDFNode)
             } yield TranslatorEdgeBinding(e.id, knowledgeGraphId, Some(prov.toString))
           }
 
@@ -243,29 +244,58 @@ object QueryService extends LazyLogging {
       }
     } yield TranslatorMessage(Some(queryGraph), Some(TranslatorKnowledgeGraph(kgNodes.toList, kgEdges.toList)), Some(results))
 
-  def getProvenance(prefixes: String, source: String, predicate: String, target: String): RIO[Config[AppConfig], String] =
+  def getProvenance(source: String, predicate: String, target: String): RIO[Config[AppConfig], String] =
     for {
-      query <- Task.effect(QueryFactory.create(s"""$prefixes
-SELECT ?g ?other WHERE { GRAPH ?g { <$source> <$predicate> <$target> } OPTIONAL { ?g prov:wasDerivedFrom ?other . }
-}"""))
+      queryText <- Task.effect(
+        s"""$prefixes
+          |SELECT ?g ?other WHERE {
+          |GRAPH ?g { <$source> <$predicate> <$target> } OPTIONAL { ?g prov:wasDerivedFrom ?other . }
+          |}""".stripMargin
+      )
+      query <- Task.effect(QueryFactory.create(queryText))
       bindings <- SPARQLQueryExecutor.runSelectQuery(query)
       nextSolution = bindings.nextSolution()
       prov <- Task.effect(nextSolution.get("g").toString).orElse(Task.effect(nextSolution.get("other").toString))
     } yield prov
 
-  def getKnowledgeGraphNodeDetails(prefixes: String, nodeIds: String): RIO[Config[AppConfig], Map[String, List[String]]] =
+  def getKnowledgeGraphNodeDetails(nodeIds: String): RIO[Config[AppConfig], Map[String, List[String]]] =
     for {
-      query <- Task.effect(QueryFactory.create(s"""$prefixes
-SELECT DISTINCT ?kid ?blclass ?label WHERE {
-VALUES ?kid { $nodeIds }
-?kid rdfs:subClassOf ?blclass .
-?blclass blml:is_a* bl:NamedThing .
-OPTIONAL { ?kid rdfs:label ?label . }
-}"""))
+      queryText <- Task.effect(
+        s"""$prefixes
+            |SELECT DISTINCT ?kid ?blclass ?label WHERE {
+            |VALUES ?kid { $nodeIds }
+            |?kid rdfs:subClassOf ?blclass .
+            |?blclass blml:is_a* bl:NamedThing .
+            |OPTIONAL { ?kid rdfs:label ?label . }
+            |}""".stripMargin
+      )
+      query <- Task.effect(QueryFactory.create(queryText))
       resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
-      map <- Task.effect(resultSet.asScala.toList.map(qs => (qs.get("label").toString, qs.get("blclass").toString)).groupBy(_._1).map {
-        case (k, v) => (k, v.map(a => CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, a._2.substring(a._2.lastIndexOf("/") + 1, a._2.length))))
-      })
+      map <- Task.effect(
+        resultSet.asScala.toList.map(qs => (qs.get("label").toString, qs.get("blclass").toString)).groupBy(_._1).map {
+          case (k, v) =>
+            (k, v.map(a => CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, a._2.substring(a._2.lastIndexOf("/") + 1, a._2.length))))
+        }
+      )
     } yield map
+
+  def getCAMStuffQuery(prov: String): RIO[Config[AppConfig], String] =
+    for {
+      queryText <- Task.effect(
+        s"""$prefixes
+           |SELECT ?s_type ?p ?o_type WHERE {
+           |GRAPH <{prov}> { {
+           |?s ?p ?o .
+           |?s rdf:type owl:NamedIndividual .
+           |?o rdf:type owl:NamedIndividual .
+           |}
+           |?o sesame:directType ?o_type .
+           |?s sesame:directType ?s_type .
+           |}""".stripMargin
+      )
+      query <- Task.effect(QueryFactory.create(queryText))
+      resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
+      response <- ZIO.succeed("")
+    } yield response
 
 }
