@@ -35,7 +35,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val e0Edge = TranslatorQueryEdge("e0", "has_participant", "n1", "n0")
 
         val queryGraph = TranslatorQueryGraph(List(n0Node, n1Node), List(e0Edge))
-        val message = TranslatorMessage(Some(queryGraph), None, None)
+        val message = TranslatorMessage(Some(queryGraph), None, List[TranslatorResult]())
         val requestBody = TranslatorQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
