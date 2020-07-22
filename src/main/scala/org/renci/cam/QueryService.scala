@@ -255,7 +255,7 @@ object QueryService extends LazyLogging {
       query <- Task.effect(QueryFactory.create(queryText))
       bindings <- SPARQLQueryExecutor.runSelectQuery(query)
       nextSolution = bindings.nextSolution()
-      prov <- Task.effect(nextSolution.get("g").toString).orElse(Task.effect(nextSolution.get("other").toString))
+      prov <- Task.effect(nextSolution.get("other").toString).orElse(Task.effect(nextSolution.get("g").toString))
     } yield prov
 
   def getKnowledgeGraphNodeDetails(nodeIds: String): RIO[Config[AppConfig], Map[String, List[String]]] =
