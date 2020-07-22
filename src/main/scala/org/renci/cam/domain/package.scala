@@ -10,7 +10,7 @@ package object domain {
 
   case class TranslatorNodeAttribute(name: String, value: String, `type`: String, url: Option[String], source: Option[String])
 
-  case class TranslatorNode(id: String, name: Option[String], `type`: Option[List[String]], attributes: Option[List[TranslatorNodeAttribute]])
+  case class TranslatorNode(id: String, name: Option[String], `type`: List[String], attributes: List[TranslatorNodeAttribute])
 
   case class TranslatorEdge(id: String, `type`: Option[String], source_id: String, target_id: String)
 
@@ -22,7 +22,7 @@ package object domain {
 
   case class TranslatorResult(node_bindings: List[TranslatorNodeBinding], edge_bindings: List[TranslatorEdgeBinding])
 
-  case class TranslatorMessage(query_graph: Option[TranslatorQueryGraph], knowledge_graph: Option[TranslatorKnowledgeGraph], results: Option[List[TranslatorResult]])
+  case class TranslatorMessage(query_graph: Option[TranslatorQueryGraph], knowledge_graph: Option[TranslatorKnowledgeGraph], results: List[TranslatorResult])
 
   case class TranslatorQueryRequestBody(message: TranslatorMessage)
 
