@@ -1,5 +1,6 @@
 package org.renci.cam
 
+import cats.implicits._
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.http4s._
@@ -61,8 +62,9 @@ object Server extends App {
         appConfig <- config[AppConfig]
         predicatesRoute <- predicatesRouteR
         queryRoute <- queryRouteR
+        routes <- Task.effect(queryRoute <+> predicatesRoute)
         docsRoute = new SwaggerHttp4s(openAPI).routes[Task]
-        httpApp = Router("/" -> queryRoute, "/" -> predicatesRoute, "/" -> docsRoute).orNotFound
+        httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
         httpAppWithLogging = Logger.httpApp(true, true)(httpApp)
         result <-
           BlazeServerBuilder[Task](runtime.platform.executor.asEC)
