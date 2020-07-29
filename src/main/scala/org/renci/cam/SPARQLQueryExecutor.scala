@@ -16,8 +16,8 @@ import zio.config.Config
 import zio.interop.catz._
 import zio.{RIO, Task, TaskManaged, UIO, ZIO, config => _}
 
-import scala.concurrent.duration.{Duration, MINUTES}
 import scala.collection.JavaConverters._
+import scala.concurrent.duration.{Duration, MINUTES}
 
 object SPARQLQueryExecutor extends LazyLogging {
 
@@ -54,6 +54,7 @@ object SPARQLQueryExecutor extends LazyLogging {
       appConfig <- zio.config.config[AppConfig]
       clientManaged <- makeHttpClient
       uri = appConfig.sparqlEndpoint
+      _ = logger.debug("query: {}", query)
       request = Request[Task](Method.POST, uri).withEntity(query)
       response <- clientManaged.use(_.expect[ResultSet](request))
     } yield response
