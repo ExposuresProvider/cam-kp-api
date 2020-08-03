@@ -6,7 +6,7 @@ import org.http4s._
 import org.http4s.headers._
 import org.http4s.implicits._
 import org.renci.cam.domain._
-import zio.Task
+import zio.{Task, ZIO}
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test.TestAspect._
@@ -16,17 +16,18 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   def spec =
     suite("QueryServiceSpec")(
-      test("testGetNodeTypes") {
+      testM("testGetNodeTypes") {
         val n0Node = TranslatorQueryNode("n0", "gene", Some("NCBIGENE:558"))
         val n1Node = TranslatorQueryNode("n1", "biological_process", None)
         val e0Edge = TranslatorQueryEdge("e0", "has_participant", "n1", "n0")
 
         val queryGraph = TranslatorQueryGraph(List(n0Node, n1Node), List(e0Edge))
 
-        val map = QueryService.getNodeTypes(queryGraph.nodes)
-        map.foreach(a => printf("k: %s, v: %s%n", a._1, a._2))
+        for {
+          map <- QueryService.getNodeTypes(queryGraph.nodes)
+          _ = map.foreach(a => printf("k: %s, v: %s%n", a._1, a._2))
+        } yield assert(map)(isNonEmpty)
 
-        assert(map)(isNonEmpty)
       } @@ ignore,
       testM("query service") {
 
@@ -40,15 +41,15 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
           httpClient <- SPARQLQueryExecutor.makeHttpClient
-          uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1)
-          //uri = uri"http://127.0.0.1:6434/query".withQueryParam("limit", 1)
+          uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
+          //uri = uri"http://127.0.0.1:6434/query".withQueryParam("limit", 1) // python
           request = Request[Task](Method.POST, uri)
             .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
             .withEntity(encoded)
           response <- httpClient.use(_.expect[String](request))
           _ = println("response: " + response)
         } yield assert(response)(isNonEmptyString)
-      } @@ ignore
+      } //@@ ignore
     )
 
 }
