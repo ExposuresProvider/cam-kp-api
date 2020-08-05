@@ -1,6 +1,8 @@
 package org.renci.cam
 
+import io.circe.Json
 import io.circe.generic.auto._
+import io.circe.parser.parse
 import io.circe.syntax._
 import org.http4s._
 import org.http4s.implicits._
@@ -19,6 +21,8 @@ import zio.config.{Config, _}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio.{config => _, _}
+
+import scala.io.Source
 
 object Server extends App {
 
@@ -50,6 +54,19 @@ object Server extends App {
         response <- Task.effect(message.asJson.deepDropNullValues.noSpaces)
       } yield response
       program.mapError(error => error.getMessage)
+  }
+
+  val loadCuriesPrefixes = {
+    for {
+      biolinkModel <- Task.effect(Source.fromURL("https://biolink.github.io/biolink-model/context.jsonld"))
+      biolinkModelStr <- Task.effect(biolinkModel.mkString)
+      biolinkModelJson <- Task.effect(parse(biolinkModelStr).getOrElse(Json.Null))
+      cursor <- Task.effect(biolinkModelJson.hcursor)
+      contextValue <- Task.effect(cursor.downField("@context").as[Map[String, Json]])
+    } yield contextValue match {
+      case Right(jsonMap) =>
+        jsonMap.map(entry => entry match { case ((id: String, curie: Json)) => if (curie.isString) (id, curie) })
+    }
   }
 
   // will be available at /docs
