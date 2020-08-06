@@ -32,7 +32,7 @@ object PullBiolinkTypeMapTest extends DefaultRunnableSpec {
           contextJson <- Task.effect(parsed.hcursor.downField("@context").focus.get)
           filteredJson <- Task.effect(contextJson.deepDropNullValues.mapObject(f =>
             f.filter(pred => pred._2.isString && pred._1 != "type" && pred._1 != "id" && pred._1 != "@vocab")))
-          _ = Files.writeString(Paths.get("src/main/resources/prefixes.json"), filteredJson.toString())
+          _ = Files.write(Paths.get("src/main/resources/prefixes.json"), filteredJson.toString().getBytes)
           map <- Task.effect(decoder.decodeJson(filteredJson).toOption.get)
           _ = println(map.toString)
         } yield assert(response)(isNonEmptyString)
