@@ -1,6 +1,10 @@
 package org.renci.cam
 
+import java.nio.file.{Files, Paths, StandardOpenOption}
+
+import io.circe._
 import io.circe.generic.auto._
+import io.circe.parser.parse
 import io.circe.syntax._
 import org.http4s._
 import org.http4s.headers._
@@ -48,6 +52,8 @@ object QueryServiceTest extends DefaultRunnableSpec {
             .withEntity(encoded)
           response <- httpClient.use(_.expect[String](request))
           _ = println("response: " + response)
+          parsed <- Task.effect(parse(response).getOrElse(Json.Null))
+          _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), parsed.as[String].toOption.get)
         } yield assert(response)(isNonEmptyString)
       } //@@ ignore
     )
