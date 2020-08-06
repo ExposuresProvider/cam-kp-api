@@ -33,11 +33,11 @@ object Server extends App {
       program.mapError(error => error.getMessage)
   }
 
-  val queryEndpoint: ZEndpoint[(Int, TranslatorQueryRequestBody), String, String] =
+  val queryEndpoint: ZEndpoint[(Int, TRAPIQueryRequestBody), String, String] =
     endpoint.post
       .in("query")
       .in(query[Int]("limit"))
-      .in(jsonBody[TranslatorQueryRequestBody])
+      .in(jsonBody[TRAPIQueryRequestBody])
       .errorOut(stringBody)
       .out(jsonBody[String])
 

@@ -22,9 +22,9 @@ import scala.collection.mutable
 
 object QueryService extends LazyLogging {
 
-  case class NewTranslatorEdge(`type`: String, source_id: String, target_id: String)
+  case class NewTRAPIEdge(`type`: String, source_id: String, target_id: String)
 
-  def getNodeTypes(nodes: List[TranslatorQueryNode]) =
+  def getNodeTypes(nodes: List[TRAPIQueryNode]) =
     for {
       nodeTypes <- Task.effect(nodes.collect {
         case node if node.`type`.nonEmpty => (node.id, "bl:" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, node.`type`))
@@ -54,7 +54,7 @@ object QueryService extends LazyLogging {
           .getOrElse(value)
     } yield ret
 
-  def run(limit: Int, queryGraph: TranslatorQueryGraph): RIO[Config[AppConfig], ResultSet] =
+  def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[Config[AppConfig], ResultSet] =
     for {
       nodeTypes <- getNodeTypes(queryGraph.nodes)
       predicates <- ZIO.foreach(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
@@ -108,12 +108,12 @@ object QueryService extends LazyLogging {
       response <- SPARQLQueryExecutor.runSelectQuery(query)
     } yield response
 
-  def parseResultSet(queryGraph: TranslatorQueryGraph, resultSet: ResultSet): RIO[Config[AppConfig], TranslatorMessage] =
+  def parseResultSet(queryGraph: TRAPIQueryGraph, resultSet: ResultSet): RIO[Config[AppConfig], TRAPIMessage] =
     for {
-      kgNodes <- Task.effect(mutable.ListBuffer[TranslatorNode]())
-      kgEdges <- Task.effect(mutable.ListBuffer[TranslatorEdge]())
-      kgExtraNodes <- Task.effect(mutable.ListBuffer[TranslatorNodeBinding]())
-      kgExtraEdges <- Task.effect(mutable.ListBuffer[TranslatorEdgeBinding]())
+      kgNodes <- Task.effect(mutable.ListBuffer[TRAPINode]())
+      kgEdges <- Task.effect(mutable.ListBuffer[TRAPIEdge]())
+      kgExtraNodes <- Task.effect(mutable.ListBuffer[TRAPINodeBinding]())
+      kgExtraEdges <- Task.effect(mutable.ListBuffer[TRAPIEdgeBinding]())
       messageDigest <- Task.effect(MessageDigest.getInstance("SHA-256"))
       results <- ZIO.foreach(resultSet.asScala.toList) { querySolution =>
         for {
@@ -124,16 +124,16 @@ object QueryService extends LazyLogging {
               nodeDetails <- getKnowledgeGraphNodeDetails(s"<${nodeMap.get(n.id).get}>")
               nodeDetailsHead <- Task.effect(nodeDetails.head)
               _ = {
-                val attribute = TranslatorNodeAttribute(
+                val attribute = TRAPINodeAttribute(
                   None,
                   abbreviatedNodeType.substring(abbreviatedNodeType.indexOf(":") + 1, abbreviatedNodeType.length),
                   abbreviatedNodeType,
                   Some(nodeMap.get(n.id).get),
                   Some(abbreviatedNodeType.substring(0, abbreviatedNodeType.indexOf(":")))
                 )
-                kgNodes += TranslatorNode(Some(nodeDetailsHead._1), nodeDetailsHead._2.sorted, List[TranslatorNodeAttribute](attribute))
+                kgNodes += TRAPINode(Some(nodeDetailsHead._1), nodeDetailsHead._2.sorted, List[TRAPINodeAttribute](attribute))
               }
-              nodeBinding <- Task.effect(TranslatorNodeBinding(Some(n.id), abbreviatedNodeType))
+              nodeBinding <- Task.effect(TRAPINodeBinding(Some(n.id), abbreviatedNodeType))
             } yield nodeBinding
           }
           edgeBindings <- ZIO.foreach(queryGraph.edges) { e =>
@@ -142,15 +142,15 @@ object QueryService extends LazyLogging {
               sourceRDFNode <- Task.effect(querySolution.get(e.source_id).toString)
               targetRDFNode <- Task.effect(querySolution.get(e.target_id).toString)
               knowledgeGraphId = {
-                val newTranslatorEdge =
-                  NewTranslatorEdge(e.`type`, e.source_id, e.target_id).asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8)
-                String.format("%064x", new BigInteger(1, messageDigest.digest(newTranslatorEdge)))
+                val newTRAPIEdge =
+                  NewTRAPIEdge(e.`type`, e.source_id, e.target_id).asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8)
+                String.format("%064x", new BigInteger(1, messageDigest.digest(newTRAPIEdge)))
               }
               prefixedSource <- applyPrefix(nodeMap.get(e.source_id).get)
               prefixedTarget <- applyPrefix(nodeMap.get(e.target_id).get)
-              _ = kgEdges += TranslatorEdge(knowledgeGraphId, Some(e.`type`), prefixedSource, prefixedTarget)
+              _ = kgEdges += TRAPIEdge(knowledgeGraphId, Some(e.`type`), prefixedSource, prefixedTarget)
               prov <- getProvenance(sourceRDFNode, predicateRDFNode, targetRDFNode)
-            } yield TranslatorEdgeBinding(Some(e.id), knowledgeGraphId, Some(prov.toString))
+            } yield TRAPIEdgeBinding(Some(e.id), knowledgeGraphId, Some(prov.toString))
           }
           _ <- ZIO.foreach(edgeBindings.map(a => a.provenance.get).toList) { p =>
             for {
@@ -162,15 +162,15 @@ object QueryService extends LazyLogging {
                   nodeDetails <- getKnowledgeGraphNodeDetails(s"<$sourceId>")
                   nodeDetailsHead <- Task.effect(nodeDetails.head)
                   _ = {
-                    val attribute = TranslatorNodeAttribute(
+                    val attribute = TRAPINodeAttribute(
                       None,
                       abbreviatedNodeType.substring(abbreviatedNodeType.indexOf(":") + 1, abbreviatedNodeType.length),
                       abbreviatedNodeType,
                       Some(sourceId),
                       Some(abbreviatedNodeType.substring(0, abbreviatedNodeType.indexOf(":")))
                     )
-                    kgNodes += TranslatorNode(Some(nodeDetailsHead._1), nodeDetailsHead._2.sorted, List[TranslatorNodeAttribute](attribute))
-                    kgExtraNodes += TranslatorNodeBinding(None, abbreviatedNodeType)
+                    kgNodes += TRAPINode(Some(nodeDetailsHead._1), nodeDetailsHead._2.sorted, List[TRAPINodeAttribute](attribute))
+                    kgExtraNodes += TRAPINodeBinding(None, abbreviatedNodeType)
                   }
                 } yield ()
               }
@@ -180,21 +180,21 @@ object QueryService extends LazyLogging {
                   prefixedTarget <- applyPrefix(triple._3)
                   prefixedPredicate <- applyPrefix(triple._2)
                   _ = {
-                    val edge = NewTranslatorEdge(triple._2, triple._1, triple._3).asJson.deepDropNullValues.noSpaces
+                    val edge = NewTRAPIEdge(triple._2, triple._1, triple._3).asJson.deepDropNullValues.noSpaces
                     val knowledgeGraphId =
                       String.format("%064x", new BigInteger(1, messageDigest.digest(edge.getBytes(StandardCharsets.UTF_8))))
                     val resolvedType = slotStuffList.filter(a => a._2.equals(triple._2)).map(a => a._4).headOption.getOrElse(prefixedPredicate)
-                    kgEdges += TranslatorEdge(knowledgeGraphId, Some(resolvedType), prefixedSource, prefixedTarget)
-                    kgExtraEdges += TranslatorEdgeBinding(None, knowledgeGraphId, Some(p))
+                    kgEdges += TRAPIEdge(knowledgeGraphId, Some(resolvedType), prefixedSource, prefixedTarget)
+                    kgExtraEdges += TRAPIEdgeBinding(None, knowledgeGraphId, Some(p))
                   }
                 } yield ()
               }
             } yield ()
           }
 
-        } yield TranslatorResult(nodeBindings, edgeBindings, Some(kgExtraNodes.toList), Some(kgExtraEdges.toList))
+        } yield TRAPIResult(nodeBindings, edgeBindings, Some(kgExtraNodes.toList), Some(kgExtraEdges.toList))
       }
-    } yield TranslatorMessage(Some(queryGraph), Some(TranslatorKnowledgeGraph(kgNodes.toList, kgEdges.toList)), results)
+    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(kgNodes.toList, kgEdges.toList)), results)
 
   def getProvenance(source: String, predicate: String, target: String): RIO[Config[AppConfig], String] =
     for {

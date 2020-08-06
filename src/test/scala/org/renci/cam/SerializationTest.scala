@@ -22,17 +22,17 @@ object SerializationTest extends DefaultRunnableSpec {
         val expected =
           """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"gene","curie":"NCBIGENE:558"},{"id":"n1","type":"biological_process"}],"edges":[{"id":"e0","source_id":"n1","target_id":"n0","type":"has_participant"}]}}}"""
 
-        val n0Node = TranslatorQueryNode("n0", "gene", Some("NCBIGENE:558"))
-        val n1Node = TranslatorQueryNode("n1", "biological_process", None)
-        val e0Edge = TranslatorQueryEdge("e0", "has_participant", "n1", "n0")
+        val n0Node = TRAPIQueryNode("n0", "gene", Some("NCBIGENE:558"))
+        val n1Node = TRAPIQueryNode("n1", "biological_process", None)
+        val e0Edge = TRAPIQueryEdge("e0", "has_participant", "n1", "n0")
 
-        val queryGraph = TranslatorQueryGraph(List(n0Node, n1Node), List(e0Edge))
-        val message = TranslatorMessage(Some(queryGraph), None, List[TranslatorResult]())
-        val requestBody = TranslatorQueryRequestBody(message)
+        val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
+        val message = TRAPIMessage(Some(queryGraph), None, List[TRAPIResult]())
+        val requestBody = TRAPIQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         println("encoded: " + encoded)
         println("expected: " + expected)
-        assert(expected)(equalTo(encoded))
+        assert(expected)(equalsIgnoreCase(encoded))
       } @@ ignore,
       test("2") {
 
