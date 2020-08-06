@@ -21,11 +21,11 @@ object QueryServiceTest extends DefaultRunnableSpec {
   def spec =
     suite("QueryServiceSpec")(
       testM("testGetNodeTypes") {
-        val n0Node = TranslatorQueryNode("n0", "gene", Some("NCBIGENE:558"))
-        val n1Node = TranslatorQueryNode("n1", "biological_process", None)
-        val e0Edge = TranslatorQueryEdge("e0", "has_participant", "n1", "n0")
+        val n0Node = TRAPIQueryNode("n0", "gene", Some("NCBIGENE:558"))
+        val n1Node = TRAPIQueryNode("n1", "biological_process", None)
+        val e0Edge = TRAPIQueryEdge("e0", "has_participant", "n1", "n0")
 
-        val queryGraph = TranslatorQueryGraph(List(n0Node, n1Node), List(e0Edge))
+        val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
 
         for {
           map <- QueryService.getNodeTypes(queryGraph.nodes)
@@ -35,13 +35,13 @@ object QueryServiceTest extends DefaultRunnableSpec {
       } @@ ignore,
       testM("query service") {
 
-        val n0Node = TranslatorQueryNode("n0", "gene", None /*Some("NCBIGENE:558")*/ )
-        val n1Node = TranslatorQueryNode("n1", "biological_process", None)
-        val e0Edge = TranslatorQueryEdge("e0", "has_participant", "n1", "n0")
+        val n0Node = TRAPIQueryNode("n0", "gene", None /*Some("NCBIGENE:558")*/ )
+        val n1Node = TRAPIQueryNode("n1", "biological_process", None)
+        val e0Edge = TRAPIQueryEdge("e0", "has_participant", "n1", "n0")
 
-        val queryGraph = TranslatorQueryGraph(List(n0Node, n1Node), List(e0Edge))
-        val message = TranslatorMessage(Some(queryGraph), None, List[TranslatorResult]())
-        val requestBody = TranslatorQueryRequestBody(message)
+        val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
+        val message = TRAPIMessage(Some(queryGraph), None, List[TRAPIResult]())
+        val requestBody = TRAPIQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
           httpClient <- SPARQLQueryExecutor.makeHttpClient
