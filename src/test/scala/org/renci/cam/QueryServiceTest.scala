@@ -53,7 +53,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
           response <- httpClient.use(_.expect[String](request))
           _ = println("response: " + response)
           parsed <- Task.effect(parse(response).getOrElse(Json.Null))
-          _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), parsed.as[String].toOption.get)
+          _ = Files.write(Paths.get("src/test/resources/local-scala.json"), parsed.as[String].toOption.get.getBytes)
         } yield assert(response)(isNonEmptyString)
       } @@ ignore
     )
