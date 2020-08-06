@@ -25,8 +25,8 @@ object BlazegraphTest extends DefaultRunnableSpec {
             uri"http://152.54.9.207:9999/blazegraph/sparql"
               .withQueryParam("query", query)
               .withQueryParam("format", "json")
-          request = Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json),
-                                                                `Content-Type`(MediaType.application.json))
+          request =
+            Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
           response <- httpClient.use(_.expect[String](request))
         } yield assert(response)(isNonEmptyString)
       } @@ ignore
