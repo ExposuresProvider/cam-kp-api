@@ -12,7 +12,7 @@ import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.phenoscape.sparql.FromQuerySolution
 import zio.ZIO.ZIOAutoCloseableOps
-import zio.config.Config
+import zio.config.ZConfig
 import zio.interop.catz._
 import zio.{RIO, Task, TaskManaged, UIO, ZIO, config => _}
 
@@ -42,14 +42,14 @@ object SPARQLQueryExecutor extends LazyLogging {
       BlazeClientBuilder[Task](rts.platform.executor.asEC).withConnectTimeout(Duration(3, MINUTES)).resource.toManaged
     }
 
-  def runSelectQueryAs[T: FromQuerySolution](query: Query): RIO[Config[AppConfig], List[T]] =
+  def runSelectQueryAs[T: FromQuerySolution](query: Query): RIO[ZConfig[AppConfig], List[T]] =
     for {
       resultSet <- runSelectQuery(query)
       results = resultSet.asScala.map(FromQuerySolution.mapSolution[T]).toList
       validResults <- ZIO.foreach(results)(ZIO.fromTry(_))
     } yield validResults
 
-  def runSelectQuery(query: Query): RIO[Config[AppConfig], ResultSet] =
+  def runSelectQuery(query: Query): RIO[ZConfig[AppConfig], ResultSet] =
     for {
       appConfig <- zio.config.config[AppConfig]
       clientManaged <- makeHttpClient
