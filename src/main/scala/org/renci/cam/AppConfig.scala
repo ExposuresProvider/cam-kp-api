@@ -9,8 +9,9 @@ final case class AppConfig(host: String, port: Int, sparqlEndpoint: Uri)
 object AppConfig {
 
   implicit val uriDescriptor: Descriptor[Uri] =
-    Descriptor[String].xmapEitherELeftPartial(Uri.fromString)(_.toString)(_.getMessage)
+    Descriptor[String].transformEitherLeft(Uri.fromString)(_.toString)(_.getMessage)
 
-  val config: ConfigDescriptor[AppConfig] = descriptor[AppConfig].mapKey(camelToKebab)
+
+  val config: ConfigDescriptor[AppConfig] = descriptor[AppConfig].mapKey(toKebabCase)
 
 }
