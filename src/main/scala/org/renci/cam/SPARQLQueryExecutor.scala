@@ -45,7 +45,7 @@ object SPARQLQueryExecutor extends LazyLogging {
   def runSelectQueryAs[T: FromQuerySolution](query: Query): RIO[Config[AppConfig], List[T]] =
     for {
       resultSet <- runSelectQuery(query)
-      results = resultSet.asScala.map(FromQuerySolution.mapSolution[T]).toIterable
+      results = resultSet.asScala.map(FromQuerySolution.mapSolution[T]).toList
       validResults <- ZIO.foreach(results)(ZIO.fromTry(_))
     } yield validResults
 

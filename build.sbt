@@ -16,7 +16,7 @@ javaOptions += "-Xmx8G"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
-val zioVersion = "1.0.0-RC21-2"
+val zioVersion = "1.0.0"
 val zioConfigVersion = "1.0.0-RC25"
 val tapirVersion = "0.16.10"
 val http4sVersion = "0.21.6"
@@ -26,7 +26,7 @@ val logbackVersion = "1.2.3"
 libraryDependencies ++= {
   Seq(
     "dev.zio"                     %% "zio"                      % zioVersion,
-    "dev.zio"                     %% "zio-interop-cats"         % "2.1.3.0-RC16",
+    "dev.zio"                     %% "zio-interop-cats"         % "2.1.4.0",
     "dev.zio"                     %% "zio-config"               % zioConfigVersion,
     "dev.zio"                     %% "zio-config-magnolia"      % zioConfigVersion,
     "dev.zio"                     %% "zio-config-typesafe"      % zioConfigVersion,
