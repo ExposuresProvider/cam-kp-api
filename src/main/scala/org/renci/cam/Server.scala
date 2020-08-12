@@ -15,7 +15,7 @@ import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{Config, _}
+import zio.config.{ZConfig, _}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio.{config => _, _}
@@ -24,7 +24,7 @@ object Server extends App {
 
   val predicatesEndpoint: ZEndpoint[Unit, String, String] = endpoint.get.in("predicates").errorOut(stringBody).out(jsonBody[String])
 
-  val predicatesRouteR: URIO[Config[AppConfig], HttpRoutes[Task]] = predicatesEndpoint.toRoutesR {
+  val predicatesRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = predicatesEndpoint.toRoutesR {
     case () =>
       val program = for {
         response <- Task.effect("")
@@ -40,7 +40,7 @@ object Server extends App {
       .errorOut(stringBody)
       .out(jsonBody[String])
 
-  val queryRouteR: URIO[Config[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
+  val queryRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
     case (limit, body) =>
       //do stuff with queryGraph
       val program = for {
@@ -55,7 +55,7 @@ object Server extends App {
   // will be available at /docs
   val openAPI: String = List(queryEndpoint, predicatesEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
 
-  val server: RIO[Config[AppConfig], Unit] =
+  val server: RIO[ZConfig[AppConfig], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- config[AppConfig]
@@ -74,7 +74,7 @@ object Server extends App {
       } yield result
     }
 
-  val configLayer: Layer[Throwable, Config[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
+  val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = server.provideLayer(configLayer).exitCode
 
