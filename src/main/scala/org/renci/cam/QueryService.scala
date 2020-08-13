@@ -96,7 +96,7 @@ object QueryService extends LazyLogging {
       valuesClause = (sparqlLines ++ moreLines).mkString("\n")
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
       prefixMap <- readPrefixes
-      prefixes <- Task.effect(prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
+      prefixes = prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n")
       queryString = s"$prefixes\n$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"
       query <- Task.effect(QueryFactory.create(queryString))
       response <- SPARQLQueryExecutor.runSelectQuery(query)
@@ -116,13 +116,13 @@ object QueryService extends LazyLogging {
             for {
               abbreviatedNodeType <- applyPrefix(nodeMap.get(n.id).get)
               nodeDetails <- getKnowledgeGraphNodeDetails(s"<${nodeMap.get(n.id).get}>")
-              nodeDetailsHead <- Task.effect(nodeDetails.head)
+              nodeDetailsHead <- ZIO.fromOption(nodeDetails.headOption).orElseFail(new Exception(s"Missing node details: ${n.id}"))
               _ = {
                 val attribute = TRAPINodeAttribute(
                   None,
                   abbreviatedNodeType.substring(abbreviatedNodeType.indexOf(":") + 1, abbreviatedNodeType.length),
                   abbreviatedNodeType,
-                  Some(nodeMap.get(n.id).get),
+                  nodeMap.get(n.id),
                   Some(abbreviatedNodeType.substring(0, abbreviatedNodeType.indexOf(":")))
                 )
                 kgNodes += TRAPINode(Some(nodeDetailsHead._1), nodeDetailsHead._2.sorted, List[TRAPINodeAttribute](attribute))
