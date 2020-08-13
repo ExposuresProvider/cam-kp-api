@@ -24,13 +24,13 @@ object QueryService extends LazyLogging {
 
   case class NewTRAPIEdge(`type`: String, source_id: String, target_id: String)
 
-  def getNodeTypes(nodes: List[TRAPIQueryNode]) =
-    for {
-      nodeTypes <- Task.effect(nodes.collect {
-        case node if node.`type`.nonEmpty => (node.id, "bl:" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, node.`type`))
-      }.toMap)
-      newNodeTypes <- Task.effect(nodeTypes ++ nodes.flatMap(node => node.curie.map(node.id -> _)).toMap)
-    } yield newNodeTypes
+  def getNodeTypes(nodes: List[TRAPIQueryNode]) = {
+    val nodeTypes = nodes.collect {
+      case node if node.`type`.nonEmpty => (node.id, "bl:" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, node.`type`))
+    }.toMap
+    val newNodeTypes = nodeTypes ++ nodes.flatMap(node => node.curie.map(node.id -> _)).toMap
+    newNodeTypes
+  }
 
   def readPrefixes =
     for {
@@ -54,9 +54,9 @@ object QueryService extends LazyLogging {
           .getOrElse(value)
     } yield ret
 
-  def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig], ResultSet] =
+  def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig], ResultSet] = {
+    val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
-      nodeTypes <- getNodeTypes(queryGraph.nodes)
       predicates <- ZIO.foreach(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
         for {
           queryText <- Task.effect(
@@ -101,6 +101,7 @@ object QueryService extends LazyLogging {
       query <- Task.effect(QueryFactory.create(queryString))
       response <- SPARQLQueryExecutor.runSelectQuery(query)
     } yield response
+  }
 
   def parseResultSet(queryGraph: TRAPIQueryGraph, resultSet: ResultSet): RIO[ZConfig[AppConfig], TRAPIMessage] =
     for {
