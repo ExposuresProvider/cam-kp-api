@@ -20,18 +20,15 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   def spec =
     suite("QueryServiceSpec")(
-      testM("testGetNodeTypes") {
+      test("testGetNodeTypes") {
         val n0Node = TRAPIQueryNode("n0", "gene", Some("NCBIGENE:558"))
         val n1Node = TRAPIQueryNode("n1", "biological_process", None)
         val e0Edge = TRAPIQueryEdge("e0", "has_participant", "n1", "n0")
 
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
-
-        for {
-          map <- QueryService.getNodeTypes(queryGraph.nodes)
-          _ = map.foreach(a => printf("k: %s, v: %s%n", a._1, a._2))
-        } yield assert(map)(isNonEmpty)
-
+        val map = QueryService.getNodeTypes(queryGraph.nodes)
+        map.foreach(a => printf("k: %s, v: %s%n", a._1, a._2))
+        assert(map)(isNonEmpty)
       } @@ ignore,
       testM("query service") {
 
