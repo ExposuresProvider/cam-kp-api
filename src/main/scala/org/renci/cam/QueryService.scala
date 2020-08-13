@@ -177,7 +177,8 @@ object QueryService extends LazyLogging {
                     val edge = NewTRAPIEdge(triple._2, triple._1, triple._3).asJson.deepDropNullValues.noSpaces
                     val knowledgeGraphId =
                       String.format("%064x", new BigInteger(1, messageDigest.digest(edge.getBytes(StandardCharsets.UTF_8))))
-                    val resolvedType = slotStuffList.filter(a => a._2.equals(triple._2)).map(a => a._4).headOption.getOrElse(prefixedPredicate)
+                    val resolvedType =
+                      slotStuffList.filter(a => a._2.equals(triple._2)).map(a => a._4).headOption.getOrElse(prefixedPredicate)
                     kgEdges += TRAPIEdge(knowledgeGraphId, Some(resolvedType), prefixedSource, prefixedTarget)
                     kgExtraEdges += TRAPIEdgeBinding(None, knowledgeGraphId, Some(p))
                   }
@@ -273,8 +274,11 @@ object QueryService extends LazyLogging {
       _ = logger.debug("queryText: {}", queryText)
       query <- Task.effect(QueryFactory.create(queryText))
       resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
-      response <-
-        Task.effect(resultSet.asScala.toList.map(qs => (qs.get("qid").toString, qs.get("kid").toString, qs.get("blslot").toString, qs.get("label").toString)).toList.distinct)
+      response <- Task.effect(
+        resultSet.asScala.toList
+          .map(qs => (qs.get("qid").toString, qs.get("kid").toString, qs.get("blslot").toString, qs.get("label").toString))
+          .toList
+          .distinct)
     } yield response
 
 }
