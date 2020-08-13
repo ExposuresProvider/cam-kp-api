@@ -49,36 +49,37 @@ object QueryService extends LazyLogging {
       .headOption
       .getOrElse(value)
 
+  private def queryEdgePredicates(edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig], (Set[String], Set[(String, String)], String)] = {
+    val queryText =
+      s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
+         |SELECT DISTINCT ?predicate WHERE {
+         |bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate .
+         |}""".stripMargin
+    for {
+      query <- Task.effect(QueryFactory.create(queryText))
+      resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
+      predicates = (for {
+          solution <- resultSet.asScala
+          v <- solution.varNames.asScala
+          node = solution.get(v)
+        } yield s"<$node>").mkString(" ")
+      predicateValuesBlock = s"VALUES ?${edge.id} { $predicates }"
+      triple = s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} ."
+    } yield (Set(edge.source_id, edge.target_id),
+             Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id),
+             s"$predicateValuesBlock\n$triple")
+  }
+
   def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig], ResultSet] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
-      predicates <- ZIO.foreach(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
-        for {
-          queryText <- Task.effect(
-            s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
-               |SELECT DISTINCT ?predicate WHERE {
-               |bl:${edge.`type`} <http://reasoner.renci.org/vocab/slot_mapping> ?predicate .
-               |}""".stripMargin
-          )
-          query <- Task.effect(QueryFactory.create(queryText))
-          resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
-          predicates = (for {
-              solution <- resultSet.asScala
-              v <- solution.varNames.asScala
-              node = solution.get(v)
-            } yield s"<$node>").mkString(" ")
-          predicateValuesBlock = s"VALUES ?${edge.id} { $predicates }"
-          triple = s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} ."
-        } yield (Set(edge.source_id, edge.target_id),
-                 Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id),
-                 s"$predicateValuesBlock\n$triple")
-      }
+      predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty))(queryEdgePredicates)
+      (instanceVars, instanceVarsToTypes, sparqlLines) = predicates.unzip3
       whereClauseParts =
         queryGraph.nodes
           .map(node => String.format("  ?%1$s sesame:directType ?%1$s_type .", node.id))
           .mkString("\n")
       whereClause = s"WHERE { \n$whereClauseParts"
-      (instanceVars, instanceVarsToTypes, sparqlLines) = predicates.unzip3
       ids =
         instanceVars.toSet.flatten.map(a => s"?$a").toList :::
           queryGraph.nodes.map(a => s"?${a.id}_type") :::
