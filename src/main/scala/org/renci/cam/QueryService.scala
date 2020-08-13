@@ -5,7 +5,6 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 import com.typesafe.scalalogging.LazyLogging
-import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser.parse
 import io.circe.syntax._
@@ -146,12 +145,12 @@ object QueryService extends LazyLogging {
               prefixedTarget <- applyPrefix(nodeMap.get(e.target_id).get)
               _ = kgEdges += TRAPIEdge(knowledgeGraphId, Some(e.`type`), prefixedSource, prefixedTarget)
               prov <- getProvenance(sourceRDFNode, predicateRDFNode, targetRDFNode)
-            } yield TRAPIEdgeBinding(Some(e.id), knowledgeGraphId, Some(prov.toString))
+            } yield TRAPIEdgeBinding(Some(e.id), knowledgeGraphId, Some(prov))
           }
-          _ <- ZIO.foreach(edgeBindings.map(a => a.provenance.get).toList) { p =>
+          _ <- ZIO.foreach(edgeBindings.map(a => a.provenance.get)) { p =>
             for {
               camStuffTriples <- getCAMStuff(p)
-              slotStuffList <- getSlotStuff(camStuffTriples.map(a => a.pred).distinct.toList)
+              slotStuffList <- getSlotStuff(camStuffTriples.map(a => a.pred).distinct)
               _ <- ZIO.foreach(camStuffTriples.map(a => a.subj).distinct) { sourceId =>
                 for {
                   abbreviatedNodeType <- applyPrefix(sourceId)
@@ -275,7 +274,6 @@ object QueryService extends LazyLogging {
       response <- Task.effect(
         resultSet.asScala.toList
           .map(qs => (qs.get("qid").toString, qs.get("kid").toString, qs.get("blslot").toString, qs.get("label").toString))
-          .toList
           .distinct)
     } yield response
 
