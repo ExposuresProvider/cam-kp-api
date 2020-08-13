@@ -89,17 +89,11 @@ object QueryService extends LazyLogging {
           queryGraph.nodes.map(a => s"?${a.id}_type") :::
           queryGraph.edges.map(a => s"?${a.id}")
       selectClause = s"SELECT DISTINCT ${ids.mkString(" ")} "
-      valuesClause = {
-        var bindings = mutable.ListBuffer[String]()
-        bindings += sparqlLines.mkString("")
-        instanceVarsToTypes.foreach(a =>
-          a.foreach(b =>
-            nodeTypes.get(b._2) match {
-              case Some(v) => bindings += s"?${b._1} rdf:type $v ."
-              case None => bindings += ""
-            }))
-        s"${bindings.mkString("\n")}"
-      }
+      moreLines = for {
+        (subj, typ) <- instanceVarsToTypes.flatten
+        v <- nodeTypes.get(typ)
+      } yield s"?$subj rdf:type $v ."
+      valuesClause = (sparqlLines ++ moreLines).mkString("\n")
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
       prefixMap <- readPrefixes
       prefixes <- Task.effect(prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
