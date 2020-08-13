@@ -235,8 +235,7 @@ object QueryService extends LazyLogging {
     for {
       prefixMap <- readPrefixes
       prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
-      queryText <- Task.effect(
-        s"""$prefixes
+      queryText = s"""$prefixes
            |SELECT DISTINCT ?s_type ?p ?o_type WHERE {
            |GRAPH <$prov> {
            |?s ?p ?o .
@@ -246,7 +245,6 @@ object QueryService extends LazyLogging {
            |?o sesame:directType ?o_type .
            |?s sesame:directType ?s_type .
            |}""".stripMargin
-      )
       query <- Task.effect(QueryFactory.create(queryText))
       resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
       response <-
@@ -261,8 +259,7 @@ object QueryService extends LazyLogging {
         predicateMap.zipWithIndex
           .map(a => String.format(" ( <%s> \"e%s\" ) ", a._1, StringUtils.leftPad(a._2.toString, 4, '0')))
           .mkString(" "))
-      queryText <- Task.effect(
-        s"""$prefixes
+      queryText = s"""$prefixes
           |SELECT DISTINCT ?qid ?kid ?blslot ?label WHERE {
           |VALUES (?kid ?qid) { $values }
           |?blslot <http://reasoner.renci.org/vocab/slot_mapping> ?kid .
@@ -271,7 +268,6 @@ object QueryService extends LazyLogging {
           |?other blml:is_a+/blml:mixins* ?blslot .
           |} OPTIONAL { ?kid rdfs:label ?label . }
           |}""".stripMargin
-      )
       _ = logger.debug("queryText: {}", queryText)
       query <- Task.effect(QueryFactory.create(queryText))
       resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
