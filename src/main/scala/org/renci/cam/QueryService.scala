@@ -96,7 +96,7 @@ object QueryService extends LazyLogging {
       valuesClause = (sparqlLines ++ moreLines).mkString("\n")
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
       prefixMap <- readPrefixes
-      prefixes = prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n")
+      prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       queryString = s"$prefixes\n$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"
       query <- Task.effect(QueryFactory.create(queryString))
       response <- SPARQLQueryExecutor.runSelectQuery(query)
@@ -195,7 +195,7 @@ object QueryService extends LazyLogging {
   def getProvenance(source: String, predicate: String, target: String): RIO[ZConfig[AppConfig], String] =
     for {
       prefixMap <- readPrefixes
-      prefixes <- Task.effect(prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
+      prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       queryText <- Task.effect(
         s"""$prefixes
           |SELECT ?g ?other WHERE {
@@ -211,7 +211,7 @@ object QueryService extends LazyLogging {
   def getKnowledgeGraphNodeDetails(nodeIds: String): RIO[ZConfig[AppConfig], Map[String, List[String]]] =
     for {
       prefixMap <- readPrefixes
-      prefixes <- Task.effect(prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
+      prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       queryText <- Task.effect(
         s"""$prefixes
             |SELECT DISTINCT ?kid ?blclass ?label WHERE {
@@ -234,7 +234,7 @@ object QueryService extends LazyLogging {
   def getCAMStuff(prov: String): RIO[ZConfig[AppConfig], List[(String, String, String)]] =
     for {
       prefixMap <- readPrefixes
-      prefixes <- Task.effect(prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
+      prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       queryText <- Task.effect(
         s"""$prefixes
            |SELECT DISTINCT ?s_type ?p ?o_type WHERE {
@@ -256,7 +256,7 @@ object QueryService extends LazyLogging {
   def getSlotStuff(predicateMap: List[String]): RIO[ZConfig[AppConfig], List[(String, String, String, String)]] =
     for {
       prefixMap <- readPrefixes
-      prefixes <- Task.effect(prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
+      prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       values <- Task.effect(
         predicateMap.zipWithIndex
           .map(a => String.format(" ( <%s> \"e%s\" ) ", a._1, StringUtils.leftPad(a._2.toString, 4, '0')))
