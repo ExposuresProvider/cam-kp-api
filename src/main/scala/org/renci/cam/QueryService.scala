@@ -238,7 +238,7 @@ object QueryService extends LazyLogging {
       prefixMap <- readPrefixes
       prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       queryText = s"""$prefixes
-           |SELECT DISTINCT ?s_type ?p ?o_type WHERE {
+           |SELECT DISTINCT (?s_type AS ?subj) (?p AS ?pred) (?o_type AS ?obj) WHERE {
            |GRAPH <$prov> {
            |?s ?p ?o .
            |?s rdf:type owl:NamedIndividual .
@@ -248,10 +248,8 @@ object QueryService extends LazyLogging {
            |?s sesame:directType ?s_type .
            |}""".stripMargin
       query <- Task.effect(QueryFactory.create(queryText))
-      resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
-      response <- Task.effect(
-        resultSet.asScala.toList.map(qs => Triple(qs.get("s_type").toString, qs.get("p").toString, qs.get("o_type").toString)).toList)
-    } yield response
+      triples <- SPARQLQueryExecutor.runSelectQueryAs[Triple](query)
+    } yield triples
 
   def getSlotStuff(predicateMap: List[String]): RIO[ZConfig[AppConfig], List[(String, String, String, String)]] =
     for {
