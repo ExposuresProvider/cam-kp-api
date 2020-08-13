@@ -114,8 +114,9 @@ object QueryService extends LazyLogging {
           nodeMap <- Task.effect(queryGraph.nodes.map(n => (n.id, querySolution.get(s"${n.id}_type").toString)).toMap)
           nodeBindings <- ZIO.foreach(queryGraph.nodes) { n =>
             for {
-              abbreviatedNodeType <- applyPrefix(nodeMap.get(n.id).get)
-              nodeDetails <- getKnowledgeGraphNodeDetails(s"<${nodeMap.get(n.id).get}>")
+              nodeIRI <- ZIO.fromOption(nodeMap.get(n.id)).orElseFail(new Exception(s"Missing node IRI: ${n.id}"))
+              abbreviatedNodeType <- applyPrefix(nodeIRI)
+              nodeDetails <- getKnowledgeGraphNodeDetails(s"<$nodeIRI>")
               nodeDetailsHead <- ZIO.fromOption(nodeDetails.headOption).orElseFail(new Exception(s"Missing node details: ${n.id}"))
               _ = {
                 val attribute = TRAPINodeAttribute(
