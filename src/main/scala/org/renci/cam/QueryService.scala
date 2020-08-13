@@ -36,11 +36,11 @@ object QueryService extends LazyLogging {
     for {
       legacyJSONString <-
         Task.effect(IOUtils.resourceToString("legacy_prefixes.json", StandardCharsets.UTF_8, this.getClass.getClassLoader))
-      legacyJSON <- Task.effect(parse(legacyJSONString).getOrElse(Json.Null))
-      legacyMap <- Task.effect(legacyJSON.as[Map[String, String]].getOrElse(Map.empty))
+      legacyJSON <- ZIO.fromEither(parse(legacyJSONString))
+      legacyMap = legacyJSON.as[Map[String, String]].getOrElse(Map.empty)
       jsonString <- Task.effect(IOUtils.resourceToString("prefixes.json", StandardCharsets.UTF_8, this.getClass.getClassLoader))
-      json <- Task.effect(parse(jsonString).getOrElse(Json.Null))
-      map <- Task.effect(json.as[Map[String, String]].getOrElse(Map.empty))
+      json <- ZIO.fromEither(parse(jsonString))
+      map = json.as[Map[String, String]].getOrElse(Map.empty)
     } yield legacyMap.++(map)
 
   def applyPrefix(value: String) =
