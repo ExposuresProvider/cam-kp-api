@@ -42,16 +42,12 @@ object QueryService extends LazyLogging {
       map = json.as[Map[String, String]].getOrElse(Map.empty)
     } yield legacyMap.++(map)
 
-  def applyPrefix(value: String): Task[String] =
-    for {
-      p <- readPrefixes
-      ret =
-        p
-          .filter(entry => value.startsWith(entry._2))
-          .map(entry => s"${entry._1}:" + value.substring(entry._2.length, value.length))
-          .headOption
-          .getOrElse(value)
-    } yield ret
+  def applyPrefix(value: String, prefixes: Map[String, String]): String =
+    prefixes
+      .filter(entry => value.startsWith(entry._2))
+      .map(entry => s"${entry._1}:" + value.substring(entry._2.length, value.length))
+      .headOption
+      .getOrElse(value)
 
   def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig], ResultSet] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
@@ -104,6 +100,7 @@ object QueryService extends LazyLogging {
 
   def parseResultSet(queryGraph: TRAPIQueryGraph, resultSet: ResultSet): RIO[ZConfig[AppConfig], TRAPIMessage] =
     for {
+      prefixes <- readPrefixes
       kgNodes <- Task.effect(mutable.ListBuffer[TRAPINode]())
       kgEdges <- Task.effect(mutable.ListBuffer[TRAPIEdge]())
       kgExtraNodes <- Task.effect(mutable.ListBuffer[TRAPINodeBinding]())
@@ -115,7 +112,7 @@ object QueryService extends LazyLogging {
           nodeBindings <- ZIO.foreach(queryGraph.nodes) { n =>
             for {
               nodeIRI <- ZIO.fromOption(nodeMap.get(n.id)).orElseFail(new Exception(s"Missing node IRI: ${n.id}"))
-              abbreviatedNodeType <- applyPrefix(nodeIRI)
+              abbreviatedNodeType = applyPrefix(nodeIRI, prefixes)
               nodeDetails <- getKnowledgeGraphNodeDetails(s"<$nodeIRI>")
               nodeDetailsHead <- ZIO.fromOption(nodeDetails.headOption).orElseFail(new Exception(s"Missing node details: ${n.id}"))
               _ = {
@@ -141,8 +138,8 @@ object QueryService extends LazyLogging {
                   NewTRAPIEdge(e.`type`, e.source_id, e.target_id).asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8)
                 String.format("%064x", new BigInteger(1, messageDigest.digest(newTRAPIEdge)))
               }
-              prefixedSource <- applyPrefix(nodeMap.get(e.source_id).get)
-              prefixedTarget <- applyPrefix(nodeMap.get(e.target_id).get)
+              prefixedSource = applyPrefix(nodeMap.get(e.source_id).get, prefixes)
+              prefixedTarget = applyPrefix(nodeMap.get(e.target_id).get, prefixes)
               _ = kgEdges += TRAPIEdge(knowledgeGraphId, Some(e.`type`), prefixedSource, prefixedTarget)
               prov <- getProvenance(sourceRDFNode, predicateRDFNode, targetRDFNode)
             } yield TRAPIEdgeBinding(Some(e.id), knowledgeGraphId, Some(prov))
@@ -152,8 +149,8 @@ object QueryService extends LazyLogging {
               camStuffTriples <- getCAMStuff(p)
               slotStuffList <- getSlotStuff(camStuffTriples.map(a => a.pred).distinct)
               _ <- ZIO.foreach(camStuffTriples.map(a => a.subj).distinct) { sourceId =>
+                val abbreviatedNodeType = applyPrefix(sourceId, prefixes)
                 for {
-                  abbreviatedNodeType <- applyPrefix(sourceId)
                   nodeDetails <- getKnowledgeGraphNodeDetails(s"<$sourceId>")
                   nodeDetailsHead <- Task.effect(nodeDetails.head)
                   _ = {
@@ -169,21 +166,17 @@ object QueryService extends LazyLogging {
                   }
                 } yield ()
               }
-              _ <- ZIO.foreach(camStuffTriples) { triple =>
-                for {
-                  prefixedSource <- applyPrefix(triple.subj)
-                  prefixedTarget <- applyPrefix(triple.obj)
-                  prefixedPredicate <- applyPrefix(triple.pred)
-                  _ = {
-                    val edge = NewTRAPIEdge(triple.pred, triple.subj, triple.obj).asJson.deepDropNullValues.noSpaces
-                    val knowledgeGraphId =
-                      String.format("%064x", new BigInteger(1, messageDigest.digest(edge.getBytes(StandardCharsets.UTF_8))))
-                    val resolvedType =
-                      slotStuffList.filter(a => a._2.equals(triple.pred)).map(a => a._4).headOption.getOrElse(prefixedPredicate)
-                    kgEdges += TRAPIEdge(knowledgeGraphId, Some(resolvedType), prefixedSource, prefixedTarget)
-                    kgExtraEdges += TRAPIEdgeBinding(None, knowledgeGraphId, Some(p))
-                  }
-                } yield ()
+              _ = camStuffTriples.foreach { triple =>
+                val prefixedSource = applyPrefix(triple.subj, prefixes)
+                val prefixedTarget = applyPrefix(triple.obj, prefixes)
+                val prefixedPredicate = applyPrefix(triple.pred, prefixes)
+                val edge = NewTRAPIEdge(triple.pred, triple.subj, triple.obj).asJson.deepDropNullValues.noSpaces
+                val knowledgeGraphId =
+                  String.format("%064x", new BigInteger(1, messageDigest.digest(edge.getBytes(StandardCharsets.UTF_8))))
+                val resolvedType =
+                  slotStuffList.filter(a => a._2.equals(triple.pred)).map(a => a._4).headOption.getOrElse(prefixedPredicate)
+                kgEdges += TRAPIEdge(knowledgeGraphId, Some(resolvedType), prefixedSource, prefixedTarget)
+                kgExtraEdges += TRAPIEdgeBinding(None, knowledgeGraphId, Some(p))
               }
             } yield ()
           }
