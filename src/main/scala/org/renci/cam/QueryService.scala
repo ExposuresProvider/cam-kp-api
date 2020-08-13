@@ -24,7 +24,7 @@ object QueryService extends LazyLogging {
 
   case class NewTRAPIEdge(`type`: String, source_id: String, target_id: String)
 
-  def getNodeTypes(nodes: List[TRAPIQueryNode]) = {
+  def getNodeTypes(nodes: List[TRAPIQueryNode]): Map[String, String] = {
     val nodeTypes = nodes.collect {
       case node if node.`type`.nonEmpty => (node.id, "bl:" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, node.`type`))
     }.toMap
@@ -32,7 +32,7 @@ object QueryService extends LazyLogging {
     newNodeTypes
   }
 
-  def readPrefixes =
+  def readPrefixes: Task[Map[String, String]] =
     for {
       legacyJSONString <-
         Task.effect(IOUtils.resourceToString("legacy_prefixes.json", StandardCharsets.UTF_8, this.getClass.getClassLoader))
@@ -43,7 +43,7 @@ object QueryService extends LazyLogging {
       map = json.as[Map[String, String]].getOrElse(Map.empty)
     } yield legacyMap.++(map)
 
-  def applyPrefix(value: String) =
+  def applyPrefix(value: String): Task[String] =
     for {
       p <- readPrefixes
       ret =
