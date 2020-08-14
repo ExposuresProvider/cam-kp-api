@@ -11,7 +11,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.jena.ext.com.google.common.base.CaseFormat
 import org.apache.jena.query.{QueryFactory, ResultSet}
 import org.renci.cam.domain._
-import zio.config.Config
+import zio.config.ZConfig
 import zio.{RIO, Task, ZIO, config => _}
 import io.circe._
 import io.circe.parser.{parse, _}
@@ -108,7 +108,7 @@ object QueryService extends LazyLogging {
       response <- SPARQLQueryExecutor.runSelectQuery(query)
     } yield response
 
-  def parseResultSet(queryGraph: TranslatorQueryGraph, resultSet: ResultSet): RIO[Config[AppConfig], TranslatorMessage] =
+  def parseResultSet(queryGraph: TranslatorQueryGraph, resultSet: ResultSet): RIO[ZConfig[AppConfig], TranslatorMessage] =
     for {
       kgNodes <- Task.effect(mutable.ListBuffer[TranslatorNode]())
       kgEdges <- Task.effect(mutable.ListBuffer[TranslatorEdge]())
@@ -144,18 +144,11 @@ object QueryService extends LazyLogging {
               prov <- getProvenance(sourceRDFNode, predicateRDFNode, targetRDFNode)
             } yield TranslatorEdgeBinding(e.id, knowledgeGraphId, Some(prov.toString))
           }
-//          _ <- ZIO.foreach(edgeBindings.map(a => a.provenance.get).toList) { p =>
-//            for {
-//              camStuffTriples <- getCAMStuffQuery(p)
-//
-//            } yield ()
-//          }
-
         } yield TranslatorResult(nodeBindings, edgeBindings)
       }
     } yield TranslatorMessage(Some(queryGraph), Some(TranslatorKnowledgeGraph(kgNodes.toList, kgEdges.toList)), results)
 
-  def getProvenance(source: String, predicate: String, target: String): RIO[Config[AppConfig], String] =
+  def getProvenance(source: String, predicate: String, target: String): RIO[ZConfig[AppConfig], String] =
     for {
       prefixMap <- readPrefixes
       prefixes <- Task.effect(prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
@@ -172,7 +165,7 @@ object QueryService extends LazyLogging {
       prov <- Task.effect(nextSolution.get("other").toString).orElse(Task.effect(nextSolution.get("g").toString))
     } yield prov
 
-  def getKnowledgeGraphNodeDetails(nodeIds: String): RIO[Config[AppConfig], Map[String, List[String]]] =
+  def getKnowledgeGraphNodeDetails(nodeIds: String): RIO[ZConfig[AppConfig], Map[String, List[String]]] =
     for {
       prefixMap <- readPrefixes
       prefixes <- Task.effect(prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
@@ -196,7 +189,7 @@ object QueryService extends LazyLogging {
       )
     } yield map
 
-  def getCAMStuffQuery(prov: String): RIO[Config[AppConfig], List[(String, String, String)]] =
+  def getCAMStuffQuery(prov: String): RIO[ZConfig[AppConfig], String] =
     for {
       prefixMap <- readPrefixes
       prefixes <- Task.effect(prefixMap.map(entry => s"PREFIX ${entry._1}: <${entry._2}>").mkString("\n"))
