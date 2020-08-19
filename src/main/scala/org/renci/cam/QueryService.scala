@@ -12,7 +12,6 @@ import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.ext.com.google.common.base.CaseFormat
 import org.apache.jena.ext.xerces.util.URI
-import org.apache.jena.iri.IRI
 import org.apache.jena.query.{QueryFactory, ResultSet}
 import org.renci.cam.domain._
 import zio.config.ZConfig
