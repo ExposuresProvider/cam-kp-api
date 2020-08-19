@@ -11,6 +11,8 @@ import io.circe.syntax._
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.ext.com.google.common.base.CaseFormat
+import org.apache.jena.ext.xerces.util.URI
+import org.apache.jena.iri.IRI
 import org.apache.jena.query.{QueryFactory, ResultSet}
 import org.renci.cam.domain._
 import zio.config.ZConfig
@@ -148,9 +150,9 @@ object QueryService extends LazyLogging {
           _ <- ZIO.foreach(edgeBindings.map(a => a.provenance.get)) { p =>
             for {
               camStuffTriples <- getCAMStuff(p)
-              slotStuffList <- getSlotStuff(camStuffTriples.map(a => a.pred).distinct)
-              _ <- ZIO.foreach(camStuffTriples.map(a => a.subj).distinct) { sourceId =>
-                val abbreviatedNodeType = applyPrefix(sourceId, prefixes)
+              slotStuffList <- getSlotStuff(camStuffTriples.map(a => a.pred.toString).distinct)
+              _ <- ZIO.foreach(camStuffTriples.map(a => a.subj.toString).distinct) { sourceId =>
+                val abbreviatedNodeType = applyPrefix(sourceId.toString, prefixes)
                 for {
                   nodeDetails <- getKnowledgeGraphNodeDetails(s"<$sourceId>")
                   nodeDetailsHead <- Task.effect(nodeDetails.head)
@@ -168,10 +170,10 @@ object QueryService extends LazyLogging {
                 } yield ()
               }
               _ = camStuffTriples.foreach { triple =>
-                val prefixedSource = applyPrefix(triple.subj, prefixes)
-                val prefixedTarget = applyPrefix(triple.obj, prefixes)
-                val prefixedPredicate = applyPrefix(triple.pred, prefixes)
-                val edge = NewTRAPIEdge(triple.pred, triple.subj, triple.obj).asJson.deepDropNullValues.noSpaces
+                val prefixedSource = applyPrefix(triple.subj.toString, prefixes)
+                val prefixedTarget = applyPrefix(triple.obj.toString, prefixes)
+                val prefixedPredicate = applyPrefix(triple.pred.toString, prefixes)
+                val edge = NewTRAPIEdge(triple.pred.toString, triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
                 val knowledgeGraphId =
                   String.format("%064x", new BigInteger(1, messageDigest.digest(edge.getBytes(StandardCharsets.UTF_8))))
                 val resolvedType =
@@ -225,7 +227,7 @@ object QueryService extends LazyLogging {
       )
     } yield map
 
-  final case class Triple(subj: String, pred: String, obj: String)
+  final case class Triple(subj: URI, pred: URI, obj: URI)
 
   def getCAMStuff(prov: String): RIO[ZConfig[AppConfig], List[Triple]] =
     for {
