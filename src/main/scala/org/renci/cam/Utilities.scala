@@ -8,14 +8,13 @@ import org.http4s.implicits._
 import org.http4s.circe._
 import zio.interop.catz._
 
-class Utilities {
+object Utilities {
 
-  def getBiolinkModel =
+  def getBiolinkModel: ZIO[Any, Throwable, Map[String, String]] =
     for {
       httpClient <- SPARQLQueryExecutor.makeHttpClient
       uri = uri"https://biolink.github.io/biolink-model/context.jsonld"
-      request =
-        Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`ld+json`), `Content-Type`(MediaType.application.`ld+json`))
+      request = Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`ld+json`))
       biolinkModelJson <- httpClient.use(_.expect[Json](request))
       cursor = biolinkModelJson.hcursor
       contextValue <- ZIO.fromEither(cursor.downField("@context").as[Map[String, Json]])
