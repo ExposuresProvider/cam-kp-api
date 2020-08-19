@@ -9,7 +9,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{ResultSetFactory, ResultSetFormatter}
-import org.renci.cam.QueryService.NewTRAPIEdge
+import org.renci.cam.QueryService.TRAPIEdgeKey
 import org.renci.cam.domain._
 import zio.Task
 import zio.test.Assertion._
@@ -26,9 +26,9 @@ object SerializationTest extends DefaultRunnableSpec {
       testM("test consistency of message digest") {
         for {
           messageDigest <- Task.effect(MessageDigest.getInstance("SHA-256"))
-          firstTRAPIEdge <- Task.effect(NewTRAPIEdge(Some("asdfasdf"), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8))
+          firstTRAPIEdge <- Task.effect(TRAPIEdgeKey(Some("asdfasdf"), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8))
           first <- Task.effect(String.format("%064x", new BigInteger(1, messageDigest.digest(firstTRAPIEdge))))
-          secondTRAPIEdge <- Task.effect(NewTRAPIEdge(Some("asdfasdf"), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8))
+          secondTRAPIEdge <- Task.effect(TRAPIEdgeKey(Some("asdfasdf"), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8))
           second <- Task.effect(String.format("%064x", new BigInteger(1, messageDigest.digest(secondTRAPIEdge))))
         } yield assert(first)(equalTo(second))
       }/*@@ ignore*/,
