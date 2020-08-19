@@ -54,7 +54,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
           parsed <- Task.effect(parse(response).getOrElse(Json.Null))
           _ = Files.write(Paths.get("src/test/resources/local-scala.json"), parsed.as[String].toOption.get.getBytes)
         } yield assert(response)(isNonEmptyString)
-      } /*@@ ignore*/,
+      } @@ ignore,
       testM("test gene to gene") {
         val n0Node = TRAPIQueryNode("n0", Some("gene"), Some("UniProtKB:P30530") )
         val n1Node = TRAPIQueryNode("n1", Some("biological_process"), None)
