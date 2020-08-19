@@ -2,9 +2,9 @@ package org.renci.cam
 
 package object domain {
 
-  case class TRAPIQueryNode(id: String, `type`: String, curie: Option[String])
+  case class TRAPIQueryNode(id: String, `type`: Option[String], curie: Option[String])
 
-  case class TRAPIQueryEdge(id: String, `type`: String, source_id: String, target_id: String)
+  case class TRAPIQueryEdge(id: String, source_id: String, target_id: String, `type`: Option[String])
 
   case class TRAPIQueryGraph(nodes: List[TRAPIQueryNode], edges: List[TRAPIQueryEdge])
 
@@ -12,7 +12,7 @@ package object domain {
 
   case class TRAPINode(name: Option[String], `type`: List[String], attributes: List[TRAPINodeAttribute])
 
-  case class TRAPIEdge(id: String, `type`: Option[String], source_id: String, target_id: String)
+  case class TRAPIEdge(id: String, source_id: String, target_id: String, `type`: Option[String])
 
   case class TRAPIKnowledgeGraph(nodes: List[TRAPINode], edges: List[TRAPIEdge])
 
@@ -25,7 +25,9 @@ package object domain {
                          extra_nodes: Option[List[TRAPINodeBinding]],
                          extra_edges: Option[List[TRAPIEdgeBinding]])
 
-  case class TRAPIMessage(query_graph: Option[TRAPIQueryGraph], knowledge_graph: Option[TRAPIKnowledgeGraph], results: List[TRAPIResult])
+  case class TRAPIMessage(query_graph: Option[TRAPIQueryGraph],
+                          knowledge_graph: Option[TRAPIKnowledgeGraph],
+                          results: Option[List[TRAPIResult]])
 
   case class TRAPIQueryRequestBody(message: TRAPIMessage)
 
