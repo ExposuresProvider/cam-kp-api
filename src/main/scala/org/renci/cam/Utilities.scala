@@ -10,7 +10,7 @@ import zio.interop.catz._
 
 object Utilities {
 
-  def getBiolinkModel: ZIO[Any, Throwable, Map[String, String]] =
+  def getBiolinkPrefixes: ZIO[Any, Throwable, Map[String, String]] =
     for {
       httpClient <- SPARQLQueryExecutor.makeHttpClient
       uri = uri"https://biolink.github.io/biolink-model/context.jsonld"
