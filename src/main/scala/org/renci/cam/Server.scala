@@ -1,9 +1,7 @@
 package org.renci.cam
 
-import cats.implicits._
 import io.circe.generic.auto._
-import org.apache.jena.riot.ResultSetMgr
-import org.apache.jena.riot.resultset.ResultSetLang
+import io.circe.syntax._
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -17,41 +15,54 @@ import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{Config, _}
+import zio.config.{ZConfig, _}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio.{config => _, _}
 
 object Server extends App {
 
-  val queryEndpoint: ZEndpoint[(Int, KGSQueryRequestBody), String, String] =
+  val predicatesEndpoint: ZEndpoint[Unit, String, String] = endpoint.get.in("predicates").errorOut(stringBody).out(jsonBody[String])
+
+  val predicatesRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = predicatesEndpoint.toRoutesR {
+    case () =>
+      val program = for {
+        response <- Task.effect("")
+      } yield response
+      program.mapError(error => error.getMessage)
+  }
+
+  val queryEndpoint: ZEndpoint[(Int, TranslatorQueryRequestBody), String, String] =
     endpoint.post
       .in("query")
       .in(query[Int]("limit"))
-      .in(jsonBody[KGSQueryRequestBody])
+      .in(jsonBody[TranslatorQueryRequestBody])
       .errorOut(stringBody)
       .out(jsonBody[String])
 
-  val routesR: URIO[Config[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
+  val queryRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
     case (limit, body) =>
       //do stuff with queryGraph
-      val queryGraph: KGSQueryGraph = body.message.query_graph
       val program = for {
+        queryGraph <- Task.effect(body.message.query_graph.get)
         resultSet <- QueryService.run(limit, queryGraph)
-        response <- Task.effect(ResultSetMgr.asString(resultSet, ResultSetLang.SPARQLResultSetJSON))
+        message <- QueryService.parseResultSet(queryGraph, resultSet)
+        response <- Task.effect(message.asJson.deepDropNullValues.noSpaces)
       } yield response
       program.mapError(error => error.getMessage)
   }
 
   // will be available at /docs
-  val openAPI: String = List(queryEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
+  val openAPI: String = List(queryEndpoint, predicatesEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
 
-  val server: RIO[Config[AppConfig], Unit] =
+  val server: RIO[ZConfig[AppConfig], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
-        routes <- routesR
         appConfig <- config[AppConfig]
-        httpApp = Router("/" -> (routes <+> new SwaggerHttp4s(openAPI).routes[Task])).orNotFound
+        predicatesRoute <- predicatesRouteR
+        queryRoute <- queryRouteR
+        docsRoute = new SwaggerHttp4s(openAPI).routes[Task]
+        httpApp = Router("/" -> queryRoute, "/" -> predicatesRoute, "/" -> docsRoute).orNotFound
         httpAppWithLogging = Logger.httpApp(true, true)(httpApp)
         result <-
           BlazeServerBuilder[Task](runtime.platform.executor.asEC)
@@ -63,7 +74,7 @@ object Server extends App {
       } yield result
     }
 
-  val configLayer: Layer[Throwable, Config[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
+  val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = server.provideLayer(configLayer).exitCode
 
