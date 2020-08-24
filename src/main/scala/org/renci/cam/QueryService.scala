@@ -147,10 +147,18 @@ object QueryService extends LazyLogging {
           }
           _ = trapiKGNodes ++= extraKGNodes.flatten
 
+          allPredicates = (for {
+              edgeBinding <- trapiKGEdgeBindings
+              prov <- edgeBinding.provenance.toList
+              camStuffTriples <- prov2CAMStuffTripleMap.get(prov).toList
+              triple <- camStuffTriples
+              predicate = triple.pred.toString
+            } yield predicate).distinct
+          slotStuffList <- getSlotStuff(allPredicates)
+
           extraKGEdges <- ZIO.foreach(trapiKGEdgeBindings.map(a => a.provenance.get)) { prov =>
             for {
               camStuffTriples <- ZIO.fromOption(prov2CAMStuffTripleMap.get(prov)).orElseFail(new Exception("failed to get cam triples"))
-              slotStuffList <- getSlotStuff(camStuffTriples.map(a => a.pred.toString).distinct)
               edges <- ZIO.foreach(camStuffTriples) { triple =>
                 for {
                   edgeKey <- Task.effect(
