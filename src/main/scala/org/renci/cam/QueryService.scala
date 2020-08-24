@@ -112,98 +112,58 @@ object QueryService extends LazyLogging {
   def parseResultSet(queryGraph: TRAPIQueryGraph, resultSet: ResultSet): RIO[ZConfig[AppConfig], TRAPIMessage] =
     for {
       prefixes <- readPrefixes
-      messageDigest <- Task.effect(MessageDigest.getInstance("SHA-256"))
-
-      trapiKGNodes <- Task.effect(mutable.ListBuffer[TRAPINode]())
-      trapiKGEdges <- Task.effect(mutable.ListBuffer[TRAPIEdge]())
-
       querySolutions = resultSet.asScala.toList
+      //FIXME these initial nodes have incorrect 'name' properties; should not be query graph name
       initialKGNodes <- getTRAPINodes(queryGraph, querySolutions, prefixes)
-      initialKGEdges <- getTRAPIEdges(queryGraph, querySolutions, prefixes, messageDigest)
-
-      _ = {
-        trapiKGNodes ++= initialKGNodes
-        trapiKGEdges ++= initialKGEdges
+      initialKGEdges <- getTRAPIEdges(queryGraph, querySolutions, prefixes)
+      trapiBindings <- ZIO.foreach(querySolutions) { querySolution =>
+        getTRAPINodeBindings(queryGraph, querySolution, prefixes) zip getTRAPIEdgeBindings(queryGraph, querySolution)
       }
-
-      results <- ZIO.foreach(querySolutions) { querySolution =>
-        for {
-          trapiKGNodeBindings <- getTRAPINodeBindings(queryGraph, querySolution, prefixes)
-          trapiKGEdgeBindings <- getTRAPIEdgeBindings(queryGraph, querySolution, messageDigest)
-
-          map <- ZIO.foreach(trapiKGEdgeBindings.map(a => a.provenance.get)) { prov =>
-            for {
-              camStuffTriples <- getCAMStuff(prov)
-            } yield (prov, camStuffTriples)
-          }
-          prov2CAMStuffTripleMap = map.toMap
-
-          extraKGNodes <- ZIO.foreach(trapiKGEdgeBindings.map(a => a.provenance.get)) { prov =>
-            for {
-              camStuffTriples <- ZIO.fromOption(prov2CAMStuffTripleMap.get(prov)).orElseFail(new Exception("failed to get cam triples"))
-              slotStuffNodeDetails <- getTRAPINodeDetails(camStuffTriples.map(a => a.subj).distinct.map(v => s"<$v>"))
-              extraKGNodes <- getExtraKGNodes(camStuffTriples, slotStuffNodeDetails, prefixes)
-            } yield extraKGNodes
-          }
-          _ = trapiKGNodes ++= extraKGNodes.flatten
-
-          allPredicates = (for {
-              edgeBinding <- trapiKGEdgeBindings
-              prov <- edgeBinding.provenance.toList
-              camStuffTriples <- prov2CAMStuffTripleMap.get(prov).toList
-              triple <- camStuffTriples
-              predicate = triple.pred.toString
-            } yield predicate).distinct
-          slotStuffList <- getSlotStuff(allPredicates)
-
-          extraKGEdges <- ZIO.foreach(trapiKGEdgeBindings.map(a => a.provenance.get)) { prov =>
-            for {
-              camStuffTriples <- ZIO.fromOption(prov2CAMStuffTripleMap.get(prov)).orElseFail(new Exception("failed to get cam triples"))
-              edges <- ZIO.foreach(camStuffTriples) { triple =>
-                for {
-                  edgeKey <- Task.effect(
-                    TRAPIEdgeKey(Some(triple.pred.toString), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces)
-                  knowledgeGraphId =
-                    String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
-                  resolvedType =
-                    slotStuffList
-                      .filter(a => a._2.equals(triple.pred.toString))
-                      .map(a => a._4)
-                      .headOption
-                      .getOrElse(applyPrefix(triple.pred.toString, prefixes))
-                  edge = TRAPIEdge(knowledgeGraphId,
-                                   applyPrefix(triple.subj.toString, prefixes),
-                                   applyPrefix(triple.obj.toString, prefixes),
-                                   Some(resolvedType))
-                } yield edge
-              }
-            } yield edges
-          }
-          _ = trapiKGEdges ++= extraKGEdges.flatten
-
-          extraKGNodeBindings <- ZIO.foreach(trapiKGEdgeBindings.map(a => a.provenance.get)) { prov =>
-            for {
-              camStuffTriples <- ZIO.fromOption(prov2CAMStuffTripleMap.get(prov)).orElseFail(new Exception("failed to get cam triples"))
-              nodeBindings = camStuffTriples.map(a => a.subj.toString).distinct.map(a => TRAPINodeBinding(None, applyPrefix(a, prefixes)))
-            } yield nodeBindings
-          }
-
-          extraKGEdgeBindings <- ZIO.foreach(trapiKGEdgeBindings.map(a => a.provenance.get)) { prov =>
-            for {
-              camStuffTriples <- ZIO.fromOption(prov2CAMStuffTripleMap.get(prov)).orElseFail(new Exception("failed to get cam triples"))
-              edgeBindings <- ZIO.foreach(camStuffTriples) { triple =>
-                for {
-                  edgeKey <- Task.effect(
-                    TRAPIEdgeKey(Some(triple.pred.toString), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces)
-                  kgId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
-                  edgeBinding = TRAPIEdgeBinding(None, kgId, Some(prov))
-                } yield edgeBinding
-              }
-            } yield edgeBindings
-          }
-        } yield TRAPIResult(trapiKGNodeBindings, trapiKGEdgeBindings, Some(extraKGNodeBindings.flatten), Some(extraKGEdgeBindings.flatten))
+      allEdgeBindings = trapiBindings.flatMap(_._2)
+      allCamIds = allEdgeBindings.toSet[TRAPIEdgeBinding].flatMap(_.provenance)
+      prov2CAMStuffTripleMap <- ZIO.foreachPar(allCamIds)(prov => getCAMStuff(prov).map(prov -> _)).map(_.toMap)
+      allCAMTriples = prov2CAMStuffTripleMap.values.toSet.flatten
+      allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj, t.obj))
+      slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.map(v => s"<$v>").toList)
+      extraKGNodes = getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, prefixes)
+      allPredicates = allCAMTriples.map(_.pred.toString)
+      slotStuffList <- getSlotStuff(allPredicates.toList)
+      extraKGEdges = allCAMTriples.map { triple =>
+        val edgeKey = TRAPIEdgeKey(Some(triple.pred.toString), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
+        val knowledgeGraphId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+        val resolvedType = slotStuffList
+          .filter(a => a._2.equals(triple.pred.toString))
+          .map(a => a._4)
+          .headOption
+          .getOrElse(applyPrefix(triple.pred.toString, prefixes))
+        TRAPIEdge(knowledgeGraphId,
+                  applyPrefix(triple.subj.toString, prefixes),
+                  applyPrefix(triple.obj.toString, prefixes),
+                  Some(resolvedType))
       }
-    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(trapiKGNodes.toList, trapiKGEdges.toList)), Some(results))
+      results = trapiBindings.map {
+        case (resultNodeBindings, resultEdgeBindings) =>
+          val provsAndCamTriples =
+            resultEdgeBindings.flatMap(_.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).toSet.flatten).toMap
+          val nodes = provsAndCamTriples.values.flatten.toSet[Triple].flatMap(t => Set(t.subj, t.obj))
+          val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(None, applyPrefix(n.toString, prefixes)))
+          val extraKGEdgeBindings = provsAndCamTriples.flatMap {
+            case (prov, triples) =>
+              triples.map { triple =>
+                val edgeKey =
+                  TRAPIEdgeKey(Some(triple.pred.toString), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
+                val kgId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+                TRAPIEdgeBinding(None, kgId, Some(prov))
+              }
+          }.toSet
+          TRAPIResult(resultNodeBindings, resultEdgeBindings, Some(extraKGNodeBindings.toList), Some(extraKGEdgeBindings.toList))
+      }
+      trapiKGNodes = initialKGNodes ++ extraKGNodes
+      trapiKGEdges = initialKGEdges ++ extraKGEdges
+    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(trapiKGNodes, trapiKGEdges)), Some(results))
+
+  // instances are not thread-safe; should be retrieved for every use
+  private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
 
   private def getTRAPINodes(queryGraph: TRAPIQueryGraph,
                             querySolutions: List[QuerySolution],
@@ -244,8 +204,7 @@ object QueryService extends LazyLogging {
 
   private def getTRAPIEdges(queryGraph: TRAPIQueryGraph,
                             querySolutions: List[QuerySolution],
-                            prefixes: Map[String, String],
-                            messageDigest: MessageDigest): RIO[ZConfig[AppConfig], List[TRAPIEdge]] =
+                            prefixes: Map[String, String]): RIO[ZConfig[AppConfig], List[TRAPIEdge]] =
     for {
       trapiEdges <- ZIO.foreach(querySolutions) { querySolution =>
         for {
@@ -277,8 +236,7 @@ object QueryService extends LazyLogging {
     } yield nodeBindings
 
   private def getTRAPIEdgeBindings(queryGraph: TRAPIQueryGraph,
-                                   querySolution: QuerySolution,
-                                   messageDigest: MessageDigest): RIO[ZConfig[AppConfig], List[TRAPIEdgeBinding]] =
+                                   querySolution: QuerySolution): RIO[ZConfig[AppConfig], List[TRAPIEdgeBinding]] =
     for {
       nodeMap <- Task.effect(queryGraph.nodes.map(n => (n.id, querySolution.get(s"${n.id}_type").toString)).toMap)
       edgeBindings <- ZIO.foreach(queryGraph.edges) { e =>
@@ -294,37 +252,28 @@ object QueryService extends LazyLogging {
       }
     } yield edgeBindings
 
-  private def getExtraKGNodes(camStuffTriples: List[Triple],
-                              slotStuffNodeDetails: List[TripleString],
-                              prefixes: Map[String, String]): RIO[ZConfig[AppConfig], List[TRAPINode]] =
+  private def getExtraKGNodes(camNodes: Set[URI], slotStuffNodeDetails: List[TripleString], prefixes: Map[String, String]): Set[TRAPINode] =
     for {
-      extraKGNodes <- ZIO.foreach(camStuffTriples.map(a => a.subj).distinct) { sourceId =>
-        for {
-          slotStuffNodeDetailTypes <-
-            ZIO
-              .fromOption(
-                slotStuffNodeDetails
-                  .filter(a => sourceId.toString.equals(a.subj))
-                  .map(a => (a.pred, a.obj))
-                  .groupBy(_._1)
-                  .map({ case (k, v) => (k, v.map(a => a._2)) })
-                  .headOption
-              )
-              .orElseFail(new Exception("failed to get slot node detail types"))
-          attribute = {
-            val abbreviatedNodeType = applyPrefix(sourceId.toString, prefixes)
-            TRAPINodeAttribute(
-              None,
-              abbreviatedNodeType.substring(abbreviatedNodeType.indexOf(":") + 1, abbreviatedNodeType.length),
-              abbreviatedNodeType,
-              Some(sourceId.toString),
-              Some(abbreviatedNodeType.substring(0, abbreviatedNodeType.indexOf(":")))
-            )
-          }
-          kgNode = TRAPINode(Some(slotStuffNodeDetailTypes._1), slotStuffNodeDetailTypes._2.sorted, List[TRAPINodeAttribute](attribute))
-        } yield kgNode
+      node <- camNodes
+      slotStuffNodeDetailTypes <-
+        slotStuffNodeDetails
+          .filter(a => node.toString.equals(a.subj))
+          .map(a => (a.pred, a.obj))
+          .groupBy(_._1)
+          .map({ case (k, v) => (k, v.map(a => a._2)) })
+          .headOption
+      attribute = {
+        val abbreviatedNodeType = applyPrefix(node.toString, prefixes)
+        TRAPINodeAttribute(
+          None,
+          abbreviatedNodeType.substring(abbreviatedNodeType.indexOf(":") + 1, abbreviatedNodeType.length),
+          abbreviatedNodeType,
+          Some(node.toString),
+          Some(abbreviatedNodeType.substring(0, abbreviatedNodeType.indexOf(":")))
+        )
       }
-    } yield extraKGNodes
+      kgNode = TRAPINode(Some(slotStuffNodeDetailTypes._1), slotStuffNodeDetailTypes._2.sorted, List[TRAPINodeAttribute](attribute))
+    } yield kgNode
 
   private def getProvenance(source: String, predicate: String, target: String): RIO[ZConfig[AppConfig], String] =
     for {
