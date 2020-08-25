@@ -51,9 +51,9 @@ object QueryServiceTest extends DefaultRunnableSpec {
             .withEntity(encoded)
           response <- httpClient.use(_.expect[String](request))
           _ = println("response: " + response)
-          _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
+          _ = Files.write(Paths.get("src/test/resources/local-scala.json"), response.getBytes())
         } yield assert(response)(isNonEmptyString)
-      } @@ ignore,
+      } /*@@ ignore*/,
       testM("test gene to gene") {
         val n0Node = TRAPIQueryNode("n0", Some("gene"), Some("UniProtKB:P30530") )
         val n1Node = TRAPIQueryNode("n1", Some("biological_process"), None)
@@ -75,7 +75,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
             .withEntity(encoded)
           response <- httpClient.use(_.expect[String](request))
           _ = println("response: " + response)
-          _ = Files.writeString(Paths.get("src/test/resources/local-scala-gene2gene.json"), response)
+          _ = Files.write(Paths.get("src/test/resources/local-scala-gene2gene.json"), response.getBytes())
         } yield assert(response)(isNonEmptyString)
       } @@ ignore,
     )
