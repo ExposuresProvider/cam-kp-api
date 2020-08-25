@@ -2,28 +2,33 @@ package org.renci.cam
 
 package object domain {
 
-  case class TranslatorQueryNode(id: String, `type`: String, curie: Option[String])
+  case class TRAPIQueryNode(id: String, `type`: Option[String], curie: Option[String])
 
-  case class TranslatorQueryEdge(id: String, `type`: String, source_id: String, target_id: String)
+  case class TRAPIQueryEdge(id: String, source_id: String, target_id: String, `type`: Option[String])
 
-  case class TranslatorQueryGraph(nodes: List[TranslatorQueryNode], edges: List[TranslatorQueryEdge])
+  case class TRAPIQueryGraph(nodes: List[TRAPIQueryNode], edges: List[TRAPIQueryEdge])
 
-  case class TranslatorNodeAttribute(name: String, value: String, `type`: String, url: Option[String], source: Option[String])
+  case class TRAPINodeAttribute(name: Option[String], value: String, `type`: String, url: Option[String], source: Option[String])
 
-  case class TranslatorNode(id: String, name: Option[String], `type`: List[String], attributes: List[TranslatorNodeAttribute])
+  case class TRAPINode(name: Option[String], `type`: List[String], attributes: List[TRAPINodeAttribute])
 
-  case class TranslatorEdge(id: String, `type`: Option[String], source_id: String, target_id: String)
+  case class TRAPIEdge(id: String, source_id: String, target_id: String, `type`: Option[String])
 
-  case class TranslatorKnowledgeGraph(nodes: List[TranslatorNode], edges: List[TranslatorEdge])
+  case class TRAPIKnowledgeGraph(nodes: List[TRAPINode], edges: List[TRAPIEdge])
 
-  case class TranslatorNodeBinding(qg_id: String, kg_id: String)
+  case class TRAPINodeBinding(qg_id: Option[String], kg_id: String)
 
-  case class TranslatorEdgeBinding(qg_id: String, kg_id: String, provenance: Option[String])
+  case class TRAPIEdgeBinding(qg_id: Option[String], kg_id: String, provenance: Option[String])
 
-  case class TranslatorResult(node_bindings: List[TranslatorNodeBinding], edge_bindings: List[TranslatorEdgeBinding])
+  case class TRAPIResult(node_bindings: List[TRAPINodeBinding],
+                         edge_bindings: List[TRAPIEdgeBinding],
+                         extra_nodes: Option[List[TRAPINodeBinding]],
+                         extra_edges: Option[List[TRAPIEdgeBinding]])
 
-  case class TranslatorMessage(query_graph: Option[TranslatorQueryGraph], knowledge_graph: Option[TranslatorKnowledgeGraph], results: List[TranslatorResult])
+  case class TRAPIMessage(query_graph: Option[TRAPIQueryGraph],
+                          knowledge_graph: Option[TRAPIKnowledgeGraph],
+                          results: Option[List[TRAPIResult]])
 
-  case class TranslatorQueryRequestBody(message: TranslatorMessage)
+  case class TRAPIQueryRequestBody(message: TRAPIMessage)
 
 }

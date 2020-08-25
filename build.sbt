@@ -16,9 +16,9 @@ javaOptions += "-Xmx8G"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
-val zioVersion = "1.0.0"
+val zioVersion = "1.0.1"
 val zioConfigVersion = "1.0.0-RC26"
-val tapirVersion = "0.16.13"
+val tapirVersion = "0.16.15"
 val http4sVersion = "0.21.7"
 val circeVersion = "0.13.0"
 val logbackVersion = "1.2.3"
@@ -40,6 +40,7 @@ libraryDependencies ++= {
     "org.http4s"                  %% "http4s-blaze-server"      % http4sVersion,
     "org.http4s"                  %% "http4s-dsl"               % http4sVersion,
     "org.http4s"                  %% "http4s-blaze-client"      % http4sVersion,
+    "org.http4s"                  %% "http4s-circe"             % http4sVersion,
     "org.apache.jena"              % "apache-jena-libs"         % "3.16.0",
     "org.phenoscape"              %% "sparql-utils"             % "1.2",
     "io.circe"                    %% "circe-core"               % circeVersion,

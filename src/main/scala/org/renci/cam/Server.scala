@@ -1,6 +1,7 @@
 package org.renci.cam
 
 import cats.implicits._
+import io.circe.Printer
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.http4s._
@@ -23,6 +24,12 @@ import zio.{config => _, _}
 
 object Server extends App {
 
+  object LocalTapirJsonCirce extends TapirJsonCirce {
+    override def jsonPrinter: Printer = Printer.spaces2.copy(dropNullValues = true)
+  }
+
+  import LocalTapirJsonCirce._
+
   val predicatesEndpoint: ZEndpoint[Unit, String, String] = endpoint.get.in("predicates").errorOut(stringBody).out(jsonBody[String])
 
   val predicatesRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = predicatesEndpoint.toRoutesR {
@@ -33,23 +40,21 @@ object Server extends App {
       program.mapError(error => error.getMessage)
   }
 
-  val queryEndpoint: ZEndpoint[(Int, TranslatorQueryRequestBody), String, String] =
+  val queryEndpoint: ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage] =
     endpoint.post
       .in("query")
       .in(query[Int]("limit"))
-      .in(jsonBody[TranslatorQueryRequestBody])
+      .in(jsonBody[TRAPIQueryRequestBody])
       .errorOut(stringBody)
-      .out(jsonBody[String])
+      .out(jsonBody[TRAPIMessage])
 
   val queryRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
     case (limit, body) =>
-      //do stuff with queryGraph
       val program = for {
         queryGraph <- Task.effect(body.message.query_graph.get)
         resultSet <- QueryService.run(limit, queryGraph)
         message <- QueryService.parseResultSet(queryGraph, resultSet)
-        response <- Task.effect(message.asJson.deepDropNullValues.noSpaces)
-      } yield response
+      } yield message
       program.mapError(error => error.getMessage)
   }
 
