@@ -3,7 +3,6 @@ package org.renci.cam
 import cats.implicits._
 import io.circe.Printer
 import io.circe.generic.auto._
-import io.circe.syntax._
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -51,7 +50,10 @@ object Server extends App {
   val queryRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
     case (limit, body) =>
       val program = for {
-        queryGraph <- Task.effect(body.message.query_graph.get)
+        queryGraph <-
+          ZIO
+            .fromOption(body.message.query_graph)
+            .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
         resultSet <- QueryService.run(limit, queryGraph)
         message <- QueryService.parseResultSet(queryGraph, resultSet)
       } yield message
@@ -67,7 +69,7 @@ object Server extends App {
         appConfig <- config[AppConfig]
         predicatesRoute <- predicatesRouteR
         queryRoute <- queryRouteR
-        routes <- Task.effect(queryRoute <+> predicatesRoute)
+        routes = queryRoute <+> predicatesRoute
         docsRoute = new SwaggerHttp4s(openAPI).routes[Task]
         httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
         httpAppWithLogging = Logger.httpApp(true, true)(httpApp)
