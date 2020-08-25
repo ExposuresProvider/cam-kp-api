@@ -66,7 +66,6 @@ object QueryService extends LazyLogging {
            |SELECT DISTINCT ?predicate WHERE {
            |bl:$edgeType <http://reasoner.renci.org/vocab/slot_mapping> ?predicate .
            |}""".stripMargin
-      _ = logger.warn("queryText: {}", queryText)
       query <- Task.effect(QueryFactory.create(queryText))
       resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
       predicates = (for {
@@ -187,15 +186,7 @@ object QueryService extends LazyLogging {
                       .headOption
                   )
                   .orElseFail(new Exception("failed to get details"))
-              abbreviatedNodeType = applyPrefix(nodeIRI, prefixes)
-              attribute = TRAPINodeAttribute(
-                None,
-                abbreviatedNodeType.substring(abbreviatedNodeType.indexOf(":") + 1, abbreviatedNodeType.length),
-                abbreviatedNodeType,
-                nodeMap.get(n.id),
-                Some(abbreviatedNodeType.substring(0, abbreviatedNodeType.indexOf(":")))
-              )
-              trapiNode = TRAPINode(Some(n.id), nodeDetailTypes._2.sorted, List[TRAPINodeAttribute](attribute))
+              trapiNode = TRAPINode(applyPrefix(nodeIRI, prefixes), Some(nodeDetailTypes._1), nodeDetailTypes._2.sorted)
             } yield trapiNode
           }
         } yield nodes
@@ -262,17 +253,8 @@ object QueryService extends LazyLogging {
           .groupBy(_._1)
           .map({ case (k, v) => (k, v.map(a => a._2)) })
           .headOption
-      attribute = {
-        val abbreviatedNodeType = applyPrefix(node.toString, prefixes)
-        TRAPINodeAttribute(
-          None,
-          abbreviatedNodeType.substring(abbreviatedNodeType.indexOf(":") + 1, abbreviatedNodeType.length),
-          abbreviatedNodeType,
-          Some(node.toString),
-          Some(abbreviatedNodeType.substring(0, abbreviatedNodeType.indexOf(":")))
-        )
-      }
-      kgNode = TRAPINode(Some(slotStuffNodeDetailTypes._1), slotStuffNodeDetailTypes._2.sorted, List[TRAPINodeAttribute](attribute))
+      abbreviatedNodeType = applyPrefix(node.toString, prefixes)
+      kgNode = TRAPINode(abbreviatedNodeType, Some(slotStuffNodeDetailTypes._1), slotStuffNodeDetailTypes._2.sorted)
     } yield kgNode
 
   private def getProvenance(source: String, predicate: String, target: String): RIO[ZConfig[AppConfig], String] =
