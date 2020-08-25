@@ -8,9 +8,7 @@ package object domain {
 
   case class TRAPIQueryGraph(nodes: List[TRAPIQueryNode], edges: List[TRAPIQueryEdge])
 
-  case class TRAPINodeAttribute(name: Option[String], value: String, `type`: String, url: Option[String], source: Option[String])
-
-  case class TRAPINode(name: Option[String], `type`: List[String], attributes: List[TRAPINodeAttribute])
+  case class TRAPINode(id: String, name: Option[String], `type`: List[String])
 
   case class TRAPIEdge(id: String, source_id: String, target_id: String, `type`: Option[String])
 
