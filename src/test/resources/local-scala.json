@@ -60,19 +60,8 @@
         ]
       },
       {
-        "id": "GO:0015016",
-        "name": "[heparan sulfate]-glucosamine N-sulfotransferase activity",
-        "type": [
-          "biological_entity",
-          "biological_process_or_activity",
-          "molecular_activity",
-          "named_thing",
-          "occurrent"
-        ]
-      },
-      {
-        "id": "MGI:MGI:894663",
-        "name": "Ext1 Mmus",
+        "id": "MGI:108050",
+        "name": "Ext2 Mmus",
         "type": [
           "biological_entity",
           "chemical_substance",
@@ -81,6 +70,17 @@
           "macromolecular_machine",
           "molecular_entity",
           "named_thing"
+        ]
+      },
+      {
+        "id": "GO:0015016",
+        "name": "[heparan sulfate]-glucosamine N-sulfotransferase activity",
+        "type": [
+          "biological_entity",
+          "biological_process_or_activity",
+          "molecular_activity",
+          "named_thing",
+          "occurrent"
         ]
       },
       {
@@ -95,8 +95,8 @@
         ]
       },
       {
-        "id": "MGI:MGI:108050",
-        "name": "Ext2 Mmus",
+        "id": "MGI:894663",
+        "name": "Ext1 Mmus",
         "type": [
           "biological_entity",
           "chemical_substance",
@@ -171,22 +171,34 @@
         "type": "has input"
       },
       {
+        "id": "882f8c94343fc254da2dc2d1b1c11199243ff7c4c3c40b624785e1a43330f803",
+        "source_id": "GO:0003674",
+        "target_id": "MGI:108050",
+        "type": "enabled by"
+      },
+      {
         "id": "b70d146877c158cb6c6074a1ec4a712fa958ccf518845e392178cbc7d61dcc97",
         "source_id": "GO:0003674",
         "target_id": "GO:0006487",
         "type": "RO:0004047"
       },
       {
-        "id": "882f8c94343fc254da2dc2d1b1c11199243ff7c4c3c40b624785e1a43330f803",
-        "source_id": "GO:0003674",
-        "target_id": "MGI:MGI:108050",
-        "type": "enabled by"
-      },
-      {
         "id": "224b122d0e858cd041b23183aadd93db5350ea3d75c5a0a2f90263d936fb4cae",
         "source_id": "GO:0005515",
         "target_id": "UniProtKB:P52848",
         "type": "has input"
+      },
+      {
+        "id": "4d5aa6c52fe876540258a32376fbd727c8529ff67fed190d1cf796297a800eef",
+        "source_id": "GO:0005515",
+        "target_id": "MGI:108050",
+        "type": "enabled by"
+      },
+      {
+        "id": "c3fda3699e3641c51841c679e4327b62f2b94d5348bf6515c6217b0c32ec5a2d",
+        "source_id": "GO:0003674",
+        "target_id": "MGI:894663",
+        "type": "enabled by"
       },
       {
         "id": "684a6f40e4e2bec85d2ea54c1e604489a420812a9fc7ec4f2048805a4bedb506",
@@ -198,12 +210,6 @@
         "id": "a2451f431de160428c47296ddade46551d277cd48c97df301fb88f8adc3466fd",
         "source_id": "GO:0015016",
         "target_id": "UniProtKB:P52848",
-        "type": "enabled by"
-      },
-      {
-        "id": "4d5aa6c52fe876540258a32376fbd727c8529ff67fed190d1cf796297a800eef",
-        "source_id": "GO:0005515",
-        "target_id": "MGI:MGI:108050",
         "type": "enabled by"
       },
       {
@@ -229,12 +235,6 @@
         "source_id": "GO:0006487",
         "target_id": "UniProtKB:P52848",
         "type": "has input"
-      },
-      {
-        "id": "c3fda3699e3641c51841c679e4327b62f2b94d5348bf6515c6217b0c32ec5a2d",
-        "source_id": "GO:0003674",
-        "target_id": "MGI:MGI:894663",
-        "type": "enabled by"
       },
       {
         "id": "efea4a98e565a9b90bb837929a3cf0957c452268787dac7e3a9acef6d63876eb",
@@ -280,13 +280,16 @@
           "kg_id": "GO:0005515"
         },
         {
+          "kg_id": "MGI:894663"
+        },
+        {
+          "kg_id": "MGI:108050"
+        },
+        {
           "kg_id": "GO:0010467"
         },
         {
           "kg_id": "BFO:0000040"
-        },
-        {
-          "kg_id": "MGI:MGI:894663"
         },
         {
           "kg_id": "UniProtKB:P52848"
@@ -296,9 +299,6 @@
         },
         {
           "kg_id": "GO:0003674"
-        },
-        {
-          "kg_id": "MGI:MGI:108050"
         },
         {
           "kg_id": "GO:0006487"
