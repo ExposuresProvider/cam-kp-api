@@ -51,8 +51,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
             .withEntity(encoded)
           response <- httpClient.use(_.expect[String](request))
           _ = println("response: " + response)
-          parsed <- Task.effect(parse(response).getOrElse(Json.Null))
-          _ = Files.write(Paths.get("src/test/resources/local-scala.json"), parsed.as[String].toOption.get.getBytes)
+          _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
         } yield assert(response)(isNonEmptyString)
       } @@ ignore,
       testM("test gene to gene") {
@@ -60,8 +59,8 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val n1Node = TRAPIQueryNode("n1", Some("biological_process"), None)
         val n2Node = TRAPIQueryNode("n2", Some("biological_process"), None)
         val n3Node = TRAPIQueryNode("n3", Some("gene"), None)
-        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", None)
-        val e1Edge = TRAPIQueryEdge("e1", "n1", "n2", Some("enabled_by"))
+        val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", None)
+        val e1Edge = TRAPIQueryEdge("e1", "n1", "n2", None/*Some("enabled_by")*/)
         val e2Edge = TRAPIQueryEdge("e2", "n2", "n3", None)
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node, n2Node, n3Node), List(e0Edge, e1Edge, e2Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -76,8 +75,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
             .withEntity(encoded)
           response <- httpClient.use(_.expect[String](request))
           _ = println("response: " + response)
-          parsed <- Task.effect(parse(response).getOrElse(Json.Null))
-          _ = Files.write(Paths.get("src/test/resources/local-scala.json"), parsed.as[String].toOption.get.getBytes)
+          _ = Files.writeString(Paths.get("src/test/resources/local-scala-gene2gene.json"), response)
         } yield assert(response)(isNonEmptyString)
       } @@ ignore,
     )
