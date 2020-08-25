@@ -18,7 +18,6 @@ import zio.config.ZConfig
 import zio.{RIO, Task, ZIO, config => _}
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 object QueryService extends LazyLogging {
 
@@ -55,7 +54,14 @@ object QueryService extends LazyLogging {
   def applyPrefix(value: String, prefixes: Map[String, String]): String =
     prefixes
       .filter(entry => value.startsWith(entry._2))
-      .map(entry => s"${entry._1}:" + value.substring(entry._2.length, value.length))
+      .map(entry => {
+        val prefix = s"${entry._1}:"
+        if (value.contains(prefix)) {
+          value.substring(value.lastIndexOf("/") + 1, value.length)
+        } else {
+          s"${entry._1}:" + value.substring(entry._2.length, value.length)
+        }
+      })
       .headOption
       .getOrElse(value)
 
