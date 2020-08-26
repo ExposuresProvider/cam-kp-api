@@ -1,21 +1,22 @@
 package org.renci.cam
 
 import io.circe.Json
-import org.http4s.{MediaType, Method, Request}
-import org.http4s.headers.{`Content-Type`, Accept}
-import zio.{Task, ZIO}
-import org.http4s.implicits._
 import org.http4s.circe._
+import org.http4s.headers.Accept
+import org.http4s.implicits._
+import org.http4s.{MediaType, Method, Request}
+import org.renci.cam.HttpClient.HttpClient
+import zio._
 import zio.interop.catz._
 
 object Utilities {
 
-  def getBiolinkPrefixes: ZIO[Any, Throwable, Map[String, String]] =
+  def getBiolinkPrefixes: ZIO[HttpClient, Throwable, Map[String, String]] =
     for {
-      httpClient <- SPARQLQueryExecutor.makeHttpClient
+      httpClient <- HttpClient.client
       uri = uri"https://biolink.github.io/biolink-model/context.jsonld"
       request = Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`ld+json`))
-      biolinkModelJson <- httpClient.use(_.expect[Json](request))
+      biolinkModelJson <- httpClient.expect[Json](request)
       cursor = biolinkModelJson.hcursor
       contextValue <- ZIO.fromEither(cursor.downField("@context").as[Map[String, Json]])
       curies =

@@ -8,6 +8,7 @@ import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger, _}
+import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
@@ -47,7 +48,7 @@ object Server extends App {
       .errorOut(stringBody)
       .out(jsonBody[TRAPIMessage])
 
-  val queryRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
+  val queryRouteR: URIO[ZConfig[AppConfig] with HttpClient, HttpRoutes[Task]] = queryEndpoint.toRoutesR {
     case (limit, body) =>
       val program = for {
         queryGraph <-
@@ -63,7 +64,7 @@ object Server extends App {
   // will be available at /docs
   val openAPI: String = List(queryEndpoint, predicatesEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
 
-  val server: RIO[ZConfig[AppConfig], Unit] =
+  val server: RIO[ZConfig[AppConfig] with HttpClient, Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- config[AppConfig]
@@ -85,6 +86,11 @@ object Server extends App {
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
-  override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = server.provideLayer(configLayer).exitCode
+  override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] =
+    (for {
+      httpClientLayer <- HttpClient.makeHttpClientLayer
+      appLayer = httpClientLayer ++ configLayer
+      out <- server.provideLayer(appLayer)
+    } yield out).exitCode
 
 }
