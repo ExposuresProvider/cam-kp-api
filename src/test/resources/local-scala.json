@@ -22,8 +22,8 @@
   "knowledge_graph": {
     "nodes": [
       {
-        "id": "UniProtKB:P52848",
-        "name": "NDST1 Hsap",
+        "id": "UniProtKB:P19174",
+        "name": "PLCG1 Hsap",
         "type": [
           "biological_entity",
           "chemical_substance",
@@ -38,8 +38,8 @@
         ]
       },
       {
-        "id": "GO:0010467",
-        "name": "gene expression",
+        "id": "GO:0008104",
+        "name": "protein localization",
         "type": [
           "biological_entity",
           "biological_process",
@@ -49,19 +49,19 @@
         ]
       },
       {
-        "id": "GO:0051923",
-        "name": "sulfation",
+        "id": "GO:0043274",
+        "name": "phospholipase binding",
         "type": [
           "biological_entity",
-          "biological_process",
           "biological_process_or_activity",
+          "molecular_activity",
           "named_thing",
           "occurrent"
         ]
       },
       {
-        "id": "MGI:108050",
-        "name": "Ext2 Mmus",
+        "id": "MGI:1914846",
+        "name": "Tespa1 Mmus",
         "type": [
           "biological_entity",
           "chemical_substance",
@@ -73,12 +73,34 @@
         ]
       },
       {
-        "id": "GO:0015016",
-        "name": "[heparan sulfate]-glucosamine N-sulfotransferase activity",
+        "id": "GO:0005783",
+        "name": "endoplasmic reticulum",
+        "type": [
+          "anatomical_entity",
+          "biological_entity",
+          "cellular_component",
+          "named_thing",
+          "organismal_entity"
+        ]
+      },
+      {
+        "id": "GO:0033077",
+        "name": "T cell differentiation in thymus",
         "type": [
           "biological_entity",
+          "biological_process",
           "biological_process_or_activity",
-          "molecular_activity",
+          "named_thing",
+          "occurrent"
+        ]
+      },
+      {
+        "id": "GO:0036399",
+        "name": "TCR signalosome assembly",
+        "type": [
+          "biological_entity",
+          "biological_process",
+          "biological_process_or_activity",
           "named_thing",
           "occurrent"
         ]
@@ -95,8 +117,68 @@
         ]
       },
       {
-        "id": "MGI:894663",
-        "name": "Ext1 Mmus",
+        "id": "UniProtKB:Q14573",
+        "name": "ITPR3 Hsap",
+        "type": [
+          "biological_entity",
+          "chemical_substance",
+          "gene",
+          "gene_or_gene_product",
+          "gene_product",
+          "genomic_entity",
+          "macromolecular_machine",
+          "molecular_entity",
+          "named_thing",
+          "protein"
+        ]
+      },
+      {
+        "id": "GO:0050848",
+        "name": "regulation of calcium-mediated signaling",
+        "type": [
+          "biological_entity",
+          "biological_process",
+          "biological_process_or_activity",
+          "named_thing",
+          "occurrent"
+        ]
+      },
+      {
+        "id": "GO:0004713",
+        "name": "protein tyrosine kinase activity",
+        "type": [
+          "biological_entity",
+          "biological_process_or_activity",
+          "molecular_activity",
+          "named_thing",
+          "occurrent"
+        ]
+      },
+      {
+        "id": "GO:0050856",
+        "name": "regulation of T cell receptor signaling pathway",
+        "type": [
+          "biological_entity",
+          "biological_process",
+          "biological_process_or_activity",
+          "named_thing",
+          "occurrent"
+        ]
+      },
+      {
+        "id": "GO:0036398",
+        "name": "TCR signalosome",
+        "type": [
+          "anatomical_entity",
+          "biological_entity",
+          "cellular_component",
+          "named_thing",
+          "organismal_entity"
+        ]
+      },
+      {
+        "id": "MGI:95602",
+        "name": "Fyn Mmus",
         "type": [
           "biological_entity",
           "chemical_substance",
@@ -108,8 +190,8 @@
         ]
       },
       {
-        "id": "UniProtKB:P52848",
-        "name": "NDST1 Hsap",
+        "id": "UniProtKB:Q14643",
+        "name": "ITPR1 Hsap",
         "type": [
           "biological_entity",
           "chemical_substance",
@@ -135,19 +217,24 @@
         ]
       },
       {
-        "id": "GO:0010467",
-        "name": "gene expression",
+        "id": "UniProtKB:Q14571",
+        "name": "ITPR2 Hsap",
         "type": [
           "biological_entity",
-          "biological_process",
-          "biological_process_or_activity",
+          "chemical_substance",
+          "gene",
+          "gene_or_gene_product",
+          "gene_product",
+          "genomic_entity",
+          "macromolecular_machine",
+          "molecular_entity",
           "named_thing",
-          "occurrent"
+          "protein"
         ]
       },
       {
-        "id": "GO:0006487",
-        "name": "protein N-linked glycosylation",
+        "id": "GO:0018108",
+        "name": "peptidyl-tyrosine phosphorylation",
         "type": [
           "biological_entity",
           "biological_process",
@@ -160,93 +247,135 @@
     "edges": [
       {
         "id": "c8ea35ae055917603c4dfd7c076895f2396d38934417eff8b31c4c56fe0cbb49",
-        "source_id": "GO:0010467",
-        "target_id": "UniProtKB:P52848",
+        "source_id": "GO:0008104",
+        "target_id": "UniProtKB:P19174",
         "type": "has_participant"
       },
       {
-        "id": "3dd399992d780307780df37bf78e86c9ce730de5b464db47400fabaa95eedde2",
-        "source_id": "GO:0005515",
-        "target_id": "UniProtKB:P70428",
+        "id": "ea8e4936d13a691ccc08cb5c4ec222d8158b019a3775104eb0803af7aea07e79",
+        "source_id": "GO:0018108",
+        "target_id": "UniProtKB:Q14643",
         "type": "has input"
       },
       {
-        "id": "882f8c94343fc254da2dc2d1b1c11199243ff7c4c3c40b624785e1a43330f803",
+        "id": "e061c7a71a08093a86667f1096b3ef3f0c939b906584de57ecfdc2b17fff9a40",
         "source_id": "GO:0003674",
-        "target_id": "MGI:108050",
+        "target_id": "MGI:1914846",
         "type": "enabled by"
       },
       {
-        "id": "b70d146877c158cb6c6074a1ec4a712fa958ccf518845e392178cbc7d61dcc97",
-        "source_id": "GO:0003674",
-        "target_id": "GO:0006487",
-        "type": "RO:0004047"
+        "id": "a2d2c63559ce0d364764242a481654c58b3320906e3adeced744d67bb94e3313",
+        "source_id": "GO:0005515",
+        "target_id": "UniProtKB:Q14571",
+        "type": "enabled by"
       },
       {
-        "id": "224b122d0e858cd041b23183aadd93db5350ea3d75c5a0a2f90263d936fb4cae",
+        "id": "117262411b1d875a524a8a520cc06a261c1e1652abd378b82367dfcb122282f2",
         "source_id": "GO:0005515",
-        "target_id": "UniProtKB:P52848",
+        "target_id": "UniProtKB:Q14573",
+        "type": "enabled by"
+      },
+      {
+        "id": "b7e77f016c8ac7f328bd4c6dc5b1fbd871e31fde048256f9034801412e59857b",
+        "source_id": "GO:0003674",
+        "target_id": "GO:0050856",
+        "type": "RO:0002411"
+      },
+      {
+        "id": "51d3645f40e2a31e7e3a7c629ceb3f21d942b6eff2f3efbe10ae95832d1d462b",
+        "source_id": "GO:0003674",
+        "target_id": "UniProtKB:Q14643",
+        "type": "enabled by"
+      },
+      {
+        "id": "b3ea48ac27b4652e13d4b0c2804d9eaafcaaf9494468c479a7eeb3716e302bc2",
+        "source_id": "UniProtKB:Q14643",
+        "target_id": "GO:0005783",
+        "type": "part of"
+      },
+      {
+        "id": "8656b30fdc7aa22dfdaa85e556baabb02beb0bd1ab77d7d4966f7a5c3f348d6e",
+        "source_id": "GO:0005515",
+        "target_id": "MGI:1914846",
+        "type": "enabled by"
+      },
+      {
+        "id": "686dc4bd76a54b031cfcb1168c2e8fa05530d81b8184f03026ec0a09b87064f9",
+        "source_id": "GO:0005515",
+        "target_id": "UniProtKB:Q14643",
+        "type": "enabled by"
+      },
+      {
+        "id": "31971acde5da90c4304afe225eced45d5029772870b1d0453a4d990454ea7b62",
+        "source_id": "GO:0004713",
+        "target_id": "GO:0018108",
+        "type": "part of"
+      },
+      {
+        "id": "359242d47868ff0e63709f8a12416e9131bc31f893ff2762fba34a95ff0751b2",
+        "source_id": "GO:0043274",
+        "target_id": "GO:0008104",
+        "type": "part of"
+      },
+      {
+        "id": "9e35f439698d65acb38546c9624e91de7180eb6ea462923823aefb333d182b05",
+        "source_id": "GO:0008104",
+        "target_id": "UniProtKB:P19174",
         "type": "has input"
       },
       {
-        "id": "4d5aa6c52fe876540258a32376fbd727c8529ff67fed190d1cf796297a800eef",
+        "id": "6e0cfa5d2faf254ea599829c8f7797b98a3e8e89e531c23b56abbcde9f3f82d9",
+        "source_id": "GO:0004713",
+        "target_id": "MGI:95602",
+        "type": "enabled by"
+      },
+      {
+        "id": "30f15376c6344fb981f400ae712a4d54bd506c3c20d79bfed416be283cdc0424",
+        "source_id": "GO:0043274",
+        "target_id": "MGI:1914846",
+        "type": "enabled by"
+      },
+      {
+        "id": "91363dfb9e317869659bb63ae3dd8cad3e1fd8cd63b4d7e7249f29a1036de086",
+        "source_id": "UniProtKB:Q14643",
+        "target_id": "GO:0036398",
+        "type": "part of"
+      },
+      {
+        "id": "71c0d0713dc33745faa42acf5d73ca86ce2de034d251a8c8e4ac27d83768c476",
+        "source_id": "GO:0003674",
+        "target_id": "GO:0036399",
+        "type": "RO:0002418"
+      },
+      {
+        "id": "21a782eb7c91518bb0b20e33609a0c1a4ce24aa7ea4cfd576cde45af6be5e376",
+        "source_id": "MGI:1914846",
+        "target_id": "GO:0036398",
+        "type": "part of"
+      },
+      {
+        "id": "08063c902d84154c2bfae5e401fdd16d0636eaa66124914b0d7406ff4a300f2e",
+        "source_id": "GO:0003674",
+        "target_id": "GO:0033077",
+        "type": "RO:0002411"
+      },
+      {
+        "id": "bff6face99451b25027122ac48991fd281f94e4975d65db2ee3a163664d23875",
+        "source_id": "GO:0008104",
+        "target_id": "GO:0036398",
+        "type": "occurs in"
+      },
+      {
+        "id": "683c87d85b335228cbc0b2352780f7586f03578be5c6193d37fe3b958a780a9a",
+        "source_id": "GO:0003674",
+        "target_id": "GO:0050848",
+        "type": "RO:0002418"
+      },
+      {
+        "id": "e3cb5185444a619579e81bc7bdb2a110fec120aa3390c53d24a5c4ee48feaac4",
         "source_id": "GO:0005515",
-        "target_id": "MGI:108050",
+        "target_id": "UniProtKB:P19174",
         "type": "enabled by"
-      },
-      {
-        "id": "c3fda3699e3641c51841c679e4327b62f2b94d5348bf6515c6217b0c32ec5a2d",
-        "source_id": "GO:0003674",
-        "target_id": "MGI:894663",
-        "type": "enabled by"
-      },
-      {
-        "id": "684a6f40e4e2bec85d2ea54c1e604489a420812a9fc7ec4f2048805a4bedb506",
-        "source_id": "GO:0003674",
-        "target_id": "GO:0051923",
-        "type": "RO:0004046"
-      },
-      {
-        "id": "a2451f431de160428c47296ddade46551d277cd48c97df301fb88f8adc3466fd",
-        "source_id": "GO:0015016",
-        "target_id": "UniProtKB:P52848",
-        "type": "enabled by"
-      },
-      {
-        "id": "d85e57beef22251344d0c24233b2427ea8ccd11b2e1fbc8b66a5787734ee0865",
-        "source_id": "GO:0003674",
-        "target_id": "GO:0051923",
-        "type": "RO:0004047"
-      },
-      {
-        "id": "fdb7badd32fd793dede1c2ad63f50ed4aceb86223e138d13abff6c604e947038",
-        "source_id": "GO:0005515",
-        "target_id": "UniProtKB:P52848",
-        "type": "enabled by"
-      },
-      {
-        "id": "b41fe168fd0529710094e7a6b0988bc7762022ce22f8705367ad40dfd53cb2a5",
-        "source_id": "GO:0003674",
-        "target_id": "GO:0010467",
-        "type": "RO:0004047"
-      },
-      {
-        "id": "af5d83d681ba6c58c45d684f5ad5627e5a99e9a9abb8c52c2c44acdef69d3fee",
-        "source_id": "GO:0006487",
-        "target_id": "UniProtKB:P52848",
-        "type": "has input"
-      },
-      {
-        "id": "efea4a98e565a9b90bb837929a3cf0957c452268787dac7e3a9acef6d63876eb",
-        "source_id": "GO:0005515",
-        "target_id": "BFO:0000040",
-        "type": "has input"
-      },
-      {
-        "id": "3d9326002e7ae8f04c86d93863a67c568ccd8cc362a9bebe6f1955f873bf0983",
-        "source_id": "GO:0010467",
-        "target_id": "UniProtKB:P52848",
-        "type": "has input"
       }
     ]
   },
@@ -255,111 +384,160 @@
       "node_bindings": [
         {
           "qg_id": "n0",
-          "kg_id": "UniProtKB:P52848"
+          "kg_id": "UniProtKB:P19174"
         },
         {
           "qg_id": "n1",
-          "kg_id": "GO:0010467"
+          "kg_id": "GO:0008104"
         }
       ],
       "edge_bindings": [
         {
           "qg_id": "e0",
           "kg_id": "c8ea35ae055917603c4dfd7c076895f2396d38934417eff8b31c4c56fe0cbb49",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         }
       ],
       "extra_nodes": [
         {
-          "kg_id": "GO:0015016"
+          "kg_id": "GO:0008104"
         },
         {
-          "kg_id": "GO:0051923"
+          "kg_id": "GO:0050848"
+        },
+        {
+          "kg_id": "UniProtKB:Q14643"
+        },
+        {
+          "kg_id": "UniProtKB:Q14571"
+        },
+        {
+          "kg_id": "UniProtKB:P19174"
         },
         {
           "kg_id": "GO:0005515"
         },
         {
-          "kg_id": "MGI:894663"
+          "kg_id": "GO:0043274"
         },
         {
-          "kg_id": "MGI:108050"
+          "kg_id": "UniProtKB:Q14573"
         },
         {
-          "kg_id": "GO:0010467"
+          "kg_id": "GO:0036398"
         },
         {
-          "kg_id": "BFO:0000040"
+          "kg_id": "GO:0004713"
         },
         {
-          "kg_id": "UniProtKB:P52848"
+          "kg_id": "GO:0050856"
         },
         {
-          "kg_id": "UniProtKB:P70428"
+          "kg_id": "GO:0018108"
+        },
+        {
+          "kg_id": "MGI:1914846"
+        },
+        {
+          "kg_id": "MGI:95602"
         },
         {
           "kg_id": "GO:0003674"
         },
         {
-          "kg_id": "GO:0006487"
+          "kg_id": "GO:0036399"
+        },
+        {
+          "kg_id": "GO:0033077"
+        },
+        {
+          "kg_id": "GO:0005783"
         }
       ],
       "extra_edges": [
         {
-          "kg_id": "4d5aa6c52fe876540258a32376fbd727c8529ff67fed190d1cf796297a800eef",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "21a782eb7c91518bb0b20e33609a0c1a4ce24aa7ea4cfd576cde45af6be5e376",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "c3fda3699e3641c51841c679e4327b62f2b94d5348bf6515c6217b0c32ec5a2d",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "08063c902d84154c2bfae5e401fdd16d0636eaa66124914b0d7406ff4a300f2e",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "3dd399992d780307780df37bf78e86c9ce730de5b464db47400fabaa95eedde2",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "51d3645f40e2a31e7e3a7c629ceb3f21d942b6eff2f3efbe10ae95832d1d462b",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "3d9326002e7ae8f04c86d93863a67c568ccd8cc362a9bebe6f1955f873bf0983",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "8656b30fdc7aa22dfdaa85e556baabb02beb0bd1ab77d7d4966f7a5c3f348d6e",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "af5d83d681ba6c58c45d684f5ad5627e5a99e9a9abb8c52c2c44acdef69d3fee",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "683c87d85b335228cbc0b2352780f7586f03578be5c6193d37fe3b958a780a9a",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "d85e57beef22251344d0c24233b2427ea8ccd11b2e1fbc8b66a5787734ee0865",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "b7e77f016c8ac7f328bd4c6dc5b1fbd871e31fde048256f9034801412e59857b",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "b70d146877c158cb6c6074a1ec4a712fa958ccf518845e392178cbc7d61dcc97",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "e3cb5185444a619579e81bc7bdb2a110fec120aa3390c53d24a5c4ee48feaac4",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "224b122d0e858cd041b23183aadd93db5350ea3d75c5a0a2f90263d936fb4cae",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "30f15376c6344fb981f400ae712a4d54bd506c3c20d79bfed416be283cdc0424",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "a2451f431de160428c47296ddade46551d277cd48c97df301fb88f8adc3466fd",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "9e35f439698d65acb38546c9624e91de7180eb6ea462923823aefb333d182b05",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "efea4a98e565a9b90bb837929a3cf0957c452268787dac7e3a9acef6d63876eb",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "686dc4bd76a54b031cfcb1168c2e8fa05530d81b8184f03026ec0a09b87064f9",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "b41fe168fd0529710094e7a6b0988bc7762022ce22f8705367ad40dfd53cb2a5",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "a2d2c63559ce0d364764242a481654c58b3320906e3adeced744d67bb94e3313",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "882f8c94343fc254da2dc2d1b1c11199243ff7c4c3c40b624785e1a43330f803",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "ea8e4936d13a691ccc08cb5c4ec222d8158b019a3775104eb0803af7aea07e79",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "684a6f40e4e2bec85d2ea54c1e604489a420812a9fc7ec4f2048805a4bedb506",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "bff6face99451b25027122ac48991fd281f94e4975d65db2ee3a163664d23875",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         },
         {
-          "kg_id": "fdb7badd32fd793dede1c2ad63f50ed4aceb86223e138d13abff6c604e947038",
-          "provenance": "http://model.geneontology.org/5e72450500000960"
+          "kg_id": "e061c7a71a08093a86667f1096b3ef3f0c939b906584de57ecfdc2b17fff9a40",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
+        },
+        {
+          "kg_id": "b3ea48ac27b4652e13d4b0c2804d9eaafcaaf9494468c479a7eeb3716e302bc2",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
+        },
+        {
+          "kg_id": "6e0cfa5d2faf254ea599829c8f7797b98a3e8e89e531c23b56abbcde9f3f82d9",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
+        },
+        {
+          "kg_id": "117262411b1d875a524a8a520cc06a261c1e1652abd378b82367dfcb122282f2",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
+        },
+        {
+          "kg_id": "359242d47868ff0e63709f8a12416e9131bc31f893ff2762fba34a95ff0751b2",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
+        },
+        {
+          "kg_id": "31971acde5da90c4304afe225eced45d5029772870b1d0453a4d990454ea7b62",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
+        },
+        {
+          "kg_id": "71c0d0713dc33745faa42acf5d73ca86ce2de034d251a8c8e4ac27d83768c476",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
+        },
+        {
+          "kg_id": "91363dfb9e317869659bb63ae3dd8cad3e1fd8cd63b4d7e7249f29a1036de086",
+          "provenance": "http://model.geneontology.org/5e72450500002150"
         }
       ]
     }
