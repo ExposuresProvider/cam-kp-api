@@ -54,14 +54,13 @@ object QueryService extends LazyLogging {
   def applyPrefix(value: String, prefixes: Map[String, String]): String =
     prefixes
       .filter(entry => value.startsWith(entry._2))
-      .map(entry => {
+      .map { entry =>
         val prefix = s"${entry._1}:"
-        if (value.contains(prefix)) {
+        if (value.contains(prefix))
           value.substring(value.lastIndexOf("/") + 1, value.length)
-        } else {
+        else
           s"${entry._1}:" + value.substring(entry._2.length, value.length)
-        }
-      })
+      }
       .headOption
       .getOrElse(value)
 
@@ -165,7 +164,7 @@ object QueryService extends LazyLogging {
       }
       trapiKGNodes = initialKGNodes ++ extraKGNodes
       trapiKGEdges = initialKGEdges ++ extraKGEdges
-    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(trapiKGNodes, trapiKGEdges)), Some(results))
+    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(trapiKGNodes.distinct, trapiKGEdges)), Some(results))
 
   // instances are not thread-safe; should be retrieved for every use
   private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
