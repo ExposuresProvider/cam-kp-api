@@ -54,13 +54,7 @@ object QueryService extends LazyLogging {
   def applyPrefix(value: String, prefixes: Map[String, String]): String =
     prefixes
       .filter(entry => value.startsWith(entry._2))
-      .map { entry =>
-        val prefix = s"${entry._1}:"
-        if (value.contains(prefix))
-          value.substring(value.lastIndexOf("/") + 1, value.length)
-        else
-          s"${entry._1}:" + value.substring(entry._2.length, value.length)
-      }
+      .map(entry => StringUtils.prependIfMissing(value.substring(entry._2.length, value.length), s"${entry._1}:"))
       .headOption
       .getOrElse(value)
 
