@@ -51,7 +51,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
             .withEntity(encoded)
           response <- httpClient.use(_.expect[String](request))
           _ = println("response: " + response)
-          _ = Files.write(Paths.get("src/test/resources/local-scala.json"), response.getBytes())
+          _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
         } yield assert(response)(isNonEmptyString)
       } @@ ignore,
       testM("test gene to gene") {
@@ -75,7 +75,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
             .withEntity(encoded)
           response <- httpClient.use(_.expect[String](request))
           _ = println("response: " + response)
-          _ = Files.write(Paths.get("src/test/resources/local-scala-gene2gene.json"), response.getBytes())
+          _ = Files.writeString(Paths.get("src/test/resources/local-scala-gene2gene.json"), response)
         } yield assert(response)(isNonEmptyString)
       } @@ ignore,
     )
