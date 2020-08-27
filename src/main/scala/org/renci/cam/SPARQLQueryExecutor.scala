@@ -11,7 +11,9 @@ import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.phenoscape.sparql.FromQuerySolution
+import org.renci.cam.HttpClient.HttpClient
 import zio.ZIO.ZIOAutoCloseableOps
+import zio._
 import zio.config.ZConfig
 import zio.interop.catz._
 import zio.{RIO, Task, TaskManaged, UIO, ZIO, config => _}
@@ -37,26 +39,21 @@ object SPARQLQueryExecutor extends LazyLogging {
     .withContentType(`Content-Type`(MediaType.application.`sparql-query`))
     .contramap(_.toString)
 
-  def makeHttpClient: UIO[TaskManaged[Client[Task]]] =
-    ZIO.runtime[Any].map { implicit rts =>
-      BlazeClientBuilder[Task](rts.platform.executor.asEC).withConnectTimeout(Duration(3, MINUTES)).resource.toManaged
-    }
-
-  def runSelectQueryAs[T: FromQuerySolution](query: Query): RIO[ZConfig[AppConfig], List[T]] =
+  def runSelectQueryAs[T: FromQuerySolution](query: Query): RIO[ZConfig[AppConfig] with HttpClient, List[T]] =
     for {
       resultSet <- runSelectQuery(query)
       results = resultSet.asScala.map(FromQuerySolution.mapSolution[T]).toList
       validResults <- ZIO.foreach(results)(ZIO.fromTry(_))
     } yield validResults
 
-  def runSelectQuery(query: Query): RIO[ZConfig[AppConfig], ResultSet] =
+  def runSelectQuery(query: Query): RIO[ZConfig[AppConfig] with HttpClient, ResultSet] =
     for {
       appConfig <- zio.config.config[AppConfig]
-      clientManaged <- makeHttpClient
+      client <- HttpClient.client
       uri = appConfig.sparqlEndpoint
       _ = logger.debug("query: {}", query)
       request = Request[Task](Method.POST, uri).withEntity(query)
-      response <- clientManaged.use(_.expect[ResultSet](request))
+      response <- client.expect[ResultSet](request)
     } yield response
 
 }

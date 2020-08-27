@@ -20,7 +20,7 @@ object BlazegraphTest extends DefaultRunnableSpec {
               SELECT DISTINCT ?predicate WHERE { bl:has_participant <http://reasoner.renci.org/vocab/slot_mapping> ?predicate . }"""
 
         for {
-          httpClient <- SPARQLQueryExecutor.makeHttpClient
+          httpClient <- HttpClient.makeHttpClient
           uri =
             uri"http://152.54.9.207:9999/blazegraph/sparql"
               .withQueryParam("query", query)

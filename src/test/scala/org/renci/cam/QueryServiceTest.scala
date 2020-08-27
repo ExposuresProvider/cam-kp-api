@@ -30,7 +30,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       } @@ ignore,
       testM("test simple query") {
         for {
-          httpClient <- SPARQLQueryExecutor.makeHttpClient
+          httpClient <- HttpClient.makeHttpClient
           encoded = {
             val n0Node = TRAPIQueryNode("n0", Some("gene"), None)
             val n1Node = TRAPIQueryNode("n1", Some("biological_process"), None)
@@ -65,7 +65,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val requestBody = TRAPIQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
-          httpClient <- SPARQLQueryExecutor.makeHttpClient
+          httpClient <- HttpClient.makeHttpClient
           uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
           //uri = uri"http://127.0.0.1:6434/query".withQueryParam("limit", 1) // python
           request = Request[Task](Method.POST, uri)
@@ -85,7 +85,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val requestBody = TRAPIQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
-          httpClient <- SPARQLQueryExecutor.makeHttpClient
+          httpClient <- HttpClient.makeHttpClient
           uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
           //uri = uri"http://127.0.0.1:6434/query".withQueryParam("limit", 1) // python
           request = Request[Task](Method.POST, uri)
@@ -107,7 +107,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val requestBody = TRAPIQueryRequestBody(message)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
-          httpClient <- SPARQLQueryExecutor.makeHttpClient
+          httpClient <- HttpClient.makeHttpClient
           uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
           //uri = uri"http://127.0.0.1:6434/query".withQueryParam("limit", 1) // python
           request = Request[Task](Method.POST, uri)
