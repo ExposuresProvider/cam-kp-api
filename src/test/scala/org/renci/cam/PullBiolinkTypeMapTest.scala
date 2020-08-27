@@ -23,7 +23,7 @@ object PullBiolinkTypeMapTest extends DefaultRunnableSpec {
     suite("PullBiolinkTypeMapTestSpec")(
       testM("pull") {
         for {
-          httpClient <- SPARQLQueryExecutor.makeHttpClient
+          httpClient <- HttpClient.makeHttpClient
           uri = uri"https://biolink.github.io/biolink-model/context.jsonld"
           request = Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`ld+json`),
                                                                `Content-Type`(MediaType.application.`ld+json`))

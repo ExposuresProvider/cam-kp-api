@@ -13,12 +13,12 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.jena.ext.com.google.common.base.CaseFormat
 import org.apache.jena.ext.xerces.util.URI
 import org.apache.jena.query.{QueryFactory, QuerySolution, ResultSet}
+import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain._
 import zio.config.ZConfig
 import zio.{RIO, Task, ZIO, config => _}
 
 import scala.collection.JavaConverters._
-import scala.collection.mutable
 
 object QueryService extends LazyLogging {
 
@@ -59,7 +59,8 @@ object QueryService extends LazyLogging {
       .headOption
       .getOrElse(value)
 
-  private def queryEdgePredicates(edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig], (Set[String], Set[(String, String)], String)] =
+  private def queryEdgePredicates(
+    edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, (Set[String], Set[(String, String)], String)] =
     for {
       edgeType <- ZIO.fromOption(edge.`type`).orElseFail(new Exception("failed to get edge type"))
       queryText = s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
@@ -80,7 +81,7 @@ object QueryService extends LazyLogging {
              Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id),
              s"$predicateValuesBlock\n$triple")
 
-  def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig], ResultSet] = {
+  def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient, ResultSet] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
       predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty))(queryEdgePredicates)
@@ -109,7 +110,7 @@ object QueryService extends LazyLogging {
     } yield response
   }
 
-  def parseResultSet(queryGraph: TRAPIQueryGraph, resultSet: ResultSet): RIO[ZConfig[AppConfig], TRAPIMessage] =
+  def parseResultSet(queryGraph: TRAPIQueryGraph, resultSet: ResultSet): RIO[ZConfig[AppConfig] with HttpClient, TRAPIMessage] =
     for {
       prefixes <- readPrefixes
       querySolutions = resultSet.asScala.toList
@@ -167,7 +168,7 @@ object QueryService extends LazyLogging {
 
   private def getTRAPINodes(queryGraph: TRAPIQueryGraph,
                             querySolutions: List[QuerySolution],
-                            prefixes: Map[String, String]): RIO[ZConfig[AppConfig], List[TRAPINode]] =
+                            prefixes: Map[String, String]): RIO[ZConfig[AppConfig] with HttpClient, List[TRAPINode]] =
     for {
       trapiNodes <- ZIO.foreach(querySolutions) { querySolution =>
         for {
@@ -236,7 +237,7 @@ object QueryService extends LazyLogging {
     } yield nodeBindings
 
   private def getTRAPIEdgeBindings(queryGraph: TRAPIQueryGraph,
-                                   querySolution: QuerySolution): RIO[ZConfig[AppConfig], List[TRAPIEdgeBinding]] =
+                                   querySolution: QuerySolution): RIO[ZConfig[AppConfig] with HttpClient, List[TRAPIEdgeBinding]] =
     for {
       nodeMap <- Task.effect(queryGraph.nodes.map(n => (n.id, querySolution.get(s"${n.id}_type").toString)).toMap)
       edgeBindings <- ZIO.foreach(queryGraph.edges) { e =>
@@ -275,7 +276,7 @@ object QueryService extends LazyLogging {
       kgNode = TRAPINode(Some(slotStuffNodeDetailTypes._1), slotStuffNodeDetailTypes._2.sorted, List[TRAPINodeAttribute](attribute))
     } yield kgNode
 
-  private def getProvenance(source: String, predicate: String, target: String): RIO[ZConfig[AppConfig], String] =
+  private def getProvenance(source: String, predicate: String, target: String): RIO[ZConfig[AppConfig] with HttpClient, String] =
     for {
       prefixMap <- readPrefixes
       prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
@@ -289,7 +290,7 @@ object QueryService extends LazyLogging {
       prov <- Task.effect(nextSolution.get("other").toString).orElse(Task.effect(nextSolution.get("g").toString))
     } yield prov
 
-  private def getTRAPINodeDetails(nodeIdList: List[String]): RIO[ZConfig[AppConfig], List[TripleString]] =
+  private def getTRAPINodeDetails(nodeIdList: List[String]): RIO[ZConfig[AppConfig] with HttpClient, List[TripleString]] =
     for {
       prefixMap <- readPrefixes
       prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
@@ -313,7 +314,7 @@ object QueryService extends LazyLogging {
       )
     } yield results
 
-  private def getCAMStuff(prov: String): RIO[ZConfig[AppConfig], List[Triple]] =
+  private def getCAMStuff(prov: String): RIO[ZConfig[AppConfig] with HttpClient, List[Triple]] =
     for {
       prefixMap <- readPrefixes
       prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
@@ -332,7 +333,7 @@ object QueryService extends LazyLogging {
       triples <- SPARQLQueryExecutor.runSelectQueryAs[Triple](query)
     } yield triples
 
-  private def getSlotStuff(predicateMap: List[String]): RIO[ZConfig[AppConfig], List[(String, String, String, String)]] =
+  private def getSlotStuff(predicateMap: List[String]): RIO[ZConfig[AppConfig] with HttpClient, List[(String, String, String, String)]] =
     for {
       prefixMap <- readPrefixes
       prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
