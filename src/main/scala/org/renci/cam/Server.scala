@@ -25,7 +25,7 @@ import zio.{config => _, _}
 object Server extends App {
 
   object LocalTapirJsonCirce extends TapirJsonCirce {
-    override def jsonPrinter: Printer = Printer.spaces2.copy(dropNullValues = true)
+    override def jsonPrinter: Printer = Printer.noSpaces.copy(dropNullValues = true)
   }
 
   import LocalTapirJsonCirce._
