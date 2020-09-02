@@ -34,7 +34,7 @@ object Utilities {
   def getBiolinkPrefixesFromFile: ZIO[Any, Throwable, PrefixesMap] =
     for {
       prefixesStr <- Task.effect(fromFile("prefixes.json").mkString)
-      prefixesJson <- Task.effect(parse(prefixesStr))
+      prefixesJson = parse(prefixesStr)
       cursor <- ZIO.fromEither(prefixesJson.map(_.hcursor))
       contextValue <- ZIO.fromEither(cursor.downField("@context").as[Map[String, Json]])
       curies =
@@ -45,11 +45,11 @@ object Utilities {
           .collect {
             case (key, Right(value)) => (key, value)
           }
-    } yield PrefixesMap(curies) //getResourcesAsStream
+    } yield PrefixesMap(curies)
 
   def getPrefixes: ZIO[HttpClient, Throwable, PrefixesMap] = getBiolinkPrefixesFromURL.orElse(getBiolinkPrefixesFromFile)
 
-  def makePrefixesLayer: UIO[TaskLayer[Has[PrefixesMap]]] = getBiolinkPrefixesFromURL.map(ZLayer.fromEffect)
+  def makePrefixesLayer: UIO[TaskLayer[Has[PrefixesMap]]] = getPrefixes.map(ZLayer.fromEffect)
 
   val biolinkPrefixes: ZIO[HttpClient, Nothing, TaskLayer[Has[PrefixesMap]]] = ZIO.service
 
