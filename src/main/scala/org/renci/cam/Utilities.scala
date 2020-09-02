@@ -49,9 +49,9 @@ object Utilities {
 
   def getPrefixes: ZIO[HttpClient, Throwable, PrefixesMap] = getBiolinkPrefixesFromURL.orElse(getBiolinkPrefixesFromFile)
 
-  def makePrefixesLayer: UIO[TaskLayer[Has[PrefixesMap]]] = getPrefixes.map(ZLayer.fromEffect)
+  def makePrefixesLayer: ZLayer[HttpClient, Throwable, Has[PrefixesMap]] = ZLayer.fromEffect(getPrefixes)
 
-  val biolinkPrefixes: ZIO[HttpClient, Nothing, TaskLayer[Has[PrefixesMap]]] = ZIO.service
+  val biolinkPrefixes: URIO[Has[PrefixesMap], PrefixesMap] = ZIO.service
 
   final case class PrefixesMap(prefixesMap: Map[String, String])
 
