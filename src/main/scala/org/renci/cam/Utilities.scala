@@ -31,27 +31,28 @@ object Utilities {
           }
     } yield PrefixesMap(curies)
 
-  def getBiolinkPrefixesFromFile: ZIO[Any, Throwable, PrefixesMap] = for {
-    val prefixesStr = fromFile("prefixes.json").mkString
-    val prefixesJson = parse(prefixesStr)
-    val cursor = prefixesJson.hcursor
-    val contextValue = ZIO.fromEither(cursor.downField("@context").as[Map[String, Json]])
-    val curies =
-      contextValue
-        .map {
-          case (key, value) => (key, value.as[String])
-        }
-        .collect {
-          case (key, Right(value)) => (key, value)
-        }
-  } yield curies //getResourcesAsStream
+  def getBiolinkPrefixesFromFile: ZIO[Any, Throwable, PrefixesMap] =
+    for {
+      prefixesStr <- Task.effect(fromFile("prefixes.json").mkString)
+      prefixesJson <- Task.effect(parse(prefixesStr))
+      cursor <- ZIO.fromEither(prefixesJson.map(_.hcursor))
+      contextValue <- ZIO.fromEither(cursor.downField("@context").as[Map[String, Json]])
+      curies =
+        contextValue
+          .map {
+            case (key, value) => (key, value.as[String])
+          }
+          .collect {
+            case (key, Right(value)) => (key, value)
+          }
+    } yield PrefixesMap(curies) //getResourcesAsStream
 
   def getPrefixes: ZIO[HttpClient, Throwable, PrefixesMap] = getBiolinkPrefixesFromURL.orElse(getBiolinkPrefixesFromFile)
 
-  def makePrefixesLayer: UIO[TaskLayer[Has[PrefixesMap]]] = getBiolinkPrefixesFromURL.map(ZLayer.fromManaged())
+  def makePrefixesLayer: UIO[TaskLayer[Has[PrefixesMap]]] = getBiolinkPrefixesFromURL.map(ZLayer.fromEffect)
 
   val biolinkPrefixes: ZIO[HttpClient, Nothing, TaskLayer[Has[PrefixesMap]]] = ZIO.service
 
-  case class PrefixesMap(prefixesMap: Map[String, String])
+  final case class PrefixesMap(prefixesMap: Map[String, String])
 
 }
