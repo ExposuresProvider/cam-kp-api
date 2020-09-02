@@ -1,6 +1,6 @@
 package org.renci.cam
 
-import scala.io.Source._
+import scala.io.Source
 import io.circe.Json
 import io.circe.parser.parse
 import org.http4s.circe._
@@ -10,6 +10,7 @@ import org.http4s.{MediaType, Method, Request}
 import org.renci.cam.HttpClient.HttpClient
 import zio._
 import zio.interop.catz._
+import zio.ZIO.ZIOAutoCloseableOps
 
 object Utilities {
 
@@ -33,7 +34,7 @@ object Utilities {
 
   def getBiolinkPrefixesFromFile: ZIO[Any, Throwable, PrefixesMap] =
     for {
-      prefixesStr <- Task.effect(fromFile("prefixes.json").mkString)
+      prefixesStr <- Task.effect(Source.fromFile("prefixes.json")).bracketAuto(source => Task.effect(source.mkString))
       prefixesJson = parse(prefixesStr)
       cursor <- ZIO.fromEither(prefixesJson.map(_.hcursor))
       contextValue <- ZIO.fromEither(cursor.downField("@context").as[Map[String, Json]])
