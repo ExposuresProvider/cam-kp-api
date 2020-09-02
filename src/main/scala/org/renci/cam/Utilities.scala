@@ -8,6 +8,7 @@ import org.http4s.headers.Accept
 import org.http4s.implicits._
 import org.http4s.{MediaType, Method, Request}
 import org.renci.cam.HttpClient.HttpClient
+import org.renci.cam.Utilities.getClass
 import zio._
 import zio.interop.catz._
 import zio.ZIO.ZIOAutoCloseableOps
@@ -34,7 +35,8 @@ object Utilities {
 
   def getBiolinkPrefixesFromFile: ZIO[Any, Throwable, PrefixesMap] =
     for {
-      prefixesStr <- Task.effect(Source.fromFile("prefixes.json")).bracketAuto(source => Task.effect(source.mkString))
+      fileStream <- Task.effect(getClass.getResourceAsStream("/prefixes.json"))
+      prefixesStr <- Task.effect(Source.fromInputStream(fileStream)).bracketAuto(source => Task.effect(source.getLines.mkString))
       prefixesJson = parse(prefixesStr)
       cursor <- ZIO.fromEither(prefixesJson.map(_.hcursor))
       contextValue <- ZIO.fromEither(cursor.downField("@context").as[Map[String, Json]])
