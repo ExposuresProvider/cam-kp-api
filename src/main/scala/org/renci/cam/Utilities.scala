@@ -37,8 +37,8 @@ object Utilities {
     for {
       fileStream <- Task.effect(getClass.getResourceAsStream("/prefixes.json"))
       prefixesStr <- Task.effect(Source.fromInputStream(fileStream)).bracketAuto(source => Task.effect(source.getLines.mkString))
-      prefixesJson = parse(prefixesStr)
-      cursor <- ZIO.fromEither(prefixesJson.map(_.hcursor))
+      prefixesJson <- ZIO.fromEither(parse(prefixesStr))
+      cursor = prefixesJson.hcursor
       contextValue <- ZIO.fromEither(cursor.downField("@context").as[Map[String, Json]])
       curies =
         contextValue
