@@ -1,4 +1,6 @@
-enablePlugins(JavaAppPackaging)
+import com.typesafe.sbt.packager.docker._
+
+enablePlugins(JavaAppPackaging, DockerPlugin)
 
 organization := "org.renci"
 
@@ -52,4 +54,14 @@ libraryDependencies ++= {
     "ch.qos.logback"               % "logback-classic"          % logbackVersion,
     "com.typesafe.scala-logging"  %% "scala-logging"            % "3.9.2"
   )
+}
+
+dockerBaseImage := "openjdk:14-alpine"
+daemonUser in Docker := "camkpapi"
+dockerExposedPorts += 8080
+dockerApiVersion := Some(DockerApiVersion(1, 40))
+dockerChmodType := DockerChmodType.UserGroupWriteExecute
+dockerCommands := dockerCommands.value.flatMap {
+  case cmd @ Cmd("EXPOSE", _) => List(Cmd("RUN", "apk update && apk add bash"), cmd)
+  case other => List(other)
 }
