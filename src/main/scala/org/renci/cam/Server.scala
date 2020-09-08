@@ -9,6 +9,7 @@ import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger, _}
 import org.renci.cam.HttpClient.HttpClient
+import org.renci.cam.Utilities._
 import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
@@ -86,10 +87,12 @@ object Server extends App {
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
+  val prefixesLayer: ZLayer[HttpClient, Throwable, Has[PrefixesMap]] = Utilities.makePrefixesLayer
+
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] =
     (for {
       httpClientLayer <- HttpClient.makeHttpClientLayer
-      appLayer = httpClientLayer ++ configLayer
+      appLayer = httpClientLayer ++ (httpClientLayer >>> prefixesLayer) ++ configLayer
       out <- server.provideLayer(appLayer)
     } yield out).exitCode
 

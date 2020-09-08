@@ -33,10 +33,14 @@ object Utilities {
           }
     } yield PrefixesMap(curies)
 
-  def getBiolinkPrefixesFromFile: ZIO[Any, Throwable, PrefixesMap] =
+  def getBiolinkPrefixesFromFile: ZIO[Any, Throwable, PrefixesMap] = {
+    val sourceManaged = for {
+      fileStream <- Managed.fromAutoCloseable(Task.effect(getClass.getResourceAsStream("/prefixes.json")))
+      source <- Managed.fromAutoCloseable(Task.effect(Source.fromInputStream(fileStream)))
+    } yield source
+
     for {
-      fileStream <- Task.effect(getClass.getResourceAsStream("/prefixes.json"))
-      prefixesStr <- Task.effect(Source.fromInputStream(fileStream)).bracketAuto(source => Task.effect(source.getLines.mkString))
+      prefixesStr <- sourceManaged.use(source => ZIO.effect(source.getLines.mkString))
       prefixesJson <- ZIO.fromEither(parse(prefixesStr))
       cursor = prefixesJson.hcursor
       contextValue <- ZIO.fromEither(cursor.downField("@context").as[Map[String, Json]])
@@ -49,6 +53,7 @@ object Utilities {
             case (key, Right(value)) => (key, value)
           }
     } yield PrefixesMap(curies)
+  }
 
   def getPrefixes: ZIO[HttpClient, Throwable, PrefixesMap] = getBiolinkPrefixesFromURL.orElse(getBiolinkPrefixesFromFile)
 
