@@ -49,7 +49,7 @@ object Server extends App {
       .errorOut(stringBody)
       .out(jsonBody[TRAPIMessage])
 
-  val queryRouteR: URIO[ZConfig[AppConfig] with HttpClient, HttpRoutes[Task]] = queryEndpoint.toRoutesR {
+  val queryRouteR: URIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
     case (limit, body) =>
       val program = for {
         queryGraph <-
@@ -65,7 +65,7 @@ object Server extends App {
   // will be available at /docs
   val openAPI: String = List(queryEndpoint, predicatesEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
 
-  val server: RIO[ZConfig[AppConfig] with HttpClient, Unit] =
+  val server: RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- config[AppConfig]
