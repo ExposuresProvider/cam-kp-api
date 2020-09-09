@@ -83,7 +83,8 @@ object QueryService extends LazyLogging {
   def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient, ResultSet] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
-      predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty))(queryEdgePredicates)
+      filteredEdgeTypes <- Task.effect(queryGraph.edges.filter(_.`type`.nonEmpty))
+      predicates <- ZIO.foreachPar(filteredEdgeTypes)(queryEdgePredicates)
       (instanceVars, instanceVarsToTypes, sparqlLines) = predicates.unzip3
       whereClauseParts =
         queryGraph.nodes
@@ -95,11 +96,11 @@ object QueryService extends LazyLogging {
           queryGraph.nodes.map(a => s"?${a.id}_type") :::
           queryGraph.edges.map(a => s"?${a.id}")
       selectClause = s"SELECT DISTINCT ${ids.mkString(" ")} "
-      moreLines = for {
-        (subj, typ) <- instanceVarsToTypes.flatten
-        v <- nodeTypes.get(typ)
-      } yield s"?$subj rdf:type $v ."
-      valuesClause = (sparqlLines ++ moreLines).mkString("\n")
+      valuesClause =
+        if (filteredEdgeTypes.nonEmpty)
+          (sparqlLines ++ instanceVarsToTypes.flatten.map(s => s"?${s._1} rdf:type ${nodeTypes.get(s._2)} .\n")).mkString("\n")
+        else
+          ""
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
       prefixMap <- readPrefixes
       prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
@@ -230,8 +231,9 @@ object QueryService extends LazyLogging {
   private def getTRAPIEdgeBindings(queryGraph: TRAPIQueryGraph,
                                    querySolution: QuerySolution): RIO[ZConfig[AppConfig] with HttpClient, List[TRAPIEdgeBinding]] =
     for {
-      nodeMap <- Task.effect(queryGraph.nodes.map(n => (n.id, querySolution.get(s"${n.id}_type").toString)).toMap)
-      edgeBindings <- ZIO.foreach(queryGraph.edges) { e =>
+      existingTriples <- Task.effect(queryGraph.edges.filter(e =>
+        querySolution.contains(e.id) && querySolution.contains(e.source_id) && querySolution.contains(e.target_id)))
+      existingEdgeBindings <- ZIO.foreach(existingTriples) { e =>
         for {
           predicateRDFNode <- Task.effect(querySolution.get(e.id).toString)
           sourceRDFNode <- Task.effect(querySolution.get(e.source_id).toString)
@@ -242,7 +244,16 @@ object QueryService extends LazyLogging {
           trapiEdgeBinding = TRAPIEdgeBinding(Some(e.id), encodedTRAPIEdge, Some(prov))
         } yield trapiEdgeBinding
       }
-    } yield edgeBindings
+      missingTriples <- Task.effect(queryGraph.edges.filter(e => !existingTriples.contains(e)))
+      missingEdgeBindings <- ZIO.foreach(missingTriples) { e =>
+        for {
+          edgeKey <- Task.effect(
+            TRAPIEdgeKey(e.`type`, e.source_id, e.target_id).asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8))
+          encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey)))
+          trapiEdgeBinding = TRAPIEdgeBinding(Some(e.id), encodedTRAPIEdge, None)
+        } yield trapiEdgeBinding
+      }
+    } yield existingEdgeBindings ++ missingEdgeBindings
 
   private def getExtraKGNodes(camNodes: Set[URI], slotStuffNodeDetails: List[TripleString], prefixes: Map[String, String]): Set[TRAPINode] =
     for {
