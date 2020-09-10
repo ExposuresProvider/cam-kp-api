@@ -14,9 +14,10 @@ import org.apache.jena.ext.com.google.common.base.CaseFormat
 import org.apache.jena.ext.xerces.util.URI
 import org.apache.jena.query.{QueryFactory, QuerySolution, ResultSet}
 import org.renci.cam.HttpClient.HttpClient
+import org.renci.cam.Utilities._
 import org.renci.cam.domain._
 import zio.config.ZConfig
-import zio.{RIO, Task, ZIO, config => _}
+import zio.{Has, RIO, Task, URIO, ZIO, config => _}
 
 import scala.collection.JavaConverters._
 
@@ -41,16 +42,16 @@ object QueryService extends LazyLogging {
         })
       .toMap
 
-  def readPrefixes: Task[Map[String, String]] =
-    for {
-      legacyJSONString <-
-        Task.effect(IOUtils.resourceToString("legacy_prefixes.json", StandardCharsets.UTF_8, this.getClass.getClassLoader))
-      legacyJSON <- ZIO.fromEither(parse(legacyJSONString))
-      legacyMap = legacyJSON.as[Map[String, String]].getOrElse(Map.empty)
-      jsonString <- Task.effect(IOUtils.resourceToString("prefixes.json", StandardCharsets.UTF_8, this.getClass.getClassLoader))
-      json <- ZIO.fromEither(parse(jsonString))
-      map = json.as[Map[String, String]].getOrElse(Map.empty)
-    } yield legacyMap.++(map)
+//  def readPrefixes: URIO[Has[PrefixesMap], PrefixesMap] = biolinkPrefixes
+//    for {
+//      legacyJSONString <-
+//        Task.effect(IOUtils.resourceToString("legacy_prefixes.json", StandardCharsets.UTF_8, this.getClass.getClassLoader))
+//      legacyJSON <- ZIO.fromEither(parse(legacyJSONString))
+//      legacyMap = legacyJSON.as[Map[String, String]].getOrElse(Map.empty)
+//      jsonString <- Task.effect(IOUtils.resourceToString("prefixes.json", StandardCharsets.UTF_8, this.getClass.getClassLoader))
+//      json <- ZIO.fromEither(parse(jsonString))
+//      map = json.as[Map[String, String]].getOrElse(Map.empty)
+//    } yield map
 
   def applyPrefix(value: String, prefixes: Map[String, String]): String =
     prefixes
@@ -80,7 +81,7 @@ object QueryService extends LazyLogging {
              Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id),
              s"$predicateValuesBlock\n$triple")
 
-  def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient, ResultSet] = {
+  def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], ResultSet] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
       predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty))(queryEdgePredicates)
@@ -101,23 +102,24 @@ object QueryService extends LazyLogging {
       } yield s"?$subj rdf:type $v ."
       valuesClause = (sparqlLines ++ moreLines).mkString("\n")
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
-      prefixMap <- readPrefixes
-      prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
+      prefixMap <- biolinkPrefixes
+      prefixes = prefixMap.prefixesMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       queryString = s"$prefixes\n$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"
       query <- Task.effect(QueryFactory.create(queryString))
       response <- SPARQLQueryExecutor.runSelectQuery(query)
     } yield response
   }
 
-  def parseResultSet(queryGraph: TRAPIQueryGraph, resultSet: ResultSet): RIO[ZConfig[AppConfig] with HttpClient, TRAPIMessage] =
+  def parseResultSet(queryGraph: TRAPIQueryGraph,
+                     resultSet: ResultSet): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], TRAPIMessage] =
     for {
-      prefixes <- readPrefixes
+      prefixes <- biolinkPrefixes
       querySolutions = resultSet.asScala.toList
       //FIXME these initial nodes have incorrect 'name' properties; should not be query graph name
-      initialKGNodes <- getTRAPINodes(queryGraph, querySolutions, prefixes)
-      initialKGEdges <- getTRAPIEdges(queryGraph, querySolutions, prefixes)
+      initialKGNodes <- getTRAPINodes(queryGraph, querySolutions, prefixes.prefixesMap)
+      initialKGEdges <- getTRAPIEdges(queryGraph, querySolutions, prefixes.prefixesMap)
       trapiBindings <- ZIO.foreach(querySolutions) { querySolution =>
-        getTRAPINodeBindings(queryGraph, querySolution, prefixes) zip getTRAPIEdgeBindings(queryGraph, querySolution)
+        getTRAPINodeBindings(queryGraph, querySolution, prefixes.prefixesMap) zip getTRAPIEdgeBindings(queryGraph, querySolution)
       }
       allEdgeBindings = trapiBindings.flatMap(_._2)
       allCamIds = allEdgeBindings.toSet[TRAPIEdgeBinding].flatMap(_.provenance)
@@ -125,7 +127,7 @@ object QueryService extends LazyLogging {
       allCAMTriples = prov2CAMStuffTripleMap.values.toSet.flatten
       allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj, t.obj))
       slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.map(v => s"<$v>").toList)
-      extraKGNodes = getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, prefixes)
+      extraKGNodes = getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, prefixes.prefixesMap)
       allPredicates = allCAMTriples.map(_.pred.toString)
       slotStuffList <- getSlotStuff(allPredicates.toList)
       extraKGEdges = allCAMTriples.map { triple =>
@@ -135,10 +137,10 @@ object QueryService extends LazyLogging {
           .filter(a => a._2.equals(triple.pred.toString))
           .map(a => a._4)
           .headOption
-          .getOrElse(applyPrefix(triple.pred.toString, prefixes))
+          .getOrElse(applyPrefix(triple.pred.toString, prefixes.prefixesMap))
         TRAPIEdge(knowledgeGraphId,
-                  applyPrefix(triple.subj.toString, prefixes),
-                  applyPrefix(triple.obj.toString, prefixes),
+                  applyPrefix(triple.subj.toString, prefixes.prefixesMap),
+                  applyPrefix(triple.obj.toString, prefixes.prefixesMap),
                   Some(resolvedType))
       }
       results = trapiBindings.map {
@@ -146,7 +148,7 @@ object QueryService extends LazyLogging {
           val provsAndCamTriples =
             resultEdgeBindings.flatMap(_.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).toSet.flatten).toMap
           val nodes = provsAndCamTriples.values.flatten.toSet[Triple].flatMap(t => Set(t.subj, t.obj))
-          val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(None, applyPrefix(n.toString, prefixes)))
+          val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(None, applyPrefix(n.toString, prefixes.prefixesMap)))
           val extraKGEdgeBindings = provsAndCamTriples.flatMap {
             case (prov, triples) =>
               triples.map { triple =>
@@ -167,7 +169,7 @@ object QueryService extends LazyLogging {
 
   private def getTRAPINodes(queryGraph: TRAPIQueryGraph,
                             querySolutions: List[QuerySolution],
-                            prefixes: Map[String, String]): RIO[ZConfig[AppConfig] with HttpClient, List[TRAPINode]] =
+                            prefixes: Map[String, String]): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[TRAPINode]] =
     for {
       trapiNodes <- ZIO.foreach(querySolutions) { querySolution =>
         for {
@@ -227,8 +229,9 @@ object QueryService extends LazyLogging {
       }
     } yield nodeBindings
 
-  private def getTRAPIEdgeBindings(queryGraph: TRAPIQueryGraph,
-                                   querySolution: QuerySolution): RIO[ZConfig[AppConfig] with HttpClient, List[TRAPIEdgeBinding]] =
+  private def getTRAPIEdgeBindings(
+    queryGraph: TRAPIQueryGraph,
+    querySolution: QuerySolution): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[TRAPIEdgeBinding]] =
     for {
       nodeMap <- Task.effect(queryGraph.nodes.map(n => (n.id, querySolution.get(s"${n.id}_type").toString)).toMap)
       edgeBindings <- ZIO.foreach(queryGraph.edges) { e =>
@@ -258,10 +261,12 @@ object QueryService extends LazyLogging {
       kgNode = TRAPINode(abbreviatedNodeType, Some(slotStuffNodeDetailTypes._1), slotStuffNodeDetailTypes._2.sorted)
     } yield kgNode
 
-  private def getProvenance(source: String, predicate: String, target: String): RIO[ZConfig[AppConfig] with HttpClient, String] =
+  private def getProvenance(source: String,
+                            predicate: String,
+                            target: String): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], String] =
     for {
-      prefixMap <- readPrefixes
-      prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
+      prefixMap <- biolinkPrefixes
+      prefixes = prefixMap.prefixesMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       queryText = s"""$prefixes
           |SELECT ?g ?other WHERE {
           |GRAPH ?g { <$source> <$predicate> <$target> } OPTIONAL { ?g prov:wasDerivedFrom ?other . }
@@ -272,10 +277,11 @@ object QueryService extends LazyLogging {
       prov <- Task.effect(nextSolution.get("other").toString).orElse(Task.effect(nextSolution.get("g").toString))
     } yield prov
 
-  private def getTRAPINodeDetails(nodeIdList: List[String]): RIO[ZConfig[AppConfig] with HttpClient, List[TripleString]] =
+  private def getTRAPINodeDetails(
+    nodeIdList: List[String]): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[TripleString]] =
     for {
-      prefixMap <- readPrefixes
-      prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
+      prefixMap <- biolinkPrefixes
+      prefixes = prefixMap.prefixesMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       nodeIds = nodeIdList.mkString(" ")
       queryText = s"""$prefixes
             |SELECT DISTINCT ?kid ?blclass ?label WHERE {
@@ -296,10 +302,10 @@ object QueryService extends LazyLogging {
       )
     } yield results
 
-  private def getCAMStuff(prov: String): RIO[ZConfig[AppConfig] with HttpClient, List[Triple]] =
+  private def getCAMStuff(prov: String): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[Triple]] =
     for {
-      prefixMap <- readPrefixes
-      prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
+      prefixMap <- biolinkPrefixes
+      prefixes = prefixMap.prefixesMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       queryText = s"""$prefixes
            |SELECT DISTINCT (?s_type AS ?subj) (?p AS ?pred) (?o_type AS ?obj) WHERE {
            |GRAPH <$prov> {
@@ -315,10 +321,11 @@ object QueryService extends LazyLogging {
       triples <- SPARQLQueryExecutor.runSelectQueryAs[Triple](query)
     } yield triples
 
-  private def getSlotStuff(predicateMap: List[String]): RIO[ZConfig[AppConfig] with HttpClient, List[(String, String, String, String)]] =
+  private def getSlotStuff(
+    predicateMap: List[String]): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[(String, String, String, String)]] =
     for {
-      prefixMap <- readPrefixes
-      prefixes = prefixMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
+      prefixMap <- biolinkPrefixes
+      prefixes = prefixMap.prefixesMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
       values =
         predicateMap.zipWithIndex
           .map(a => String.format(" ( <%s> \"e%s\" ) ", a._1, StringUtils.leftPad(a._2.toString, 4, '0')))
