@@ -66,7 +66,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
           httpClient <- HttpClient.makeHttpClient
-          uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
+          uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 10) // scala
           //uri = uri"http://127.0.0.1:6434/query".withQueryParam("limit", 1) // python
           request = Request[Task](Method.POST, uri)
             .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
