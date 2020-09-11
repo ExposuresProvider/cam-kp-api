@@ -1,0 +1,613 @@
+{
+  "query_graph": {
+    "nodes": [
+      {
+        "id": "n0",
+        "type": "gene",
+        "curie": "UniProtKB:P30530"
+      },
+      {
+        "id": "n1",
+        "type": "biological_process"
+      },
+      {
+        "id": "n2",
+        "type": "biological_process"
+      },
+      {
+        "id": "n3",
+        "type": "gene"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e0",
+        "source_id": "n1",
+        "target_id": "n0"
+      },
+      {
+        "id": "e1",
+        "source_id": "n1",
+        "target_id": "n2"
+      },
+      {
+        "id": "e2",
+        "source_id": "n2",
+        "target_id": "n3"
+      }
+    ]
+  },
+  "knowledge_graph": {
+    "nodes": [
+      {
+        "id": "GO:0000981",
+        "name": "DNA-binding transcription factor activity, RNA polymerase II-specific",
+        "type": [
+          "biological_entity",
+          "biological_process_or_activity",
+          "molecular_activity",
+          "named_thing",
+          "occurrent"
+        ]
+      },
+      {
+        "id": "GO:0003674",
+        "name": "molecular_function",
+        "type": [
+          "biological_entity",
+          "biological_process_or_activity",
+          "molecular_activity",
+          "named_thing",
+          "occurrent"
+        ]
+      },
+      {
+        "id": "GO:0003700",
+        "name": "DNA-binding transcription factor activity",
+        "type": [
+          "biological_entity",
+          "biological_process_or_activity",
+          "molecular_activity",
+          "named_thing",
+          "occurrent"
+        ]
+      },
+      {
+        "id": "GO:0004672",
+        "name": "protein kinase activity",
+        "type": [
+          "biological_entity",
+          "biological_process_or_activity",
+          "molecular_activity",
+          "named_thing",
+          "occurrent"
+        ]
+      },
+      {
+        "id": "GO:0004842",
+        "name": "ubiquitin-protein transferase activity",
+        "type": [
+          "biological_entity",
+          "biological_process_or_activity",
+          "molecular_activity",
+          "named_thing",
+          "occurrent"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0003674"
+      },
+      {
+        "id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0003674"
+      },
+      {
+        "id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0003674"
+      },
+      {
+        "id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0003674"
+      },
+      {
+        "id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0003700"
+      },
+      {
+        "id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0003674"
+      },
+      {
+        "id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0003700"
+      },
+      {
+        "id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0004672"
+      },
+      {
+        "id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0003674"
+      },
+      {
+        "id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0004672"
+      },
+      {
+        "id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0004842"
+      },
+      {
+        "id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0003674"
+      },
+      {
+        "id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0000981"
+      },
+      {
+        "id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8",
+        "source_id": "GO:0000981",
+        "target_id": "GO:0004842"
+      }
+    ]
+  },
+  "results": [
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n2",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n3",
+          "kg_id": "GO:0000981"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196"
+        },
+        {
+          "qg_id": "e1",
+          "kg_id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95"
+        },
+        {
+          "qg_id": "e2",
+          "kg_id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8"
+        }
+      ],
+      "extra_nodes": [],
+      "extra_edges": []
+    },
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "GO:0003674"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n2",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n3",
+          "kg_id": "GO:0000981"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196"
+        },
+        {
+          "qg_id": "e1",
+          "kg_id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95"
+        },
+        {
+          "qg_id": "e2",
+          "kg_id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8"
+        }
+      ],
+      "extra_nodes": [],
+      "extra_edges": []
+    },
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n2",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n3",
+          "kg_id": "GO:0003674"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196"
+        },
+        {
+          "qg_id": "e1",
+          "kg_id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95"
+        },
+        {
+          "qg_id": "e2",
+          "kg_id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8"
+        }
+      ],
+      "extra_nodes": [],
+      "extra_edges": []
+    },
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "GO:0003674"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n2",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n3",
+          "kg_id": "GO:0003674"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196"
+        },
+        {
+          "qg_id": "e1",
+          "kg_id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95"
+        },
+        {
+          "qg_id": "e2",
+          "kg_id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8"
+        }
+      ],
+      "extra_nodes": [],
+      "extra_edges": []
+    },
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n2",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n3",
+          "kg_id": "GO:0003700"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196"
+        },
+        {
+          "qg_id": "e1",
+          "kg_id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95"
+        },
+        {
+          "qg_id": "e2",
+          "kg_id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8"
+        }
+      ],
+      "extra_nodes": [],
+      "extra_edges": []
+    },
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "GO:0003674"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n2",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n3",
+          "kg_id": "GO:0003700"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196"
+        },
+        {
+          "qg_id": "e1",
+          "kg_id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95"
+        },
+        {
+          "qg_id": "e2",
+          "kg_id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8"
+        }
+      ],
+      "extra_nodes": [],
+      "extra_edges": []
+    },
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n2",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n3",
+          "kg_id": "GO:0004672"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196"
+        },
+        {
+          "qg_id": "e1",
+          "kg_id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95"
+        },
+        {
+          "qg_id": "e2",
+          "kg_id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8"
+        }
+      ],
+      "extra_nodes": [],
+      "extra_edges": []
+    },
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "GO:0003674"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n2",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n3",
+          "kg_id": "GO:0004672"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196"
+        },
+        {
+          "qg_id": "e1",
+          "kg_id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95"
+        },
+        {
+          "qg_id": "e2",
+          "kg_id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8"
+        }
+      ],
+      "extra_nodes": [],
+      "extra_edges": []
+    },
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n2",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n3",
+          "kg_id": "GO:0004842"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196"
+        },
+        {
+          "qg_id": "e1",
+          "kg_id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95"
+        },
+        {
+          "qg_id": "e2",
+          "kg_id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8"
+        }
+      ],
+      "extra_nodes": [],
+      "extra_edges": []
+    },
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "GO:0003674"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n2",
+          "kg_id": "GO:0000981"
+        },
+        {
+          "qg_id": "n3",
+          "kg_id": "GO:0004842"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "07759dba51fe188559dd58998cc1ef943b303773971cf440d766cc58e837c196"
+        },
+        {
+          "qg_id": "e1",
+          "kg_id": "925ec2c18ab0cdd209b2ea62c7d0ff3e45afe837aa6bf1ae4477a1409e08de95"
+        },
+        {
+          "qg_id": "e2",
+          "kg_id": "6e8a873a7604a357eaeeba9030f960b942227e2dcd7eff4a214d176f0a01dca8"
+        }
+      ],
+      "extra_nodes": [],
+      "extra_edges": []
+    }
+  ]
+}
