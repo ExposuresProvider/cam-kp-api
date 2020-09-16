@@ -8,6 +8,8 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.parser.parse
 import io.circe.syntax._
+import java.io
+
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.ext.com.google.common.base.CaseFormat
@@ -66,7 +68,8 @@ object QueryService extends LazyLogging {
       edgeType <- ZIO.fromOption(edge.`type`).orElseFail(new Exception("failed to get edge type"))
       queryText = s"""PREFIX bl: <https://w3id.org/biolink/vocab/>
            |SELECT DISTINCT ?predicate WHERE {
-           |bl:$edgeType <http://reasoner.renci.org/vocab/slot_mapping> ?predicate .
+           |?predicate <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>+ bl:$edgeType .
+           |FILTER NOT EXISTS { ?predicate a <https://w3id.org/biolink/biolinkml/meta/types/SlotDefinition> }
            |}""".stripMargin
       query <- Task.effect(QueryFactory.create(queryText))
       resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
@@ -118,8 +121,9 @@ object QueryService extends LazyLogging {
       //FIXME these initial nodes have incorrect 'name' properties; should not be query graph name
       initialKGNodes <- getTRAPINodes(queryGraph, querySolutions, prefixes.prefixesMap)
       initialKGEdges <- getTRAPIEdges(queryGraph, querySolutions, prefixes.prefixesMap)
+      querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, querySolutions)
       trapiBindings <- ZIO.foreach(querySolutions) { querySolution =>
-        getTRAPINodeBindings(queryGraph, querySolution, prefixes.prefixesMap) zip getTRAPIEdgeBindings(queryGraph, querySolution)
+        getTRAPINodeBindings(queryGraph, querySolution, prefixes.prefixesMap) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
       }
       allEdgeBindings = trapiBindings.flatMap(_._2)
       allCamIds = allEdgeBindings.toSet[TRAPIEdgeBinding].flatMap(_.provenance)
@@ -128,37 +132,35 @@ object QueryService extends LazyLogging {
       allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj, t.obj))
       slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.map(v => s"<$v>").toList)
       extraKGNodes = getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, prefixes.prefixesMap)
-      allPredicates = allCAMTriples.map(_.pred.toString)
+      allPredicates = allCAMTriples.map(_.pred)
       slotStuffList <- getSlotStuff(allPredicates.toList)
       extraKGEdges = allCAMTriples.map { triple =>
-        val edgeKey = TRAPIEdgeKey(Some(triple.pred.toString), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
+        val edgeKey = TRAPIEdgeKey(Some(triple.pred), triple.subj, triple.obj).asJson.deepDropNullValues.noSpaces
         val knowledgeGraphId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
         val resolvedType = slotStuffList
-          .filter(a => a._2.equals(triple.pred.toString))
+          .filter(a => a._2.equals(triple.pred))
           .map(a => a._4)
           .headOption
-          .getOrElse(applyPrefix(triple.pred.toString, prefixes.prefixesMap))
+          .getOrElse(applyPrefix(triple.pred, prefixes.prefixesMap))
         TRAPIEdge(knowledgeGraphId,
-                  applyPrefix(triple.subj.toString, prefixes.prefixesMap),
-                  applyPrefix(triple.obj.toString, prefixes.prefixesMap),
+                  applyPrefix(triple.subj, prefixes.prefixesMap),
+                  applyPrefix(triple.obj, prefixes.prefixesMap),
                   Some(resolvedType))
       }
-      results = trapiBindings.map {
-        case (resultNodeBindings, resultEdgeBindings) =>
-          val provsAndCamTriples =
-            resultEdgeBindings.flatMap(_.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).toSet.flatten).toMap
-          val nodes = provsAndCamTriples.values.flatten.toSet[Triple].flatMap(t => Set(t.subj, t.obj))
-          val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(None, applyPrefix(n.toString, prefixes.prefixesMap)))
-          val extraKGEdgeBindings = provsAndCamTriples.flatMap {
-            case (prov, triples) =>
-              triples.map { triple =>
-                val edgeKey =
-                  TRAPIEdgeKey(Some(triple.pred.toString), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
-                val kgId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
-                TRAPIEdgeBinding(None, kgId, Some(prov))
-              }
-          }.toSet
-          TRAPIResult(resultNodeBindings, resultEdgeBindings, Some(extraKGNodeBindings.toList), Some(extraKGEdgeBindings.toList))
+      results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) =>
+        val provsAndCamTriples =
+          resultEdgeBindings.flatMap(_.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).toSet.flatten).toMap
+        val nodes = provsAndCamTriples.values.flatten.toSet[TripleString].flatMap(t => Set(t.subj, t.obj))
+        val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(None, applyPrefix(n.toString, prefixes.prefixesMap)))
+        val extraKGEdgeBindings = provsAndCamTriples.flatMap { case (prov, triples) =>
+          triples.map { triple =>
+            val edgeKey =
+              TRAPIEdgeKey(Some(triple.pred.toString), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
+            val kgId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+            TRAPIEdgeBinding(None, kgId, Some(prov))
+          }
+        }.toSet
+        TRAPIResult(resultNodeBindings, resultEdgeBindings, Some(extraKGNodeBindings.toList), Some(extraKGEdgeBindings.toList))
       }
       trapiKGNodes = initialKGNodes ++ extraKGNodes
       trapiKGEdges = initialKGEdges ++ extraKGEdges
@@ -167,14 +169,18 @@ object QueryService extends LazyLogging {
   // instances are not thread-safe; should be retrieved for every use
   private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
 
-  private def getTRAPINodes(queryGraph: TRAPIQueryGraph,
-                            querySolutions: List[QuerySolution],
-                            prefixes: Map[String, String]): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[TRAPINode]] =
+  private def getTRAPINodes(
+    queryGraph: TRAPIQueryGraph,
+    querySolutions: List[QuerySolution],
+    prefixes: Map[String, String]): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[TRAPINode]] = {
+    val allOntClasses = querySolutions.flatMap { qs =>
+      qs.varNames.asScala.filter(_.endsWith("_type")).map(v => qs.getResource(v).getURI)
+    }
     for {
+      nodeDetails <- getTRAPINodeDetails(allOntClasses.map(v => s"<$v>"))
       trapiNodes <- ZIO.foreach(querySolutions) { querySolution =>
         for {
           nodeMap <- Task.effect(queryGraph.nodes.map(n => (n.id, querySolution.get(s"${n.id}_type").toString)).toMap)
-          nodeDetails <- getTRAPINodeDetails(nodeMap.values.map(v => s"<$v>").toList)
           nodes <- ZIO.foreach(queryGraph.nodes) { n =>
             for {
               nodeIRI <- ZIO.fromOption(nodeMap.get(n.id)).orElseFail(new Exception(s"Missing node IRI: ${n.id}"))
@@ -195,6 +201,7 @@ object QueryService extends LazyLogging {
         } yield nodes
       }
     } yield trapiNodes.flatten
+  }
 
   private def getTRAPIEdges(queryGraph: TRAPIQueryGraph,
                             querySolutions: List[QuerySolution],
@@ -229,6 +236,38 @@ object QueryService extends LazyLogging {
       }
     } yield nodeBindings
 
+  private def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution])
+    : ZIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], Throwable, Map[QuerySolution, List[TRAPIEdgeBinding]]] = {
+    val queryTriples = queryGraph.edges.map(e => TripleString(e.source_id, e.id, e.target_id))
+    val solutionTriples = querySolutions.flatMap { qs =>
+      queryTriples.map { qt =>
+        TripleString(qs.getResource(qt.subj).getURI, qs.getResource(qt.pred).getURI, qs.getResource(qt.obj).getURI)
+      }
+    }
+    for {
+      provs <- getProvenanceMany(solutionTriples.toSet)
+      querySolutionsToEdgeBindings <- ZIO.foreach(querySolutions) { querySolution =>
+        for {
+          nodeMap <- Task.effect(queryGraph.nodes.map(n => (n.id, querySolution.get(s"${n.id}_type").toString)).toMap)
+          edgeBindings <- ZIO.foreach(queryGraph.edges) { e =>
+            for {
+              predicateRDFNode <- Task.effect(querySolution.get(e.id).toString)
+              sourceRDFNode <- Task.effect(querySolution.get(e.source_id).toString)
+              targetRDFNode <- Task.effect(querySolution.get(e.target_id).toString)
+              edgeKey = TRAPIEdgeKey(e.`type`, e.source_id, e.target_id).asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8)
+              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey)))
+              prov <-
+                ZIO
+                  .fromOption(provs.get(TripleString(sourceRDFNode, predicateRDFNode, targetRDFNode)))
+                  .orElseFail(new Exception("Unexpected triple string"))
+              trapiEdgeBinding = TRAPIEdgeBinding(Some(e.id), encodedTRAPIEdge, Some(prov))
+            } yield trapiEdgeBinding
+          }
+        } yield querySolution -> edgeBindings
+      }
+    } yield querySolutionsToEdgeBindings.toMap
+  }
+
   private def getTRAPIEdgeBindings(
     queryGraph: TRAPIQueryGraph,
     querySolution: QuerySolution): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[TRAPIEdgeBinding]] =
@@ -247,19 +286,43 @@ object QueryService extends LazyLogging {
       }
     } yield edgeBindings
 
-  private def getExtraKGNodes(camNodes: Set[URI], slotStuffNodeDetails: List[TripleString], prefixes: Map[String, String]): Set[TRAPINode] =
+  private def getExtraKGNodes(camNodes: Set[String],
+                              slotStuffNodeDetails: List[TripleString],
+                              prefixes: Map[String, String]): Set[TRAPINode] =
     for {
       node <- camNodes
       slotStuffNodeDetailTypes <-
         slotStuffNodeDetails
-          .filter(a => node.toString.equals(a.subj))
+          .filter(a => node.equals(a.subj))
           .map(a => (a.pred, a.obj))
           .groupBy(_._1)
           .map({ case (k, v) => (k, v.map(a => a._2)) })
           .headOption
-      abbreviatedNodeType = applyPrefix(node.toString, prefixes)
+      abbreviatedNodeType = applyPrefix(node, prefixes)
       kgNode = TRAPINode(abbreviatedNodeType, Some(slotStuffNodeDetailTypes._1), slotStuffNodeDetailTypes._2.sorted)
     } yield kgNode
+
+  private def getProvenanceMany(
+    edges: Set[TripleString]): ZIO[ZConfig[AppConfig] with HttpClient with ZConfig[PrefixesMap], Throwable, Map[TripleString, String]] =
+    for {
+      prefixMap <- biolinkPrefixes
+      prefixes = prefixMap.prefixesMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
+      values = edges.map(e => s"(<${e.subj}> <${e.pred}> <${e.obj}>)").mkString(" ")
+      queryText = s"""$prefixes
+                     |SELECT ?s ?p ?o ?g ?other WHERE {
+                     |VALUES (?s ?p ?o) { $values }
+                     |GRAPH ?g { ?s ?p ?o } OPTIONAL { ?g prov:wasDerivedFrom ?other . }
+                     |}""".stripMargin
+      query <- Task.effect(QueryFactory.create(queryText))
+      bindings <- SPARQLQueryExecutor.runSelectQuery(query)
+      triplesToGraphs <- ZIO.foreach(bindings.asScala.toList) { solution =>
+        Task.effect {
+          val graph = if (solution.contains("other")) solution.getResource("other").getURI else solution.getResource("g").getURI
+          val triple = TripleString(solution.getResource("s").getURI, solution.getResource("p").getURI, solution.getResource("o").getURI)
+          triple -> graph
+        }
+      }
+    } yield triplesToGraphs.toMap
 
   private def getProvenance(source: String,
                             predicate: String,
@@ -302,7 +365,7 @@ object QueryService extends LazyLogging {
       )
     } yield results
 
-  private def getCAMStuff(prov: String): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[Triple]] =
+  private def getCAMStuff(prov: String): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[TripleString]] =
     for {
       prefixMap <- biolinkPrefixes
       prefixes = prefixMap.prefixesMap.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
@@ -317,9 +380,8 @@ object QueryService extends LazyLogging {
            |?s sesame:directType ?s_type .
            |}""".stripMargin
       query <- Task.effect(QueryFactory.create(queryText))
-      resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
       triples <- SPARQLQueryExecutor.runSelectQueryAs[Triple](query)
-    } yield triples
+    } yield triples.map(t => TripleString(t.subj.toString, t.pred.toString, t.obj.toString))
 
   private def getSlotStuff(
     predicateMap: List[String]): RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], List[(String, String, String, String)]] =
@@ -333,9 +395,10 @@ object QueryService extends LazyLogging {
       queryText = s"""$prefixes
           |SELECT DISTINCT ?qid ?kid ?blslot ?label WHERE {
           |VALUES (?kid ?qid) { $values }
-          |?blslot <http://reasoner.renci.org/vocab/slot_mapping> ?kid .
+          |?kid <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>+ ?blslot .
+          |?blslot a <https://w3id.org/biolink/biolinkml/meta/types/SlotDefinition> .
           |FILTER NOT EXISTS {
-          |?other <http://reasoner.renci.org/vocab/slot_mapping> ?kid .
+          |?kid <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>+ ?other .
           |?other blml:is_a+/blml:mixins* ?blslot .
           |} OPTIONAL { ?kid rdfs:label ?label . }
           |}""".stripMargin
