@@ -23,6 +23,8 @@ import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio.{config => _, _}
 
+import scala.concurrent.duration._
+
 object Server extends App {
 
   object LocalTapirJsonCirce extends TapirJsonCirce {
@@ -33,12 +35,11 @@ object Server extends App {
 
   val predicatesEndpoint: ZEndpoint[Unit, String, String] = endpoint.get.in("predicates").errorOut(stringBody).out(jsonBody[String])
 
-  val predicatesRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = predicatesEndpoint.toRoutesR {
-    case () =>
-      val program = for {
-        response <- Task.effect("")
-      } yield response
-      program.mapError(error => error.getMessage)
+  val predicatesRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = predicatesEndpoint.toRoutesR { case () =>
+    val program = for {
+      response <- Task.effect("")
+    } yield response
+    program.mapError(error => error.getMessage)
   }
 
   val queryEndpoint: ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage] =
@@ -74,11 +75,13 @@ object Server extends App {
         routes = queryRoute <+> predicatesRoute
         docsRoute = new SwaggerHttp4s(openAPI).routes[Task]
         httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
-        httpAppWithLogging = Logger.httpApp(true, true)(httpApp)
+        httpAppWithLogging = Logger.httpApp(true, false)(httpApp)
         result <-
           BlazeServerBuilder[Task](runtime.platform.executor.asEC)
             .bindHttp(appConfig.port, appConfig.host)
             .withHttpApp(CORS(httpAppWithLogging))
+            .withResponseHeaderTimeout(120.seconds)
+            .withIdleTimeout(180.seconds)
             .serve
             .compile
             .drain

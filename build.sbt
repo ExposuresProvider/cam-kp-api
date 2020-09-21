@@ -25,6 +25,8 @@ val http4sVersion = "0.21.7"
 val circeVersion = "0.13.0"
 val logbackVersion = "1.2.3"
 
+javaOptions in reStart += "-Xmx16G"
+
 libraryDependencies ++= {
   Seq(
     "dev.zio"                     %% "zio"                      % zioVersion,
