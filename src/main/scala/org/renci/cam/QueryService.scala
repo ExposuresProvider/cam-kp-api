@@ -23,7 +23,7 @@ import scala.collection.JavaConverters._
 
 object QueryService extends LazyLogging {
 
-  final case class TRAPIEdgeKey(`type`: Option[String], source_id: String, target_id: String)
+  final case class TRAPIEdgeKey(`type`: Option[CURIEorIRI], source_id: String, target_id: String)
 
   final case class Triple(subj: URI, pred: URI, obj: URI)
 
@@ -35,9 +35,9 @@ object QueryService extends LazyLogging {
     nodes
       .map(node =>
         (node.`type`, node.curie) match {
-          case (Some(t), Some(c)) => (node.id, c)
-          case (None, Some(c)) => (node.id, c)
-          case (Some(t), None) => (node.id, "bl:" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, t))
+          case (Some(t), Some(c)) => (node.id, c.reference)
+          case (None, Some(c)) => (node.id, c.reference)
+          case (Some(t), None) => (node.id, "bl:" + CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, t.reference))
           case (None, None) => (node.id, "")
         })
       .toMap
@@ -131,7 +131,7 @@ object QueryService extends LazyLogging {
       allPredicates = allCAMTriples.map(_.pred.toString)
       slotStuffList <- getSlotStuff(allPredicates.toList)
       extraKGEdges = allCAMTriples.map { triple =>
-        val edgeKey = TRAPIEdgeKey(Some(triple.pred.toString), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
+        val edgeKey = TRAPIEdgeKey(Some(CURIEorIRI(Some("asdf"), triple.pred.toString)), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
         val knowledgeGraphId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
         val resolvedType = slotStuffList
           .filter(a => a._2.equals(triple.pred.toString))
@@ -141,7 +141,7 @@ object QueryService extends LazyLogging {
         TRAPIEdge(knowledgeGraphId,
                   applyPrefix(triple.subj.toString, prefixes.prefixesMap),
                   applyPrefix(triple.obj.toString, prefixes.prefixesMap),
-                  Some(resolvedType))
+                  Some(CURIEorIRI(Some("asdf"), resolvedType)))
       }
       results = trapiBindings.map {
         case (resultNodeBindings, resultEdgeBindings) =>
@@ -153,7 +153,7 @@ object QueryService extends LazyLogging {
             case (prov, triples) =>
               triples.map { triple =>
                 val edgeKey =
-                  TRAPIEdgeKey(Some(triple.pred.toString), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
+                  TRAPIEdgeKey(Some(CURIEorIRI(Some("asdf"), triple.pred.toString)), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
                 val kgId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
                 TRAPIEdgeBinding(None, kgId, Some(prov))
               }
