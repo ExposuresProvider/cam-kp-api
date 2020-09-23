@@ -6,6 +6,7 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 import io.circe.generic.auto._
+import io.circe.parser._
 import io.circe.syntax._
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{ResultSetFactory, ResultSetFormatter}
@@ -16,7 +17,6 @@ import zio.test.Assertion._
 import zio.test.TestAspect._
 import zio.test._
 
-import scala.collection.JavaConverters._
 import scala.collection.mutable
 
 object SerializationTest extends DefaultRunnableSpec {
@@ -26,28 +26,70 @@ object SerializationTest extends DefaultRunnableSpec {
       testM("test consistency of message digest") {
         for {
           messageDigest <- Task.effect(MessageDigest.getInstance("SHA-256"))
-          firstTRAPIEdge <- Task.effect(TRAPIEdgeKey(Some("asdfasdf"), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8))
+          firstTRAPIEdge <- Task.effect(
+            TRAPIEdgeKey(Some(CURIEorIRI(Some("bl"), "asdfasdf")), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces
+              .getBytes(StandardCharsets.UTF_8))
           first <- Task.effect(String.format("%064x", new BigInteger(1, messageDigest.digest(firstTRAPIEdge))))
-          secondTRAPIEdge <- Task.effect(TRAPIEdgeKey(Some("asdfasdf"), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8))
+          secondTRAPIEdge <- Task.effect(
+            TRAPIEdgeKey(Some(CURIEorIRI(Some("bl"), "asdfasdf")), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces
+              .getBytes(StandardCharsets.UTF_8))
           second <- Task.effect(String.format("%064x", new BigInteger(1, messageDigest.digest(secondTRAPIEdge))))
         } yield assert(first)(equalTo(second))
-      }/*@@ ignore*/,
-      test("1") {
+      } @@ ignore,
+      test("test implicit outEncodeCURIEorIRI") {
         val expected =
-          """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"gene","curie":"NCBIGENE:558"},{"id":"n1","type":"biological_process"}],"edges":[{"id":"e0","source_id":"n0","target_id":"n1","type":"has_participant"}]},"results":[]}}"""
+          """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"bl:gene","curie":"NCBIGENE:558"},{"id":"n1","type":"bl:biological_process"}],"edges":[{"id":"e0","source_id":"n0","target_id":"n1","type":"bl:has_participant"}]}}}"""
 
-        val n0Node = TRAPIQueryNode("n0", Some("gene"), Some("NCBIGENE:558"))
-        val n1Node = TRAPIQueryNode("n1", Some("biological_process"), None)
-        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some("has_participant"))
+        val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), Some(CURIEorIRI(Some("NCBIGENE"), "558")))
+        val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(Some("bl"), "biological_process")), None)
+        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(CURIEorIRI(None, "has_participant")))
 
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         val requestBody = TRAPIQueryRequestBody(message)
+        import Implicits.outEncodeCURIEorIRI
+        val encoded = requestBody.asJson.deepDropNullValues.noSpaces
+//        println("encoded: " + encoded)
+//        println("expected: " + expected)
+        assert(expected)(equalsIgnoreCase(encoded))
+      } /*@@ ignore*/,
+      test("test implicit inEncodeCURIEorIRI") {
+        val expected =
+          """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"https://w3id.org/biolink/vocab/gene","curie":"http://www.ncbi.nlm.nih.gov/gene/558"},{"id":"n1","type":"https://w3id.org/biolink/vocab/biological_process"}],"edges":[{"id":"e0","source_id":"n0","target_id":"n1","type":"https://w3id.org/biolink/vocab/has_participant"}]}}}"""
+
+        val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), Some(CURIEorIRI(Some("NCBIGENE"), "558")))
+        val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(Some("bl"), "biological_process")), None)
+        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(CURIEorIRI(None, "has_participant")))
+
+        val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
+        val message = TRAPIMessage(Some(queryGraph), None, None)
+        val requestBody = TRAPIQueryRequestBody(message)
+        import Implicits.inEncodeCURIEorIRI
+        val encoded = requestBody.asJson.deepDropNullValues.noSpaces
+//        println("encoded: " + encoded)
+//        println("expected: " + expected)
+        assert(expected)(equalsIgnoreCase(encoded))
+      } /*@@ ignore*/,
+      test("test decodeCURIEorIRI") {
+
+        val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), Some(CURIEorIRI(Some("NCBIGENE"), "558")))
+        val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(Some("bl"), "biological_process")), None)
+        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(CURIEorIRI(None, "has_participant")))
+
+        val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
+        val message = TRAPIMessage(Some(queryGraph), None, None)
+        val requestBody = TRAPIQueryRequestBody(message)
+        import Implicits.outEncodeCURIEorIRI
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         println("encoded: " + encoded)
-        println("expected: " + expected)
-        assert(expected)(equalsIgnoreCase(encoded))
-      } @@ ignore,
+
+        val decodedJson = encoded.asJson
+        import Implicits.decodeCURIEorIRI
+        val decoded = decode[TRAPIQueryRequestBody](encoded)
+        println("n0 == " + decoded.toOption.get.message.query_graph.get.nodes.head.id)
+
+        assertCompletes
+      } /*@@ ignore*/,
       test("2") {
 
         val response = s"""{
