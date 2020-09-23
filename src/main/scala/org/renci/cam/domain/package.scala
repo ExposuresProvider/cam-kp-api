@@ -2,15 +2,17 @@ package org.renci.cam
 
 package object domain {
 
-  case class TRAPIQueryNode(id: String, `type`: Option[String], curie: Option[String])
+  case class CURIEorIRI(prefix: Option[String], reference: String)
 
-  case class TRAPIQueryEdge(id: String, source_id: String, target_id: String, `type`: Option[String])
+  case class TRAPIQueryNode(id: String, `type`: Option[CURIEorIRI], curie: Option[CURIEorIRI])
+
+  case class TRAPIQueryEdge(id: String, source_id: String, target_id: String, `type`: Option[CURIEorIRI])
 
   case class TRAPIQueryGraph(nodes: List[TRAPIQueryNode], edges: List[TRAPIQueryEdge])
 
   case class TRAPINode(id: String, name: Option[String], `type`: List[String])
 
-  case class TRAPIEdge(id: String, source_id: String, target_id: String, `type`: Option[String])
+  case class TRAPIEdge(id: String, source_id: String, target_id: String, `type`: Option[CURIEorIRI])
 
   case class TRAPIKnowledgeGraph(nodes: List[TRAPINode], edges: List[TRAPIEdge])
 
