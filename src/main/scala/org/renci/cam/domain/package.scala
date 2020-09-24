@@ -1,5 +1,7 @@
 package org.renci.cam
 
+import org.renci.cam.Implicits.readPrefixes
+
 package object domain {
 
   case class CURIEorIRI(prefix: Option[String], reference: String)
@@ -12,7 +14,7 @@ package object domain {
 
   case class TRAPINode(id: String, name: Option[String], `type`: List[String])
 
-  case class TRAPIEdge(id: String, source_id: String, target_id: String, `type`: Option[CURIEorIRI])
+  case class TRAPIEdge(id: String, source_id: CURIEorIRI, target_id: CURIEorIRI, `type`: Option[CURIEorIRI])
 
   case class TRAPIKnowledgeGraph(nodes: List[TRAPINode], edges: List[TRAPIEdge])
 
