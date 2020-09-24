@@ -52,7 +52,7 @@ object SerializationTest extends DefaultRunnableSpec {
 //        println("encoded: " + encoded)
 //        println("expected: " + expected)
         assert(expected)(equalsIgnoreCase(encoded))
-      } /*@@ ignore*/,
+      } @@ ignore,
       test("test implicit inEncodeCURIEorIRI") {
         val expected =
           """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"https://w3id.org/biolink/vocab/gene","curie":"http://www.ncbi.nlm.nih.gov/gene/558"},{"id":"n1","type":"https://w3id.org/biolink/vocab/biological_process"}],"edges":[{"id":"e0","source_id":"n0","target_id":"n1","type":"https://w3id.org/biolink/vocab/has_participant"}]}}}"""
@@ -69,7 +69,7 @@ object SerializationTest extends DefaultRunnableSpec {
 //        println("encoded: " + encoded)
 //        println("expected: " + expected)
         assert(expected)(equalsIgnoreCase(encoded))
-      } /*@@ ignore*/,
+      } @@ ignore,
       test("test decodeCURIEorIRI") {
 
         val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), Some(CURIEorIRI(Some("NCBIGENE"), "558")))
@@ -89,7 +89,7 @@ object SerializationTest extends DefaultRunnableSpec {
         println("n0 == " + decoded.toOption.get.message.query_graph.get.nodes.head.id)
 
         assertCompletes
-      } /*@@ ignore*/,
+      } @@ ignore,
       test("2") {
 
         val response = s"""{

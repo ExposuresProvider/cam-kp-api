@@ -53,7 +53,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
           _ = println("response: " + response)
           _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
         } yield assert(response)(isNonEmptyString)
-      } /*@@ ignore*/,
+      } @@ ignore,
       testM("test gene to process to process to gene") {
         val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), Some(CURIEorIRI(Some("UniProtKB"), "P30530")))
         val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(None, "biological_process")), None)
