@@ -2,6 +2,7 @@ package org.renci.cam
 
 import java.nio.charset.StandardCharsets
 
+import com.typesafe.scalalogging.LazyLogging
 import io.circe.parser.parse
 import io.circe.{Decoder, Encoder, Json}
 import org.apache.commons.io.IOUtils
@@ -9,9 +10,9 @@ import org.renci.cam.domain.CURIEorIRI
 
 import scala.util.Try
 
-object Implicits {
+object Implicits extends LazyLogging {
 
-  // should be getting this from the ZIO service in Utilities
+  // FIXME should be getting this from the ZIO service in Utilities
   def readPrefixes: Map[String, String] = {
     val legacyPrefixes = IOUtils.resourceToString("legacy_prefixes.json", StandardCharsets.UTF_8, this.getClass.getClassLoader)
     val legacyJSON = parse(legacyPrefixes).getOrElse(Json.Null)
@@ -56,21 +57,27 @@ object Implicits {
     }
   }
 
-  //  def applyPrefix(value: String, prefixes: Map[String, String]): String =
-  //    prefixes
-  //      .filter(entry => value.startsWith(entry._2))
-  //      .map(entry => StringUtils.prependIfMissing(value.substring(entry._2.length, value.length), s"${entry._1}:"))
-  //      .headOption
-  //      .getOrElse(value)
-
   implicit def decodeCURIEorIRI: Decoder[CURIEorIRI] = Decoder.decodeString.emapTry(value =>
     Try(
       {
-        readPrefixes
-          .filter(entry => value.startsWith(entry._2))
-          .map(entry => CURIEorIRI(Some(entry._1), value.substring(entry._2.length, value.length)))
-          .headOption
-          .getOrElse(CURIEorIRI(None, value))
+        if (value.contains(":")) {
+          if (value.startsWith("http")) {
+            //it's an IRI
+            readPrefixes
+              .filter(entry => value.startsWith(entry._2))
+              .map(entry => CURIEorIRI(Some(entry._1), value.substring(entry._2.length, value.length)))
+              .head
+          } else {
+            //it's an CURIE
+            val split = value.split(":")
+            readPrefixes
+              .filter(entry => split(0).equalsIgnoreCase(entry._1))
+              .map(entry => CURIEorIRI(Some(entry._1), split(1)))
+              .head
+          }
+        } else {
+          CURIEorIRI(None, value)
+        }
       }
     ))
 
