@@ -47,6 +47,7 @@ object Server extends App {
           .in(query[Int]("limit"))
           .in({
             import Implicits.inEncodeCURIEorIRI
+            import Implicits.decodeCURIEorIRI
             jsonBody[TRAPIQueryRequestBody]
           })
           .errorOut(stringBody)
