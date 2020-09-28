@@ -147,8 +147,8 @@ object QueryService extends LazyLogging {
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) =>
         val provsAndCamTriples =
           resultEdgeBindings.flatMap(_.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).toSet.flatten).toMap
-        val nodes = provsAndCamTriples.values.flatten.toSet[Triple].flatMap(t => Set(t.subj, t.obj))
-        val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(None, applyPrefix(n.toString, prefixes.prefixesMap)))
+        val nodes = provsAndCamTriples.values.flatten.toSet.flatMap(t => Set(t.subj, t.obj))
+        val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(None, applyPrefix(n, prefixes.prefixesMap)))
         val extraKGEdgeBindings = provsAndCamTriples.flatMap { case (prov, triples) =>
           triples.map { triple =>
             val edgeKey =
