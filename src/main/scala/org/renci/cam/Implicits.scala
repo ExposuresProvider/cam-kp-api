@@ -6,6 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe.parser.parse
 import io.circe.{Decoder, Encoder, Json}
 import org.apache.commons.io.IOUtils
+import org.apache.commons.lang3.StringUtils
 import org.renci.cam.domain.CURIEorIRI
 
 import scala.util.Try
@@ -45,13 +46,13 @@ object Implicits extends LazyLogging {
       case Some(p) =>
         readPrefixes
           .filter(entry => entry._1.equalsIgnoreCase(p))
-          .map(entry => s"${entry._1}:${a.reference}")
+          .map(entry => StringUtils.prependIfMissing(s"${a.reference}", s"${entry._1}:"))
           .headOption
           .getOrElse(s"$p:${a.reference}")
       case None =>
         readPrefixes
           .filter(entry => entry._1.equalsIgnoreCase("bl"))
-          .map(entry => s"${entry._1}:${a.reference}")
+          .map(entry => StringUtils.prependIfMissing(s"${a.reference}", s"${entry._1}:"))
           .headOption
           .getOrElse(s"bl:${a.reference}")
     }
