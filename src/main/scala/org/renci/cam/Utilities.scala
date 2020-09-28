@@ -1,6 +1,5 @@
 package org.renci.cam
 
-import scala.io.Source
 import io.circe.Json
 import io.circe.parser.parse
 import org.http4s.circe._
@@ -8,10 +7,10 @@ import org.http4s.headers.Accept
 import org.http4s.implicits._
 import org.http4s.{MediaType, Method, Request}
 import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.Utilities.getClass
 import zio._
 import zio.interop.catz._
-import zio.ZIO.ZIOAutoCloseableOps
+
+import scala.io.Source
 
 object Utilities {
 
@@ -38,7 +37,24 @@ object Utilities {
     } yield PrefixesMap(curies)
   }
 
-  def getPrefixes: ZIO[HttpClient, Throwable, PrefixesMap] = getBiolinkPrefixesFromURL.orElse(getBiolinkPrefixesFromFile)
+  def localPrefixes: ZIO[Any, Throwable, Map[String, String]] = {
+    val sourceManaged = for {
+      fileStream <- Managed.fromAutoCloseable(Task.effect(getClass.getResourceAsStream("/legacy_prefixes.json")))
+      source <- Managed.fromAutoCloseable(Task.effect(Source.fromInputStream(fileStream)))
+    } yield source
+    for {
+      prefixesStr <- sourceManaged.use(source => ZIO.effect(source.getLines.mkString))
+      prefixesJson <- ZIO.fromEither(parse(prefixesStr))
+      prefixes <- ZIO.fromEither(prefixesJson.as[Map[String, String]])
+    } yield prefixes
+  }
+
+  def getPrefixes: ZIO[HttpClient, Throwable, PrefixesMap] =
+    for {
+      local <- localPrefixes
+      biolink <- getBiolinkPrefixesFromURL.orElse(getBiolinkPrefixesFromFile)
+      combined = local ++ biolink.prefixesMap
+    } yield PrefixesMap(combined)
 
   def makePrefixesLayer: ZLayer[HttpClient, Throwable, Has[PrefixesMap]] = ZLayer.fromEffect(getPrefixes)
 
