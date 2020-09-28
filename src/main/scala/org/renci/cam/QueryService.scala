@@ -1,6 +1,7 @@
 package org.renci.cam
 
 import java.math.BigInteger
+import java.net.URI
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
@@ -9,7 +10,6 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.ext.com.google.common.base.CaseFormat
-import org.apache.jena.ext.xerces.util.URI
 import org.apache.jena.query.{QueryFactory, QuerySolution, ResultSet}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.Utilities._
@@ -125,29 +125,29 @@ object QueryService extends LazyLogging {
       allCamIds = allEdgeBindings.toSet[TRAPIEdgeBinding].flatMap(_.provenance)
       prov2CAMStuffTripleMap <- ZIO.foreachPar(allCamIds)(prov => getCAMStuff(prov).map(prov -> _)).map(_.toMap)
       allCAMTriples = prov2CAMStuffTripleMap.values.toSet.flatten
-      allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj, t.obj))
+      allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj.toString, t.obj.toString))
       slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.map(v => s"<$v>").toList)
       extraKGNodes = getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, prefixes.prefixesMap)
-      allPredicates = allCAMTriples.map(_.pred)
+      allPredicates = allCAMTriples.map(_.pred.toString)
       slotStuffList <- getSlotStuff(allPredicates.toList)
       extraKGEdges = allCAMTriples.map { triple =>
         val edgeKey =
-          TRAPIEdgeKey(Some(toCURIEorIRI(triple.pred, prefixes.prefixesMap)), triple.subj, triple.obj).asJson.deepDropNullValues.noSpaces
+          TRAPIEdgeKey(Some(toCURIEorIRI(triple.pred.toString, prefixes.prefixesMap)), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
         val knowledgeGraphId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
         val resolvedType = slotStuffList
           .filter(a => a._2.equals(triple.pred))
           .map(a => toCURIEorIRI(a._4, prefixes.prefixesMap))
           .headOption
-          .getOrElse(toCURIEorIRI(triple.pred, prefixes.prefixesMap))
+          .getOrElse(toCURIEorIRI(triple.pred.toString, prefixes.prefixesMap))
         TRAPIEdge(knowledgeGraphId,
-                  toCURIEorIRI(triple.subj, prefixes.prefixesMap),
-                  toCURIEorIRI(triple.obj, prefixes.prefixesMap),
+                  toCURIEorIRI(triple.subj.toString, prefixes.prefixesMap),
+                  toCURIEorIRI(triple.obj.toString, prefixes.prefixesMap),
                   Some(resolvedType))
       }
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) =>
         val provsAndCamTriples =
           resultEdgeBindings.flatMap(_.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).toSet.flatten).toMap
-        val nodes = provsAndCamTriples.values.flatten.toSet.flatMap(t => Set(t.subj, t.obj))
+        val nodes = provsAndCamTriples.values.flatten.toSet[TripleString].flatMap(t => Set(t.subj, t.obj))
         val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(None, applyPrefix(n, prefixes.prefixesMap)))
         val extraKGEdgeBindings = provsAndCamTriples.flatMap { case (prov, triples) =>
           triples.map { triple =>
@@ -281,9 +281,7 @@ object QueryService extends LazyLogging {
       }
     } yield edgeBindings
 
-  private def getExtraKGNodes(camNodes: Set[String],
-                              slotStuffNodeDetails: List[TripleString],
-                              prefixes: Map[String, String]): Set[TRAPINode] =
+  private def getExtraKGNodes(camNodes: Set[String], slotStuffNodeDetails: List[TripleString], prefixes: Map[String, String]): Set[TRAPINode] =
     for {
       node <- camNodes
       slotStuffNodeDetailTypes <-
@@ -365,8 +363,8 @@ object QueryService extends LazyLogging {
            |}""".stripMargin
       )
       query <- Task.effect(QueryFactory.create(queryText))
-      triples <- SPARQLQueryExecutor.runSelectQueryAs[Triple](query)
-    } yield triples.map(t => TripleString(t.subj.toString, t.pred.toString, t.obj.toString))
+      triples <- SPARQLQueryExecutor.runSelectQueryAs[TripleString](query)
+    } yield triples
 
   private def getSlotStuff(predicateMap: List[String]): RIO[ZConfig[AppConfig] with HttpClient, List[(String, String, String, String)]] =
     for {
