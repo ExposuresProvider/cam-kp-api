@@ -125,23 +125,23 @@ object QueryService extends LazyLogging {
       allCamIds = allEdgeBindings.toSet[TRAPIEdgeBinding].flatMap(_.provenance)
       prov2CAMStuffTripleMap <- ZIO.foreachPar(allCamIds)(prov => getCAMStuff(prov).map(prov -> _)).map(_.toMap)
       allCAMTriples = prov2CAMStuffTripleMap.values.toSet.flatten
-      allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj.toString, t.obj.toString))
+      allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj, t.obj))
       slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.map(v => s"<$v>").toList)
       extraKGNodes = getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, prefixes.prefixesMap)
-      allPredicates = allCAMTriples.map(_.pred.toString)
+      allPredicates = allCAMTriples.map(_.pred)
       slotStuffList <- getSlotStuff(allPredicates.toList)
       extraKGEdges = allCAMTriples.map { triple =>
         val edgeKey =
-          TRAPIEdgeKey(Some(toCURIEorIRI(triple.pred.toString, prefixes.prefixesMap)), triple.subj.toString, triple.obj.toString).asJson.deepDropNullValues.noSpaces
+          TRAPIEdgeKey(Some(toCURIEorIRI(triple.pred, prefixes.prefixesMap)), triple.subj, triple.obj).asJson.deepDropNullValues.noSpaces
         val knowledgeGraphId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
         val resolvedType = slotStuffList
           .filter(a => a._2.equals(triple.pred))
           .map(a => toCURIEorIRI(a._4, prefixes.prefixesMap))
           .headOption
-          .getOrElse(toCURIEorIRI(triple.pred.toString, prefixes.prefixesMap))
+          .getOrElse(toCURIEorIRI(triple.pred, prefixes.prefixesMap))
         TRAPIEdge(knowledgeGraphId,
-                  toCURIEorIRI(triple.subj.toString, prefixes.prefixesMap),
-                  toCURIEorIRI(triple.obj.toString, prefixes.prefixesMap),
+                  toCURIEorIRI(triple.subj, prefixes.prefixesMap),
+                  toCURIEorIRI(triple.obj, prefixes.prefixesMap),
                   Some(resolvedType))
       }
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) =>
@@ -281,7 +281,9 @@ object QueryService extends LazyLogging {
       }
     } yield edgeBindings
 
-  private def getExtraKGNodes(camNodes: Set[String], slotStuffNodeDetails: List[TripleString], prefixes: Map[String, String]): Set[TRAPINode] =
+  private def getExtraKGNodes(camNodes: Set[String],
+                              slotStuffNodeDetails: List[TripleString],
+                              prefixes: Map[String, String]): Set[TRAPINode] =
     for {
       node <- camNodes
       slotStuffNodeDetailTypes <-
@@ -363,7 +365,11 @@ object QueryService extends LazyLogging {
            |}""".stripMargin
       )
       query <- Task.effect(QueryFactory.create(queryText))
-      triples <- SPARQLQueryExecutor.runSelectQueryAs[TripleString](query)
+      resultSet <- SPARQLQueryExecutor.runSelectQuery(query)
+//      triples <- SPARQLQueryExecutor.runSelectQueryAs[TripleString](query)
+      triples = resultSet.asScala.toList.map { qs =>
+        TripleString(qs.get("subj").toString, qs.get("pred").toString, qs.get("obj").toString)
+      }
     } yield triples
 
   private def getSlotStuff(predicateMap: List[String]): RIO[ZConfig[AppConfig] with HttpClient, List[(String, String, String, String)]] =
