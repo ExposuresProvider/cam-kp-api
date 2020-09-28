@@ -1,7 +1,7 @@
 package org.renci.cam
 
 import cats.implicits._
-import io.circe.{Encoder, Printer}
+import io.circe.Printer
 import io.circe.generic.auto._
 import org.http4s._
 import org.http4s.implicits._
@@ -43,19 +43,18 @@ object Server extends App {
   }
 
   val queryEndpoint: ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage] =
-      endpoint.post
-          .in("query")
-          .in(query[Int]("limit"))
-          .in({
-            import Implicits.inEncodeCURIEorIRI
-            import Implicits.decodeCURIEorIRI
-            jsonBody[TRAPIQueryRequestBody]
-          })
-          .errorOut(stringBody)
-          .out({
-            import Implicits.outEncodeCURIEorIRI
-            jsonBody[TRAPIMessage]
-          })
+    endpoint.post
+      .in("query")
+      .in(query[Int]("limit"))
+      .in({
+        import Implicits.{decodeCURIEorIRI, inEncodeCURIEorIRI}
+        jsonBody[TRAPIQueryRequestBody]
+      })
+      .errorOut(stringBody)
+      .out({
+        import Implicits.outEncodeCURIEorIRI
+        jsonBody[TRAPIMessage]
+      })
 
   val queryRouteR: URIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
     case (limit, body) =>
