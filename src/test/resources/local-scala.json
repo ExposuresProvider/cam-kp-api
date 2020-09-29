@@ -3,11 +3,11 @@
     "nodes": [
       {
         "id": "n0",
-        "type": "bl:gene"
+        "type": "biolink:gene"
       },
       {
         "id": "n1",
-        "type": "bl:biological_process"
+        "type": "biolink:biological_process"
       }
     ],
     "edges": [
@@ -15,7 +15,7 @@
         "id": "e0",
         "source_id": "n1",
         "target_id": "n0",
-        "type": "bl:has_participant"
+        "type": "biolink:has_participant"
       }
     ]
   },
@@ -258,136 +258,136 @@
     ],
     "edges": [
       {
-        "id": "48dab8e8d53c9f21f74060da972f39639d7d250355ce2fd4770139d85b5f0129",
+        "id": "893223676a69153a51e4da05ac503526025ff341803185e60c8d1f7bede3f72c",
         "source_id": "GO:0008104",
         "target_id": "UniProtKB:P19174",
-        "type": "bl:has_participant"
+        "type": "biolink:has_participant"
       },
       {
         "id": "70ec08f2431bc529191ead2d10c257a20d44941352a7af3aee1f9bec212e69bf",
         "source_id": "GO:0005515",
         "target_id": "UniProtKB:Q14573",
-        "type": "bl:enabled_by"
+        "type": "biolink:enabled_by"
       },
       {
         "id": "1195db117f71975527160c15442bc94fb808b2e5c834c3f84cb885e049a98a99",
         "source_id": "GO:0003674",
         "target_id": "GO:0050856",
-        "type": "bl:causally_upstream_of"
+        "type": "biolink:causally_upstream_of"
       },
       {
         "id": "1a9a8eaab5313a03a1a3845295350af6fff2f131ff2326a945995f07f8e59a73",
         "source_id": "UniProtKB:Q14643",
         "target_id": "GO:0005783",
-        "type": "bl:part_of"
+        "type": "biolink:part_of"
       },
       {
         "id": "9244f3188c1fdc8e967f0ac57e9947f4f335d1c504ce80cb7fe1caea74536d66",
         "source_id": "GO:0018108",
         "target_id": "UniProtKB:Q14643",
-        "type": "bl:has_input"
+        "type": "biolink:has_input"
       },
       {
         "id": "9623ad6aa89721927417a4556c71489f6ee4d46301af9e7de422d9b711157ad9",
         "source_id": "GO:0005515",
         "target_id": "UniProtKB:P19174",
-        "type": "bl:enabled_by"
+        "type": "biolink:enabled_by"
       },
       {
         "id": "ffe94b48d8affb0bf41c536c2f9f33805f1146ddb816d07d1f248836c6d4b1a8",
         "source_id": "GO:0003674",
         "target_id": "UniProtKB:Q14643",
-        "type": "bl:enabled_by"
+        "type": "biolink:enabled_by"
       },
       {
         "id": "9e78858a074022bf3e2294c7f5decd08c99dd7d988bf4e908ab3ce88f21b8cde",
         "source_id": "GO:0005515",
         "target_id": "UniProtKB:Q14571",
-        "type": "bl:enabled_by"
+        "type": "biolink:enabled_by"
       },
       {
         "id": "de5b80b9b5c379a1b8df253707375703f8a7378dec4a54df1fd6a24d519d4eb0",
         "source_id": "GO:0003674",
         "target_id": "GO:0050848",
-        "type": "bl:causally_upstream_of_or_within"
+        "type": "biolink:causally_upstream_of_or_within"
       },
       {
         "id": "fd0fa0efd04905d623092b41eb0d2ffd25b68bfefa150a1a4136adf1d47885a4",
         "source_id": "GO:0005515",
         "target_id": "MGI:1914846",
-        "type": "bl:enabled_by"
+        "type": "biolink:enabled_by"
       },
       {
         "id": "83afc81590a46e9d8303aec9ae5a0af2c5045b9be30463631b2d7f94ed73ecb6",
         "source_id": "GO:0003674",
         "target_id": "MGI:1914846",
-        "type": "bl:enabled_by"
+        "type": "biolink:enabled_by"
       },
       {
         "id": "3761a74c8be84cceadc3e3d24396ec217297aed4a808c699e2cc7ae52534524e",
         "source_id": "GO:0003674",
         "target_id": "GO:0036399",
-        "type": "bl:causally_upstream_of_or_within"
+        "type": "biolink:causally_upstream_of_or_within"
       },
       {
         "id": "82ea97eb5b60a8b33fb40a27e8a5c2351c3fdfad1171b1aed80f011bd5a09674",
         "source_id": "GO:0004713",
         "target_id": "GO:0018108",
-        "type": "bl:part_of"
+        "type": "biolink:part_of"
       },
       {
         "id": "643765e727e1baae39e5a7c466439551e8a4cede7a9a48402da66130728e99f7",
         "source_id": "GO:0008104",
         "target_id": "GO:0036398",
-        "type": "bl:occurs_in"
+        "type": "biolink:occurs_in"
       },
       {
         "id": "928426b15b575ab677e5b1e1e2869c7e78350668c2dde9c98d8179457dfc9fe1",
         "source_id": "GO:0008104",
         "target_id": "UniProtKB:P19174",
-        "type": "bl:has_input"
+        "type": "biolink:has_input"
       },
       {
         "id": "d544b82686f377a993ce3fc017aeccca7e70326daf045a3997abbdc012b0faca",
         "source_id": "UniProtKB:Q14643",
         "target_id": "GO:0036398",
-        "type": "bl:part_of"
+        "type": "biolink:part_of"
       },
       {
         "id": "2d62613c65de2e55d4fbeda386afb4e8368f9f7d22f3fafe540d84b9258a12f9",
         "source_id": "GO:0004713",
         "target_id": "MGI:95602",
-        "type": "bl:enabled_by"
+        "type": "biolink:enabled_by"
       },
       {
         "id": "24b28fcb76c4d21baf503c570158a100c5a21cddf44e756e45db68f271ab7bf1",
         "source_id": "GO:0043274",
         "target_id": "MGI:1914846",
-        "type": "bl:enabled_by"
+        "type": "biolink:enabled_by"
       },
       {
         "id": "c74d9a144d3ccce8a4ad718b03a6df7237d9b932a8d9d1959331529132ab7c3f",
         "source_id": "GO:0003674",
         "target_id": "GO:0033077",
-        "type": "bl:causally_upstream_of"
+        "type": "biolink:causally_upstream_of"
       },
       {
         "id": "8a233263b020d50a1c9d130164f17716c2d9f5945d5460794271f0c6c3ff4b8e",
         "source_id": "GO:0005515",
         "target_id": "UniProtKB:Q14643",
-        "type": "bl:enabled_by"
+        "type": "biolink:enabled_by"
       },
       {
         "id": "803fd88546985dcc746f2f32081d292693412bd682c71fbcc30e7357b786e600",
         "source_id": "GO:0043274",
         "target_id": "GO:0008104",
-        "type": "bl:part_of"
+        "type": "biolink:part_of"
       },
       {
         "id": "383286bbd45724d9a18052709de756c81d61248882dcd584ee376b6214007111",
         "source_id": "MGI:1914846",
         "target_id": "GO:0036398",
-        "type": "bl:part_of"
+        "type": "biolink:part_of"
       }
     ]
   },
@@ -406,7 +406,7 @@
       "edge_bindings": [
         {
           "qg_id": "e0",
-          "kg_id": "48dab8e8d53c9f21f74060da972f39639d7d250355ce2fd4770139d85b5f0129",
+          "kg_id": "893223676a69153a51e4da05ac503526025ff341803185e60c8d1f7bede3f72c",
           "provenance": "http://model.geneontology.org/5e72450500002150"
         }
       ],
