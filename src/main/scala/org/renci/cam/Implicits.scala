@@ -37,7 +37,7 @@ object Implicits extends LazyLogging {
           .filter(entry => entry._1.equalsIgnoreCase("biolink"))
           .map(entry => s"${entry._2}${a.reference}")
           .headOption
-          .getOrElse(s"bl:${a.reference}")
+          .getOrElse(s"biolink:${a.reference}")
     }
   }
 
