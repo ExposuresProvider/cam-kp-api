@@ -63,8 +63,7 @@ object QueryService extends LazyLogging {
     edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, (Set[String], Set[(String, String)], String)] =
     for {
       edgeType <- ZIO.fromOption(edge.`type`).orElseFail(new Exception("failed to get edge type"))
-      queryText = s"""
-           |SELECT DISTINCT ?predicate WHERE {
+      queryText = s"""SELECT DISTINCT ?predicate WHERE {
            |?predicate <http://www.w3.org/2000/01/rdf-schema#subPropertyOf>+ <https://w3id.org/biolink/vocab/${edgeType.reference}> .
            |FILTER NOT EXISTS { ?predicate a <https://w3id.org/biolink/biolinkml/meta/types/SlotDefinition> }
            |}""".stripMargin
