@@ -34,7 +34,7 @@ object Implicits extends LazyLogging {
           .getOrElse(s"$p:${a.reference}")
       case None =>
         readPrefixes
-          .filter(entry => entry._1.equalsIgnoreCase("bl"))
+          .filter(entry => entry._1.equalsIgnoreCase("biolink"))
           .map(entry => s"${entry._2}${a.reference}")
           .headOption
           .getOrElse(s"bl:${a.reference}")
@@ -51,10 +51,10 @@ object Implicits extends LazyLogging {
           .getOrElse(s"$p:${a.reference}")
       case None =>
         readPrefixes
-          .filter(entry => entry._1.equalsIgnoreCase("bl"))
+          .filter(entry => entry._1.equalsIgnoreCase("biolink"))
           .map(entry => StringUtils.prependIfMissing(s"${a.reference.replace(" ", "_")}", s"${entry._1}:"))
           .headOption
-          .getOrElse(s"bl:${a.reference}")
+          .getOrElse(s"biolink:${a.reference}")
     }
   }
 
