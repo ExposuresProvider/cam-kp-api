@@ -46,13 +46,13 @@ object Implicits extends LazyLogging {
       case Some(p) =>
         readPrefixes
           .filter(entry => entry._1.equalsIgnoreCase(p))
-          .map(entry => StringUtils.prependIfMissing(s"${a.reference}", s"${entry._1}:"))
+          .map(entry => StringUtils.prependIfMissing(s"${a.reference.replace(" ", "_")}", s"${entry._1}:"))
           .headOption
           .getOrElse(s"$p:${a.reference}")
       case None =>
         readPrefixes
           .filter(entry => entry._1.equalsIgnoreCase("bl"))
-          .map(entry => StringUtils.prependIfMissing(s"${a.reference}", s"${entry._1}:"))
+          .map(entry => StringUtils.prependIfMissing(s"${a.reference.replace(" ", "_")}", s"${entry._1}:"))
           .headOption
           .getOrElse(s"bl:${a.reference}")
     }
