@@ -30,7 +30,7 @@ javaOptions in reStart += "-Xmx16G"
 libraryDependencies ++= {
   Seq(
     "dev.zio"                     %% "zio"                      % zioVersion,
-    "dev.zio"                     %% "zio-interop-cats"         % "2.1.4.1",
+    "dev.zio"                     %% "zio-interop-cats"         % "2.2.0.1",
     "dev.zio"                     %% "zio-config"               % zioConfigVersion,
     "dev.zio"                     %% "zio-config-magnolia"      % zioConfigVersion,
     "dev.zio"                     %% "zio-config-typesafe"      % zioConfigVersion,
