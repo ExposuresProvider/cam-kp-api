@@ -37,7 +37,7 @@ object QueryService extends LazyLogging {
       .map(node =>
         (node.`type`, node.curie) match {
           case (Some(t), Some(c)) => (node.id, c.reference)
-          case (None, Some(c)) => (node.id, c.reference)
+          case (None, Some(c))    => (node.id, c.reference)
           case (Some(t), None) =>
             (node.id,
              String.format("<https://w3id.org/biolink/vocab/%s>", CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, t.reference)))
