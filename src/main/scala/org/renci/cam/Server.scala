@@ -17,11 +17,11 @@ import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
+import zio._
+import zio.config.{ZConfig, getConfig}
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{ZConfig, _}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio.{config => _, _}
 
 import scala.concurrent.duration._
 
@@ -69,7 +69,7 @@ object Server extends App {
   val server: RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
-        appConfig <- config[AppConfig]
+        appConfig <- getConfig[AppConfig]
         predicatesRoute <- predicatesRouteR
         queryRoute <- queryRouteR
         routes = queryRoute <+> predicatesRoute
