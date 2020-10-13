@@ -65,20 +65,19 @@ object Server extends App {
   }
 
   def queryRouteR(queryEndpoint: ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage])
-    : URIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap] with Has[Biolink], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
-    case (limit, body) =>
-      val program = for {
-        queryGraph <-
-          ZIO
-            .fromOption(body.message.query_graph)
-            .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
-        resultSet <- QueryService.run(limit, queryGraph)
-        message <- QueryService.parseResultSet(queryGraph, resultSet)
-      } yield message
-      program.mapError(error => error.getMessage)
+    : URIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], HttpRoutes[Task]] = queryEndpoint.toRoutesR { case (limit, body) =>
+    val program = for {
+      queryGraph <-
+        ZIO
+          .fromOption(body.message.query_graph)
+          .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
+      resultSet <- QueryService.run(limit, queryGraph)
+      message <- QueryService.parseResultSet(queryGraph, resultSet)
+    } yield message
+    program.mapError(error => error.getMessage)
   }
 
-  val server: RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap] with Has[Biolink], Unit] =
+  val server: RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- config[AppConfig]
@@ -110,8 +109,7 @@ object Server extends App {
     (for {
       httpClientLayer <- HttpClient.makeHttpClientLayer
       satisfiedPrefixesLayer = httpClientLayer >>> prefixesLayer
-      biolinkLayer = (httpClientLayer ++ satisfiedPrefixesLayer) >>> Biolink.getBiolinkModel.toLayer
-      appLayer = httpClientLayer ++ satisfiedPrefixesLayer ++ configLayer ++ biolinkLayer
+      appLayer = httpClientLayer ++ satisfiedPrefixesLayer ++ configLayer
       out <- server.provideLayer(appLayer)
     } yield out).exitCode
 
