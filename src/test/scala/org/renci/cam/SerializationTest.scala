@@ -5,6 +5,7 @@ import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
+import io.circe.{Decoder, Encoder}
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
@@ -21,6 +22,10 @@ import scala.collection.mutable
 
 object SerializationTest extends DefaultRunnableSpec {
 
+  val testLayerZ = HttpClient.makeHttpClientLayer.map { httpLayer =>
+    httpLayer >+> Utilities.makePrefixesLayer
+  }
+
   def spec =
     suite("SerializationSpec")(
       testM("test consistency of message digest") {
@@ -36,7 +41,7 @@ object SerializationTest extends DefaultRunnableSpec {
           second <- Task.effect(String.format("%064x", new BigInteger(1, messageDigest.digest(secondTRAPIEdge))))
         } yield assert(first)(equalTo(second))
       } @@ ignore,
-      test("test implicit outEncodeCURIEorIRI") {
+      testM("test implicit outEncodeCURIEorIRI") {
         val expected =
           """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"bl:gene","curie":"NCBIGENE:558"},{"id":"n1","type":"bl:biological_process"}],"edges":[{"id":"e0","source_id":"n0","target_id":"n1","type":"bl:has_participant"}]}}}"""
 
@@ -47,14 +52,19 @@ object SerializationTest extends DefaultRunnableSpec {
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         val requestBody = TRAPIQueryRequestBody(message)
-
-//TODO        import Implicits.outEncodeCURIEorIRI
-        val encoded = requestBody.asJson.deepDropNullValues.noSpaces
-//        println("encoded: " + encoded)
-//        println("expected: " + expected)
-        assert(expected)(equalsIgnoreCase(encoded))
+        val testCase = for {
+          prefixes <- Utilities.biolinkPrefixes
+        } yield {
+          implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoder(prefixes.prefixesMap)
+          implicit val iriDecoder: Decoder[IRI] = IRI.makeDecoder(prefixes.prefixesMap)
+          val encoded = requestBody.asJson.deepDropNullValues.noSpaces
+          //        println("encoded: " + encoded)
+          //        println("expected: " + expected)
+          assert(expected)(equalsIgnoreCase(encoded))
+        }
+        testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
       } @@ ignore,
-      test("test implicit inEncodeCURIEorIRI") {
+      testM("test implicit inEncodeCURIEorIRI") {
         val expected =
           """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"https://w3id.org/biolink/vocab/gene","curie":"http://www.ncbi.nlm.nih.gov/gene/558"},{"id":"n1","type":"https://w3id.org/biolink/vocab/biological_process"}],"edges":[{"id":"e0","source_id":"n0","target_id":"n1","type":"https://w3id.org/biolink/vocab/has_participant"}]}}}"""
 
@@ -65,13 +75,21 @@ object SerializationTest extends DefaultRunnableSpec {
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         val requestBody = TRAPIQueryRequestBody(message)
-//TODO        import Implicits.inEncodeCURIEorIRI
-        val encoded = requestBody.asJson.deepDropNullValues.noSpaces
+        val testCase = for {
+          prefixes <- Utilities.biolinkPrefixes
+        } yield {
+          implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoder(prefixes.prefixesMap)
+          implicit val iriDecoder: Decoder[IRI] = IRI.makeDecoder(prefixes.prefixesMap)
+          val encoded = requestBody.asJson.deepDropNullValues.noSpaces
+          //        println("encoded: " + encoded)
+          //        println("expected: " + expected)
+          assert(expected)(equalsIgnoreCase(encoded))
+        }
+        testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
 //        println("encoded: " + encoded)
 //        println("expected: " + expected)
-        assert(expected)(equalsIgnoreCase(encoded))
       } @@ ignore,
-      test("test decodeCURIEorIRI") {
+      testM("test decodeCURIEorIRI") {
 
         val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene")), Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")))
         val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("biological_process")), None)
@@ -80,16 +98,21 @@ object SerializationTest extends DefaultRunnableSpec {
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         val requestBody = TRAPIQueryRequestBody(message)
-//TODO        import Implicits.outEncodeCURIEorIRI
-        val encoded = requestBody.asJson.deepDropNullValues.noSpaces
-        println("encoded: " + encoded)
-
-        val decodedJson = encoded.asJson
-//TODO        import Implicits.decodeCURIEorIRI
-        val decoded = decode[TRAPIQueryRequestBody](encoded)
-        println("n0 == " + decoded.toOption.get.message.query_graph.get.nodes.head.id)
-
-        assertCompletes
+        val testCase = for {
+          prefixes <- Utilities.biolinkPrefixes
+        } yield {
+          implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoder(prefixes.prefixesMap)
+          implicit val iriDecoder: Decoder[IRI] = IRI.makeDecoder(prefixes.prefixesMap)
+          val encoded = requestBody.asJson.deepDropNullValues.noSpaces
+          //        println("encoded: " + encoded)
+          //        println("expected: " + expected)
+          println("encoded: " + encoded)
+          val decodedJson = encoded.asJson
+          val decoded = decode[TRAPIQueryRequestBody](encoded)
+          println("n0 == " + decoded.toOption.get.message.query_graph.get.nodes.head.id)
+          assertCompletes
+        }
+        testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
       } @@ ignore,
       test("2") {
 
