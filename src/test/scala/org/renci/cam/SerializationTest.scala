@@ -27,11 +27,11 @@ object SerializationTest extends DefaultRunnableSpec {
         for {
           messageDigest <- Task.effect(MessageDigest.getInstance("SHA-256"))
           firstTRAPIEdge <- Task.effect(
-            TRAPIEdgeKey(Some(CURIEorIRI(Some("bl"), "asdfasdf")), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces
+            TRAPIEdgeKey(Some(BiolinkPredicate("asdfasdf")), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces
               .getBytes(StandardCharsets.UTF_8))
           first <- Task.effect(String.format("%064x", new BigInteger(1, messageDigest.digest(firstTRAPIEdge))))
           secondTRAPIEdge <- Task.effect(
-            TRAPIEdgeKey(Some(CURIEorIRI(Some("bl"), "asdfasdf")), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces
+            TRAPIEdgeKey(Some(BiolinkPredicate("asdfasdf")), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces
               .getBytes(StandardCharsets.UTF_8))
           second <- Task.effect(String.format("%064x", new BigInteger(1, messageDigest.digest(secondTRAPIEdge))))
         } yield assert(first)(equalTo(second))
@@ -40,14 +40,15 @@ object SerializationTest extends DefaultRunnableSpec {
         val expected =
           """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"bl:gene","curie":"NCBIGENE:558"},{"id":"n1","type":"bl:biological_process"}],"edges":[{"id":"e0","source_id":"n0","target_id":"n1","type":"bl:has_participant"}]}}}"""
 
-        val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), Some(CURIEorIRI(Some("NCBIGENE"), "558")))
-        val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(Some("bl"), "biological_process")), None)
-        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(CURIEorIRI(None, "has_participant")))
+        val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene")), Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")))
+        val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("biological_process")), None)
+        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(BiolinkPredicate("has_participant")))
 
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         val requestBody = TRAPIQueryRequestBody(message)
-        import Implicits.outEncodeCURIEorIRI
+
+//TODO        import Implicits.outEncodeCURIEorIRI
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
 //        println("encoded: " + encoded)
 //        println("expected: " + expected)
@@ -57,14 +58,14 @@ object SerializationTest extends DefaultRunnableSpec {
         val expected =
           """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"https://w3id.org/biolink/vocab/gene","curie":"http://www.ncbi.nlm.nih.gov/gene/558"},{"id":"n1","type":"https://w3id.org/biolink/vocab/biological_process"}],"edges":[{"id":"e0","source_id":"n0","target_id":"n1","type":"https://w3id.org/biolink/vocab/has_participant"}]}}}"""
 
-        val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), Some(CURIEorIRI(Some("NCBIGENE"), "558")))
-        val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(Some("bl"), "biological_process")), None)
-        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(CURIEorIRI(None, "has_participant")))
+        val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene")), Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")))
+        val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("biological_process")), None)
+        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(BiolinkPredicate("has_participant")))
 
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         val requestBody = TRAPIQueryRequestBody(message)
-        import Implicits.inEncodeCURIEorIRI
+//TODO        import Implicits.inEncodeCURIEorIRI
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
 //        println("encoded: " + encoded)
 //        println("expected: " + expected)
@@ -72,19 +73,19 @@ object SerializationTest extends DefaultRunnableSpec {
       } @@ ignore,
       test("test decodeCURIEorIRI") {
 
-        val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), Some(CURIEorIRI(Some("NCBIGENE"), "558")))
-        val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(Some("bl"), "biological_process")), None)
-        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(CURIEorIRI(None, "has_participant")))
+        val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene")), Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")))
+        val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("biological_process")), None)
+        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(BiolinkPredicate("has_participant")))
 
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         val requestBody = TRAPIQueryRequestBody(message)
-        import Implicits.outEncodeCURIEorIRI
+//TODO        import Implicits.outEncodeCURIEorIRI
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         println("encoded: " + encoded)
 
         val decodedJson = encoded.asJson
-        import Implicits.decodeCURIEorIRI
+//TODO        import Implicits.decodeCURIEorIRI
         val decoded = decode[TRAPIQueryRequestBody](encoded)
         println("n0 == " + decoded.toOption.get.message.query_graph.get.nodes.head.id)
 

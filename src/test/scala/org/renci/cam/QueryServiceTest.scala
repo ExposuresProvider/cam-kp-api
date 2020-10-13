@@ -19,9 +19,9 @@ object QueryServiceTest extends DefaultRunnableSpec {
   def spec =
     suite("QueryServiceSpec")(
       test("testGetNodeTypes") {
-        val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), Some(CURIEorIRI(Some("NCBIGENE"), "558")))
-        val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(None, "biological_process")), None)
-        val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", Some(CURIEorIRI(None, "has_participant")))
+        val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene")), Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")))
+        val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("biological_process")), None)
+        val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", Some(BiolinkPredicate("has_participant")))
 
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
         val map = QueryService.getNodeTypes(queryGraph.nodes)
@@ -32,15 +32,15 @@ object QueryServiceTest extends DefaultRunnableSpec {
         for {
           httpClient <- HttpClient.makeHttpClient
           encoded = {
-            val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), None)
-            val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(None, "biological_process")), None)
-            val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", Some(CURIEorIRI(None, "has_participant")))
+            val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene")), None)
+            val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("biological_process")), None)
+            val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", Some(BiolinkPredicate("has_participant")))
 
             val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
             val message = TRAPIMessage(Some(queryGraph), None, None)
             val requestBody = TRAPIQueryRequestBody(message)
-            import Implicits.outEncodeCURIEorIRI
-            import Implicits.decodeCURIEorIRI
+//TODO          import Implicits.outEncodeCURIEorIRI
+//TODO            import Implicits.decodeCURIEorIRI
             requestBody.asJson.deepDropNullValues.noSpaces
           }
           _ = println("encoded: " + encoded)
@@ -55,17 +55,17 @@ object QueryServiceTest extends DefaultRunnableSpec {
         } yield assert(response)(isNonEmptyString)
       } @@ ignore,
       testM("test gene to process to process to gene") {
-        val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene")), Some(CURIEorIRI(Some("UniProtKB"), "P30530")))
-        val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(None, "biological_process")), None)
-        val n2Node = TRAPIQueryNode("n2", Some(CURIEorIRI(None, "biological_process")), None)
-        val n3Node = TRAPIQueryNode("n3", Some(CURIEorIRI(None, "gene")), None)
+        val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene")), Some(IRI("http://identifiers.org/uniprot/P30530")))
+        val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("biological_process")), None)
+        val n2Node = TRAPIQueryNode("n2", Some(BiolinkClass("biological_process")), None)
+        val n3Node = TRAPIQueryNode("n3", Some(BiolinkClass("gene")), None)
         val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", None)
         val e1Edge = TRAPIQueryEdge("e1", "n1", "n2", None /*Some(CURIEorIRI(None, "enabled_by"))*/ )
         val e2Edge = TRAPIQueryEdge("e2", "n2", "n3", None)
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node, n2Node, n3Node), List(e0Edge, e1Edge, e2Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         val requestBody = TRAPIQueryRequestBody(message)
-        import Implicits.outEncodeCURIEorIRI
+//TODO        import Implicits.outEncodeCURIEorIRI
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
           httpClient <- HttpClient.makeHttpClient
@@ -80,13 +80,13 @@ object QueryServiceTest extends DefaultRunnableSpec {
         } yield assert(response)(isNonEmptyString)
       } @@ ignore,
       testM("find genes enabling any kind of catalytic activity") {
-        val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "gene_or_gene_product")), None)
-        val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(None, "molecular_activity")), Some(CURIEorIRI(Some("GO"), "0003824")))
-        val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", Some(CURIEorIRI(None, "enabled_by")))
+        val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene_or_gene_product")), None)
+        val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("molecular_activity")), Some(IRI("http://purl.obolibrary.org/obo/GO_0003824")))
+        val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", Some(BiolinkPredicate("enabled_by")))
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         val requestBody = TRAPIQueryRequestBody(message)
-        import Implicits.outEncodeCURIEorIRI
+//TODO        import Implicits.outEncodeCURIEorIRI
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
           httpClient <- HttpClient.makeHttpClient
@@ -101,15 +101,17 @@ object QueryServiceTest extends DefaultRunnableSpec {
         } yield assert(response)(isNonEmptyString)
       } @@ ignore,
       testM("negative regulation chaining") {
-        val n0Node = TRAPIQueryNode("n0", Some(CURIEorIRI(None, "biological_process_or_activity")), Some(CURIEorIRI(Some("GO"), "0004252")))
-        val n1Node = TRAPIQueryNode("n1", Some(CURIEorIRI(None, "biological_process_or_activity")), Some(CURIEorIRI(Some("GO"), "0003810")))
-        val n2Node = TRAPIQueryNode("n2", Some(CURIEorIRI(None, "gene_or_gene_product")), None)
-        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(CURIEorIRI(None, "positively_regulates")))
-        val e1Edge = TRAPIQueryEdge("e1", "n1", "n2", Some(CURIEorIRI(None, "enabled_by")))
+        val n0Node =
+          TRAPIQueryNode("n0", Some(BiolinkClass("biological_process_or_activity")), Some(IRI("http://purl.obolibrary.org/obo/GO_0004252")))
+        val n1Node =
+          TRAPIQueryNode("n1", Some(BiolinkClass("biological_process_or_activity")), Some(IRI("http://purl.obolibrary.org/obo/GO_0003810")))
+        val n2Node = TRAPIQueryNode("n2", Some(BiolinkClass("gene_or_gene_product")), None)
+        val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(BiolinkPredicate("positively_regulates")))
+        val e1Edge = TRAPIQueryEdge("e1", "n1", "n2", Some(BiolinkPredicate("enabled_by")))
         val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node, n2Node), List(e0Edge, e1Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         val requestBody = TRAPIQueryRequestBody(message)
-        import Implicits.outEncodeCURIEorIRI
+//TODO        import Implicits.outEncodeCURIEorIRI
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         for {
           httpClient <- HttpClient.makeHttpClient

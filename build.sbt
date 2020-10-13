@@ -47,6 +47,7 @@ libraryDependencies ++= {
     "org.http4s"                  %% "http4s-circe"             % http4sVersion,
     "org.apache.jena"              % "apache-jena-libs"         % "3.16.0",
     "org.phenoscape"              %% "sparql-utils"             % "1.2",
+    "org.apache.commons"           % "commons-text"             % "1.9",
     "io.circe"                    %% "circe-core"               % circeVersion,
     "io.circe"                    %% "circe-generic"            % circeVersion,
     "io.circe"                    %% "circe-parser"             % circeVersion,
@@ -65,5 +66,5 @@ dockerApiVersion := Some(DockerApiVersion(1, 40))
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
 dockerCommands := dockerCommands.value.flatMap {
   case cmd @ Cmd("EXPOSE", _) => List(Cmd("RUN", "apk update && apk add bash"), cmd)
-  case other => List(other)
+  case other                  => List(other)
 }

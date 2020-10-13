@@ -6,5 +6,7 @@
   "MYVARIANT_HG38": "http://example.org/UNKNOWN/MYVARIANT_HG38/",
   "dct": "http://example.org/UNKNOWN/dct/",
   "EMAPA": "http://purl.obolibrary.org/obo/EMAPA_",
+  "PATO": "http://purl.obolibrary.org/obo/PATO_",
+  "PCO": "http://purl.obolibrary.org/obo/PCO_",
   "sesame": "http://www.openrdf.org/schema/sesame#"
 }
