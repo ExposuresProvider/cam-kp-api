@@ -21,7 +21,7 @@ testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 val zioVersion = "1.0.3"
 val zioConfigVersion = "1.0.0-RC27"
 val tapirVersion = "0.16.16"
-val http4sVersion = "0.21.7"
+val http4sVersion = "0.21.8"
 val circeVersion = "0.13.0"
 val logbackVersion = "1.2.3"
 
