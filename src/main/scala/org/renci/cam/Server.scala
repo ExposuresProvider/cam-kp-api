@@ -1,6 +1,7 @@
 package org.renci.cam
 
 import cats.implicits._
+import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.{Decoder, Encoder, Printer}
 import org.http4s._
@@ -25,7 +26,7 @@ import zio.{config => _, _}
 
 import scala.concurrent.duration._
 
-object Server extends App {
+object Server extends App with LazyLogging {
 
   object LocalTapirJsonCirce extends TapirJsonCirce {
     override def jsonPrinter: Printer = Printer.noSpaces.copy(dropNullValues = true)
@@ -42,30 +43,34 @@ object Server extends App {
     program.mapError(error => error.getMessage)
   }
 
-  val queryEndpointZ: URIO[Has[PrefixesMap], ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage]] = {
+  val queryEndpointZ: URIO[Has[BiolinkPrefixes] with Has[List[BiolinkPredicate]] with Has[List[BiolinkClass]], ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage]] = {
     for {
       prefixes <- biolinkPrefixes
+      predicates <- biolinkPredicates
+      classes <- biolinkClasses
     } yield {
-      implicit val iriDecoder: Decoder[IRI] = IRI.makeDecoder(prefixes.prefixesMap)
-      implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoder(prefixes.prefixesMap)
-      endpoint.post
-        .in("query")
-        .in(query[Option[Int]]("limit"))
-        .in(jsonBody[TRAPIQueryRequestBody])
-        .errorOut(stringBody)
-        .out(jsonBody[TRAPIMessage])
-        .summary("Submit a TRAPI question graph and retrieve matching solutions")
       endpoint.post
         .in("query")
         .in(query[Int]("limit"))
-        .in(jsonBody[TRAPIQueryRequestBody])
+        .in({
+          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(prefixes.prefixes)
+          implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(classes)
+          implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(predicates)
+          jsonBody[TRAPIQueryRequestBody]
+        })
         .errorOut(stringBody)
-        .out(jsonBody[TRAPIMessage])
+        .out({
+          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(prefixes.prefixes)
+          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
+          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
+          jsonBody[TRAPIMessage]
+        })
+        .summary("Submit a TRAPI question graph and retrieve matching solutions")
     }
   }
 
   def queryRouteR(queryEndpoint: ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage])
-    : URIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], HttpRoutes[Task]] = queryEndpoint.toRoutesR { case (limit, body) =>
+    : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkPrefixes] with Has[List[BiolinkPredicate]] with Has[List[BiolinkClass]], HttpRoutes[Task]] = queryEndpoint.toRoutesR { case (limit, body) =>
     val program = for {
       queryGraph <-
         ZIO
@@ -77,7 +82,7 @@ object Server extends App {
     program.mapError(error => error.getMessage)
   }
 
-  val server: RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], Unit] =
+  val server: RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkPrefixes] with Has[List[BiolinkPredicate]] with Has[List[BiolinkClass]], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- config[AppConfig]
@@ -103,13 +108,13 @@ object Server extends App {
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
-  val prefixesLayer: ZLayer[HttpClient, Throwable, Has[PrefixesMap]] = Utilities.makePrefixesLayer
+  val utilitiesLayer: ZLayer[HttpClient, Throwable, Has[BiolinkPrefixes] with Has[List[BiolinkPredicate]] with Has[List[BiolinkClass]]] = Utilities.makeUtilitiesLayer
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] =
     (for {
       httpClientLayer <- HttpClient.makeHttpClientLayer
-      satisfiedPrefixesLayer = httpClientLayer >>> prefixesLayer
-      appLayer = httpClientLayer ++ satisfiedPrefixesLayer ++ configLayer
+      satisfiedUtilitiesLayer = httpClientLayer >>> utilitiesLayer
+      appLayer = httpClientLayer ++ satisfiedUtilitiesLayer ++ configLayer
       out <- server.provideLayer(appLayer)
     } yield out).exitCode
 
