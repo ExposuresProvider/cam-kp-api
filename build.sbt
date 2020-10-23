@@ -51,6 +51,7 @@ libraryDependencies ++= {
     "io.circe"                    %% "circe-core"               % circeVersion,
     "io.circe"                    %% "circe-generic"            % circeVersion,
     "io.circe"                    %% "circe-parser"             % circeVersion,
+    "io.circe"                    %% "circe-yaml"               % circeVersion,
     "dev.zio"                     %% "zio-test"                 % zioVersion % Test,
     "dev.zio"                     %% "zio-test-sbt"             % zioVersion % Test,
     "com.google.guava"             % "guava"                    % "29.0-jre",
