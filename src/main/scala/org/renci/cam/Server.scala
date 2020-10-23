@@ -18,11 +18,11 @@ import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
+import zio._
+import zio.config.{ZConfig, getConfig}
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{ZConfig, _}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio.{config => _, _}
 
 import scala.concurrent.duration._
 
