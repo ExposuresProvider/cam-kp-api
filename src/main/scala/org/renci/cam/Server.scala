@@ -85,7 +85,7 @@ object Server extends App with LazyLogging {
   val server: RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkPrefixes] with Has[List[BiolinkPredicate]] with Has[List[BiolinkClass]], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
-        appConfig <- config[AppConfig]
+        appConfig <- getConfig[AppConfig]
         queryEndpoint <- queryEndpointZ
         predicatesRoute <- predicatesRouteR
         queryRoute <- queryRouteR(queryEndpoint)
