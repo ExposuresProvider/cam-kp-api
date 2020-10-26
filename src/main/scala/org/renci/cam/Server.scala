@@ -1,15 +1,16 @@
 package org.renci.cam
 
 import cats.implicits._
-import io.circe.Printer
+import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
+import io.circe.{Decoder, Encoder, Printer}
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger, _}
 import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.Utilities._
+import org.renci.cam.Biolink._
 import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
@@ -25,7 +26,7 @@ import zio.interop.catz.implicits._
 
 import scala.concurrent.duration._
 
-object Server extends App {
+object Server extends App with LazyLogging {
 
   object LocalTapirJsonCirce extends TapirJsonCirce {
     override def jsonPrinter: Printer = Printer.noSpaces.copy(dropNullValues = true)
@@ -42,37 +43,52 @@ object Server extends App {
     program.mapError(error => error.getMessage)
   }
 
-  val queryEndpoint: ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage] =
-    endpoint.post
-      .in("query")
-      .in(query[Int]("limit"))
-      .in(jsonBody[TRAPIQueryRequestBody])
-      .errorOut(stringBody)
-      .out(jsonBody[TRAPIMessage])
-
-  val queryRouteR: URIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], HttpRoutes[Task]] = queryEndpoint.toRoutesR {
-    case (limit, body) =>
-      val program = for {
-        queryGraph <-
-          ZIO
-            .fromOption(body.message.query_graph)
-            .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
-        resultSet <- QueryService.run(limit, queryGraph)
-        message <- QueryService.parseResultSet(queryGraph, resultSet)
-      } yield message
-      program.mapError(error => error.getMessage)
+  val queryEndpointZ: URIO[Has[BiolinkData], ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage]] = {
+    for {
+      biolinkData <- biolinkData
+    } yield {
+      endpoint.post
+        .in("query")
+        .in(query[Int]("limit"))
+        .in({
+          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+          implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+          implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+          jsonBody[TRAPIQueryRequestBody]
+        })
+        .errorOut(stringBody)
+        .out({
+          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(biolinkData.prefixes)
+          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
+          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
+          jsonBody[TRAPIMessage]
+        })
+        .summary("Submit a TRAPI question graph and retrieve matching solutions")
+    }
   }
 
-  // will be available at /docs
-  val openAPI: String = List(queryEndpoint, predicatesEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
+  def queryRouteR(queryEndpoint: ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage])
+    : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], HttpRoutes[Task]] = queryEndpoint.toRoutesR { case (limit, body) =>
+    val program = for {
+      queryGraph <-
+        ZIO
+          .fromOption(body.message.query_graph)
+          .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
+      resultSet <- QueryService.run(limit, queryGraph)
+      message <- QueryService.parseResultSet(queryGraph, resultSet)
+    } yield message
+    program.mapError(error => error.getMessage)
+  }
 
-  val server: RIO[ZConfig[AppConfig] with HttpClient with Has[PrefixesMap], Unit] =
+  val server: RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- getConfig[AppConfig]
+        queryEndpoint <- queryEndpointZ
         predicatesRoute <- predicatesRouteR
-        queryRoute <- queryRouteR
+        queryRoute <- queryRouteR(queryEndpoint)
         routes = queryRoute <+> predicatesRoute
+        openAPI = List(queryEndpoint, predicatesEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
         docsRoute = new SwaggerHttp4s(openAPI).routes[Task]
         httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
         httpAppWithLogging = Logger.httpApp(true, false)(httpApp)
@@ -90,12 +106,13 @@ object Server extends App {
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
-  val prefixesLayer: ZLayer[HttpClient, Throwable, Has[PrefixesMap]] = Utilities.makePrefixesLayer
+  val utilitiesLayer: ZLayer[HttpClient, Throwable, Has[BiolinkData]] = Biolink.makeUtilitiesLayer
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] =
     (for {
       httpClientLayer <- HttpClient.makeHttpClientLayer
-      appLayer = httpClientLayer ++ (httpClientLayer >>> prefixesLayer) ++ configLayer
+      satisfiedUtilitiesLayer = httpClientLayer >>> utilitiesLayer
+      appLayer = httpClientLayer ++ satisfiedUtilitiesLayer ++ configLayer
       out <- server.provideLayer(appLayer)
     } yield out).exitCode
 
