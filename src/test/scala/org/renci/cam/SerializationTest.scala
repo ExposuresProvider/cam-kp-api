@@ -24,7 +24,7 @@ import scala.collection.mutable
 object SerializationTest extends DefaultRunnableSpec {
 
   val testLayerZ = HttpClient.makeHttpClientLayer.map { httpLayer =>
-    httpLayer >+> Utilities.makeUtilitiesLayer
+    httpLayer >+> Biolink.makeUtilitiesLayer
   }
 
   val testingMessageDigest = suite("testingMessageDigest")(
@@ -56,9 +56,9 @@ object SerializationTest extends DefaultRunnableSpec {
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQueryRequestBody(message)
       val testCase = for {
-        prefixes <- Utilities.biolinkPrefixes
+        biolinkData <- Biolink.biolinkData
       } yield {
-        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(prefixes.prefixes)
+        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(biolinkData.prefixes)
         implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
         implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
@@ -83,10 +83,10 @@ object SerializationTest extends DefaultRunnableSpec {
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQueryRequestBody(message)
       val testCase = for {
-        prefixes <- Utilities.biolinkPrefixes
+        biolinkData <- Biolink.biolinkData
       } yield {
-        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(prefixes.prefixes)
-        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(prefixes.prefixes)
+        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(biolinkData.prefixes)
         implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.iri.value)
         implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.iri.value)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
@@ -111,10 +111,10 @@ object SerializationTest extends DefaultRunnableSpec {
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQueryRequestBody(message)
       val testCase = for {
-        prefixes <- Utilities.biolinkPrefixes
+        biolinkData <- Biolink.biolinkData
       } yield {
-        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(prefixes.prefixes)
-//        implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoderIn(prefixes.prefixesMap)
+        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+//        implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoderIn(biolinkData.prefixesMap)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         //        println("encoded: " + encoded)
         //        println("expected: " + expected)
@@ -235,9 +235,9 @@ object SerializationTest extends DefaultRunnableSpec {
   val testIRIWithColonInReference = suite("testIRIWithColonInReference")(
     testM("test iri with colon in reference") {
       val testCase = for {
-        prefixes <- Utilities.biolinkPrefixes
+        biolinkData <- Biolink.biolinkData
         iri = IRI("http://identifiers.org/mgi/MGI:1914846")
-        startsWith = prefixes.prefixes.filter { case (_, namespace) => iri.value.startsWith(namespace) }
+        startsWith = biolinkData.prefixes.filter { case (_, namespace) => iri.value.startsWith(namespace) }
         asdf =
           if (startsWith.nonEmpty) {
             val (prefix, namespace) = startsWith.maxBy(_._2.length)

@@ -18,7 +18,7 @@ import zio.test._
 object QueryServiceTest extends DefaultRunnableSpec {
 
   val testLayerZ = HttpClient.makeHttpClientLayer.map { httpLayer =>
-    httpLayer >+> Utilities.makeUtilitiesLayer
+    httpLayer >+> Biolink.makeUtilitiesLayer
   }
 
   val listNodeTypes = suite("listNodeTypes")(
@@ -38,12 +38,10 @@ object QueryServiceTest extends DefaultRunnableSpec {
     testM("test simple query") {
       val testCase = for {
         httpClient <- HttpClient.client
-        prefixes <- Utilities.biolinkPrefixes
-        predicates <- Utilities.biolinkPredicates
-        classes <- Utilities.biolinkClasses
+        biolinkData <- Biolink.biolinkData
         encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(prefixes.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(prefixes.prefixes)
+          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(biolinkData.prefixes)
           implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
           implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
 
@@ -66,7 +64,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
       } yield assert(response)(isNonEmptyString)
       testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
-    } @@ ignore
+    } /*@@ ignore*/
   )
 
   val testGene2Process2Process2Gene = suite("testGene2Process2Process2Gene")(
@@ -83,11 +81,11 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQueryRequestBody(message)
       val testCase = for {
         httpClient <- HttpClient.client
-        prefixes <- Utilities.biolinkPrefixes
+        biolinkData <- Biolink.biolinkData
         encoded = {
           //          implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoderIn(prefixes.prefixesMap)
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(prefixes.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(prefixes.prefixes)
+          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(biolinkData.prefixes)
           requestBody.asJson.deepDropNullValues.noSpaces
         }
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
@@ -113,11 +111,11 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQueryRequestBody(message)
       val testCase = for {
         httpClient <- HttpClient.client
-        prefixes <- Utilities.biolinkPrefixes
+        biolinkData <- Biolink.biolinkData
         encoded = {
           //          implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoderIn(prefixes.prefixesMap)
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(prefixes.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(prefixes.prefixes)
+          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(biolinkData.prefixes)
           requestBody.asJson.deepDropNullValues.noSpaces
         }
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
@@ -147,11 +145,11 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQueryRequestBody(message)
       val testCase = for {
         httpClient <- HttpClient.client
-        prefixes <- Utilities.biolinkPrefixes
+        biolinkData <- Biolink.biolinkData
         encoded = {
           //          implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoderIn(prefixes.prefixesMap)
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(prefixes.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(prefixes.prefixes)
+          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(biolinkData.prefixes)
           requestBody.asJson.deepDropNullValues.noSpaces
         }
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala

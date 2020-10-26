@@ -10,7 +10,7 @@ import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger, _}
 import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.Utilities._
+import org.renci.cam.Biolink._
 import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
@@ -43,24 +43,22 @@ object Server extends App with LazyLogging {
     program.mapError(error => error.getMessage)
   }
 
-  val queryEndpointZ: URIO[Has[BiolinkPrefixes] with Has[List[BiolinkPredicate]] with Has[List[BiolinkClass]], ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage]] = {
+  val queryEndpointZ: URIO[Has[BiolinkData], ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage]] = {
     for {
-      prefixes <- biolinkPrefixes
-      predicates <- biolinkPredicates
-      classes <- biolinkClasses
+      biolinkData <- biolinkData
     } yield {
       endpoint.post
         .in("query")
         .in(query[Int]("limit"))
         .in({
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(prefixes.prefixes)
-          implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(classes)
-          implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(predicates)
+          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+          implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+          implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
           jsonBody[TRAPIQueryRequestBody]
         })
         .errorOut(stringBody)
         .out({
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(prefixes.prefixes)
+          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(biolinkData.prefixes)
           implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
           implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
           jsonBody[TRAPIMessage]
@@ -70,7 +68,7 @@ object Server extends App with LazyLogging {
   }
 
   def queryRouteR(queryEndpoint: ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage])
-    : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkPrefixes] with Has[List[BiolinkPredicate]] with Has[List[BiolinkClass]], HttpRoutes[Task]] = queryEndpoint.toRoutesR { case (limit, body) =>
+    : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], HttpRoutes[Task]] = queryEndpoint.toRoutesR { case (limit, body) =>
     val program = for {
       queryGraph <-
         ZIO
@@ -82,7 +80,7 @@ object Server extends App with LazyLogging {
     program.mapError(error => error.getMessage)
   }
 
-  val server: RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkPrefixes] with Has[List[BiolinkPredicate]] with Has[List[BiolinkClass]], Unit] =
+  val server: RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- getConfig[AppConfig]
@@ -108,7 +106,7 @@ object Server extends App with LazyLogging {
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
-  val utilitiesLayer: ZLayer[HttpClient, Throwable, Has[BiolinkPrefixes] with Has[List[BiolinkPredicate]] with Has[List[BiolinkClass]]] = Utilities.makeUtilitiesLayer
+  val utilitiesLayer: ZLayer[HttpClient, Throwable, Has[BiolinkData]] = Biolink.makeUtilitiesLayer
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] =
     (for {
