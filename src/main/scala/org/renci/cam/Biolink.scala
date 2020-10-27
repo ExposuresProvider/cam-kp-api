@@ -23,8 +23,7 @@ object Biolink {
   def getBiolinkData: ZIO[HttpClient, Throwable, BiolinkData] =
     for {
       local <- localPrefixes
-      prefixes <- getBiolinkPrefixesFromFile
-      //biolink <- getBiolinkPrefixesFromURL.orElse(getBiolinkPrefixesFromFile)
+      prefixes <- getBiolinkPrefixesFromURL.orElse(getBiolinkPrefixesFromFile)
       combined = local ++ prefixes
       (classes, predicates) <- getBiolinkClassesAndPredicatesFromFile
     } yield BiolinkData(combined, classes, predicates)
