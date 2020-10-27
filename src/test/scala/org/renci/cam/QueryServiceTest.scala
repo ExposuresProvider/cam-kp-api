@@ -64,7 +64,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
       } yield assert(response)(isNonEmptyString)
       testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
-    } /*@@ ignore*/
+    } @@ ignore
   )
 
   val testGene2Process2Process2Gene = suite("testGene2Process2Process2Gene")(
