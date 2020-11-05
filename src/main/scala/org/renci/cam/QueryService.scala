@@ -59,7 +59,7 @@ object QueryService extends LazyLogging {
         (node.`type`, node.curie) match {
           case (_, Some(c))    => (node.id, c)
           case (Some(t), None) => (node.id, t.iri)
-          case (None, None)    => (node.id, IRI(""))
+          case (None, None) => throw new Exception("both type and curie can't be None")
         })
       .toMap
 
@@ -77,11 +77,8 @@ object QueryService extends LazyLogging {
       queryText =
         sparql"""SELECT DISTINCT ?predicate WHERE { ?predicate $rdfSchemaSubPropertyOf+ ${edgeType.iri} . FILTER NOT EXISTS { ?predicate a $biolinkmlSlotDefinition } }"""
       resultSet <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
-      predicates = (for {
-        solution <- resultSet.asScala
-        v <- solution.varNames.asScala
-        node = solution.get(v)
-      } yield s"<$node>").mkString(" ")
+      querySolutions = resultSet.asScala.toList
+      predicates = querySolutions.flatMap(qs => qs.varNames.asScala.map(v => qs.getResource(v).getURI)).map(a => IRI(a)).map(a => sparql"$a".text).mkString(" ")
       predicateValuesBlock = s"VALUES ?${edge.id} { $predicates }"
       triple = s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} ."
     } yield (Set(edge.source_id, edge.target_id),
@@ -97,7 +94,7 @@ object QueryService extends LazyLogging {
         queryGraph.nodes
           .map(node => {
             val nodeIdQueryText = QueryText(s"${node.id}")
-            sparql"""  ?$nodeIdQueryText $sesameDirectType ?${nodeIdQueryText}_type .""".text
+            sparql"  ?$nodeIdQueryText $sesameDirectType ?${nodeIdQueryText}_type .".text
           }).mkString("\n")
       whereClause = s"WHERE { \n$whereClauseParts"
       ids =
@@ -109,14 +106,12 @@ object QueryService extends LazyLogging {
         (subj, typ) <- instanceVarsToTypes.flatten
         v <- nodeTypes.get(typ)
       } yield {
-        val subjQueryText = QueryText(s"${subj}")
-        sparql"""?$subjQueryText $rdfSyntaxType $v .""".text
+        val subjQueryText = QueryText(s"$subj")
+        sparql"?$subjQueryText $rdfSyntaxType $v .".text
       }
       valuesClause = (sparqlLines ++ moreLines).mkString("\n")
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
-      biolinkData <- biolinkData
-      prefixes = biolinkData.prefixes.map { case (prefix, expansion) => s"PREFIX $prefix: <$expansion>" }.mkString("\n")
-      queryString = s"""$prefixes\n$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"""
+      queryString = s"""$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"""
       response <- SPARQLQueryExecutor.runSelectQuery(QueryFactory.create(queryString))
     } yield response
   }
@@ -134,11 +129,11 @@ object QueryService extends LazyLogging {
       }
       allEdgeBindings = trapiBindings.flatMap(_._2)
       allCamIds = allEdgeBindings.toSet[TRAPIEdgeBinding].flatMap(_.provenance)
-      prov2CAMStuffTripleMap <- ZIO.foreachPar(allCamIds)(prov => getCAMStuff(QueryText(prov)).map(prov -> _)).map(_.toMap)
+      prov2CAMStuffTripleMap <- ZIO.foreachPar(allCamIds)(prov => getCAMStuff(IRI(prov)).map(prov -> _)).map(_.toMap)
       allCAMTriples = prov2CAMStuffTripleMap.values.toSet.flatten
       allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj, t.obj))
       slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.map(v => s"<$v>").toList, biolinkData.classes)
-      extraKGNodes <- getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, biolinkData.prefixes, biolinkData.classes)
+      extraKGNodes <- getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, biolinkData)
       allPredicates = allCAMTriples.map(_.pred)
       slotStuffList <- getSlotStuff(allPredicates.toList)
       extraKGEdges = allCAMTriples.flatMap { triple =>
@@ -279,8 +274,7 @@ object QueryService extends LazyLogging {
 
   private def getExtraKGNodes(camNodes: Set[String],
                               slotStuffNodeDetails: List[TripleString],
-                              prefixes: Map[String, String],
-                              biolinkClasses: List[BiolinkClass]): ZIO[Any, Throwable, Set[TRAPINode]] =
+                              biolinkData: BiolinkData): ZIO[Any, Throwable, Set[TRAPINode]] =
     ZIO.foreach(camNodes) { node =>
       for {
         (label, biolinkTypes) <-
@@ -293,8 +287,8 @@ object QueryService extends LazyLogging {
                 .map({ case (k, v) => (k, v.map(a => a._2)) })
                 .headOption)
             .orElseFail(new Exception("Failed getting node types"))
-        classes = biolinkClasses.filter(a => biolinkTypes.contains(a.shorthand))
-        abbreviatedNodeType = applyPrefix(node, prefixes)
+        classes = biolinkData.classes.filter(a => biolinkTypes.contains(a.shorthand))
+        abbreviatedNodeType = applyPrefix(node, biolinkData.prefixes)
       } yield TRAPINode(abbreviatedNodeType, Some(label), classes)
     }
 
@@ -336,10 +330,10 @@ object QueryService extends LazyLogging {
       )
     } yield results
 
-  private def getCAMStuff(prov: QueryText): RIO[ZConfig[AppConfig] with HttpClient, List[TripleString]] =
+  private def getCAMStuff(prov: IRI): RIO[ZConfig[AppConfig] with HttpClient, List[TripleString]] =
     for {
       queryText <- Task.effect(
-        sparql"""SELECT DISTINCT (?s_type AS ?subj) (?p AS ?pred) (?o_type AS ?obj) WHERE { GRAPH <$prov> {
+        sparql"""SELECT DISTINCT (?s_type AS ?subj) (?p AS ?pred) (?o_type AS ?obj) WHERE { GRAPH $prov {
                    ?s ?p ?o .
                    ?s $rdfSyntaxType $owlNamedIndividual .
                    ?o $rdfSyntaxType $owlNamedIndividual .
@@ -365,7 +359,7 @@ object QueryService extends LazyLogging {
                      ?blslot a $biolinkmlSlotDefinition .
                      FILTER NOT EXISTS {
                        ?kid $rdfSchemaSubPropertyOf+ ?other .
-                       ?other <https://w3id.org/biolink/biolinkml/meta/is_a+/https://w3id.org/biolink/biolinkml/meta/mixins>* ?blslot .
+                       ?other <https://w3id.org/biolink/biolinkml/meta/is_a>+/<https://w3id.org/biolink/biolinkml/meta/mixins>* ?blslot .
                      } OPTIONAL { ?kid $rdfSchemaLabel ?label . }
                   }"""
       resultSet <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
