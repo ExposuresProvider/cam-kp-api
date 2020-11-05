@@ -1,0 +1,2113 @@
+{
+  "query_graph": {
+    "nodes": [
+      {
+        "id": "n0",
+        "type": "gene_or_gene_product"
+      },
+      {
+        "id": "n1",
+        "type": "molecular_activity",
+        "curie": "GO:0003824"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e0",
+        "source_id": "n1",
+        "target_id": "n0",
+        "type": "enabled_by"
+      }
+    ]
+  },
+  "knowledge_graph": {
+    "nodes": [
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-4084703",
+        "name": "EROIL-like Proteins",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0015036",
+        "name": "disulfide oxidoreductase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0140318",
+        "name": "protein transporter activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0000146",
+        "name": "microfilament motor activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264908",
+        "name": "6xProinsulin:2xZn2+:1xCa2+",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437099",
+        "name": "ZnT6",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023172",
+        "name": "INS_HUMAN",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0004181",
+        "name": "metallocarboxypeptidase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-8932938",
+        "name": "TMEM27",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264989",
+        "name": "EXOC4",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0048518",
+        "name": "positive regulation of biological process",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "biological_process"
+        ]
+      },
+      {
+        "id": "GO:0005886",
+        "name": "plasma membrane",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "anatomical_entity",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "GO:0004252",
+        "name": "serine-type endopeptidase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0005788",
+        "name": "endoplasmic reticulum lumen",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "anatomical_entity",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265156",
+        "name": "PC2",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0005796",
+        "name": "Golgi lumen",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "anatomical_entity",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-378974",
+        "name": "PC1:calcium cofactor",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023192",
+        "name": "6xInsulin:2xZn2+:Ca2+ (post actin network)",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265075",
+        "name": "6xHC-INS(25-110)",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264931",
+        "name": "6xInsulin:2xZn2+:Ca2+",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023156",
+        "name": "6x2xHC-INS(25-54):4xHC-INS(57-110):2xZn2+:1xCa2+",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "GO:1905370",
+        "name": "serine-type endopeptidase complex",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-29426",
+        "name": "Zn2+",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0005515",
+        "name": "protein binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-387383",
+        "name": "Core SNARE Complex",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264974",
+        "name": "Exocyst Complex",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-216667",
+        "name": "Zn2+",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-216785",
+        "name": "Zn2+",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265073",
+        "name": "6xProinsulin:2xZn2+:1xCa2+",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "GO:0044877",
+        "name": "protein-containing complex binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0005829",
+        "name": "cytosol",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "anatomical_entity",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023182",
+        "name": "6x2xHC-INS(25-56):4xHC-INS(57-110):2xZn2+:1xCa2+",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-8931616",
+        "name": "MYO5A:MYRIP:RAB27A",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "GO:0008150",
+        "name": "Biological Process",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "biological_process"
+        ]
+      },
+      {
+        "id": "GO:0034774",
+        "name": "secretory granule lumen",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "anatomical_entity",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-351603",
+        "name": "H2O",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265041",
+        "name": "EXOC6",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0030667",
+        "name": "secretory granule membrane",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "anatomical_entity",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-1428499",
+        "name": "MYO5A",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265011",
+        "name": "C Peptide",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264948",
+        "name": "EXOC8",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-3878118",
+        "name": "KIF5B-like proteins",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-386977",
+        "name": "6xInsulin:2xZn2+:Ca2+ (docked granule)",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264893",
+        "name": "Proinsulin",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0000139",
+        "name": "Golgi membrane",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "anatomical_entity",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437104",
+        "name": "ZnT7",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-2872286",
+        "name": "EXOC3",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0005385",
+        "name": "zinc ion transmembrane transporter activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023198",
+        "name": "CPE:Zn2+",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "GO:0003777",
+        "name": "microtubule motor activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264890",
+        "name": "6xHC-INS(25-110)",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-2872288",
+        "name": "EXOC7",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437105",
+        "name": "ZnT5",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437106",
+        "name": "ZnT8",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:1905368",
+        "name": "peptidase complex",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265045",
+        "name": "EXOC5",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-167012",
+        "name": "Ca2+",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264887",
+        "name": "EXOC2",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-2872284",
+        "name": "EXOC1",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0000149",
+        "name": "SNARE binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "3f81eb24f85ea74c1d9577d8460b03d01929d4d79d5b90797dc73be637be443e",
+        "source_id": "GO:0015036",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-4084703",
+        "type": "enabled_by"
+      },
+      {
+        "id": "9136acc2b07359590b98a5a58f77b2bea6aee64b16cf6d491bbe7e2fddfc11ec",
+        "source_id": "GO:0005385",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437106",
+        "type": "enabled_by"
+      },
+      {
+        "id": "f6e447b48a18b6bc446c19510f67f31994ff66ab28a97cd558fe50414f86e507",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-8932938",
+        "type": "has_input"
+      },
+      {
+        "id": "4b7cc513c0233e99d20baa15bc39fdf5c95a7beb9f842b64893b2015cad6026f",
+        "source_id": "GO:0004181",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "4e37c32d7605728e75ed0fe1d1be05375b3d2408ecc44ad9782755385c2e00ab",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264948",
+        "type": "has_input"
+      },
+      {
+        "id": "73d3274fa25e50ace5fcfb0c40354197139e736b3071a1fd9107d673b51cbde7",
+        "source_id": "GO:0004252",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265156",
+        "type": "enabled_by"
+      },
+      {
+        "id": "06c57e1cf634cc1fd9af17d496dc9e3c3bc7809cac6141d634d148f543487fca",
+        "source_id": "GO:0004252",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-378974",
+        "type": "enabled_by"
+      },
+      {
+        "id": "cffd49aa075294c01af03ba61f711f86712f1d04b1cbe8f9c37cc457290d8394",
+        "source_id": "GO:0000146",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264931",
+        "type": "has_input"
+      },
+      {
+        "id": "dd7a67fed7814522b31434da3ecda0889a619ae7450f8f537d80c1a298f7d227",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-2872286",
+        "type": "has_input"
+      },
+      {
+        "id": "d60d6b2087677dddcee1d701136232ce25c28b1082fda6d7f6143703d90e2eb3",
+        "source_id": "GO:0005385",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-216667",
+        "type": "has_output"
+      },
+      {
+        "id": "96241db782bd8460f3624488d27a0e341486db6b491deb4c625d3c856d89519c",
+        "source_id": "GO:0044877",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-387383",
+        "type": "has_input"
+      },
+      {
+        "id": "9d5760f7c0cc968d1852234ae880113b03b763c8ae254e594985bb61a1076951",
+        "source_id": "GO:0003777",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-3878118",
+        "type": "enabled_by"
+      },
+      {
+        "id": "1867bde71c01ce6dff79f4d93c50f9d18a19e30f201e3385ddd252a1ba038d28",
+        "source_id": "GO:0140318",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264908",
+        "type": "has_input"
+      },
+      {
+        "id": "e57444ed61ee8a39612f5e791b4943f084524994beaf5d207e44e1197a4a506b",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265045",
+        "type": "has_input"
+      },
+      {
+        "id": "cb09686b6e95122ac733d69966cfa05ea4e6e2c1f8a14f260e28f062311ae37c",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-2872288",
+        "type": "has_input"
+      },
+      {
+        "id": "42f145bb23a7a87c56c4cc686b82a94d41bba01aa635d0b51fccbfb38f428fd0",
+        "source_id": "GO:0005385",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437105",
+        "type": "enabled_by"
+      },
+      {
+        "id": "e6edb44c35ad6aec7d489ac01a033e304361d4d1d4daf6a82c6901120af93770",
+        "source_id": "GO:0005385",
+        "target_id": "GO:0005515",
+        "type": "precedes"
+      },
+      {
+        "id": "94cbfe66f404e6237da201d5b70d523a3b83a13773ac3108fc346cacbf067843",
+        "source_id": "GO:0004252",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023182",
+        "type": "has_output"
+      },
+      {
+        "id": "c33fe618c7fb9453411503780dcdd6c4c65489beb719dd76b98fbc9f159bd61d",
+        "source_id": "GO:0003777",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264931",
+        "type": "has_output"
+      },
+      {
+        "id": "53c4a8c0040c8ab8bc2d19be8ab497b6392021fa1e5bb57af146c46ed9d7d773",
+        "source_id": "GO:0004252",
+        "target_id": "GO:0004181",
+        "type": "precedes"
+      },
+      {
+        "id": "30ecd20accbc9dfeca7706f26dedd6488970e5b038c494a231dae73c6a810566",
+        "source_id": "GO:0015036",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-4084703",
+        "type": "enabled_by"
+      },
+      {
+        "id": "b61afd55e9123798f03a5e4f4919e478f14469f93939f6640436e0fab8d968dc",
+        "source_id": "GO:0044877",
+        "target_id": "GO:0044877",
+        "type": "positively_regulates"
+      },
+      {
+        "id": "ac2984da04ed3f11fcf55564e55382201230a80ff1a205610e054595045cba46",
+        "source_id": "GO:0004252",
+        "target_id": "GO:1905370",
+        "type": "enabled_by"
+      },
+      {
+        "id": "e7cee60930f77d0cf465074326c2007dfbaf3ecb0f43ee5421cc2d63709ebf5d",
+        "source_id": "GO:0005385",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437104",
+        "type": "enabled_by"
+      },
+      {
+        "id": "8544a30b38dda7192bc559866d92a00c760ed17e31a5047fdcd66986357edb68",
+        "source_id": "GO:0005515",
+        "target_id": "GO:0005796",
+        "type": "occurs_in"
+      },
+      {
+        "id": "d39aa34413a87b639a1c340d138010e2e36d8b73cd633dba08d872f0cf2a28b8",
+        "source_id": "GO:0005515",
+        "target_id": "GO:0048518",
+        "type": "part_of"
+      },
+      {
+        "id": "b4f746d1979452885010d324a7224f118ca416d221847500d2672645ba7722d6",
+        "source_id": "GO:0005385",
+        "target_id": "GO:0030667",
+        "type": "occurs_in"
+      },
+      {
+        "id": "5c270b7499a1ec6a9ca68b966cd27cd4f5a0128f0a189e0e7729c5d1f1505137",
+        "source_id": "GO:0000146",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "19bade7ddcb34e23247ad66af940930aac17d59eb9e25378d0eee5a685230c1b",
+        "source_id": "GO:0000149",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-386977",
+        "type": "has_output"
+      },
+      {
+        "id": "2bbb84f86acdff78bd2c428191a6be6e51c75b20221adf71a9ec7c9808238327",
+        "source_id": "GO:0000149",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023192",
+        "type": "has_input"
+      },
+      {
+        "id": "9a34df3b2d86ad19f2ddb4d53fa0a230778acefb804cbe342fe9618818ad14cd",
+        "source_id": "GO:0140318",
+        "target_id": "GO:0005515",
+        "type": "precedes"
+      },
+      {
+        "id": "3f310fb9bda2569aa7faf26bed43bdbca913b31b0c7386f45cfcb29e15e39e51",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264908",
+        "type": "has_output"
+      },
+      {
+        "id": "2a647d13a62f72adc854f5b2638f76792826f4553354dc96688598980c8187f6",
+        "source_id": "GO:0140318",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "057aaec79e2b4a3d9aab30c042e70af8ffd9312f99fad134589ac7c5f3461a87",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-167012",
+        "type": "has_input"
+      },
+      {
+        "id": "bf75885bdc4148dd0a3a1ec2edc2536c2527db93f9bb0a3b59e80805b683c0ea",
+        "source_id": "GO:0000149",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-387383",
+        "type": "enabled_by"
+      },
+      {
+        "id": "7b421a8a56f623ce1e014294b98829fac7098d873ec217c0af6a16dc7deeeb0f",
+        "source_id": "GO:0140318",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264890",
+        "type": "has_output"
+      },
+      {
+        "id": "3589c33111e732f7bcdbaf29136e66966693679446b45bbac6e5ecb8444192cd",
+        "source_id": "GO:0004181",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023198",
+        "type": "enabled_by"
+      },
+      {
+        "id": "67707aec9bd0afb4119b0898566ba59cc50a2480f53ad5093b1cd5560ac5b571",
+        "source_id": "GO:0044877",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "4edcf81d0175e5e82238c0f6a1507d0470b6ba346b5c4132453cd72dc5a97180",
+        "source_id": "GO:0005385",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437099",
+        "type": "enabled_by"
+      },
+      {
+        "id": "608f63ed635c83e40d1120d3869f9f6e351b87c73765dec628917c218a1c8063",
+        "source_id": "GO:0004181",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-351603",
+        "type": "has_input"
+      },
+      {
+        "id": "44de51e9e44ac6d129ca6692344ecc18385b23587cf71d9866fc5347e3e46b14",
+        "source_id": "GO:0004181",
+        "target_id": "GO:0004252",
+        "type": "precedes"
+      },
+      {
+        "id": "f64726f54785b752ca688b990170739ef4786b53882b2d0cee88ca6bc1383dc7",
+        "source_id": "GO:0140318",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265075",
+        "type": "has_participant"
+      },
+      {
+        "id": "29136f93776c9935d93c08277e43e7b6d1e6b4852cb208bff1879cf3021912c0",
+        "source_id": "GO:0003777",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "69282cedf79d0bc8ad03f8e46c2f0dd49420512f1359a557762eb1682a6be99a",
+        "source_id": "GO:0044877",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023192",
+        "type": "has_input"
+      },
+      {
+        "id": "91e29ea1295bf0378b2306172c70db6ff7923f48f0b0a85f3ae28ff5988e233b",
+        "source_id": "GO:0005385",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-216785",
+        "type": "has_output"
+      },
+      {
+        "id": "b74f79a74f0085c50e640ded2750169a1ae2b412ae87d69c7d22e1b76820b639",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-387383",
+        "type": "has_input"
+      },
+      {
+        "id": "39a78a51db35f10aa14dad4135310061ee24a5199ec1c6981065808a6057e9b6",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264989",
+        "type": "has_input"
+      },
+      {
+        "id": "29633e75996b1f6339bef375bcce45663543069734cbc98d212d3ae985ac1076",
+        "source_id": "GO:0015036",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265075",
+        "type": "has_output"
+      },
+      {
+        "id": "c3c9b2080423dff0303893c53a9467d580fb035dafbfb58397a3853856d07b63",
+        "source_id": "GO:0000149",
+        "target_id": "GO:0005886",
+        "type": "occurs_in"
+      },
+      {
+        "id": "5e6d3caf2875660fde512eb92dd0f132e0528072d13d37b92786c39d8554bd3a",
+        "source_id": "GO:0000146",
+        "target_id": "GO:0044877",
+        "type": "precedes"
+      },
+      {
+        "id": "dfeb04a8fe00cec8e2d934b503d4b9a2ef642037702e973a2fb15da56ae6e526",
+        "source_id": "GO:0044877",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-386977",
+        "type": "has_output"
+      },
+      {
+        "id": "62b59238ad64da7cce355e550cd704b080c9942b50f5fbd7307734708cacb559",
+        "source_id": "GO:0004252",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264931",
+        "type": "has_output"
+      },
+      {
+        "id": "ffbf5bdc497521dab0346f0e203020f4eb2e16c0930f9d57a79c9b4daa200f07",
+        "source_id": "GO:0044877",
+        "target_id": "GO:0048518",
+        "type": "part_of"
+      },
+      {
+        "id": "8d94e5cb93ec4f7731ecf35683c14375d71b68e84302c5a28fc6b41047d3bc48",
+        "source_id": "GO:0005385",
+        "target_id": "GO:0003777",
+        "type": "precedes"
+      },
+      {
+        "id": "6570d07b0dfc5a75d5814c26d35c17f9b98ea60721a62f2b0ab7216309ffa414",
+        "source_id": "GO:0003777",
+        "target_id": "GO:0005829",
+        "type": "occurs_in"
+      },
+      {
+        "id": "a3517ff045b2ea08f70064ba50a65e3f4a7eb7003d5eb682f71cb97c17dbd900",
+        "source_id": "GO:0004181",
+        "target_id": "GO:1905368",
+        "type": "enabled_by"
+      },
+      {
+        "id": "5c4163e0d11df830eb6a7483491bf912421c85f6c7493013567121f6ff22f097",
+        "source_id": "GO:0048518",
+        "target_id": "GO:0008150",
+        "type": "positively_regulates"
+      },
+      {
+        "id": "19e3f1eea082c0f3036fd3656549309e374f907467aff6fe9d993b0e4e08fdd4",
+        "source_id": "GO:0044877",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-387383",
+        "type": "enabled_by"
+      },
+      {
+        "id": "ec5b2da467b1a473df70cb39fa9c3b7edc8882528a70fee75560af7e025ef4c6",
+        "source_id": "GO:0005515",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "1532996ee62327734028ab3fa923b67998988940373e40fbe86153425a536556",
+        "source_id": "GO:0000146",
+        "target_id": "GO:0000149",
+        "type": "precedes"
+      },
+      {
+        "id": "de87ab75eef35a6dcb15bb3191356c9c9371b81907bccce36c4819e15473423f",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264890",
+        "type": "has_input"
+      },
+      {
+        "id": "7c2ddf3ad2222d8eadb31e77a3fe0a5a9d1a483808dbe474b779fab1da7ffab3",
+        "source_id": "GO:0044877",
+        "target_id": "GO:0005886",
+        "type": "occurs_in"
+      },
+      {
+        "id": "5b0bb6219fda9f4c04ab37954511014840c961626763aa2d8061991b3f436777",
+        "source_id": "GO:0003777",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264931",
+        "type": "has_input"
+      },
+      {
+        "id": "dd6071f97b88ec8b619a6eadfe0f0cb8cc73983f1b1bb139230b30c0327d73f8",
+        "source_id": "GO:0140318",
+        "target_id": "GO:0004252",
+        "type": "precedes"
+      },
+      {
+        "id": "8e9a3d7ca29447da6bab2ebe56ec1bdc3e1f12c40df8ab3e0034a757a76a899a",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-216667",
+        "type": "has_input"
+      },
+      {
+        "id": "8aa9c7e289163a3c4a5446d7c1b12a56bc35fce05bafea23522bcc962918fe2e",
+        "source_id": "GO:0044877",
+        "target_id": "GO:0000149",
+        "type": "positively_regulates"
+      },
+      {
+        "id": "7e832d4fddcf0fe56b5375c8e9368788d2c0d59842a1b92966ba4a41c9f02ab7",
+        "source_id": "GO:0015036",
+        "target_id": "GO:0005788",
+        "type": "occurs_in"
+      },
+      {
+        "id": "959c919556b51e6b425516cd10b024e8debb1486741792ae4e69f4abcef9b528",
+        "source_id": "GO:0015036",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264893",
+        "type": "has_input"
+      },
+      {
+        "id": "57a8443d69cd604524fe215dd8836774d6242f008352fed48d5a0f3f009df937",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264974",
+        "type": "has_output"
+      },
+      {
+        "id": "f894a388a56f6a4031ea952aede15b07651cbde352b4f3ec184a8ba59d4739b6",
+        "source_id": "GO:0004252",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023156",
+        "type": "has_input"
+      },
+      {
+        "id": "bce9273f455c580e228896ab3bfe6c6055f4cb835e5bddd8e2b00ec2ac865b04",
+        "source_id": "GO:0003777",
+        "target_id": "GO:0000146",
+        "type": "precedes"
+      },
+      {
+        "id": "3e277d805491ef84f6810a8cccd77e319ae0e659896b13c53b70aaa22403fae3",
+        "source_id": "GO:0000146",
+        "target_id": "GO:0034774",
+        "type": "occurs_in"
+      },
+      {
+        "id": "22e8c49e26ec4b6ee9518e33081c28d1b150d098e87ae89245df311daaa09278",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-2872284",
+        "type": "has_input"
+      },
+      {
+        "id": "96611dd9c3afa11c8c7d1673413af947303a407e52513945c06ba67c6a8548f4",
+        "source_id": "GO:0000146",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-1428499",
+        "type": "enabled_by"
+      },
+      {
+        "id": "50c41109b4f5690c8195eac2f7ccecb5817fee414dc7245ebd5e442aec5ca14c",
+        "source_id": "GO:0000146",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023192",
+        "type": "has_output"
+      },
+      {
+        "id": "6006c9d65b886fb0adc88b1453e1b8f786a35e47ff12c4b8ae30cb6c6e1e679b",
+        "source_id": "GO:0004252",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "1816fa2149d9c634098685ae21fe67cd2df292adf0d76dbf81bc9f841e83043e",
+        "source_id": "GO:0004181",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023156",
+        "type": "has_output"
+      },
+      {
+        "id": "f41a0e1481da7cff3a5bb90eed69304dade4387b646fba0bb6e76b143ae0015f",
+        "source_id": "GO:0044877",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-8932938",
+        "type": "has_input"
+      },
+      {
+        "id": "793d2ae0eec6747f7a504db9053353abcbd3042d9bf32467a21a5a38d9f93157",
+        "source_id": "GO:0005385",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-29426",
+        "type": "has_input"
+      },
+      {
+        "id": "66361d663c55c39495d0c802da17309a51a570dc48a7b456c890cc0782008f2c",
+        "source_id": "GO:0004181",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023172",
+        "type": "has_input"
+      },
+      {
+        "id": "2e2fc7077a8a5ad49fc6729e3a74f05a8672777b4ef47e136a8262ec957ec904",
+        "source_id": "GO:0004181",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265011",
+        "type": "has_output"
+      },
+      {
+        "id": "2999a8c985e4b869e0b8a62b208eeeb5ee13b5c81d0d8327620f62973aaa0f35",
+        "source_id": "GO:0015036",
+        "target_id": "GO:0140318",
+        "type": "precedes"
+      },
+      {
+        "id": "dc9579479339700ceb09b98140acd2bb54d70a4c05624e8e4dbb44d140b40632",
+        "source_id": "GO:0140318",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265075",
+        "type": "has_input"
+      },
+      {
+        "id": "d0ef6501a80f44665623452d50cb5035e4bd01ca61e7f0e8028c7be95e2c13f0",
+        "source_id": "GO:0140318",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264908",
+        "type": "has_participant"
+      },
+      {
+        "id": "68b0d4f66ab04035c4ab6385add0bd9321e91303c17648a3cf8af1ddef02d68c",
+        "source_id": "GO:0005515",
+        "target_id": "GO:0044877",
+        "type": "positively_regulates"
+      },
+      {
+        "id": "26c8a05b1e63563c62d082e67aed1f2fc86f05a191ef7b8119dfbd113bc6ea1e",
+        "source_id": "GO:0005515",
+        "target_id": "GO:0140318",
+        "type": "precedes"
+      },
+      {
+        "id": "ce139076038472d370164e74097c5501180b27a4828e78629502a7fe1fda70e1",
+        "source_id": "GO:0005385",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "f97be71c49eb5e571dbf2a0cd5ef68be2463602051fa0c72e083c9458ceb55fd",
+        "source_id": "GO:0004252",
+        "target_id": "GO:0034774",
+        "type": "occurs_in"
+      },
+      {
+        "id": "67e0046adb91ba3fb781ad47bc460e2fdb165e197a9bb53fba6a76d72e68b6fc",
+        "source_id": "GO:0015036",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "4cc2afd7678551025e19c5b04fc5d1be6ea5742b9f483c7c22433e9208334530",
+        "source_id": "GO:0004181",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023182",
+        "type": "has_input"
+      },
+      {
+        "id": "b6089c45c3ddae5abd32439c846aa3eeff10f4bc69112550236f672bbaf9083f",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264887",
+        "type": "has_input"
+      },
+      {
+        "id": "7301b37ad2fdc7424165d457e6f6b8fc7681c31d8ddf62329cd39aeba4022cd4",
+        "source_id": "GO:0004181",
+        "target_id": "GO:0030667",
+        "type": "occurs_in"
+      },
+      {
+        "id": "3db6d42de2fb6c33b73dc6419f475983be2c63e64f41e71d976466a9d55da002",
+        "source_id": "GO:0000149",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "9426ae326b455df2bc6c8c4b0a358500bf84196bc21f7a68ccbd420d253de4e6",
+        "source_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-8931616",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-1428499",
+        "type": "has_part"
+      },
+      {
+        "id": "cb4555d1249da5a8a0185cb9d0cb6bf452e413c895fbcfbb01465e2dec51ef00",
+        "source_id": "GO:0000146",
+        "target_id": "GO:0005515",
+        "type": "precedes"
+      },
+      {
+        "id": "e55694d6f154d10305d1624cbdb931ee6a1c5cef1d5d17de2f8e2822382bb4c7",
+        "source_id": "GO:0005515",
+        "target_id": "GO:0000149",
+        "type": "positively_regulates"
+      },
+      {
+        "id": "ac32b5176e95a4abd3782090d486c9e2d82bec79c239c163a66cfbb09c432b28",
+        "source_id": "GO:0004252",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023172",
+        "type": "has_output"
+      },
+      {
+        "id": "f49a6301f4ddda332d2cf20dd6c20b8b60823125224ab11163c0e4106e24bc9c",
+        "source_id": "GO:0140318",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265073",
+        "type": "has_output"
+      },
+      {
+        "id": "ca08c0c6b36f7cf72a22925d078b733e2fb5ada7a450d7d9236cd080c8658e65",
+        "source_id": "GO:0004252",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-351603",
+        "type": "has_input"
+      },
+      {
+        "id": "1c4700d21e83fe1dab7df647996d922835c84c4141600f45899eb168da9c4558",
+        "source_id": "GO:0005385",
+        "target_id": "GO:0000139",
+        "type": "occurs_in"
+      },
+      {
+        "id": "ba1f4cbcd5d86e3cd5d2f37dd59227705a4cc74b7dc227c061273b51a98a162c",
+        "source_id": "GO:0005515",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265041",
+        "type": "has_input"
+      },
+      {
+        "id": "54eaabaa2c2444ef5c9df6b5fd15605154fd016f9223aea6de95d51e354d8e6f",
+        "source_id": "GO:0004252",
+        "target_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265073",
+        "type": "has_input"
+      }
+    ]
+  },
+  "results": [
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-4084703"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0015036"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "3f81eb24f85ea74c1d9577d8460b03d01929d4d79d5b90797dc73be637be443e",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        }
+      ],
+      "extra_nodes": [
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437104"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023198"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264974"
+        },
+        {
+          "kg_id": "GO:0034774"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-29426"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-386977"
+        },
+        {
+          "kg_id": "GO:0005788"
+        },
+        {
+          "kg_id": "GO:0004181"
+        },
+        {
+          "kg_id": "GO:0044877"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-216667"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023192"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-351603"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-216785"
+        },
+        {
+          "kg_id": "GO:0008150"
+        },
+        {
+          "kg_id": "GO:0000149"
+        },
+        {
+          "kg_id": "GO:0005515"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-2872284"
+        },
+        {
+          "kg_id": "GO:0140318"
+        },
+        {
+          "kg_id": "GO:0005385"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265041"
+        },
+        {
+          "kg_id": "GO:0048518"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-4084703"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-1428499"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265156"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-2872286"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437106"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437099"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-387383"
+        },
+        {
+          "kg_id": "GO:0000139"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-378974"
+        },
+        {
+          "kg_id": "GO:0005829"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264893"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264931"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265011"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264948"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-ALL-167012"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-437105"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264887"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265075"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-2872288"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023172"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265045"
+        },
+        {
+          "kg_id": "GO:0004252"
+        },
+        {
+          "kg_id": "GO:1905368"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023156"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-3878118"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-265073"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264989"
+        },
+        {
+          "kg_id": "GO:0015036"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264908"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-264890"
+        },
+        {
+          "kg_id": "GO:0005796"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-8932938"
+        },
+        {
+          "kg_id": "GO:1905370"
+        },
+        {
+          "kg_id": "GO:0005886"
+        },
+        {
+          "kg_id": "GO:0030667"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-8931616"
+        },
+        {
+          "kg_id": "GO:0000146"
+        },
+        {
+          "kg_id": "GO:0003777"
+        },
+        {
+          "kg_id": "OBO:go/extensions/reacto.owl#REACTO_R-HSA-9023182"
+        }
+      ],
+      "extra_edges": [
+        {
+          "kg_id": "a610351a797c546f13cbde8c6a3af6d68573cfc224a70920ce8814e2555d0806",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "93b8d6dd14113f5e790100798f49924f47da4d9e3f02fa6080c16b548297b3ff",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "d663b5ae4ebbc8640e27577d613a2267d0ba3ea6fccbb63585dc7a2d961839dd",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "02a3f6912a48cbbeb6cf2c17e5065809485cad9a43d60c0cbaf480eb256f1811",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "2eafe05f61fda6433f1479f56dd4e7c8144ba08cea614d14bb0b8cd2e0ed23cd",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "22763920d9aa3d099f44be683d90b065bf0ba9098278caba05d977ebaedddd86",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "76893af2ea08c755c155c18aff8f729e761205c67173e07659fc70e7ede47e32",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "cf25f10d78cd089e19285cbda0f13e2f9ced009810a6ba0295415b4385c0a634",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "37b30f5976ab7bcc87626b8ee56cb4c1974cc968d7de56cab7143470cef092af",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "72f17c39afd9f42b1b75188f66133a8f7848ab657a41b74933756826d25780b6",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "bee9edcbe4858b35fa5dec24da746bbad871912df48943673be939d317df95d0",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "4ccffb765c7da1c3125b07e4cb82b54d4093e4b486769b14d82be94250ee3ee1",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "1d196e737d162b3860149f287f7b8489af589c01707a75fb2ca4781ab8b04052",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "0878e61de5777d45df1f20e126e2e0967fe588d968353f2caae1edf3b85bb143",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "3500b74934122e9001d0586510cc814fc404b0151a63568eebac43a0fc10b19f",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "e5a7a1e72f8d11e3f5fe268fd81997a4213dfa56bdfb0a9becd0facfffe4ad0c",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "2f788b966726955e17f00728dc8a37788f275a7c9dc23866d52a21cf747b10be",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "06cb3a882d8d5a324059c61b7a5226f337f7c6ae4f252a4706ba51bd12cacd91",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "2ad5f2b5b6e57c45e9dc97c68f7dce4e0cf8877f7d52da91ed1ae6ee2de63ffb",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "cac87f034446becd6a8ee15431b9c971ed5b6166eeb79a52c840de70a4eedcca",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "61582fbeadd2872437fed9f1a8cdb297bad362775e424c562bfea3c3878ec983",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "699ed341595a6e909e8549c90bfec807d909d008112351e4be90fcc8b20cbdf3",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "03dbf47ca198d61d909c4d6f494d0f07f44a3d0e671403f6f523849d0f06b7f3",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "b8f55836bc721e68047d076f75a02204daee54f1f68c1d9509996e4a77f42d96",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "66c315d234e1a711faf138cee093fb859360101c82bfe20a2ef2087b43008dca",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "54fa296c3bc1772534f792014ea9c5ef01bdf8a4da77ddc9a3fe8945b9d4bff5",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "06b7f3fb29f06c7f5996040296d115f08d0aa19d689ee9718759429dcc436a74",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "67c182c5eb24f58b5b2e5e90b08a3c912f78412b99cd1cfdb29e26be8734b38a",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "90c18770b02c70c6bde9823755fa3c283f5c2b1e5e4143388b4b85d45a6dbae7",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "3fb078a62dc4ca131c651df856101a92f72cf0a28715f83ad34aa803642d26bd",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "a71c45fb4ff222296c9bedb08e2043c90adfc92bc3a5769669d00eb853733efb",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "29a13079f074519979bd7dcfeb918688fb7582ace0d53263860c4701abf1dd33",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "04a64423140cb7090473a3dbaac85a6ae806bda69bca846daf91376b55220864",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "db1271db74ae3d4ff927fe15cced106b8cb42b353e4d2379220a45496d421034",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "4a3a56862a0968f5026466a30ffb29099cad77a4e3bc7ea5b23bfbae6f1c11a6",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "b44567ee213b56055da991ba3aead548e3eea444e7d72d1b5eb46f581cb4f046",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "766f19807b5316f65392dc8a6ae76dc47bb38323122ddd670ee4287d33f26628",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "675137a68862c6d4b7e2a89e462f64437fa62653f984d9c348097a1c96c75af1",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "97cace57a8d6b4dced09a618e7fc3d66edd039bd97341b52f268c0b08c09f4ca",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "69814b4d4efb68fb2d3cc17dc4344d67c1eae5fc400e6149d9040068c31aa0e4",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "6e9fa9335823228ec59c09f9d670a48d56ce9ce44afe3b2c6afd675ff27ae9b6",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "d3d07bbfe82b15634b64063e2e184da2cead3764739051b0b1f116e6bee3abb1",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "1252682e52746c3eb20ae70e45c1da6a3f5b3cdf10012aae65fb05b7c65be142",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "5a1521976b2d5c20f04de684099f977455cc9018786225c0cf91048a730535a0",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "1732c7b15497f0b97210f0fc5b74e155e1e45d8397d988c78dc2e0e31d592c8a",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "c5e068e2a1a61f03904a5f0f75717de493d7a58ab22e92bdcda1ae91c073da60",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "2e31bc1d18a1f13a2d62acc08508925806ee1155bc4baacabb954b0cfdd9a6ad",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "5674137c3d3ca06ada0e9f31f50fde64fdaab6550de8f02f341326fd381a965d",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "a773501e0b6ca8551fe8808b5659a5a7cb312b7eecbdf33938e3db2b86312760",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "71bdb3c0c9dd09967ebbe86e32c9b7cfffe0418216d5787bfdcea1483203e58e",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "69e1aac5e62f11ad0f44c4bfda99427974417357ff4bfdb31f3dc5b376dd7d70",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "488eb6445dc19761bd810dcfc308cb6810882b8904a99543bc2314bcec9f6f67",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "d2a20e8f5944b2a30889cdb6d57e9db9152115f2f0acb529032efb16b466407a",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "fe66e5cf7c6c2fafb49aee1eac1137d56619de29924fd7b37739832815166d8f",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "b943a1132010c729f8158c016888b040d3aa6fa2ebfbe18cee793f09e9d4c99b",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "bfa825ef2ae16fe8a5d404a9d413c5ae2a35bbce9298b5547ce091104ccc181e",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "f2da8224d5af67c61b96b7e48b7597a89487bdf2fc5dbe28fd687e692e50af79",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "7685c49ddb4f78ffc30c867dc97414fd9ab1507821167be306ca566db086bc1a",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "d58666a2939ef37ee16fe67f899abf47ea3525e6741593da995a40fbc18b0a9f",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "0e887ec6503849b96fd56e4580e36a2b597f3199d25311d86f5f20a5d1bb4b20",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "9e1c2ff7d99de0de9f3a13e5a31ec79b6519bc804db0e30269cf8279bbbee22d",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "da698762a1ff8cc8d8043850211323518442f1d7be03c621fc3d9d29d57347a0",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "13c65fb232f17adddfe524e4b50f8c477f5f6b88215203d92937ae598920a5ed",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "dde0b105a24530a58d24354d27c5e787e188faf3b11fa7dc9b2b053f0521657e",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "b08bf3feec260ce98e5491cc3ee5a42701719ba0e5e795f5dee33515bda264bd",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "275c35c72915fe2b02e4be0968d1a9cccedba257f64b471573120fdaca5d22cd",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "cf0a87cc7e2fca93b240cdeb32e019adc2636699f66d005a70d6988c501dd014",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "ad778bfdd47d6992d6dbfdbe2054fcb38d7d84a05c919a8d3ca1b6593a778424",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "f30f7878de3b1cc4d70da1bd3807ef75db726ade7421c2ead2678c1bbbdeb39b",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "a993284161617af1225b58567cad2703ca9ea3fd0b30f5025c370975b718bd50",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "b2ab705feb5a0cb2f6914a03f6f71070f18eea90c876e52b01551f61d19deef6",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "a35177299e763936f117728aed27c09176e21a6d8e931e3cb0ad1d8d2c81e6fb",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "c9b02637abd9c45534abd157586532c84147fc7b122f401ba841375923b2c3a7",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "6eb99dc35b9675b678a3e02c1ed5fc12430dc4a63fede57fb8114c54ddc92bd2",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "bfc3add55b84e85b3ac5837766c29cff022f6d506544374edadd99c7cfd18fe0",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "b013d29779f2e67df956e184d85afb824613345b9f1e0ba6446921759d56e7ff",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "9636d5749540a9b0d23cb2596216f668873ac96907286158ed29650a6e213779",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "4ff97ed47148eb317a43849daaa20c9fe3ab2e4fc66e6bda1158a0a871570e71",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "47797e901a440e015b42e7c3dc987b28efd9149c8227f147b0144a9145d56487",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "18fbc62365a7b2d2a7b008a8710c3f7e76f0dddbdb0cb2ec6cc6de29d6383d30",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "2a751f4fa6b36557ab0ec803049e66a3d72ca69ce71af8a949fc0c5b9c853196",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "0a2e91380d1512bb6a1dcad7124e954206b01758ba47c982cfe561d34e171b8b",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "404e08a35a20bfaef0f276ed89abe084fbc0fb4da2a5f5537b2c9e50074121a5",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "66f8391dd283098e7f37771730f287dc2cd6178d13011926cd075828d7871b57",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "e52c23a87fe3bcf8981786d69c3ada93305cf1e46aa7aadd40e2521b0b6ae3c5",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "04f8917baada37192ccf83bd325cac947f9d228f788d9d0a2c7d4876b23103c6",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "a0387697372bc73dd26eed94c03585ab856d1c6bd72f878b0950f5ccf4026f28",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "ef3d01a96f9b996539f384c60cc85f1e59117f85fd57c23834a9491e25f8b4a9",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "c01727c65f4ad914ca588b989a0e4d01e7e33f5044dbdc7774f4949e1d07f031",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "5a366684f57bca079ed74cc26fe680d841eadbcc6990a06463751f7129aedc66",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "2cda4da1802c24942dfdd293a1fb9e1e94f28a2d6f06cf492db121ab47957b50",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "198942573b3ea08a598b9928e4f198c3ad26e862a3f4aa4e2f1ae5ddcee7a138",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "f16b33797e70e01c8b5b6938acb2023c2f0cf8ed434956c6c75581d90b601465",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "534aa7f14df1634452abb11e4cd8555aeed8080f893058d598cd37c153b5802d",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "9dd4bcf084c09cc638b74b4a13d86283773d729aee57ca84eed700e3bd4e5285",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "d34fd0331a5b5c046a4da99cfef9634976cbdd734d0c86a3b4da375361233720",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "90e96f291a496ce37548c63d1159ab9b724c21619a87373f459612b28cd7cea2",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "2b17c96c18a71d70058a16755b92b92d7d2660cb57f69a67d1f9952d7ee7b3ba",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "62b6b78c83a04860752219ef30e8d375c7b3139263f33e441d1632ecae8adeda",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        },
+        {
+          "kg_id": "fda0736403ebe2b953521ed96b7267ff569ba8743469e7f1beb0986f10c1d261",
+          "provenance": "http://model.geneontology.org/R-HSA-264876"
+        }
+      ]
+    }
+  ]
+}
