@@ -49,9 +49,9 @@ object SPARQLQueryExecutor extends LazyLogging {
   def runSelectQuery(query: Query): RIO[ZConfig[AppConfig] with HttpClient, ResultSet] =
     for {
       appConfig <- zio.config.getConfig[AppConfig]
+      _ = logger.debug("query: {}", query)
       client <- HttpClient.client
       uri = appConfig.sparqlEndpoint
-      _ = logger.debug("query: {}", query)
       request = Request[Task](Method.POST, uri).withEntity(query)
       response <- client.expect[ResultSet](request)
     } yield response
