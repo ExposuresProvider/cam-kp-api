@@ -1,1 +1,392 @@
-{"query_graph":{"nodes":[{"id":"n0","type":"gene"},{"id":"n1","type":"biological_process"}],"edges":[{"id":"e0","source_id":"n1","target_id":"n0","type":"has_participant"}]},"knowledge_graph":{"nodes":[{"id":"UniProtKB:P19174","name":"PLCG1 Hsap","type":["named_thing","biological_entity","molecular_entity","chemical_substance","genomic_entity","macromolecular_machine","gene_or_gene_product","gene","gene_product","protein","physical_entity"]},{"id":"GO:0008104","name":"protein localization","type":["named_thing","biological_entity","occurrent","biological_process_or_activity","biological_process"]},{"id":"MGI:95602","name":"Fyn Mmus","type":["named_thing","biological_entity","molecular_entity","chemical_substance","genomic_entity","macromolecular_machine","gene_or_gene_product","physical_entity"]},{"id":"UniProtKB:Q14571","name":"ITPR2 Hsap","type":["named_thing","biological_entity","molecular_entity","chemical_substance","genomic_entity","macromolecular_machine","gene_or_gene_product","gene","gene_product","protein","physical_entity"]},{"id":"GO:0003674","name":"molecular_function","type":["named_thing","biological_entity","occurrent","biological_process_or_activity","molecular_activity"]},{"id":"GO:0036398","name":"TCR signalosome","type":["named_thing","biological_entity","organismal_entity","molecular_entity","anatomical_entity","genomic_entity","macromolecular_machine","macromolecular_complex","physical_entity","cellular_component"]},{"id":"GO:0004713","name":"protein tyrosine kinase activity","type":["named_thing","biological_entity","occurrent","biological_process_or_activity","molecular_activity"]},{"id":"GO:0043274","name":"phospholipase binding","type":["named_thing","biological_entity","occurrent","biological_process_or_activity","molecular_activity"]},{"id":"GO:0005515","name":"protein binding","type":["named_thing","biological_entity","occurrent","biological_process_or_activity","molecular_activity"]},{"id":"GO:0005783","name":"endoplasmic reticulum","type":["named_thing","biological_entity","organismal_entity","anatomical_entity","physical_entity","cellular_component"]},{"id":"MGI:1914846","name":"Tespa1 Mmus","type":["named_thing","biological_entity","molecular_entity","chemical_substance","genomic_entity","macromolecular_machine","gene_or_gene_product","physical_entity"]},{"id":"GO:0033077","name":"T cell differentiation in thymus","type":["named_thing","biological_entity","occurrent","biological_process_or_activity","biological_process"]},{"id":"UniProtKB:Q14573","name":"ITPR3 Hsap","type":["named_thing","biological_entity","molecular_entity","chemical_substance","genomic_entity","macromolecular_machine","gene_or_gene_product","gene","gene_product","protein","physical_entity"]},{"id":"GO:0050856","name":"regulation of T cell receptor signaling pathway","type":["named_thing","biological_entity","occurrent","biological_process_or_activity","biological_process"]},{"id":"GO:0036399","name":"TCR signalosome assembly","type":["named_thing","biological_entity","occurrent","biological_process_or_activity","biological_process"]},{"id":"GO:0050848","name":"regulation of calcium-mediated signaling","type":["named_thing","biological_entity","occurrent","biological_process_or_activity","biological_process"]},{"id":"UniProtKB:Q14643","name":"ITPR1 Hsap","type":["named_thing","biological_entity","molecular_entity","chemical_substance","genomic_entity","macromolecular_machine","gene_or_gene_product","gene","gene_product","protein","physical_entity"]},{"id":"GO:0018108","name":"peptidyl-tyrosine phosphorylation","type":["named_thing","biological_entity","occurrent","biological_process_or_activity","biological_process"]}],"edges":[{"id":"6c80fb013a0ae9e64b6503ae9996cc447f2683ee561928ca8e4693d3984889f8","source_id":"GO:0008104","target_id":"UniProtKB:P19174","type":"has_participant"},{"id":"b934e91bdfc02b3b77f680b94a3a8e4fdcca9d0b99ac028b36f8dd04c1331526","source_id":"GO:0005515","target_id":"UniProtKB:Q14643","type":"enabled_by"},{"id":"9ae8d55ddf066759c9a1ee401ff7fca68aa6962345408774580ba0bbcc17ba53","source_id":"GO:0008104","target_id":"UniProtKB:P19174","type":"has_input"},{"id":"4279fc8f42f8c153e5d7f1389fcd61c42b60df0e173d1b9c4574cfdfe563c814","source_id":"GO:0004713","target_id":"GO:0018108","type":"part_of"},{"id":"76a893e780224a7f2b4c937038d466235e63c2d8f48a5e71b5cd5dd78dc41011","source_id":"GO:0043274","target_id":"GO:0008104","type":"part_of"},{"id":"eb2b8942fbf66eda2524596c4f381fe41ae9c39fd142ad0df259be5640d434f1","source_id":"GO:0005515","target_id":"UniProtKB:Q14571","type":"enabled_by"},{"id":"a917e6e16cb7936ba37283949ae8b6068b350e5d40ea9c1f6b9393527b9cd7fa","source_id":"GO:0003674","target_id":"GO:0033077","type":"precedes"},{"id":"924a7271ed37dcfa8a6dd126e64e9e8032ce376f51b7c116f02ea9e2a2bc7a91","source_id":"MGI:1914846","target_id":"GO:0036398","type":"part_of"},{"id":"9b7a9c85673f63e9d590b821bbda2057c1c13c6852bda9c120fc401db6016676","source_id":"GO:0003674","target_id":"GO:0036399","type":"causes"},{"id":"a20c97e18a7b85df82edf40bfd17119805d515eaedb985867f695fca5ceb3234","source_id":"UniProtKB:Q14643","target_id":"GO:0036398","type":"part_of"},{"id":"b80f5d6d03f97e2a49a3ec2ec7c7a97a9add078b440cb20b2e87b28a12403172","source_id":"GO:0005515","target_id":"UniProtKB:P19174","type":"enabled_by"},{"id":"cdbc7449b45032c3d41f9fee509b14cbfb45e562ad04b3c867cc090c032b47b3","source_id":"GO:0003674","target_id":"UniProtKB:Q14643","type":"enabled_by"},{"id":"dcc84b71eb217a6b7d558fd58bd1fec94467ed31bc83d12b380ae8956807b1e1","source_id":"GO:0043274","target_id":"MGI:1914846","type":"enabled_by"},{"id":"8cf8e47e140b0b9ac72dabcf194f6cfae9dd150ebca9c1e350cea7db2570cb79","source_id":"GO:0004713","target_id":"MGI:95602","type":"enabled_by"},{"id":"3d0e2889a6afa14e185186a57dce906de540df80a864fde52233b9d88aac0cf2","source_id":"GO:0003674","target_id":"GO:0050848","type":"causes"},{"id":"855dd510e33db9f3ad8990ebcc4de54480bd375fe10827d6ba16b351175fe82c","source_id":"GO:0005515","target_id":"MGI:1914846","type":"enabled_by"},{"id":"407ea3269a452599ed07ebcda0f402b633fb8a651abd7f5ddc66ef514c2515bc","source_id":"GO:0018108","target_id":"UniProtKB:Q14643","type":"has_input"},{"id":"d503fe59c4ad2d875483086dcc00b3a15d0b8098a192fb59b5fca8e7e5d3f221","source_id":"UniProtKB:Q14643","target_id":"GO:0005783","type":"part_of"},{"id":"c8be0419259c5b565d08cc5e0f12d7e49a78076ef471bb56185c96ff9fea2bf3","source_id":"GO:0008104","target_id":"GO:0036398","type":"occurs_in"},{"id":"d7086d93eb829a6a899fee6da83bbdab629d8c04709dab7bd2e246ab9c0ee3d6","source_id":"GO:0003674","target_id":"GO:0050856","type":"precedes"},{"id":"3e1eea61ae99754eb98a54d7fac29ac0fc6a84a73b68030076535e6220ce003d","source_id":"GO:0003674","target_id":"MGI:1914846","type":"enabled_by"},{"id":"24d99c0fdbecff66104c1ad72119a90f83d1969a265e308e6bfabc86dd9786a6","source_id":"GO:0005515","target_id":"UniProtKB:Q14573","type":"enabled_by"}]},"results":[{"node_bindings":[{"qg_id":"n0","kg_id":"UniProtKB:P19174"},{"qg_id":"n1","kg_id":"GO:0008104"}],"edge_bindings":[{"qg_id":"e0","kg_id":"6c80fb013a0ae9e64b6503ae9996cc447f2683ee561928ca8e4693d3984889f8","provenance":"http://model.geneontology.org/5e72450500002150"}],"extra_nodes":[{"kg_id":"GO:0008104"},{"kg_id":"GO:0050848"},{"kg_id":"UniProtKB:Q14643"},{"kg_id":"UniProtKB:Q14571"},{"kg_id":"UniProtKB:P19174"},{"kg_id":"GO:0005515"},{"kg_id":"GO:0043274"},{"kg_id":"UniProtKB:Q14573"},{"kg_id":"GO:0036398"},{"kg_id":"GO:0004713"},{"kg_id":"GO:0050856"},{"kg_id":"GO:0018108"},{"kg_id":"MGI:1914846"},{"kg_id":"MGI:95602"},{"kg_id":"GO:0003674"},{"kg_id":"GO:0036399"},{"kg_id":"GO:0033077"},{"kg_id":"GO:0005783"}],"extra_edges":[{"kg_id":"d9d28cf0d00fa9322dfb5b713350858fdd1f9a19e1a5500817ed77647b39625d","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"5e3bd13dcf5251ce9d77093e087fc4ec1bdc32335076e9f34e375f6bd8d52dce","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"2169ff467989f5a8612eea05845eddf1bd3a3550185a256e18c631372f53de57","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"2088736aa66b4153a7663d87e25d75e3b3619965334af471a5981d5ccfe9816e","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"85a5316dbc2b8f16c0ff8ce499d3b59cd01f5afed041943069b4d72f090f39b2","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"ebcc50dc0c5688db09f22e026250d79d5bbd78e22ef202f926663ed2fa3da87e","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"e5bb988e5020da342779a77bc6f6759a0f3b67fbb7a803f22fe11f6d19ef9c2e","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"1c3eb8128e432f1d3ece9ed497593b71c7ca4b9fd8b9798dc74c5f47ed3a3312","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"734f4e58c16f86b809c31e7e74dc7028ef8cc8397121c5feb4ede3ae8004fc4b","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"9c693b866a1bf47eb6e284f6dc10ff28c1a611378572975e05de9ca18904ab0b","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"2f8de3760bde86e4a10b27b2d51012b0b1eb2772cbc1c4c0c923dc5da5c63c47","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"23eb2d3f29dc57cd671f51e784fde6470c0920b5fe7dacd41a5db09464bd52a7","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"ca60e56f89fe3e6cbc77e6f46d35bae000c6aa7fa0601e9ee1c3a73533420018","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"6d271c580fbf00c937c92dfc0f46222f0ecedd33b4425061e340486a5a2b677b","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"321607be57c0bc6f918582fb35a22c26c67472d5db8bc1dd69c19d9fec2a4484","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"b440f5e503481efecd24b495d82a51a637325d4fac2847054f505c17fac3392e","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"ccaeea101ac3b27533b59020913466fef6e21735a3745659c8eaa028016db990","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"3d42edaa20844ff8de55c01a5e0a3bf462b894a5f8ce8fbc0e639c6f97fabd0f","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"f89b80e6914351d2d481325ef583b26fea7d1ef3f519362c449f034140ecea2b","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"a06ab82a0778cf07ece8228ae36ad9034aa0404a78c37b580fcb4cb25c0081dc","provenance":"http://model.geneontology.org/5e72450500002150"},{"kg_id":"eee13ff7f650b7b94c4348b0cad280ff1999f21da5c4a45030b814137f35ec44","provenance":"http://model.geneontology.org/5e72450500002150"}]}]}
+{
+  "query_graph": {
+    "nodes": [
+      {
+        "id": "n0",
+        "type": "gene"
+      },
+      {
+        "id": "n1",
+        "type": "biological_process"
+      }
+    ],
+    "edges": [
+      {
+        "id": "e0",
+        "source_id": "n1",
+        "target_id": "n0",
+        "type": "has_participant"
+      }
+    ]
+  },
+  "knowledge_graph": {
+    "nodes": [
+      {
+        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68546",
+        "name": "MCM3",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0008150",
+        "name": "Biological Process",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "biological_process"
+        ]
+      },
+      {
+        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-69018",
+        "name": "Mcm4:Mcm6:Mcm7",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "GO:0032991",
+        "name": "protein-containing complex",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "UniProtKB:P25205",
+        "name": "MCM3 Hsap",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68551",
+        "name": "MCM5",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "UniProtKB:P49736",
+        "name": "MCM2 Hsap",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "UniProtKB:P33992",
+        "name": "MCM5 Hsap",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "name": "Molecular Event",
+        "type": [
+          "named_thing",
+          "occurrent"
+        ]
+      },
+      {
+        "id": "GO:0005654",
+        "name": "nucleoplasm",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "anatomical_entity",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68558",
+        "name": "MCM2-7",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "organismal_entity",
+          "molecular_entity",
+          "anatomical_entity",
+          "genomic_entity",
+          "macromolecular_machine",
+          "macromolecular_complex",
+          "physical_entity",
+          "cellular_component"
+        ]
+      },
+      {
+        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68557",
+        "name": "MCM2",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "gene",
+          "gene_product",
+          "protein",
+          "physical_entity"
+        ]
+      }
+    ],
+    "edges": [
+      {
+        "id": "6c80fb013a0ae9e64b6503ae9996cc447f2683ee561928ca8e4693d3984889f8",
+        "source_id": "GO:0008150",
+        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68546",
+        "type": "has_participant"
+      },
+      {
+        "id": "92d36e881f2f8be0cf7486424b1be8c71f4e150407c2c2548215c9e11800511d",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68558",
+        "type": "has_input"
+      },
+      {
+        "id": "9796fa0d8d0a732c18c7700e65a3ec45456f38b9d0d42db03af96230718043e5",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-69018",
+        "type": "has_output"
+      },
+      {
+        "id": "4483430f1be9b213f3d90da29a4d590539ba5a8846cb0473ff21cbbf13294880",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "GO:0005654",
+        "type": "occurs_in"
+      },
+      {
+        "id": "a214dae4f45089c281a21bd95862d2cca9e7e8e666da265ee6c2dd42c72865c1",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "UniProtKB:P33992",
+        "type": "has_output"
+      },
+      {
+        "id": "34d151a70e87ba47f79c169121ccd6ba827727099290c4dfd14e20556a641417",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "GO:0032991",
+        "type": "has_input"
+      },
+      {
+        "id": "fc81095690db46cebedf82cf980956a9148319f99aa3f6665c014aaa4492d3a8",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "UniProtKB:P49736",
+        "type": "has_output"
+      },
+      {
+        "id": "e0e614dc88e4e4e73a10158654073d69e4ae070c28f9e50c038ec12d3e287a32",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68557",
+        "type": "has_output"
+      },
+      {
+        "id": "d0e49a91a0c50a15a0e1bbe919747c33bce86587c7e189d955cbac648364c92d",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68551",
+        "type": "has_output"
+      },
+      {
+        "id": "15bbb59bf793e0776af5cf5b574dda6a3556f46f438eee8d4acad1198e93b714",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "GO:0032991",
+        "type": "has_output"
+      },
+      {
+        "id": "37861a07968354eb9087e5b7bb93f2f6818966d6b68376a1a352dc69cf545193",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "GO:0008150",
+        "type": "part_of"
+      },
+      {
+        "id": "e06d2df5cae2c2667bcd70e8c88dd0106a6658b92ebb80862356feb878f578d1",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68546",
+        "type": "has_output"
+      },
+      {
+        "id": "30cde3ec0cfb2a4a4c7aff8c55c95b4825db60b0cf452dcc44b764c7cd92373f",
+        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+        "target_id": "UniProtKB:P25205",
+        "type": "has_output"
+      }
+    ]
+  },
+  "results": [
+    {
+      "node_bindings": [
+        {
+          "qg_id": "n0",
+          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68546"
+        },
+        {
+          "qg_id": "n1",
+          "kg_id": "GO:0008150"
+        }
+      ],
+      "edge_bindings": [
+        {
+          "qg_id": "e0",
+          "kg_id": "6c80fb013a0ae9e64b6503ae9996cc447f2683ee561928ca8e4693d3984889f8",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        }
+      ],
+      "extra_nodes": [
+        {
+          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68558"
+        },
+        {
+          "kg_id": "GO:0008150"
+        },
+        {
+          "kg_id": "GO:0005654"
+        },
+        {
+          "kg_id": "UniProtKB:P33992"
+        },
+        {
+          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68551"
+        },
+        {
+          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-69018"
+        },
+        {
+          "kg_id": "GO:0032991"
+        },
+        {
+          "kg_id": "UniProtKB:P25205"
+        },
+        {
+          "kg_id": "UniProtKB:P49736"
+        },
+        {
+          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68557"
+        },
+        {
+          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event"
+        },
+        {
+          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-68546"
+        }
+      ],
+      "extra_edges": [
+        {
+          "kg_id": "299cbfc1e027315651cca907cb282795f3a853a10a8d8c1418b8a2a22c4a3a01",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        },
+        {
+          "kg_id": "11b1f912d36936294bb64a66e0a54046124f21fb243af2842aa385e6a6b9cdc2",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        },
+        {
+          "kg_id": "e24478f48cf4ab80a36a92964425c2cb89f3e84d6dd57b6285e10058714a4c9b",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        },
+        {
+          "kg_id": "1eb9cf88a5de99fb6647526f26030622d0f0f601948fa202dfbabb21a72016b1",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        },
+        {
+          "kg_id": "c436ad422235505c0bdc0aa5d004308a123086d17f9845ef42831195c77ba4b5",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        },
+        {
+          "kg_id": "b743a1696003afbfa5158ecdc47864d1c7f457a8965c3cd80f17571814f13ae4",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        },
+        {
+          "kg_id": "3b55bd51034c284b32c46ff5ad7c0d439833ee8e2843ccf19e8a0eb55890a9c0",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        },
+        {
+          "kg_id": "b36c334fc405099a48ea3a08e2d82af6128c92352fe1f88600b72f0b54d76e24",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        },
+        {
+          "kg_id": "27402b33d425be51e2be3ed4095daec3223db07a8096166649fad21b18cbd2eb",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        },
+        {
+          "kg_id": "d3a5840fb3f2e4349dc3d75e262806aa85ac4cfc748b8fa04e8e98dd6cb0012a",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        },
+        {
+          "kg_id": "04126f57e92102989dc35602f22d37a39f7de48358bdba7910320204e95ce3ab",
+          "provenance": "http://model.geneontology.org/R-HSA-69052"
+        }
+      ]
+    }
+  ]
+}
