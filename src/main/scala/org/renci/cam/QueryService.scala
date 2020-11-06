@@ -320,14 +320,11 @@ object QueryService extends LazyLogging {
                      OPTIONAL { ?kid $rdfSchemaLabel ?label . }
                   }"""
       resultSet <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
-      results <- Task.effect(
-        resultSet.asScala.toList.map { qs =>
-          val blClass = qs.get("blclass").toString
-          TripleString(qs.get("kid").toString,
-                       qs.get("label").toString,
-                       convertCase(blClass.substring(blClass.lastIndexOf("/") + 1, blClass.length)))
-        }
-      )
+      resultSetAsList = resultSet.asScala.toList
+      results = resultSetAsList.filter(a => a.contains("label")).map(a => {
+        val blClass = a.get("blclass").toString
+        TripleString(a.get("kid").toString, a.get("label").toString, convertCase(blClass.substring(blClass.lastIndexOf("/") + 1, blClass.length)))
+      })
     } yield results
 
   private def getCAMStuff(prov: IRI): RIO[ZConfig[AppConfig] with HttpClient, List[TripleString]] =
