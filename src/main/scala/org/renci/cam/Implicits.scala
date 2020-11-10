@@ -34,14 +34,6 @@ object Implicits {
 
   }
 
-  //    def makeEncoder(prefixesMap: Map[String, String]): Encoder[IRI] = Encoder.encodeString.contramap { iri =>
-  //      val startsWith = prefixesMap.filter { case (_, namespace) => iri.value.startsWith(namespace) }
-  //      if (startsWith.nonEmpty) {
-  //        val (prefix, namespace) = startsWith.maxBy(_._2.length)
-  //        s"$prefix:${iri.value.drop(namespace.length)}"
-  //      } else iri.value
-  //    }
-
   def iriEncoderOut(prefixesMap: Map[String, String]): Encoder[IRI] = Encoder.encodeString.contramap { iri =>
     val startsWith = prefixesMap.filter { case (_, namespace) => iri.value.startsWith(namespace) }
     if (startsWith.nonEmpty) {

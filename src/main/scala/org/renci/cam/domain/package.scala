@@ -1,11 +1,24 @@
 package org.renci.cam
 
 import com.google.common.base.CaseFormat
+import contextual.Case
+import org.apache.jena.query.ParameterizedSparqlString
+import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator
+import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator.SPARQLContext
 
 package object domain {
 
   case class IRI(value: String)
 
+  object IRI {
+
+    implicit val embedInSPARQL = SPARQLInterpolator.embed[IRI](Case(SPARQLContext, SPARQLContext) { iri =>
+      val pss = new ParameterizedSparqlString()
+      pss.appendIri(iri.value)
+      pss.toString
+    })
+
+  }
   sealed trait BiolinkTerm {
 
     def shorthand: String

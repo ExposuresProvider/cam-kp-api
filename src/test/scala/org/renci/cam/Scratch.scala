@@ -1,13 +1,12 @@
 package org.renci.cam
 
 import com.typesafe.scalalogging.LazyLogging
-import io.circe.{Decoder, KeyDecoder}
-
-import scala.io.Source
 import io.circe.yaml.parser
 import zio._
 import zio.test.Assertion._
 import zio.test._
+
+import scala.io.Source
 
 object Scratch extends DefaultRunnableSpec with LazyLogging {
 
@@ -28,23 +27,14 @@ object Scratch extends DefaultRunnableSpec with LazyLogging {
         json <- ZIO.fromEither(parser.parse(source))
         slotKeys <- ZIO.fromOption(json.hcursor.downField("slots").keys).orElseFail(throw new Exception("couldn't get slots"))
         slots = slotKeys.map(a => a.replaceAll(" ", "_")).toList
+        _ = logger.info("slots: {}", slots)
+        prefixes <- ZIO.fromOption(json.hcursor.downField("prefixes").focus).orElseFail(throw new Exception("couldn't get slots"))
+        prefixesMap <- ZIO.fromEither(prefixes.as[Map[String, String]])
+        _ = logger.info("prefixesMap: {}", prefixesMap)
 //        slots = slotsFromCursor.flatMap(_.hcursor.focus.get.toString())
 
 //        asdf <- ZIO.fromOption().orElseFail(throw new Exception("asdfasd"))
 //        qwer <- ZIO.fromEither(asdf.as[List[String]])
-        _ = logger.info("slots: {}", slots)
-
-//val itemsFromCursor: Vector[Json] = json.hcursor.
-//      downField("order").
-//      downField("items").
-//      focus.
-//      flatMap(_.asArray).
-//      getOrElse(Vector.empty)
-//        asdf <- json.mapObject(a => a.)
-//        is -> Task.effect(IOUtils.toInputStream(getClass.getClassLoader.getResourceAsStream("biolink-model.yaml"), StandardCharsets.UTF_8))
-//        resultSet = ResultSetFactory.fromJSON(is)
-//        is.close()
-
 
       } yield assert(List(1, 2, 3))(equalTo(List(1, 2, 3)))
     } //@@ ignore
