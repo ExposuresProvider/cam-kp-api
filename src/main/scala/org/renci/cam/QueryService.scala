@@ -36,11 +36,10 @@ object QueryService extends LazyLogging {
 
   def getNodeTypes(nodes: List[TRAPIQueryNode]): Map[String, String] = {
     nodes
-      .map(node =>
+      .flatMap(node =>
         (node.`type`, node.curie) match {
-          case (_, Some(c))    => (node.id, c.value)
-          case (Some(t), None) => (node.id, t.iri.value)
-          case (None, None)    => (node.id, "")
+          case (_, Some(c))    => Map(node.id -> c.value)
+          case (Some(t), None) => Map(node.id -> t.iri.value)
         })
       .toMap
   }
