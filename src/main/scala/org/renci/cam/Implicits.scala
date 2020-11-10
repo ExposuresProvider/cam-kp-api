@@ -5,8 +5,6 @@ import io.circe.{Decoder, Encoder, HCursor}
 import org.apache.commons.lang3.StringUtils
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
 
-import scala.util.Try
-
 object Implicits {
 
   def iriDecoder(prefixesMap: Map[String, String]): Decoder[IRI] = new Decoder[IRI] {
@@ -50,12 +48,12 @@ object Implicits {
     } else iri.value
   }
 
-  def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = Decoder.decodeString.emapTry { s =>
-    Try(biolinkPredicates.find(a => a.shorthand == s).getOrElse(throw new Exception(s"BiolinkPredicate does not exist: $s")))
+  def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = Decoder.decodeString.emap { s =>
+    biolinkPredicates.find(a => a.shorthand == s).toRight(s"BiolinkPredicate does not exist: $s")
   }
 
-  def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = Decoder.decodeString.emapTry { s =>
-    Try(biolinkClasses.find(a => a.shorthand == s).getOrElse(throw new Exception(s"BiolinkClass does not exist: $s")))
+  def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = Decoder.decodeString.emap { s =>
+    biolinkClasses.find(a => a.shorthand == s).toRight(s"BiolinkClass does not exist: $s")
   }
 
 }
