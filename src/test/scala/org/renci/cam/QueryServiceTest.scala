@@ -17,9 +17,7 @@ import zio.test._
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
-  val testLayerZ = HttpClient.makeHttpClientLayer.map { httpLayer =>
-    httpLayer >+> Biolink.makeUtilitiesLayer
-  }
+  val testLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
 
   val listNodeTypes = suite("listNodeTypes")(
     test("testGetNodeTypes") {
@@ -63,7 +61,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         _ = println("response: " + response)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
       } yield assert(response)(isNonEmptyString)
-      testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
+      testCase.provideCustomLayer(testLayer)
     } @@ ignore
   )
 
@@ -96,7 +94,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         _ = println("response: " + response)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-find-genes-enabling-catalytic-activity.json"), response)
       } yield assert(response)(isNonEmptyString)
-      testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
+      testCase.provideCustomLayer(testLayer)
     }  @@ ignore
   )
 
@@ -131,7 +129,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         _ = println("response: " + response)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-gene-to-process-to-process-to-gene.json"), response)
       } yield assert(response)(isNonEmptyString)
-      testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
+      testCase.provideCustomLayer(testLayer)
     } @@ ignore
   )
 
@@ -166,7 +164,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         _ = println("response: " + response)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
-      testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
+      testCase.provideCustomLayer(testLayer)
     } @@ ignore
   )
 
