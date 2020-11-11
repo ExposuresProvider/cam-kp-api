@@ -106,14 +106,9 @@ object Server extends App with LazyLogging {
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
-  val utilitiesLayer: ZLayer[HttpClient, Throwable, Has[BiolinkData]] = Biolink.makeUtilitiesLayer
-
-  override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] =
-    (for {
-      httpClientLayer <- HttpClient.makeHttpClientLayer
-      satisfiedUtilitiesLayer = httpClientLayer >>> utilitiesLayer
-      appLayer = httpClientLayer ++ satisfiedUtilitiesLayer ++ configLayer
-      out <- server.provideLayer(appLayer)
-    } yield out).exitCode
+  override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = {
+    val appLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer ++ configLayer
+    server.provideLayer(appLayer).exitCode
+  }
 
 }

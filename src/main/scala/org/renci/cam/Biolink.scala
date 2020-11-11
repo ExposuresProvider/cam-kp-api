@@ -16,7 +16,7 @@ object Biolink {
 
   final case class BiolinkData(prefixes: Map[String, String], classes: List[BiolinkClass], predicates: List[BiolinkPredicate])
 
-  def makeUtilitiesLayer: ZLayer[HttpClient, Throwable, Has[BiolinkData]] = ZLayer.fromEffect(getBiolinkData)
+  def makeUtilitiesLayer: ZLayer[HttpClient, Throwable, Has[BiolinkData]] = getBiolinkData.toLayer
 
   val biolinkData: URIO[Has[BiolinkData], BiolinkData] = ZIO.service
 

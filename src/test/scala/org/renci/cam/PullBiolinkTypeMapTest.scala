@@ -18,12 +18,11 @@ object PullBiolinkTypeMapTest extends DefaultRunnableSpec {
 
   val suite1 = suite("PullBiolinkTypeMapTestSpec")(
     testM("pull") {
+      val uri = uri"https://biolink.github.io/biolink-model/context.jsonld"
+      val request = Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`ld+json`),
+        `Content-Type`(MediaType.application.`ld+json`))
       for {
-        httpClient <- HttpClient.makeHttpClient
-        uri = uri"https://biolink.github.io/biolink-model/context.jsonld"
-        request = Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`ld+json`),
-                                                             `Content-Type`(MediaType.application.`ld+json`))
-        response <- httpClient.use(_.expect[String](request))
+        response <- HttpClient.makeHttpClient.use(_.expect[String](request))
         parsed <- ZIO.fromEither(parse(response))
         contextJson <- ZIO.fromOption(parsed.hcursor.downField("@context").focus)
         filteredJson = contextJson.deepDropNullValues.mapObject(f =>

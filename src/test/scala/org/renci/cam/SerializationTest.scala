@@ -23,9 +23,7 @@ import scala.collection.mutable
 
 object SerializationTest extends DefaultRunnableSpec {
 
-  val testLayerZ = HttpClient.makeHttpClientLayer.map { httpLayer =>
-    httpLayer >+> Biolink.makeUtilitiesLayer
-  }
+  val testLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
 
   val testingMessageDigest = suite("testingMessageDigest")(
     testM("test consistency of message digest") {
@@ -66,7 +64,7 @@ object SerializationTest extends DefaultRunnableSpec {
 //                println("expected: " + expected)
         assert(expected)(equalsIgnoreCase(encoded))
       }
-      testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
+      testCase.provideCustomLayer(testLayer)
     } /*@@ ignore*/
   )
 
@@ -96,7 +94,7 @@ object SerializationTest extends DefaultRunnableSpec {
       }
 //        println("encoded: " + encoded)
 //        println("expected: " + expected)
-      testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
+      testCase.provideCustomLayer(testLayer)
     } /*@@ ignore*/
   )
 
@@ -124,7 +122,7 @@ object SerializationTest extends DefaultRunnableSpec {
         println("n0 == " + decoded.toOption.get.message.query_graph.get.nodes.head.id)
         assertCompletes
       }
-      testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
+      testCase.provideCustomLayer(testLayer)
     } @@ ignore
   )
 
@@ -248,7 +246,7 @@ object SerializationTest extends DefaultRunnableSpec {
           }
         _ = println("asdf: " + asdf)
       } yield assertCompletes
-      testLayerZ.flatMap(layer => testCase.provideCustomLayer(layer))
+      testCase.provideCustomLayer(testLayer)
     } /*@@ ignore*/
   )
 
