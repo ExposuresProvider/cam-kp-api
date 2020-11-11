@@ -1,46 +1,26 @@
 package org.renci.cam
 
 import io.circe.Decoder.Result
-import io.circe.{Decoder, Encoder, HCursor}
+import io.circe.{Decoder, DecodingFailure, Encoder, HCursor}
 import org.apache.commons.lang3.StringUtils
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
 
-import scala.util.Try
-
 object Implicits {
+
+  private val Curie = "^([^:]*):(.*)$".r
+  private val protocols = Set("http", "https", "ftp", "file", "mailto")
 
   def iriDecoder(prefixesMap: Map[String, String]): Decoder[IRI] = new Decoder[IRI] {
 
     override def apply(c: HCursor): Result[IRI] = for {
       value <- c.value.as[String]
-      ret =
-        prefixesMap
-          .filter(entry => value.startsWith(entry._1))
-          .map { entry =>
-            val remainder = value.replaceAll(s"${entry._1}:", "")
-            s"${entry._2}$remainder"
-          }
-          .headOption
-          .orElse(
-            prefixesMap
-              .filter(entry => value.startsWith(entry._2))
-              .map { entry =>
-                val remainder = value.substring(entry._2.length, value.length).replaceAll(s"${entry._1}:", "")
-                s"${entry._2}$remainder"
-              }
-              .headOption
-          ).getOrElse(throw new Exception(s"Could not parse IRI: $value"))
-    } yield IRI(ret)
+      Curie(prefix, local) = value
+      namespace <-
+        if (protocols(prefix)) Right(prefix)
+        else prefixesMap.get(prefix).toRight(DecodingFailure(s"No prefix expansion found for $prefix:$local", Nil))
+    } yield IRI(s"$namespace$local")
 
   }
-
-  //    def makeEncoder(prefixesMap: Map[String, String]): Encoder[IRI] = Encoder.encodeString.contramap { iri =>
-  //      val startsWith = prefixesMap.filter { case (_, namespace) => iri.value.startsWith(namespace) }
-  //      if (startsWith.nonEmpty) {
-  //        val (prefix, namespace) = startsWith.maxBy(_._2.length)
-  //        s"$prefix:${iri.value.drop(namespace.length)}"
-  //      } else iri.value
-  //    }
 
   def iriEncoderOut(prefixesMap: Map[String, String]): Encoder[IRI] = Encoder.encodeString.contramap { iri =>
     val startsWith = prefixesMap.filter { case (_, namespace) => iri.value.startsWith(namespace) }
@@ -58,12 +38,12 @@ object Implicits {
     } else iri.value
   }
 
-  def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = Decoder.decodeString.emapTry { s =>
-    Try(biolinkPredicates.find(a => a.shorthand == s).getOrElse(throw new Exception(s"BiolinkPredicate does not exist: $s")))
+  def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = Decoder.decodeString.emap { s =>
+    biolinkPredicates.find(a => a.shorthand == s).toRight(s"BiolinkPredicate does not exist: $s")
   }
 
-  def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = Decoder.decodeString.emapTry { s =>
-    Try(biolinkClasses.find(a => a.shorthand == s).getOrElse(throw new Exception(s"BiolinkClass does not exist: $s")))
+  def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = Decoder.decodeString.emap { s =>
+    biolinkClasses.find(a => a.shorthand == s).toRight(s"BiolinkClass does not exist: $s")
   }
 
 }
