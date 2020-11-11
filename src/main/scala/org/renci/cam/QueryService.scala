@@ -54,11 +54,13 @@ object QueryService extends LazyLogging {
   private def convertCase(v: String): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, v)
 
   def getNodeTypes(nodes: List[TRAPIQueryNode]): Map[String, IRI] =
-    nodes.map {node => (node.`type`, node.curie) match {
-          case (_, Some(c))    => Map(node.id -> c)
-          case (Some(t), None) => Map(node.id-> t.iri)
-          case (None, None) => Map.empty[String, IRI]
-        }}.fold(Map.empty[String, IRI])(_ ++ _)
+    nodes.flatMap {node =>
+      (node.`type`, node.curie) match {
+          case (_, Some(c))    => List(node.id -> c)
+          case (Some(t), None) => List(node.id-> t.iri)
+          case (None, None) => Nil
+        }
+    }.toMap
 
   def applyPrefix(value: String, prefixes: Map[String, String]): String =
     prefixes
