@@ -54,14 +54,13 @@ object QueryService extends LazyLogging {
   private def convertCase(v: String): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, v)
 
   def getNodeTypes(nodes: List[TRAPIQueryNode]): Map[String, IRI] =
-    nodes
-      .map(node =>
-        (node.`type`, node.curie) match {
-          case (_, Some(c))    => (node.id, c)
-          case (Some(t), None) => (node.id, t.iri)
-          case (None, None) => throw new Exception("both type and curie can't be None")
-        })
-      .toMap
+    nodes.flatMap {node =>
+      (node.`type`, node.curie) match {
+          case (_, Some(c))    => List(node.id -> c)
+          case (Some(t), None) => List(node.id-> t.iri)
+          case (None, None) => Nil
+        }
+    }.toMap
 
   def applyPrefix(value: String, prefixes: Map[String, String]): String =
     prefixes
@@ -311,9 +310,7 @@ object QueryService extends LazyLogging {
                                   biolinkClasses: List[BiolinkClass]): RIO[ZConfig[AppConfig] with HttpClient, List[TripleString]] =
     for {
       nodeIds <- Task.effect(QueryText(nodeIdList.mkString(" ")))
-      namedThingBiolinkClass = biolinkClasses
-        .find(a => a.shorthand == "named_thing")
-        .getOrElse(throw new Exception("Could not find BiolinkClass:NamedThing"))
+      namedThingBiolinkClass <- ZIO.fromOption(biolinkClasses.find(a => a.shorthand == "named_thing")).orElseFail(new Exception("Could not find BiolinkClass:NamedThing"))
       queryText = sparql"""SELECT DISTINCT ?kid ?blclass ?label WHERE { VALUES ?kid { $nodeIds }
                      ?kid $rdfSchemaSubClassOf ?blclass .
                      ?blclass $biolinkmlIsA* ${namedThingBiolinkClass.iri} .
