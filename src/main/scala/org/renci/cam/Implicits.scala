@@ -16,7 +16,7 @@ object Implicits {
       value <- c.value.as[String]
       Curie(prefix, local) = value
       namespace <-
-        if (protocols(prefix)) Right(prefix)
+        if (protocols(prefix)) Right(s"$prefix:")
         else prefixesMap.get(prefix).toRight(DecodingFailure(s"No prefix expansion found for $prefix:$local", Nil))
     } yield IRI(s"$namespace$local")
 
