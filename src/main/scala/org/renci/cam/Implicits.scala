@@ -14,7 +14,11 @@ object Implicits {
 
     override def apply(c: HCursor): Result[IRI] = for {
       value <- c.value.as[String]
-      Curie(prefix, local) = value
+      curie <- value match {
+        case Curie(p, l) => Right((p, l))
+        case _           => Left(DecodingFailure(s"CURIE is malformed: $value", Nil))
+      }
+      (prefix, local) = curie
       namespace <-
         if (protocols(prefix)) Right(s"$prefix:")
         else prefixesMap.get(prefix).toRight(DecodingFailure(s"No prefix expansion found for $prefix:$local", Nil))
