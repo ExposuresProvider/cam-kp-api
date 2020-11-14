@@ -2,9 +2,12 @@ package org.renci.cam
 
 import com.google.common.base.CaseFormat
 import contextual.Case
-import org.apache.jena.query.ParameterizedSparqlString
+import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
+import org.phenoscape.sparql.FromQuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator.SPARQLContext
+
+import scala.util.Try
 
 package object domain {
 
@@ -18,7 +21,15 @@ package object domain {
       pss.toString
     })
 
+    implicit object IRIFromQuerySolution extends FromQuerySolution[IRI] {
+
+      def fromQuerySolution(qs: QuerySolution, variablePath: String = ""): Try[IRI] =
+        getResource(qs, variablePath).map(r => IRI(r.getURI))
+
+    }
+
   }
+
   sealed trait BiolinkTerm {
 
     def shorthand: String
@@ -42,9 +53,7 @@ package object domain {
 
   object BiolinkPredicate {
 
-    def apply(label: String): BiolinkPredicate = {
-      BiolinkPredicate(label, IRI(s"${BiolinkTerm.namespace}$label"))
-    }
+    def apply(label: String): BiolinkPredicate = BiolinkPredicate(label, IRI(s"${BiolinkTerm.namespace}$label"))
 
   }
 
