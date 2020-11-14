@@ -76,8 +76,7 @@ object QueryService extends LazyLogging {
       edgeType <- ZIO.fromOption(edge.`type`).orElseFail(new Exception("failed to get edge type"))
       queryText =
         sparql"""SELECT DISTINCT ?predicate WHERE { ?predicate $RDFSSubPropertyOf+ ${edgeType.iri} . FILTER NOT EXISTS { ?predicate a $BiolinkMLSlotDefinition } }"""
-      resultSet <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
-      querySolutions = resultSet.asScala.toList
+      querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
       //FIXME getResource can throw exceptions
       predicates = querySolutions
         .flatMap(qs => qs.varNames.asScala.map(v => qs.getResource(v).getURI))
@@ -90,7 +89,7 @@ object QueryService extends LazyLogging {
              Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id),
              s"$predicateValuesBlock\n$triple")
 
-  def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], ResultSet] = {
+  def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[QuerySolution]] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
       predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty))(queryEdgePredicates)
@@ -123,10 +122,9 @@ object QueryService extends LazyLogging {
   }
 
   def parseResultSet(queryGraph: TRAPIQueryGraph,
-                     resultSet: ResultSet): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], TRAPIMessage] =
+                     querySolutions: List[QuerySolution]): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], TRAPIMessage] =
     for {
       biolinkData <- biolinkData
-      querySolutions = resultSet.asScala.toList
       initialKGNodes <- getTRAPINodes(queryGraph, querySolutions)
       initialKGEdges <- getTRAPIEdges(queryGraph, querySolutions)
       querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, querySolutions)
@@ -254,7 +252,7 @@ object QueryService extends LazyLogging {
     val queryTriples = queryGraph.edges.map(e => TripleString(e.source_id, e.id, e.target_id))
     val solutionTriples = querySolutions.flatMap { qs =>
       queryTriples.map { qt =>
-        TripleString(qs.getResource(qt.subj).getURI, qs.getResource(qt.pred).getURI, qs.getResource(qt.obj).getURI)
+        Triple(IRI(qs.getResource(qt.subj).getURI), IRI(qs.getResource(qt.pred).getURI), IRI(qs.getResource(qt.obj).getURI))
       }
     }
     for {
@@ -296,13 +294,20 @@ object QueryService extends LazyLogging {
     }
   }
 
-  private def getProvenance(edges: Set[TripleString]): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, Map[TripleString, String]] =
+  private def getProvenance(edges: Set[Triple]): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, Map[TripleString, String]] = {
+    val values = edges.map(e => sparql"( ${e.subj} ${e.pred} ${e.obj} )").fold(sparql"")(_ + _)
+    val queryText =
+      sparql"""
+              SELECT ?s ?p ?o ?g ?other 
+              WHERE { 
+                VALUES (?s ?p ?o) { $values } 
+                GRAPH ?g { ?s ?p ?o } 
+                OPTIONAL { ?g $ProvWasDerivedFrom ?other . } 
+              }
+            """
     for {
-      values <- Task.effect(QueryText(edges.map(e => s"(<${e.subj}> <${e.pred}> <${e.obj}>)").mkString(" ")))
-      queryText =
-        sparql"""SELECT ?s ?p ?o ?g ?other WHERE { VALUES (?s ?p ?o) { $values } GRAPH ?g { ?s ?p ?o } OPTIONAL { ?g $ProvWasDerivedFrom ?other . } }"""
       bindings <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
-      triplesToGraphs <- ZIO.foreach(bindings.asScala.toList) { solution =>
+      triplesToGraphs <- ZIO.foreach(bindings) { solution =>
         Task.effect {
           val graph = if (solution.contains("other")) solution.getResource("other").getURI else solution.getResource("g").getURI
           val triple = TripleString(solution.getResource("s").getURI, solution.getResource("p").getURI, solution.getResource("o").getURI)
@@ -310,6 +315,7 @@ object QueryService extends LazyLogging {
         }
       }
     } yield triplesToGraphs.toMap
+  }
 
   final private case class TermWithLabelAndBiolinkType(term: IRI, biolinkType: IRI, label: Option[String])
 
