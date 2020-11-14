@@ -321,7 +321,7 @@ object QueryService extends LazyLogging {
       namedThingBiolinkClass <- ZIO
         .fromOption(biolinkClasses.find(a => a.shorthand == "named_thing"))
         .orElseFail(new Exception("Could not find BiolinkClass:NamedThing"))
-      //FIXME problem - requiring biolinkType makes some nodes not be found when these results are used elsewhere
+      // requiring biolinkType makes some terms not be found when these results are used elsewhere - must be handled there
       queryText = sparql"""
                      SELECT ?term ?biolinkType (MIN(?term_label) AS ?label)
                      WHERE { 
