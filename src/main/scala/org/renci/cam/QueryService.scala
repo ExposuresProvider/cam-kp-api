@@ -21,25 +21,25 @@ import scala.collection.JavaConverters._
 
 object QueryService extends LazyLogging {
 
-  val provWasDerivedFrom: IRI = IRI("http://www.w3.org/ns/prov#wasDerivedFrom")
+  val ProvWasDerivedFrom: IRI = IRI("http://www.w3.org/ns/prov#wasDerivedFrom")
 
-  val rdfSchemaSubClassOf: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#subClassOf")
+  val RDFSSubClassOf: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#subClassOf")
 
-  val rdfSchemaLabel: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#label")
+  val RDFSLabel: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#label")
 
-  val rdfSyntaxType: IRI = IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
+  val RDFType: IRI = IRI("http://www.w3.org/1999/02/22-rdf-syntax-ns#type")
 
-  val owlNamedIndividual: IRI = IRI("http://www.w3.org/2002/07/owl#NamedIndividual")
+  val OWLNamedIndividual: IRI = IRI("http://www.w3.org/2002/07/owl#NamedIndividual")
 
-  val sesameDirectType: IRI = IRI("http://www.openrdf.org/schema/sesame#directType")
+  val SesameDirectType: IRI = IRI("http://www.openrdf.org/schema/sesame#directType")
 
-  val biolinkmlSlotDefinition: IRI = IRI("https://w3id.org/biolink/biolinkml/meta/types/SlotDefinition")
+  val BiolinkMLSlotDefinition: IRI = IRI("https://w3id.org/biolink/biolinkml/meta/types/SlotDefinition")
 
-  val biolinkmlIsA: IRI = IRI("https://w3id.org/biolink/biolinkml/meta/is_a")
+  val BiolinkMLIsA: IRI = IRI("https://w3id.org/biolink/biolinkml/meta/is_a")
 
-  val NamedThing: IRI = IRI("https://w3id.org/biolink/vocab/NamedThing")
+  val BiolinkNamedThing: IRI = IRI("https://w3id.org/biolink/vocab/NamedThing")
 
-  val rdfSchemaSubPropertyOf: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#subPropertyOf")
+  val RDFSSubPropertyOf: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#subPropertyOf")
 
   final case class TRAPIEdgeKey(`type`: Option[BiolinkPredicate], source_id: String, target_id: String)
 
@@ -75,7 +75,7 @@ object QueryService extends LazyLogging {
     for {
       edgeType <- ZIO.fromOption(edge.`type`).orElseFail(new Exception("failed to get edge type"))
       queryText =
-        sparql"""SELECT DISTINCT ?predicate WHERE { ?predicate $rdfSchemaSubPropertyOf+ ${edgeType.iri} . FILTER NOT EXISTS { ?predicate a $biolinkmlSlotDefinition } }"""
+        sparql"""SELECT DISTINCT ?predicate WHERE { ?predicate $RDFSSubPropertyOf+ ${edgeType.iri} . FILTER NOT EXISTS { ?predicate a $BiolinkMLSlotDefinition } }"""
       resultSet <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
       querySolutions = resultSet.asScala.toList
       //FIXME getResource can throw exceptions
@@ -99,7 +99,7 @@ object QueryService extends LazyLogging {
         queryGraph.nodes
           .map { node =>
             val nodeIdQueryText = QueryText(s"${node.id}")
-            sparql"  ?$nodeIdQueryText $sesameDirectType ?${nodeIdQueryText}_type .".text
+            sparql"  ?$nodeIdQueryText $SesameDirectType ?${nodeIdQueryText}_type .".text
           }
           .mkString("\n")
       whereClause = s"WHERE { \n$whereClauseParts"
@@ -113,7 +113,7 @@ object QueryService extends LazyLogging {
         v <- nodeTypes.get(typ)
       } yield {
         val subjQueryText = QueryText(s"$subj")
-        sparql"?$subjQueryText $rdfSyntaxType $v .".text
+        sparql"?$subjQueryText $RDFType $v .".text
       }
       valuesClause = (sparqlLines ++ moreLines).mkString("\n")
       limitSparql = if (limit > 0) s" LIMIT $limit" else ""
@@ -206,7 +206,7 @@ object QueryService extends LazyLogging {
           nodes <- ZIO.foreach(queryGraph.nodes) { n =>
             for {
               nodeIRI <- ZIO.fromOption(nodeMap.get(n.id)).orElseFail(new Exception(s"Missing node IRI: ${n.id}"))
-              labelAndTypes = termToLabelAndTypes.getOrElse(IRI(nodeIRI), (None, List(NamedThing)))
+              labelAndTypes = termToLabelAndTypes.getOrElse(IRI(nodeIRI), (None, List(BiolinkNamedThing)))
               (labelOpt, biolinkTypes) = labelAndTypes
               biolinkTypesSet = biolinkTypes.toSet
               nodeBiolinkTypes = biolinkData.classes.filter(c => biolinkTypesSet(c.iri))
@@ -288,7 +288,7 @@ object QueryService extends LazyLogging {
       term -> (labels.flatten.headOption, biolinkTypes)
     }
     camNodes.map { node =>
-      val (labelOpt, biolinkTypes) = termToLabelAndTypes.getOrElse(node, (None, List(NamedThing)))
+      val (labelOpt, biolinkTypes) = termToLabelAndTypes.getOrElse(node, (None, List(BiolinkNamedThing)))
       val biolinkTypesSet = biolinkTypes.toSet
       val abbreviatedNodeType = applyPrefix(node.value, biolinkData.prefixes)
       val classes = biolinkData.classes.filter(c => biolinkTypesSet(c.iri))
@@ -300,7 +300,7 @@ object QueryService extends LazyLogging {
     for {
       values <- Task.effect(QueryText(edges.map(e => s"(<${e.subj}> <${e.pred}> <${e.obj}>)").mkString(" ")))
       queryText =
-        sparql"""SELECT ?s ?p ?o ?g ?other WHERE { VALUES (?s ?p ?o) { $values } GRAPH ?g { ?s ?p ?o } OPTIONAL { ?g $provWasDerivedFrom ?other . } }"""
+        sparql"""SELECT ?s ?p ?o ?g ?other WHERE { VALUES (?s ?p ?o) { $values } GRAPH ?g { ?s ?p ?o } OPTIONAL { ?g $ProvWasDerivedFrom ?other . } }"""
       bindings <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
       triplesToGraphs <- ZIO.foreach(bindings.asScala.toList) { solution =>
         Task.effect {
@@ -326,9 +326,9 @@ object QueryService extends LazyLogging {
                      SELECT ?term ?biolinkType (MIN(?term_label) AS ?label)
                      WHERE { 
                        VALUES ?term { $nodeIds }
-                       ?term $rdfSchemaSubClassOf ?biolinkType .
-                       ?biolinkType $biolinkmlIsA* ${namedThingBiolinkClass.iri} .
-                       OPTIONAL { ?term $rdfSchemaLabel ?term_label }
+                       ?term $RDFSSubClassOf ?biolinkType .
+                       ?biolinkType $BiolinkMLIsA* ${namedThingBiolinkClass.iri} .
+                       OPTIONAL { ?term $RDFSLabel ?term_label }
                      }
                      GROUP BY ?term ?biolinkType
                      """
@@ -341,11 +341,11 @@ object QueryService extends LazyLogging {
       queryText <- Task.effect(
         sparql"""SELECT DISTINCT (?s_type AS ?subj) (?p AS ?pred) (?o_type AS ?obj) WHERE { GRAPH $prov {
                    ?s ?p ?o .
-                   ?s $rdfSyntaxType $owlNamedIndividual .
-                   ?o $rdfSyntaxType $owlNamedIndividual .
+                   ?s $RDFType $OWLNamedIndividual .
+                   ?o $RDFType $OWLNamedIndividual .
                  }
-                 ?o $sesameDirectType ?o_type .
-                 ?s $sesameDirectType ?s_type .
+                 ?o $SesameDirectType ?o_type .
+                 ?s $SesameDirectType ?s_type .
                  FILTER(isIRI(?o_type))
                  FILTER(isIRI(?s_type))
                }"""
@@ -365,11 +365,11 @@ object QueryService extends LazyLogging {
                      SELECT DISTINCT ?qid ?kid ?biolinkSlot ?label 
                      WHERE { 
                      VALUES (?kid ?qid) { $values }
-                     ?kid $rdfSchemaSubPropertyOf+ ?biolinkSlot .
-                     ?biolinkSlot a $biolinkmlSlotDefinition .
-                     OPTIONAL { ?kid $rdfSchemaLabel ?label . }
+                     ?kid $RDFSSubPropertyOf+ ?biolinkSlot .
+                     ?biolinkSlot a $BiolinkMLSlotDefinition .
+                     OPTIONAL { ?kid $RDFSLabel ?label . }
                      FILTER NOT EXISTS {
-                       ?kid $rdfSchemaSubPropertyOf+ ?other .
+                       ?kid $RDFSSubPropertyOf+ ?other .
                        ?other <https://w3id.org/biolink/biolinkml/meta/is_a>+/<https://w3id.org/biolink/biolinkml/meta/mixins>* ?biolinkSlot .
                        } 
                      }
