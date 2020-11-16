@@ -71,7 +71,7 @@ object QueryService extends LazyLogging {
       .getOrElse(value)
 
   private def queryEdgePredicates(
-    edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, (Set[String], Set[(String, String)], String)] =
+    edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, (Set[String], Set[(String, String)], QueryText)] =
     for {
       edgeType <- ZIO.fromOption(edge.`type`).orElseFail(new Exception("failed to get edge type"))
       queryText =
@@ -81,43 +81,50 @@ object QueryService extends LazyLogging {
       predicates = querySolutions
         .flatMap(qs => qs.varNames.asScala.map(v => qs.getResource(v).getURI))
         .map(a => IRI(a))
-        .map(a => sparql"$a".text)
-        .mkString(" ")
-      predicateValuesBlock = s"VALUES ?${edge.id} { $predicates }"
-      triple = s"  ?${edge.source_id} ?${edge.id} ?${edge.target_id} ."
-    } yield (Set(edge.source_id, edge.target_id),
-             Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id),
-             s"$predicateValuesBlock\n$triple")
+        .map(a => sparql" $a ")
+        .fold(sparql"")(_ + _)
+      edgeIDVar = Var(edge.id)
+      edgeSourceVar = Var(edge.source_id)
+      edgeTargetVar = Var(edge.target_id)
+      sparqlChunk =
+        sparql"""
+                 VALUES $edgeIDVar { $predicates }
+                 $edgeSourceVar $edgeIDVar $edgeTargetVar .
+              """
+    } yield (Set(edge.source_id, edge.target_id), Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id), sparqlChunk)
 
   def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[QuerySolution]] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
       predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty))(queryEdgePredicates)
       (instanceVars, instanceVarsToTypes, sparqlLines) = predicates.unzip3
-      whereClauseParts =
+      nodesToDirectTypes =
         queryGraph.nodes
           .map { node =>
-            val nodeIdQueryText = QueryText(s"${node.id}")
-            sparql"  ?$nodeIdQueryText $SesameDirectType ?${nodeIdQueryText}_type .".text
+            val nodeVar = Var(node.id)
+            val nodeTypeVar = Var(s"${node.id}_type")
+            sparql""" $nodeVar $SesameDirectType $nodeTypeVar .  
+                  """
           }
-          .mkString("\n")
-      whereClause = s"WHERE { \n$whereClauseParts"
-      ids =
-        instanceVars.toSet.flatten.map(a => s"?$a").toList :::
-          queryGraph.nodes.map(a => s"?${a.id}_type") :::
-          queryGraph.edges.map(a => s"?${a.id}")
-      selectClause = s"SELECT DISTINCT ${ids.mkString(" ")} "
+          .fold(sparql"")(_ + _)
+      projectionVariableNames = instanceVars.toSet.flatten ++ queryGraph.nodes.map(n => s"${n.id}_type") ++ queryGraph.edges.map(_.id)
+      projection = projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
       moreLines = for {
         (subj, typ) <- instanceVarsToTypes.flatten
+        subjVar = Var(subj)
         v <- nodeTypes.get(typ)
-      } yield {
-        val subjQueryText = QueryText(s"$subj")
-        sparql"?$subjQueryText $RDFType $v .".text
-      }
-      valuesClause = (sparqlLines ++ moreLines).mkString("\n")
-      limitSparql = if (limit > 0) s" LIMIT $limit" else ""
-      queryString = s"""$selectClause\n$whereClause\n$valuesClause \n } $limitSparql"""
-      response <- SPARQLQueryExecutor.runSelectQuery(QueryFactory.create(queryString))
+      } yield sparql"$subjVar $RDFType $v ."
+      valuesClause = (sparqlLines ++ moreLines).fold(sparql"")(_ + _)
+      limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
+      queryString = sparql"""
+                          SELECT DISTINCT $projection
+                          WHERE {
+                            $nodesToDirectTypes
+                            $valuesClause
+                          }
+                          $limitSparql
+                          """
+      response <- SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
     } yield response
   }
 
@@ -249,12 +256,14 @@ object QueryService extends LazyLogging {
 
   private def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution])
     : ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[QuerySolution, List[TRAPIEdgeBinding]]] = {
-    val queryTriples = queryGraph.edges.map(e => TripleString(e.source_id, e.id, e.target_id))
-    val solutionTriples = querySolutions.flatMap { qs =>
-      queryTriples.map { qt =>
-        Triple(IRI(qs.getResource(qt.subj).getURI), IRI(qs.getResource(qt.pred).getURI), IRI(qs.getResource(qt.obj).getURI))
-      }
-    }
+    val solutionTriples = for {
+      queryEdge <- queryGraph.edges
+      solution <- querySolutions
+    } yield Triple(
+      IRI(solution.getResource(queryEdge.source_id).getURI),
+      IRI(solution.getResource(queryEdge.id).getURI),
+      IRI(solution.getResource(queryEdge.target_id).getURI)
+    )
     for {
       provs <- getProvenance(solutionTriples.toSet)
       querySolutionsToEdgeBindings <- ZIO.foreach(querySolutions) { querySolution =>

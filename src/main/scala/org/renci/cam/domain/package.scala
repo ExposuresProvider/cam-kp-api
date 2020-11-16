@@ -3,6 +3,7 @@ package org.renci.cam
 import com.google.common.base.CaseFormat
 import contextual.Case
 import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
+import org.apache.jena.sparql.core.{Var => JenaVar}
 import org.phenoscape.sparql.FromQuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator.SPARQLContext
@@ -11,7 +12,7 @@ import scala.util.Try
 
 package object domain {
 
-  case class IRI(value: String)
+  final case class IRI(value: String)
 
   object IRI {
 
@@ -27,6 +28,18 @@ package object domain {
         getResource(qs, variablePath).map(r => IRI(r.getURI))
 
     }
+
+  }
+
+  final case class Var(label: String)
+
+  object Var {
+
+    implicit val embedInSPARQL = SPARQLInterpolator.embed[Var](Case(SPARQLContext, SPARQLContext) { variable =>
+      val pss = new ParameterizedSparqlString()
+      pss.appendNode(JenaVar.alloc(variable.label))
+      pss.toString
+    })
 
   }
 
@@ -63,31 +76,31 @@ package object domain {
 
   }
 
-  case class TRAPIQueryNode(id: String, `type`: Option[BiolinkClass], curie: Option[IRI])
+  final case class TRAPIQueryNode(id: String, `type`: Option[BiolinkClass], curie: Option[IRI])
 
-  case class TRAPIQueryEdge(id: String, source_id: String, target_id: String, `type`: Option[BiolinkPredicate])
+  final case class TRAPIQueryEdge(id: String, source_id: String, target_id: String, `type`: Option[BiolinkPredicate])
 
-  case class TRAPIQueryGraph(nodes: List[TRAPIQueryNode], edges: List[TRAPIQueryEdge])
+  final case class TRAPIQueryGraph(nodes: List[TRAPIQueryNode], edges: List[TRAPIQueryEdge])
 
-  case class TRAPINode(id: String, name: Option[String], `type`: List[BiolinkClass])
+  final case class TRAPINode(id: String, name: Option[String], `type`: List[BiolinkClass])
 
-  case class TRAPIEdge(id: String, source_id: IRI, target_id: IRI, `type`: Option[BiolinkPredicate])
+  final case class TRAPIEdge(id: String, source_id: IRI, target_id: IRI, `type`: Option[BiolinkPredicate])
 
-  case class TRAPIKnowledgeGraph(nodes: List[TRAPINode], edges: List[TRAPIEdge])
+  final case class TRAPIKnowledgeGraph(nodes: List[TRAPINode], edges: List[TRAPIEdge])
 
-  case class TRAPINodeBinding(qg_id: Option[String], kg_id: String)
+  final case class TRAPINodeBinding(qg_id: Option[String], kg_id: String)
 
-  case class TRAPIEdgeBinding(qg_id: Option[String], kg_id: String, provenance: Option[String])
+  final case class TRAPIEdgeBinding(qg_id: Option[String], kg_id: String, provenance: Option[String])
 
-  case class TRAPIResult(node_bindings: List[TRAPINodeBinding],
-                         edge_bindings: List[TRAPIEdgeBinding],
-                         extra_nodes: Option[List[TRAPINodeBinding]],
-                         extra_edges: Option[List[TRAPIEdgeBinding]])
+  final case class TRAPIResult(node_bindings: List[TRAPINodeBinding],
+                               edge_bindings: List[TRAPIEdgeBinding],
+                               extra_nodes: Option[List[TRAPINodeBinding]],
+                               extra_edges: Option[List[TRAPIEdgeBinding]])
 
-  case class TRAPIMessage(query_graph: Option[TRAPIQueryGraph],
-                          knowledge_graph: Option[TRAPIKnowledgeGraph],
-                          results: Option[List[TRAPIResult]])
+  final case class TRAPIMessage(query_graph: Option[TRAPIQueryGraph],
+                                knowledge_graph: Option[TRAPIKnowledgeGraph],
+                                results: Option[List[TRAPIResult]])
 
-  case class TRAPIQueryRequestBody(message: TRAPIMessage)
+  final case class TRAPIQueryRequestBody(message: TRAPIMessage)
 
 }
