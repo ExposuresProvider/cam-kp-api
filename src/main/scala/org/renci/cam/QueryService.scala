@@ -75,7 +75,12 @@ object QueryService extends LazyLogging {
     for {
       edgeType <- ZIO.fromOption(edge.`type`).orElseFail(new Exception("failed to get edge type"))
       queryText =
-        sparql"""SELECT DISTINCT ?predicate WHERE { ?predicate $RDFSSubPropertyOf+ ${edgeType.iri} . FILTER NOT EXISTS { ?predicate a $BiolinkMLSlotDefinition } }"""
+        sparql"""SELECT DISTINCT ?predicate 
+                 WHERE { 
+                   ?predicate $RDFSSubPropertyOf+ ${edgeType.iri} . 
+                   FILTER NOT EXISTS { ?predicate a $BiolinkMLSlotDefinition } 
+                 }
+              """
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
       //FIXME getResource can throw exceptions
       predicates = querySolutions
