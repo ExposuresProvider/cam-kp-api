@@ -9,7 +9,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.ext.com.google.common.base.CaseFormat
-import org.apache.jena.query.{QueryFactory, QuerySolution, ResultSet}
+import org.apache.jena.query.QuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation._
 import org.renci.cam.Biolink._
 import org.renci.cam.HttpClient.HttpClient
@@ -70,54 +70,39 @@ object QueryService extends LazyLogging {
       .headOption
       .getOrElse(value)
 
-  private def queryEdgePredicates(
-    edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, (Set[String], Set[(String, String)], QueryText)] =
-    for {
-      edgeType <- ZIO.fromOption(edge.`type`).orElseFail(new Exception("failed to get edge type"))
-      queryText =
-        sparql"""SELECT DISTINCT ?predicate 
-                 WHERE { 
-                   ?predicate $RDFSSubPropertyOf+ ${edgeType.iri} . 
-                   FILTER NOT EXISTS { ?predicate a $BiolinkMLSlotDefinition } 
-                 }
-              """
-      querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
-      //FIXME getResource can throw exceptions
-      predicates = querySolutions
-        .flatMap(qs => qs.varNames.asScala.map(v => qs.getResource(v).getURI))
-        .map(a => IRI(a))
-        .map(a => sparql" $a ")
-        .fold(sparql"")(_ + _)
-      edgeIDVar = Var(edge.id)
-      edgeSourceVar = Var(edge.source_id)
-      edgeTargetVar = Var(edge.target_id)
-      sparqlChunk =
-        sparql"""
-                 VALUES $edgeIDVar { $predicates }
-                 $edgeSourceVar $edgeIDVar $edgeTargetVar .
-              """
-    } yield (Set(edge.source_id, edge.target_id), Set(edge.source_id -> edge.source_id, edge.target_id -> edge.target_id), sparqlChunk)
-
   def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[QuerySolution]] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
-      predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty))(queryEdgePredicates)
-      (instanceVars, instanceVarsToTypes, sparqlLines) = predicates.unzip3
+      predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty))(edge => {
+        for {
+          foundPredicates <- getTRAPIQEdgePredicates(edge)
+          predicates = foundPredicates.map(a => sparql" $a ").fold(sparql"")(_ + _)
+          _ = logger.info("predicates: {}", predicates.text)
+          edgeIDVar = Var(edge.id)
+          edgeSourceVar = Var(edge.source_id)
+          edgeTargetVar = Var(edge.target_id)
+          sparqlChunk =
+          sparql"""
+                 VALUES $edgeIDVar { $predicates }
+                 $edgeSourceVar $edgeIDVar $edgeTargetVar .
+              """
+        } yield (edge, sparqlChunk)
+      })
+      (edges, sparqlLines) = predicates.unzip
       nodesToDirectTypes =
         queryGraph.nodes
           .map { node =>
             val nodeVar = Var(node.id)
             val nodeTypeVar = Var(s"${node.id}_type")
-            sparql""" $nodeVar $SesameDirectType $nodeTypeVar .  
-                  """
+            sparql""" $nodeVar $SesameDirectType $nodeTypeVar .  """
           }
           .fold(sparql"")(_ + _)
-      projectionVariableNames = instanceVars.toSet.flatten ++ queryGraph.nodes.map(n => s"${n.id}_type") ++ queryGraph.edges.map(_.id)
+      projectionVariableNames = edges.flatMap(a => List(a.id, a.source_id, a.target_id)) ++ queryGraph.nodes.map(n => s"${n.id}_type")
       projection = projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
       moreLines = for {
-        (subj, typ) <- instanceVarsToTypes.flatten
-        subjVar = Var(subj)
-        v <- nodeTypes.get(typ)
+        ids <- edges.flatMap(a => List(a.source_id, a.target_id))
+        subjVar = Var(ids)
+        v <- nodeTypes.get(ids)
       } yield sparql"$subjVar $RDFType $v ."
       valuesClause = (sparqlLines ++ moreLines).fold(sparql"")(_ + _)
       limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
@@ -396,5 +381,20 @@ object QueryService extends LazyLogging {
                      """
     SPARQLQueryExecutor.runSelectQueryAs[SlotStuff](queryText.toQuery)
   }
+
+  private def getTRAPIQEdgePredicates(edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, List[IRI]] =
+    for {
+      edgeType <- ZIO.fromOption(edge.`type`).orElseFail(new Exception("failed to get edge type"))
+      queryText = sparql"""
+                   SELECT DISTINCT ?predicate
+                   WHERE {
+                     ?predicate $RDFSSubPropertyOf+ ${edgeType.iri} .
+                     FILTER NOT EXISTS { ?predicate a $BiolinkMLSlotDefinition }
+                   }
+                   """
+      querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
+      predicates = querySolutions
+        .flatMap(qs => qs.varNames.asScala.filter(a => qs.contains(a)).map(v => IRI(qs.get(v).toString)))
+    } yield predicates
 
 }
