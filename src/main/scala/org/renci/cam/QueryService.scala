@@ -77,7 +77,6 @@ object QueryService extends LazyLogging {
         for {
           foundPredicates <- getTRAPIQEdgePredicates(edge)
           predicates = foundPredicates.map(a => sparql" $a ").fold(sparql"")(_ + _)
-          _ = logger.info("predicates: {}", predicates.text)
           edgeIDVar = Var(edge.id)
           edgeSourceVar = Var(edge.source_id)
           edgeTargetVar = Var(edge.target_id)
@@ -100,9 +99,9 @@ object QueryService extends LazyLogging {
       projectionVariableNames = edges.flatMap(a => List(a.id, a.source_id, a.target_id)) ++ queryGraph.nodes.map(n => s"${n.id}_type")
       projection = projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
       moreLines = for {
-        ids <- edges.flatMap(a => List(a.source_id, a.target_id))
-        subjVar = Var(ids)
-        v <- nodeTypes.get(ids)
+        id <- edges.flatMap(a => List(a.source_id, a.target_id))
+        subjVar = Var(id)
+        v <- nodeTypes.get(id)
       } yield sparql"$subjVar $RDFType $v ."
       valuesClause = (sparqlLines ++ moreLines).fold(sparql"")(_ + _)
       limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
