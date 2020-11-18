@@ -23,8 +23,8 @@
   "knowledge_graph": {
     "nodes": [
       {
-        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418379",
-        "name": "cGKs",
+        "id": "http://identifiers.org/wormbase/WBGene00018269",
+        "name": "acs-11 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -33,14 +33,12 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "GO:0004692",
-        "name": "cGMP-dependent protein kinase activity",
+        "id": "GO:0003824",
+        "name": "catalytic activity",
         "type": [
           "named_thing",
           "biological_entity",
@@ -50,19 +48,8 @@
         ]
       },
       {
-        "id": "CHEBI:28806",
-        "name": "2'-deoxyinosine-5'-monophosphate",
-        "type": [
-          "named_thing",
-          "biological_entity",
-          "molecular_entity",
-          "chemical_substance",
-          "physical_entity"
-        ]
-      },
-      {
-        "id": "UniProtKB:Q01064",
-        "name": "PDE1B Hsap",
+        "id": "http://identifiers.org/wormbase/WBGene00003876",
+        "name": "pept-2 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -71,15 +58,12 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "UniProtKB:O76083",
-        "name": "PDE9A Hsap",
+        "id": "http://identifiers.org/wormbase/WBGene00021868",
+        "name": "atln-1 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -88,15 +72,42 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "UniProtKB:Q9HCR9",
-        "name": "PDE11A Hsap",
+        "id": "GO:0003980",
+        "name": "UDP-glucose:glycoprotein glucosyltransferase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0035673",
+        "name": "oligopeptide transmembrane transporter activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "BFO:0000015",
+        "name": "process",
+        "type": [
+          "named_thing",
+          "occurrent"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00008132",
+        "name": "gale-1 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -105,15 +116,23 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "UniProtKB:O76074",
-        "name": "PDE5A Hsap",
+        "id": "GO:0004364",
+        "name": "glutathione transferase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00008624",
+        "name": "crld-1 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -122,58 +141,12 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "CHEBI:17345",
-        "name": "guanosine 5'-monophosphate",
-        "type": [
-          "named_thing",
-          "biological_entity",
-          "molecular_entity",
-          "chemical_substance",
-          "physical_entity"
-        ]
-      },
-      {
-        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418432",
-        "name": "Phosphorylated IRAG:IP3 receptor type 1",
-        "type": [
-          "named_thing",
-          "biological_entity",
-          "organismal_entity",
-          "molecular_entity",
-          "anatomical_entity",
-          "genomic_entity",
-          "macromolecular_machine",
-          "macromolecular_complex",
-          "physical_entity",
-          "cellular_component"
-        ]
-      },
-      {
-        "id": "GO:0032991",
-        "name": "protein-containing complex",
-        "type": [
-          "named_thing",
-          "biological_entity",
-          "organismal_entity",
-          "molecular_entity",
-          "anatomical_entity",
-          "genomic_entity",
-          "macromolecular_machine",
-          "macromolecular_complex",
-          "physical_entity",
-          "cellular_component"
-        ]
-      },
-      {
-        "id": "UniProtKB:Q13237",
-        "name": "PRKG2 Hsap",
+        "id": "http://identifiers.org/wormbase/WBGene00018181",
+        "name": "mpdu-1 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -182,15 +155,12 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "UniProtKB:Q13976-1",
-        "name": "PRKG1 Hsap",
+        "id": "http://identifiers.org/wormbase/WBGene00002007",
+        "name": "hsp-3 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -199,15 +169,12 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "UniProtKB:Q9Y233",
-        "name": "PDE10A Hsap",
+        "id": "http://identifiers.org/wormbase/WBGene00019760",
+        "name": "calu-1 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -216,103 +183,873 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "CHEBI:17202",
-        "name": "IMP",
+        "id": "http://identifiers.org/wormbase/WBGene00003962",
+        "name": "pdi-1 Cele",
         "type": [
           "named_thing",
           "biological_entity",
           "molecular_entity",
           "chemical_substance",
-          "physical_entity"
-        ]
-      },
-      {
-        "id": "CHEBI:16027",
-        "name": "adenosine 5'-monophosphate",
-        "type": [
-          "named_thing",
-          "biological_entity",
-          "molecular_entity",
-          "chemical_substance",
-          "physical_entity"
-        ]
-      },
-      {
-        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418425",
-        "name": "IRAG:ITPR1",
-        "type": [
-          "named_thing",
-          "biological_entity",
-          "organismal_entity",
-          "molecular_entity",
-          "anatomical_entity",
           "genomic_entity",
           "macromolecular_machine",
-          "macromolecular_complex",
-          "physical_entity",
-          "cellular_component"
+          "gene_or_gene_product",
+          "physical_entity"
         ]
       },
       {
-        "id": "CHEBI:16192",
-        "name": "2'-deoxyguanosine 5'-monophosphate",
+        "id": "http://identifiers.org/wormbase/WBGene00008877",
+        "name": "rtcb-1 Cele",
         "type": [
           "named_thing",
           "biological_entity",
           "molecular_entity",
           "chemical_substance",
-          "physical_entity"
-        ]
-      },
-      {
-        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-30991",
-        "name": "cGMP",
-        "type": [
-          "named_thing",
-          "biological_entity",
-          "molecular_entity",
-          "chemical_substance",
-          "physical_entity"
-        ]
-      },
-      {
-        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418473",
-        "name": "BK channel",
-        "type": [
-          "named_thing",
-          "biological_entity",
-          "organismal_entity",
-          "molecular_entity",
-          "anatomical_entity",
           "genomic_entity",
           "macromolecular_machine",
-          "macromolecular_complex",
-          "physical_entity",
-          "cellular_component"
+          "gene_or_gene_product",
+          "physical_entity"
         ]
       },
       {
-        "id": "GO:0005829",
-        "name": "cytosol",
+        "id": "http://identifiers.org/wormbase/WBGene00008546",
+        "name": "gfat-1 Cele",
         "type": [
           "named_thing",
           "biological_entity",
-          "organismal_entity",
-          "anatomical_entity",
-          "physical_entity",
-          "cellular_component"
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
         ]
       },
       {
-        "id": "GO:0008150",
-        "name": "Biological Process",
+        "id": "GO:0032217",
+        "name": "riboflavin transmembrane transporter activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00020486",
+        "name": "T13C5.6 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0044183",
+        "name": "protein folding chaperone",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00000245",
+        "name": "bca-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00002019",
+        "name": "hsp-16.48 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0005524",
+        "name": "ATP binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0004653",
+        "name": "polypeptide N-acetylgalactosaminyltransferase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00018292",
+        "name": "F41E6.11 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00012757",
+        "name": "Y41C4A.11 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0004615",
+        "name": "phosphomannomutase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0016671",
+        "name": "oxidoreductase activity, acting on a sulfur group of donors, disulfide as acceptor",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0003676",
+        "name": "nucleic acid binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00011535",
+        "name": "T06E4.8 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00017705",
+        "name": "F22E5.6 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00018737",
+        "name": "F53B1.4 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0003756",
+        "name": "protein disulfide isomerase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00011115",
+        "name": "R07E5.7 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0003841",
+        "name": "1-acylglycerol-3-phosphate O-acyltransferase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0000977",
+        "name": "RNA polymerase II transcription regulatory region sequence-specific DNA binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00010470",
+        "name": "cdr-4 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00000683",
+        "name": "col-109 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00016469",
+        "name": "C36B7.6 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00019679",
+        "name": "spcs-3 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0043023",
+        "name": "ribosomal large subunit binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0004382",
+        "name": "guanosine-diphosphatase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0036498",
+        "name": "IRE1-mediated unfolded protein response",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "biological_process",
+          "pathway"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00008148",
+        "name": "C47E12.3 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00001334",
+        "name": "ero-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00003963",
+        "name": "pdi-2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00013740",
+        "name": "hut-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0061630",
+        "name": "ubiquitin protein ligase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00015057",
+        "name": "gad-3 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00001425",
+        "name": "fis-2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0016887",
+        "name": "ATPase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0004656",
+        "name": "procollagen-proline 4-dioxygenase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00002018",
+        "name": "hsp-16.41 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00020781",
+        "name": "T24H7.2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0004571",
+        "name": "mannosyl-oligosaccharide 1,2-alpha-mannosidase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0003729",
+        "name": "mRNA binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00021626",
+        "name": "rft-2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0048763",
+        "name": "calcium-induced calcium release activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00010670",
+        "name": "tmed-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00004768",
+        "name": "sel-11 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0019904",
+        "name": "protein domain specific binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00002026",
+        "name": "hsp-70 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00000664",
+        "name": "col-89 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00001630",
+        "name": "gly-5 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00009178",
+        "name": "uggt-2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00021844",
+        "name": "sec-11 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00010496",
+        "name": "sec-12 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0004867",
+        "name": "serine-type endopeptidase inhibitor activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00002017",
+        "name": "hsp-16.11 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0008446",
+        "name": "GDP-mannose 4,6-dehydratase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00001046",
+        "name": "dnj-28 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00015752",
+        "name": "C14B9.2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00012766",
+        "name": "Y41E3.8 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0004579",
+        "name": "dolichyl-diphosphooligosaccharide-protein glycotransferase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0005459",
+        "name": "UDP-galactose transmembrane transporter activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00020038",
+        "name": "R12E2.13 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00001099",
+        "name": "dsc-4 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00006059",
+        "name": "stc-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00018853",
+        "name": "sec-22 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0005515",
+        "name": "protein binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0000166",
+        "name": "nucleotide binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:1903895",
+        "name": "negative regulation of IRE1-mediated unfolded protein response",
         "type": [
           "named_thing",
           "biological_entity",
@@ -322,8 +1059,8 @@
         ]
       },
       {
-        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418560",
-        "name": "cGMP phosphodiesterases",
+        "id": "http://identifiers.org/wormbase/WBGene00007992",
+        "name": "fipr-24 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -332,14 +1069,12 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "UniProtKB:O00408",
-        "name": "PDE2A Hsap",
+        "id": "http://identifiers.org/wormbase/WBGene00006708",
+        "name": "ubc-13 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -348,39 +1083,26 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "name": "Molecular Event",
-        "type": [
-          "named_thing",
-          "occurrent"
-        ]
-      },
-      {
-        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418495",
-        "name": "BK channel, phosphorylated",
+        "id": "http://identifiers.org/wormbase/WBGene00000843",
+        "name": "cup-2 Cele",
         "type": [
           "named_thing",
           "biological_entity",
-          "organismal_entity",
           "molecular_entity",
-          "anatomical_entity",
+          "chemical_substance",
           "genomic_entity",
           "macromolecular_machine",
-          "macromolecular_complex",
-          "physical_entity",
-          "cellular_component"
+          "gene_or_gene_product",
+          "physical_entity"
         ]
       },
       {
-        "id": "GO:0047555",
-        "name": "3',5'-cyclic-GMP phosphodiesterase activity",
+        "id": "GO:0019706",
+        "name": "protein-cysteine S-palmitoyltransferase activity",
         "type": [
           "named_thing",
           "biological_entity",
@@ -390,46 +1112,19 @@
         ]
       },
       {
-        "id": "CHEBI:17713",
-        "name": "2'-deoxyadenosine 5'-monophosphate",
+        "id": "GO:0016787",
+        "name": "hydrolase activity",
         "type": [
           "named_thing",
           "biological_entity",
-          "molecular_entity",
-          "chemical_substance",
-          "physical_entity"
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
         ]
       },
       {
-        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-113578",
-        "name": "GMP",
-        "type": [
-          "named_thing",
-          "biological_entity",
-          "molecular_entity",
-          "chemical_substance",
-          "physical_entity"
-        ]
-      },
-      {
-        "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418378",
-        "name": "Activated cGMP-dependent protein kinase (PKGs)",
-        "type": [
-          "named_thing",
-          "biological_entity",
-          "organismal_entity",
-          "molecular_entity",
-          "anatomical_entity",
-          "genomic_entity",
-          "macromolecular_machine",
-          "macromolecular_complex",
-          "physical_entity",
-          "cellular_component"
-        ]
-      },
-      {
-        "id": "UniProtKB:P54750",
-        "name": "PDE1A Hsap",
+        "id": "http://identifiers.org/wormbase/WBGene00015295",
+        "name": "acl-12 Cele",
         "type": [
           "named_thing",
           "biological_entity",
@@ -438,270 +1133,2453 @@
           "genomic_entity",
           "macromolecular_machine",
           "gene_or_gene_product",
-          "gene",
-          "gene_product",
-          "protein",
           "physical_entity"
         ]
       },
       {
-        "id": "CHEBI:16356",
-        "name": "3',5'-cyclic GMP",
+        "id": "GO:0004989",
+        "name": "octopamine receptor activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00016583",
+        "name": "tag-335 Cele",
         "type": [
           "named_thing",
           "biological_entity",
           "molecular_entity",
           "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
           "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00006801",
+        "name": "unc-68 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00011481",
+        "name": "imp-2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0005509",
+        "name": "calcium ion binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0004871",
+        "type": [
+          "named_thing"
+        ]
+      },
+      {
+        "id": "GO:0001228",
+        "name": "DNA-binding transcription activator activity, RNA polymerase II-specific",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00000802",
+        "name": "crt-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00011529",
+        "name": "T06D8.9 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00013765",
+        "name": "cdkr-3 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0005507",
+        "name": "copper ion binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00007297",
+        "name": "C04F12.1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0051861",
+        "name": "glycolipid binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0005483",
+        "name": "soluble NSF attachment protein activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0030544",
+        "name": "Hsp70 protein binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00011771",
+        "name": "T14G8.3 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00020472",
+        "name": "lips-11 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00009112",
+        "name": "tag-353 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00017217",
+        "name": "F07F6.4 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00018259",
+        "name": "F41B4.3 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00001331",
+        "name": "erd-2.1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00013957",
+        "name": "sre-23 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00018604",
+        "name": "uggt-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00014249",
+        "name": "ZK1307.8 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0004521",
+        "name": "endoribonuclease activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00009925",
+        "name": "F52B11.2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0008233",
+        "name": "peptidase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00009239",
+        "name": "irld-6 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00016395",
+        "name": "spcs-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00004509",
+        "name": "rrf-2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0036499",
+        "name": "PERK-mediated unfolded protein response",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "biological_process",
+          "pathway"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00010040",
+        "name": "F54C8.7 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00010500",
+        "name": "K02B12.7 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0042500",
+        "name": "aspartic endopeptidase activity, intramembrane cleaving",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00000567",
+        "name": "cnx-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00015660",
+        "name": "catp-3 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0004475",
+        "name": "mannose-1-phosphate guanylyltransferase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00022570",
+        "name": "sdz-35 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00022702",
+        "name": "cutc-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00019444",
+        "name": "frpr-11 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0003972",
+        "name": "RNA ligase (ATP) activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00004759",
+        "name": "sel-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00015168",
+        "name": "pdi-6 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00018152",
+        "name": "acs-4 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00021291",
+        "name": "clec-121 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0004103",
+        "name": "choline kinase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00002271",
+        "name": "lec-8 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00017733",
+        "name": "ubxn-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00000514",
+        "name": "ckb-4 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00002015",
+        "name": "hsp-16.1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00002020",
+        "name": "hsp-16.49 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00000190",
+        "name": "arf-1.1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0004176",
+        "name": "ATP-dependent peptidase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00000266",
+        "name": "bre-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0005484",
+        "name": "SNAP receptor activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00003818",
+        "name": "nsf-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00004736",
+        "name": "sca-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0005388",
+        "name": "calcium transmembrane transporter activity, phosphorylative mechanism",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00017016",
+        "name": "snap-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00019677",
+        "name": "K12H4.2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00012606",
+        "name": "Y38F1A.2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0015036",
+        "name": "disulfide oxidoreductase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00016391",
+        "name": "lonp-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00004804",
+        "name": "skn-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00009783",
+        "name": "rer-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00002070",
+        "name": "ile-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0051082",
+        "name": "unfolded protein binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00008940",
+        "name": "F18H3.4 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0005096",
+        "name": "GTPase activator activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00008053",
+        "name": "cdc-48.2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00019344",
+        "name": "dhhc-10 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0004854",
+        "name": "xanthine dehydrogenase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00001749",
+        "name": "gst-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00004949",
+        "name": "sox-2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00000512",
+        "name": "ckb-2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00002783",
+        "name": "let-607 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00006959",
+        "name": "xbp-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00021883",
+        "name": "Y54G2A.18 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0120013",
+        "name": "lipid transfer activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "GO:0004842",
+        "name": "ubiquitin-protein transferase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00001152",
+        "name": "ech-3 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0003974",
+        "name": "UDP-N-acetylglucosamine 4-epimerase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00019813",
+        "name": "ger-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00005648",
+        "name": "srp-7 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00011638",
+        "name": "ostb-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00006411",
+        "name": "octr-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00017244",
+        "name": "apy-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00003766",
+        "name": "nlp-28 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0050577",
+        "name": "GDP-L-fucose synthase activity",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00009784",
+        "name": "F46C5.9 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:1903894",
+        "name": "regulation of IRE1-mediated unfolded protein response",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "biological_process"
+        ]
+      },
+      {
+        "id": "GO:0046923",
+        "name": "ER retention sequence binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00002147",
+        "name": "ire-1 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00020109",
+        "name": "R151.6 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0003674",
+        "name": "Molecular Function",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00001077",
+        "name": "dpy-18 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0030246",
+        "name": "carbohydrate binding",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00001045",
+        "name": "dnj-27 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "http://identifiers.org/wormbase/WBGene00012550",
+        "name": "spcs-2 Cele",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "molecular_entity",
+          "chemical_substance",
+          "genomic_entity",
+          "macromolecular_machine",
+          "gene_or_gene_product",
+          "physical_entity"
+        ]
+      },
+      {
+        "id": "GO:0042302",
+        "name": "structural constituent of cuticle",
+        "type": [
+          "named_thing",
+          "biological_entity",
+          "occurrent",
+          "biological_process_or_activity",
+          "molecular_activity"
         ]
       }
     ],
     "edges": [
       {
         "id": "3f81eb24f85ea74c1d9577d8460b03d01929d4d79d5b90797dc73be637be443e",
-        "source_id": "GO:0004692",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418379",
+        "source_id": "GO:0003824",
+        "target_id": "http://identifiers.org/wormbase/WBGene00018269",
         "type": "enabled_by"
       },
       {
-        "id": "8cdd410a0d063b7219f7cba8ffbc939097e860be8b4e8bce62218aaf5c0d57a1",
-        "source_id": "GO:0047555",
-        "target_id": "GO:0008150",
+        "id": "d1e7cb9bb0e27bf9e53cdc323b69acf8a0dcca9bf9d15d1b6dd644e4ba5676cc",
+        "source_id": "GO:0004475",
+        "target_id": "GO:0036498",
         "type": "part_of"
       },
       {
-        "id": "712fa839d36e8296f84d58bf15b93dfe9415dc95aa32421517913b04ac1c5ff2",
-        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "target_id": "UniProtKB:Q13976-1",
-        "type": "has_input"
-      },
-      {
-        "id": "ceb30bf628834b0a56f85dfd9b7d83995bd16d92bcb91294b8456b5b777e6712",
-        "source_id": "GO:0004692",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418495",
-        "type": "has_output"
-      },
-      {
-        "id": "ea057b4949f772f95aff3897785adb588e1c2e961fa8aca12cd1707554dbc4c2",
-        "source_id": "GO:0004692",
-        "target_id": "GO:0032991",
-        "type": "has_input"
-      },
-      {
-        "id": "57c4b7b29b1e5e9a0a6676e8e24062864fe51a0aeff640e13d255b419624fda0",
-        "source_id": "GO:0004692",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418379",
-        "type": "enabled_by"
-      },
-      {
-        "id": "7f9615bc69883f600eb9778e47519dabc01e4253fe0edf9b9e60edd96c4b951d",
-        "source_id": "GO:0047555",
-        "target_id": "CHEBI:17345",
-        "type": "has_output"
-      },
-      {
-        "id": "09daadc14be9c275a81508fed983af977b052678c3c56ba16ed11306dba12c49",
-        "source_id": "GO:0004692",
-        "target_id": "GO:0005829",
-        "type": "occurs_in"
-      },
-      {
-        "id": "eecb51e46a89add2dc7af8e4872740c74d5369505585a81b0f177df81a016334",
-        "source_id": "GO:0047555",
-        "target_id": "UniProtKB:O76074",
-        "type": "enabled_by"
-      },
-      {
-        "id": "33cd31ea936120b088df95d554a62b70ad395483e3e64a9de3e304f4176dd122",
-        "source_id": "GO:0004692",
-        "target_id": "GO:0008150",
+        "id": "3007be3a3be9600724cd23fa1bee5dd302bfcb4efb278daca3c01597768a7174",
+        "source_id": "GO:0003974",
+        "target_id": "GO:0036498",
         "type": "part_of"
       },
       {
-        "id": "abd7ee904f6697d7e32410d8db063aa801830d37227b726f94420153d8c05847",
-        "source_id": "GO:0047555",
-        "target_id": "CHEBI:17202",
-        "type": "has_output"
-      },
-      {
-        "id": "121d08108f69cfb0a6a246c00d82d38683d384663eae5ca1a4ee5c169e0a4206",
-        "source_id": "GO:0047555",
-        "target_id": "UniProtKB:Q9Y233",
+        "id": "c1c127e75ec1b65d11fae958b0bfdbc5277f90d757e87a7952d39e40c77f67d5",
+        "source_id": "GO:0043023",
+        "target_id": "http://identifiers.org/wormbase/WBGene00019677",
         "type": "enabled_by"
       },
       {
-        "id": "b77405853639d54f4eac5dd78893b8a6d06a5a77dd396639da560f3fe81e830c",
-        "source_id": "GO:0047555",
-        "target_id": "UniProtKB:P54750",
+        "id": "bcd466860e0622f67bde9ad6782a952e642351c1d9ceb45d7a555bbf3a5a1ef6",
+        "source_id": "GO:0005515",
+        "target_id": "http://identifiers.org/wormbase/WBGene00000843",
         "type": "enabled_by"
       },
       {
-        "id": "0ddafaa82db5d073dfa68af0178b04eb8907f51307b2f3e7606d40d9c36c8526",
-        "source_id": "GO:0047555",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-113578",
-        "type": "has_output"
-      },
-      {
-        "id": "f8753901179e75ff6bc05c6973f67fa0f4fc6062f42eb757371b071bba7ee51f",
-        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418378",
-        "type": "has_output"
-      },
-      {
-        "id": "ff2a6e187b88cfbec19728d67aea42ffee8b4d8a95a2cb510959081a28da3035",
-        "source_id": "GO:0004692",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418425",
-        "type": "has_input"
-      },
-      {
-        "id": "564eef1256b91e64f42eb4a20eefd98b59bf3eb8e0b50d2b8db3f21a8d950108",
-        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "target_id": "UniProtKB:Q13237",
-        "type": "has_input"
-      },
-      {
-        "id": "15bbb59bf793e0776af5cf5b574dda6a3556f46f438eee8d4acad1198e93b714",
-        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "target_id": "GO:0032991",
-        "type": "has_output"
-      },
-      {
-        "id": "3cdbc5a064b7cfe7c55c106de6d4265ce7b1b4578ff0546fab8aeeec8127a647",
-        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-30991",
-        "type": "has_input"
-      },
-      {
-        "id": "0027e8717895162fa3b3df9c6919b22de37497dc5e4be79389420baa47cba0e8",
-        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "target_id": "GO:0004692",
-        "type": "precedes"
-      },
-      {
-        "id": "1858bec79c80da05208112f07c88dca1ad809d53c2910a2f4f678472f9b8bc4b",
-        "source_id": "GO:0047555",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418560",
+        "id": "96d75df138a88a6bfc856f65d43b684fb71b80742f51f53d81bc6aeb820024e2",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00016469",
         "type": "enabled_by"
       },
       {
-        "id": "2c0dd2c925de9b7c0d5bd461650dcd09d9c8665f33cc23278e043c7296ead3b3",
-        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "target_id": "CHEBI:16356",
-        "type": "has_input"
-      },
-      {
-        "id": "51bd41c31712663de9600ee462dec242db2eeeb6f759dc8d342c78a648bd78f1",
-        "source_id": "GO:0047555",
-        "target_id": "CHEBI:16192",
-        "type": "has_output"
-      },
-      {
-        "id": "ebd96776e9e6914e08b2753cad1c6d557df44fccc745dd5b06435006611a55c7",
-        "source_id": "GO:0047555",
-        "target_id": "GO:0005829",
-        "type": "occurs_in"
-      },
-      {
-        "id": "deadb524325a481220b9d518c039a27d1c487dacbce4214844cb1376165bc5fe",
-        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "target_id": "GO:0005829",
-        "type": "occurs_in"
-      },
-      {
-        "id": "552bc42903a0b3d204dcfa690e958461d5329a9688870524b390b2e32d8fef1a",
-        "source_id": "GO:0004692",
-        "target_id": "GO:0032991",
-        "type": "has_output"
-      },
-      {
-        "id": "f13543b24cd556929bbd0994b5a2070e20e5681b6ff0a5d313a474856c0e6c22",
-        "source_id": "GO:0004692",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418473",
-        "type": "has_input"
-      },
-      {
-        "id": "6e5030ca5bb382b8838927b2f14e6cae1996f3105fec0c232fd1205f0b456451",
-        "source_id": "GO:0004692",
-        "target_id": "UniProtKB:Q13976-1",
+        "id": "a014f6cd93fa49f637c4174afc89167a43a3b84ea3d175708ccf13eedfb99277",
+        "source_id": "GO:0003824",
+        "target_id": "http://identifiers.org/wormbase/WBGene00001152",
         "type": "enabled_by"
       },
       {
-        "id": "d94cb6b70a60bb99ec5c47f3540b34640308b73c68efd88b57e34db2ccd3f89e",
-        "source_id": "GO:0004692",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418432",
-        "type": "has_output"
+        "id": "1ae4fdfe828b0447693ed4e9408713df11258ca2b66a3cdd85a4c1082f47447e",
+        "source_id": "BFO:0000015",
+        "target_id": "http://identifiers.org/wormbase/WBGene00010670",
+        "type": "enabled_by"
       },
       {
-        "id": "37861a07968354eb9087e5b7bb93f2f6818966d6b68376a1a352dc69cf545193",
-        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "target_id": "GO:0008150",
+        "id": "befc65bb83c5a55ce2b47645c85ac0f3b5d66f0da04ba72d65b72ccd2af62002",
+        "source_id": "GO:0004871",
+        "target_id": "http://identifiers.org/wormbase/WBGene00010670",
+        "type": "enabled_by"
+      },
+      {
+        "id": "856774e7f47defd1f12d9d034e4bd9ad6143e53d1687c3e82e3f7899309b9618",
+        "source_id": "GO:0004615",
+        "target_id": "http://identifiers.org/wormbase/WBGene00009925",
+        "type": "enabled_by"
+      },
+      {
+        "id": "412d6575c52af39455312de46ab712d3e32796004d2965b5b3f57f565ac6ca83",
+        "source_id": "GO:0004579",
+        "target_id": "http://identifiers.org/wormbase/WBGene00011638",
+        "type": "enabled_by"
+      },
+      {
+        "id": "2b49718d456f6665c705ad00b47b20ec8a9d7d0f6f36467f2982a522d6c82259",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00014249",
+        "type": "enabled_by"
+      },
+      {
+        "id": "106f31b54cc77cdc8ecb13e05ffe055b8d898bffc8c484d9c9ad29f60fa6ed09",
+        "source_id": "GO:0003824",
+        "target_id": "http://identifiers.org/wormbase/WBGene00018152",
+        "type": "enabled_by"
+      },
+      {
+        "id": "1091a2fa749b5fdc03b96d59095accb47b3bb223b75221ab7511e85ea6a4eff8",
+        "source_id": "GO:0004854",
+        "target_id": "GO:0036498",
         "type": "part_of"
       },
       {
-        "id": "5ac73714648270f90e8d96e8fed8faf8bb84e15cf6fb3addc083d57f6af43a19",
-        "source_id": "GO:0047555",
-        "target_id": "CHEBI:28806",
-        "type": "has_output"
+        "id": "97d32ef8747b7f171d557421086afa11c302901dd62dad5697d80a57d9221669",
+        "source_id": "GO:0004854",
+        "target_id": "http://identifiers.org/wormbase/WBGene00015057",
+        "type": "enabled_by"
       },
       {
-        "id": "715c7e6c82def354ec4baf2bbc4176b7382f79109b6beabe94aea4da64889541",
-        "source_id": "GO:0047555",
-        "target_id": "CHEBI:16356",
+        "id": "dacf3dcf5592794d1e890533557b7cf176973ce82322a188d997eb36d4bb219b",
+        "source_id": "GO:0003674",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "b1ef68eef07a2a9559a686c30d8cd9908619928c6809985ec1355efa0abbd305",
+        "source_id": "GO:0004615",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "d546b0f9a25872dd28f7c37ceb807ca74bfb4f78cb09fb926840b2eb4c6b17dd",
+        "source_id": "GO:0030246",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002070",
+        "type": "enabled_by"
+      },
+      {
+        "id": "33bfe8ef44357740bba3ce94a9d77c0a11b93b096487495770fe6102401e36f8",
+        "source_id": "GO:0005507",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "6468a47120a67d1705aff8095134107b2c1adf332de06e3139fabc7d800293ba",
+        "source_id": "GO:0050577",
+        "target_id": "http://identifiers.org/wormbase/WBGene00019813",
+        "type": "enabled_by"
+      },
+      {
+        "id": "50c72945523cdceb12de7da77ccadd9fecd7de8ceb940e02556d17ee6b11655c",
+        "source_id": "GO:0044183",
+        "target_id": "http://identifiers.org/wormbase/WBGene00020781",
+        "type": "enabled_by"
+      },
+      {
+        "id": "8304467bf75a46d29e7d45689b1cf425dc7378a15d488375e831442664fd76a0",
+        "source_id": "GO:0004871",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "dd07eb02ec268f33038855523f492ec959281da621f2c81452d11052b7741357",
+        "source_id": "GO:0005484",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "7413f12ca9d2edb203c432abffcb41accfaf70b6ba29eb0c6f7acebb4931ec72",
+        "source_id": "GO:0051082",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "b18bfb87f338c502f9250a7064e53b2611b4f075f493b37c893f608bbc0d0613",
+        "source_id": "GO:0051082",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002018",
+        "type": "enabled_by"
+      },
+      {
+        "id": "be2742dc3329f588732b922f9b380ece0b9c9c7cdf34293e776ba89e1a3fbed7",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00015660",
+        "type": "enabled_by"
+      },
+      {
+        "id": "3f6734badc0f90c442beee3cfbd6572a7fcb52d75059fbc06696d145be00b8ec",
+        "source_id": "GO:0003972",
+        "target_id": "http://identifiers.org/wormbase/WBGene00006959",
         "type": "has_input"
       },
       {
-        "id": "3774b37aea341ed87af73e12c86e503b1f204808639f519021872eada603fcbb",
-        "source_id": "GO:0047555",
-        "target_id": "UniProtKB:Q9HCR9",
+        "id": "78a92fd4aa31d61088e5358216d35102d61db74d3ed306fad05919c51fb76346",
+        "source_id": "GO:0008233",
+        "target_id": "http://identifiers.org/wormbase/WBGene00021844",
         "type": "enabled_by"
       },
       {
-        "id": "02ac9d81eb3235142da9bd3b3baf099dca76c91d0b76e8c9abdbb60a1a46f23a",
-        "source_id": "GO:0004692",
-        "target_id": "UniProtKB:Q13237",
+        "id": "2584f4b8e622ae1a7f4abaf48e988b4d16e621f727cd83a0bf522ce66176d722",
+        "source_id": "GO:0005388",
+        "target_id": "http://identifiers.org/wormbase/WBGene00004736",
         "type": "enabled_by"
       },
       {
-        "id": "3d9483a81c93de9dc2a0fe0a29e59da1e2859a750a2cdd8bb39b9f1e165cc5b5",
-        "source_id": "GO:0047555",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-30991",
+        "id": "c6ac782393e2b986c5412d2b900ceca96a962c28bf539165dc28f38675ff9593",
+        "source_id": "GO:0003729",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "a049291184cee140385ae96b7e622e67ea28f4f0b816ce0e131be4482337e381",
+        "source_id": "GO:0005524",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "e0fd1e5b093265aba32aac6d5f6d72495efff16f69905617e473d3458b50850c",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00001425",
+        "type": "enabled_by"
+      },
+      {
+        "id": "2d5f3abdcfbca1b5692b9fdd3eaee8f43247387ef54ab89465bd9b20d0cde196",
+        "source_id": "GO:0035673",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "22b505ff1070635d53b04a0d79dd3b61b596a017d5cf1b51f463f5a979a64229",
+        "source_id": "GO:0008233",
+        "target_id": "http://identifiers.org/wormbase/WBGene00016395",
+        "type": "enabled_by"
+      },
+      {
+        "id": "1f495e7fd882e0f9bbf3e83884e2e384be2d0d6666d548b7b25a5f64ac617071",
+        "source_id": "GO:0004842",
+        "target_id": "http://identifiers.org/wormbase/WBGene00004759",
+        "type": "enabled_by"
+      },
+      {
+        "id": "2489995742bf53d8d3e0f182d67b2b2d37f9414b6579565b92a16c87fccfbd08",
+        "source_id": "GO:0005459",
+        "target_id": "http://identifiers.org/wormbase/WBGene00013740",
+        "type": "enabled_by"
+      },
+      {
+        "id": "938e75eb43f2c9404852edb774449822d55a73b2fcf14cdec1250c7ed91bbd0b",
+        "source_id": "GO:0003676",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "23b00e2bb09e289ee137a52f7ddb183cf8096934d03c0609104261b44208cd25",
+        "source_id": "GO:0008446",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "c753f36657c2dfb6c888d383a0db110322865f3954b1ae604a7d4450423973d9",
+        "source_id": "GO:0005515",
+        "target_id": "http://identifiers.org/wormbase/WBGene00008546",
+        "type": "enabled_by"
+      },
+      {
+        "id": "e80f56cadbbf67cf918e9cdd63e08c636600b7e65ad2b465ce6ee2bbcd5f4bc4",
+        "source_id": "GO:0003756",
+        "target_id": "http://identifiers.org/wormbase/WBGene00003962",
+        "type": "enabled_by"
+      },
+      {
+        "id": "14e299fc28a5560dfc43e82ed8d8fe784ffb6ae48072a1832f0ddb2fa1984328",
+        "source_id": "GO:0004867",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "248a111decd1e9e14d9f96c36cc7427c887f19aa6487e6812aad92e969b8fa32",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00003766",
+        "type": "enabled_by"
+      },
+      {
+        "id": "fdad2c5e1d14e94502c04899b6b5f4204a22b2736b848fe8a806bd10dcef1a5d",
+        "source_id": "GO:0051861",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002271",
+        "type": "enabled_by"
+      },
+      {
+        "id": "f04716bce46c060dbfacb584180d0699dcca59af9b405b2fcc2d2a8a49ec34bc",
+        "source_id": "GO:0004867",
+        "target_id": "http://identifiers.org/wormbase/WBGene00005648",
+        "type": "enabled_by"
+      },
+      {
+        "id": "be115adf3a75eb9cc375ea21749a077c1578d1bee1a8b2ab71314e3227669294",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00009784",
+        "type": "enabled_by"
+      },
+      {
+        "id": "8a7ac6402d8185ea344c64bf86e109380b5ac3a8031395284769ece44fa0d906",
+        "source_id": "GO:0005483",
+        "target_id": "http://identifiers.org/wormbase/WBGene00017016",
+        "type": "enabled_by"
+      },
+      {
+        "id": "7cfa2ac63c693783afa5fe0d098e73043dc89934ebf3fd7f08bfb5236a853509",
+        "source_id": "GO:0003972",
+        "target_id": "http://identifiers.org/wormbase/WBGene00008877",
+        "type": "enabled_by"
+      },
+      {
+        "id": "1252acf24c3445ec9b6f6d85377851aecb6a5296ae721cb6cccd7bb980347ebb",
+        "source_id": "GO:0003756",
+        "target_id": "http://identifiers.org/wormbase/WBGene00015168",
+        "type": "enabled_by"
+      },
+      {
+        "id": "d3456aa0909917a98a316a6c1fe205867c01563b6f99957de44f585c8427127b",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00011529",
+        "type": "enabled_by"
+      },
+      {
+        "id": "57a1f6740d2d68bfd20669a563618ce653d0afb22ed06f457001619774e2855d",
+        "source_id": "GO:0030246",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "063b533685c9392cf95b081d288dc26c761c03288126f0b0c286f6665e744324",
+        "source_id": "GO:0032217",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "24c899c1f61a89e08aec95978278d46a6da716d3d0b46a06d446c09c477f98dc",
+        "source_id": "GO:0004989",
+        "target_id": "http://identifiers.org/wormbase/WBGene00006411",
+        "type": "enabled_by"
+      },
+      {
+        "id": "8e4354dd451240c482c0bed9eea1ed1671c6050ea38f14c76c9050860f44f974",
+        "source_id": "GO:0042500",
+        "target_id": "http://identifiers.org/wormbase/WBGene00011481",
+        "type": "enabled_by"
+      },
+      {
+        "id": "9b126657c696a91892b4781a8b25b78291b4f77b4fdd803991fc819a09d7d49c",
+        "source_id": "GO:0008233",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "79bdb099d9ff41a2f0e1a464c29400139d54c145675de26e614fa11105d5b320",
+        "source_id": "GO:0016887",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002007",
+        "type": "enabled_by"
+      },
+      {
+        "id": "37800acd1228eb15cada1b33e9ba82ca432ba64f0ed350acd646948c2b73defd",
+        "source_id": "GO:0003824",
+        "target_id": "http://identifiers.org/wormbase/WBGene00018269",
+        "type": "enabled_by"
+      },
+      {
+        "id": "7dfd551c11b3e7db4cc9b415466e9128f7cc5ff27eff6053a6e31e2537e694bc",
+        "source_id": "GO:0016887",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "5683c399df231fd81fa5d209c34375e861e3f5a186ca1292c9b18789299885bd",
+        "source_id": "GO:0004653",
+        "target_id": "http://identifiers.org/wormbase/WBGene00001630",
+        "type": "enabled_by"
+      },
+      {
+        "id": "27cfbe7c555c3ea0d4b949b67aa744845ea08e782ae9b2dbbc0f1b79b3708c6e",
+        "source_id": "GO:0000977",
+        "target_id": "http://identifiers.org/wormbase/WBGene00006959",
+        "type": "enabled_by"
+      },
+      {
+        "id": "cc63a044f4e3190761569d97c804e5b75a66d5deca7920e4b33611a3933803d3",
+        "source_id": "GO:0005524",
+        "target_id": "http://identifiers.org/wormbase/WBGene00006059",
+        "type": "enabled_by"
+      },
+      {
+        "id": "2c84069ce4b6a3a3d5d17d8491a985649cad05be49e7e8eecc7da829d55d24cb",
+        "source_id": "GO:0004989",
+        "target_id": "GO:1903894",
+        "type": "part_of"
+      },
+      {
+        "id": "9c389b6a8f849af88fff98511fbab34d6c9ec13ab89503b8856e9869e56e951f",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00019444",
+        "type": "enabled_by"
+      },
+      {
+        "id": "01b57a22eca3a0ee0d986939df94cceac2f4d87261b7ad829b0b8a43f1d1782d",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00017705",
+        "type": "enabled_by"
+      },
+      {
+        "id": "186d802f8d3ba4f87c726370f64a3dae53c1afce6f4786a86c90fa42fd3baca5",
+        "source_id": "GO:0004382",
+        "target_id": "http://identifiers.org/wormbase/WBGene00017244",
+        "type": "enabled_by"
+      },
+      {
+        "id": "36ca28791400f5c7b11db5193829691290941ac107065a124dd2d2d97fe2a58d",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00017733",
+        "type": "enabled_by"
+      },
+      {
+        "id": "6de5dc4278efae2d16470934ecbea1ab4694e4868178edfcf0c0907ae06ac9d7",
+        "source_id": "GO:0030544",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "335332aad2fa8e9673e72e0febd8d52dc96469d02a88c574379fd3aa9068acb3",
+        "source_id": "GO:0003674",
+        "target_id": "GO:0036499",
+        "type": "causes"
+      },
+      {
+        "id": "2e304df268b5a745931224b69849543872f06dcbc44f4c46709012f719eea105",
+        "source_id": "GO:0004842",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "df78ed714413d6c8e1ab3b01ee9bd7b83f383e483b35982eb2e6640a95dfadde",
+        "source_id": "GO:0030246",
+        "target_id": "http://identifiers.org/wormbase/WBGene00021291",
+        "type": "enabled_by"
+      },
+      {
+        "id": "031b7267765655d92a8a1811b78aea44a1a39db8eb0b2dc517992c1e5105ce7a",
+        "source_id": "GO:0000166",
+        "target_id": "http://identifiers.org/wormbase/WBGene00000190",
+        "type": "enabled_by"
+      },
+      {
+        "id": "3182dfcb908d331c3239a08809fe57dfd32101143b657300308dca73a5ab2ced",
+        "source_id": "BFO:0000015",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "7158ee1a677c264baa03e6dbc287c57857e4167b34afc1937c6ab80315fbb853",
+        "source_id": "GO:0061630",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "219f020591d81c39b9062b02d252c8e343f98e6bd4d9557bfad5d04ef76c863e",
+        "source_id": "GO:0051082",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002015",
+        "type": "enabled_by"
+      },
+      {
+        "id": "80618ca8da8a79943e47ebec974c58dde0c845969b328a5dbacce1e70929654c",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00009783",
+        "type": "enabled_by"
+      },
+      {
+        "id": "57211c93d410a02e26ebf1e5e14e0fed8821c2b75aa89787dd71d14caba4715b",
+        "source_id": "GO:0004103",
+        "target_id": "http://identifiers.org/wormbase/WBGene00000512",
+        "type": "enabled_by"
+      },
+      {
+        "id": "04cf098db643adf7b507685f2220f55ad9eae6fd2a1a7c23cf23da3da719a9bd",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00020038",
+        "type": "enabled_by"
+      },
+      {
+        "id": "1fbd8e9b03c3c1f5e7e0d87f341e492719d4463a5f9798f566e580acbbdb8438",
+        "source_id": "GO:0005515",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "8a4d935ab5942f5dd348ddeefcb473dde9fdf32c91cf92188242eed439e5d5c0",
+        "source_id": "GO:0004571",
+        "target_id": "http://identifiers.org/wormbase/WBGene00008148",
+        "type": "enabled_by"
+      },
+      {
+        "id": "1e33a3807c8a1606ebe8be215da995bb9621428ce9a5b8839848fe79cabe3cf7",
+        "source_id": "GO:0005459",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "0ddde54c16636a3e2e7c45d4bb36ae2a66100070149dc9dbdf2bf6bd9632f388",
+        "source_id": "GO:0015036",
+        "target_id": "http://identifiers.org/wormbase/WBGene00001045",
+        "type": "enabled_by"
+      },
+      {
+        "id": "09e200ce2c84c347b4570a233598786b6a22c1b346cbfe2b48d1090cb145f895",
+        "source_id": "GO:0005096",
+        "target_id": "http://identifiers.org/wormbase/WBGene00017217",
+        "type": "enabled_by"
+      },
+      {
+        "id": "31d8eb90040e6d8428ea338ef5232a151c89dac703bad2e5c53949b2fa7da611",
+        "source_id": "GO:0051082",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002020",
+        "type": "enabled_by"
+      },
+      {
+        "id": "5b4087a0a35446abc39fa7c679decdc1fe62ee7dd99b6017fa2a22abf94da5bc",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00012757",
+        "type": "enabled_by"
+      },
+      {
+        "id": "dbfafc581f022800e69acf4d210d500e21378b47c30e4a2fdfa10dc91c14d9a1",
+        "source_id": "GO:0003980",
+        "target_id": "http://identifiers.org/wormbase/WBGene00018604",
+        "type": "enabled_by"
+      },
+      {
+        "id": "f71185bbe9157b069096f3f44902bd2d614ae41bdbe0f0b91c2dc16e1092f762",
+        "source_id": "GO:0050577",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "138c66442baa3a8398c9ee94a16bfb409560a11c1d5cbcb981d8d95f30ffe9b0",
+        "source_id": "GO:0003756",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "fcab58e2d826fd7b1018aa576e9f06064cd56a46b87423ebd6d4022e6f379025",
+        "source_id": "GO:0008233",
+        "target_id": "http://identifiers.org/wormbase/WBGene00019679",
+        "type": "enabled_by"
+      },
+      {
+        "id": "a2c355fffaf6ca18425c9a2158141b17969f3cb2616a8ff5bb214a058a3b8548",
+        "source_id": "GO:0061630",
+        "target_id": "http://identifiers.org/wormbase/WBGene00004768",
+        "type": "enabled_by"
+      },
+      {
+        "id": "f527adcf1bc1ba821b42856f90512d52038b9be8bf33db5023743a896f505127",
+        "source_id": "GO:0000166",
+        "target_id": "http://identifiers.org/wormbase/WBGene00021868",
+        "type": "enabled_by"
+      },
+      {
+        "id": "3471d763310b1aec24c46a00ca2df449fba3c608023d6788e21ebd70d6e00521",
+        "source_id": "GO:0003841",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "d7f42480bb8d4844428ecbba05eb6481822265a3fcc7089d98e5ac7e71eed207",
+        "source_id": "GO:0120013",
+        "target_id": "http://identifiers.org/wormbase/WBGene00001099",
+        "type": "enabled_by"
+      },
+      {
+        "id": "4b2d79c1c6debd5c0c71c1ee7fcbd4bf08589b584fc0afd8fabbb225498af8b1",
+        "source_id": "GO:0003756",
+        "target_id": "GO:1903895",
+        "type": "part_of"
+      },
+      {
+        "id": "1d9b2f817a62dde70e27b9e3eab332af73f37bd76b2cb853269032cbf271a500",
+        "source_id": "GO:0048763",
+        "target_id": "http://identifiers.org/wormbase/WBGene00006801",
+        "type": "enabled_by"
+      },
+      {
+        "id": "f5d4f015ffa8272a1dceb6c78eef40e50d095f2f4bbf7cd4649d6ffa0ab394f0",
+        "source_id": "GO:0005483",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "f25a6995e78b41c970cee2e48451a58f43b1cddf5ffa0f50e36f302da65965d4",
+        "source_id": "GO:0000977",
+        "target_id": "http://identifiers.org/wormbase/WBGene00004949",
+        "type": "enabled_by"
+      },
+      {
+        "id": "c78cfa9b811f16e0404fd20fe90d316af7b49893100c73c8955756085180f894",
+        "source_id": "GO:0016787",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "dac46832be62e8c01380b13b6f1fe5e9c10e86c517ee2c1be086197d93715b64",
+        "source_id": "GO:0003841",
+        "target_id": "http://identifiers.org/wormbase/WBGene00015295",
+        "type": "enabled_by"
+      },
+      {
+        "id": "81706e2e2a312e20e64f56af0b8ca5640c722df94b36339b3354fbe2024cf756",
+        "source_id": "GO:0003980",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "6ef213ae48492da8ed46e674f35336713a54790af1159a47b97fb05d5d968a0e",
+        "source_id": "GO:0051082",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002019",
+        "type": "enabled_by"
+      },
+      {
+        "id": "8fb63f9110f9e6596550fc3c07651d24ba4d5ac53b99322ac97118d539804364",
+        "source_id": "GO:0042302",
+        "target_id": "http://identifiers.org/wormbase/WBGene00000664",
+        "type": "enabled_by"
+      },
+      {
+        "id": "ba4f0ebb05cf15c8f2b977d2a219657733ebcba6e07e015c345ee79ae175672b",
+        "source_id": "GO:0008233",
+        "target_id": "http://identifiers.org/wormbase/WBGene00012550",
+        "type": "enabled_by"
+      },
+      {
+        "id": "86e49db7138f4653d73130e7864a4358e20331b4346c097b5f465c320813a46b",
+        "source_id": "GO:0005509",
+        "target_id": "http://identifiers.org/wormbase/WBGene00019760",
+        "type": "enabled_by"
+      },
+      {
+        "id": "fc9bd26f4435e77308d6119862a38daea41ac49291fe823332cc9880f4e59354",
+        "source_id": "GO:0004382",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "9027a625c9a74aec6b0685a2d62e7e7f952bca1d366d68e434fada38cc90f046",
+        "source_id": "GO:0032217",
+        "target_id": "http://identifiers.org/wormbase/WBGene00021626",
+        "type": "enabled_by"
+      },
+      {
+        "id": "e8499740d79d02f3c2dcf51ed8e1b6837e783a4b8378db549a3a690402d19093",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00010470",
+        "type": "enabled_by"
+      },
+      {
+        "id": "0f3e4bdc94325d693ac33570690b594e1636de6368a0e8bd3e1d21f12e956040",
+        "source_id": "GO:0004571",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "462b1bba95c7f33233a89411d46a3f3024557b79186145d9664a8459d45ed171",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00010496",
+        "type": "enabled_by"
+      },
+      {
+        "id": "b4b1b494ae95f8a13db06cd24af4ad305d1c0e0a9b7f27e21f0ebd3f63afb58a",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00022570",
+        "type": "enabled_by"
+      },
+      {
+        "id": "0ff9929e3430bcbdc424990126c858db2bb31ed85f80596dfb8d0e9ec062b0c7",
+        "source_id": "GO:0003674",
+        "target_id": "GO:0036498",
+        "type": "causes"
+      },
+      {
+        "id": "65f3855a952277832cb7ce1f2080b346ea9a0288c6b26f5459e643ca49c7bca8",
+        "source_id": "GO:0005515",
+        "target_id": "http://identifiers.org/wormbase/WBGene00003818",
+        "type": "enabled_by"
+      },
+      {
+        "id": "37fa9939fc362c9cb54e7299fe5382cca91667ff038cdb04bb783dcbe6cade26",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00000245",
+        "type": "enabled_by"
+      },
+      {
+        "id": "4052520799a8315d925244fd2bb8c9b522ee3bf6baf9c212c93c552f4e429ea8",
+        "source_id": "GO:0005507",
+        "target_id": "http://identifiers.org/wormbase/WBGene00022702",
+        "type": "enabled_by"
+      },
+      {
+        "id": "4d61cf06f5e920f09e0bda8e04f5ccbaaa41be966489fde52c1b536451f5cc8a",
+        "source_id": "GO:0004656",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "e7c10991591f89ce45b66619965b6492dc8da2e89aa6958c6e5b1ada607149f3",
+        "source_id": "GO:0005509",
+        "target_id": "http://identifiers.org/wormbase/WBGene00008624",
+        "type": "enabled_by"
+      },
+      {
+        "id": "f24a2525aed2eb9eac947e2b278f58e73d3f65a772c97569835b2fbb325bf4bb",
+        "source_id": "GO:0003980",
+        "target_id": "http://identifiers.org/wormbase/WBGene00009178",
+        "type": "enabled_by"
+      },
+      {
+        "id": "037c86298ae2f999226bd1b0cdc56c02ffefb055ee037bb46550aad2ad4704e2",
+        "source_id": "GO:0003676",
+        "target_id": "http://identifiers.org/wormbase/WBGene00007297",
+        "type": "enabled_by"
+      },
+      {
+        "id": "ccf1b06d2044a76ae9915cb8f804a6787727fd3a2c18fa410480d681a616f715",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00013765",
+        "type": "enabled_by"
+      },
+      {
+        "id": "406bac7938ab21ae41db41e7123564533f9f3b3acf1a7483accfef042ae068c3",
+        "source_id": "GO:0004176",
+        "target_id": "http://identifiers.org/wormbase/WBGene00016391",
+        "type": "enabled_by"
+      },
+      {
+        "id": "e8666378dc8db09eb208cdbf4df5ccaa483024228418bf4b0755e58f325083c6",
+        "source_id": "GO:0004521",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "4613727029cd4e9f4cc7be5e5393ea2053a5fc6d1ff8dabcdfee3229e772fc74",
+        "source_id": "GO:0000977",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "d372a150d55d46857e680800dccca9bc15480c51c3bddaab20486bf74529d0cf",
+        "source_id": "GO:0004653",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "33a65ded467fcb7fa40fc3db58eeed739ed589d2e9e9371f6d6abc1866a27cd1",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00020486",
+        "type": "enabled_by"
+      },
+      {
+        "id": "2d0436662303a44413bd5b257a45baadf766141679c467096e91529d56c72198",
+        "source_id": "GO:0003974",
+        "target_id": "http://identifiers.org/wormbase/WBGene00008132",
+        "type": "enabled_by"
+      },
+      {
+        "id": "36889eb49391e8d8d1aa5c01b2310a57946c5521a9a646e1e1fd1990afd547fb",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00001046",
+        "type": "enabled_by"
+      },
+      {
+        "id": "8b0c1432679a818efac4ab3bb96480ba0c83c141f828fe514ee593110ea496f6",
+        "source_id": "GO:0051861",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "f56fcfa80ba9829cb08a6d74e994f5865301e75a41d1e7ddba82d4c623f37bb0",
+        "source_id": "GO:0000166",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002026",
+        "type": "enabled_by"
+      },
+      {
+        "id": "cdfdb41f8d8dd0440bea27f207e0c796bc34a7d49070db838da96f1694ae022d",
+        "source_id": "GO:0046923",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "9ca7e9dfe31eec8647a7a21648cd7f124e9954948c5dc11a87a0aa3490c6d7ba",
+        "source_id": "GO:0005509",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "279a9334539ce70724a95674dad1df2ce32c2e47ee18ab9a71ef02c518fbc027",
+        "source_id": "GO:0120013",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "d8848b7213bec009d2ed1ad4db806545be6e9038c6a6f8343a8c4297d76930e0",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00018181",
+        "type": "enabled_by"
+      },
+      {
+        "id": "a4814787a3ffc68130c4ec2cab3861edcd7c8cfe123ac4738f6a523ce55d5c5e",
+        "source_id": "GO:0005509",
+        "target_id": "http://identifiers.org/wormbase/WBGene00000567",
+        "type": "enabled_by"
+      },
+      {
+        "id": "58b5ffd4ba87a261448015c8a9be84a3a2fbd04c7a58d92850dca3409c87adfa",
+        "source_id": "GO:0019904",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "2c925b3892bc33638f67a33d3289cbe9436e36b407cc40db444b1b5c42fd7016",
+        "source_id": "GO:0019706",
+        "target_id": "http://identifiers.org/wormbase/WBGene00019344",
+        "type": "enabled_by"
+      },
+      {
+        "id": "63e796fa449dc9ef4fef10f3b4b18d8fc8387eff22a79d21bd40ea9b02ef28be",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00018737",
+        "type": "enabled_by"
+      },
+      {
+        "id": "a67bdb730a8d057955a6b7f1e661e4b474a7a084f1b5b1e30d58493218fcd8ed",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00018259",
+        "type": "enabled_by"
+      },
+      {
+        "id": "cf8871fdb77ced4a2882a9468d07e76bb123d78d1ade4b78d5cedb6a1b29f540",
+        "source_id": "GO:0004475",
+        "target_id": "http://identifiers.org/wormbase/WBGene00016583",
+        "type": "enabled_by"
+      },
+      {
+        "id": "0f4f654c4473ba0571ab3497827e30303dbe0a0dd01b8d1bdcc225f1f01fbf77",
+        "source_id": "GO:0042302",
+        "target_id": "http://identifiers.org/wormbase/WBGene00000683",
+        "type": "enabled_by"
+      },
+      {
+        "id": "670f903606e23bcc497db38963ea0ebd5ab33376a21ded48b0b23d4f9cb6e7be",
+        "source_id": "GO:0005515",
+        "target_id": "http://identifiers.org/wormbase/WBGene00008053",
+        "type": "enabled_by"
+      },
+      {
+        "id": "339480710b3017a33c95e0a07de3575cb4e7bcd1edcc614645706fd1f6577230",
+        "source_id": "GO:0004103",
+        "target_id": "http://identifiers.org/wormbase/WBGene00000514",
+        "type": "enabled_by"
+      },
+      {
+        "id": "a052dd3c5c34209fce8fc6ce7d45b44c0cfc6f9b940eb39cfef0caa0927db3b6",
+        "source_id": "GO:0004176",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "6cfbbbf770e917ee013e845c50858e03067eb61c0ac514e887b056d8028ed824",
+        "source_id": "GO:0005096",
+        "target_id": "http://identifiers.org/wormbase/WBGene00010500",
+        "type": "enabled_by"
+      },
+      {
+        "id": "09c0e9ad5470711beac834b237aa76133fd6d2dc4b1d5130b14cc75665ad4848",
+        "source_id": "GO:0004842",
+        "target_id": "http://identifiers.org/wormbase/WBGene00006708",
+        "type": "enabled_by"
+      },
+      {
+        "id": "83d1716022d77cae7896d6a68b5d4cb303506a35942bb8e5b1af5877bf989b87",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00004509",
+        "type": "enabled_by"
+      },
+      {
+        "id": "79bf2d891858d986a741f587c8854dc1e8360d79cee685af3c5fecfedfaec564",
+        "source_id": "GO:0043023",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "8eda8377f8095534390c35fb90b440534d011aa5399f0059c34f751804386119",
+        "source_id": "GO:0005484",
+        "target_id": "http://identifiers.org/wormbase/WBGene00018853",
+        "type": "enabled_by"
+      },
+      {
+        "id": "5233e6d48e1c2e0c6f76e68a7c07490957d7092a332fa4042eb90719a81aea0b",
+        "source_id": "GO:0004364",
+        "target_id": "http://identifiers.org/wormbase/WBGene00001749",
+        "type": "enabled_by"
+      },
+      {
+        "id": "3b9670f30a95e029fce55bd6beebf8c62868c93597e863a42694237dab0abbc7",
+        "source_id": "GO:0051082",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002017",
+        "type": "enabled_by"
+      },
+      {
+        "id": "91b3e8a9af02a3e9df7807ea707d9778d1dd872200ce69956d3c2d40055e0954",
+        "source_id": "GO:0048763",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "fd5c837091475d16a5e842bea5f325e3bb3577d771bfff823a1c8fb6fe303a5e",
+        "source_id": "GO:0004521",
+        "target_id": "http://identifiers.org/wormbase/WBGene00006959",
         "type": "has_input"
       },
       {
-        "id": "910e0cbee42f51af58d169e9150724889b04b3ecee8bdb1bd608d9ce39c2abe5",
-        "source_id": "GO:0047555",
-        "target_id": "CHEBI:16027",
-        "type": "has_output"
+        "id": "b984e5baed35779ee520d2aec60de03fff0ff996dcc0cf499733bd59b3ea9eb6",
+        "source_id": "GO:0001228",
+        "target_id": "GO:0036498",
+        "type": "part_of"
       },
       {
-        "id": "a59ff62e93d6d0f2b255f6babefc1a117915682109e811dc1f69218ba322d178",
-        "source_id": "GO:0047555",
-        "target_id": "UniProtKB:Q01064",
+        "id": "3f40f416b52f6fd853c48569ba1b816f3d797b4c8217df3c47706c8c625637b4",
+        "source_id": "GO:0004579",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "93213c4540333da52efd27227023c127c63f36d3413da120486128f73055f6ab",
+        "source_id": "GO:0044183",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "5ed59e83fd29d72c9d3ee1ce7a59232701a7a3b333dd53093fb0095f7a602b45",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00011115",
         "type": "enabled_by"
       },
       {
-        "id": "2319245fcc6c0f0c13708162d883bade0e3ffd9170a39addf765ff519182aaea",
-        "source_id": "GO:0047555",
-        "target_id": "UniProtKB:O00408",
+        "id": "3e4ef5b1e38166600785c28f8a9852f8de7ca806e70924a01bd2b2c0eb377e65",
+        "source_id": "GO:0003972",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "3f246efaf24f4d5f0a9beac72bcb92b635c2521f34784776de43a560729d8db7",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00011535",
         "type": "enabled_by"
       },
       {
-        "id": "5dafc4e790b12a8b2ec844ad02e2037aec6fd0a29647e78846c93a8f3186977a",
-        "source_id": "GO:0047555",
-        "target_id": "CHEBI:17713",
-        "type": "has_output"
-      },
-      {
-        "id": "78508d2246a6f080007b2eabce59ebaa42062eed1bac6b0f2f48283564176356",
-        "source_id": "GO:0047555",
-        "target_id": "UniProtKB:O76083",
+        "id": "3fc78fae49739adebd50f920ddc21b771a22d4b9a114dfc44a6b01bed5e9760c",
+        "source_id": "GO:0030544",
+        "target_id": "http://identifiers.org/wormbase/WBGene00004804",
         "type": "enabled_by"
       },
       {
-        "id": "0af00d0135ea2ad5a3d64a873a2a0a36c83513cb6b156b0fa484410d82d76092",
-        "source_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-        "target_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418379",
-        "type": "has_input"
+        "id": "4d3ab9810a62e92a0016b1d7913c2931c8ba30611e941685cfcfeb00b6aaf3fa",
+        "source_id": "GO:0042500",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "841607562b9fca7dee6e11b63746734069b37cc0edde5ad83fed108368145664",
+        "source_id": "GO:0005388",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "f2c0a3b6e1bc3251a7a6416d2cebddd13bb9c2fff5cf132712d284d70129bdab",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00013957",
+        "type": "enabled_by"
+      },
+      {
+        "id": "94dc911df9b5b4f0623b647f099a7ac2ad0b3b5b811f1bc66dbf6974826a50b4",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00009112",
+        "type": "enabled_by"
+      },
+      {
+        "id": "9dfa40beb727c40a4dff68475269920afbdb116e0b5850cb3a46284568b9016b",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00018292",
+        "type": "enabled_by"
+      },
+      {
+        "id": "2b06eb0da131744361afeb11deb4e0917cfd14593e4eac61ab4c0e631969a236",
+        "source_id": "GO:0019904",
+        "target_id": "http://identifiers.org/wormbase/WBGene00010040",
+        "type": "enabled_by"
+      },
+      {
+        "id": "a5089cfb9501b825929d4db986cd7bd49555b94b818f807332c90a2901e92a48",
+        "source_id": "GO:0008446",
+        "target_id": "http://identifiers.org/wormbase/WBGene00000266",
+        "type": "enabled_by"
+      },
+      {
+        "id": "9bcbb808bfcf4521be86bcef352f99233ea6e793754c0bd5cd809df34fa18d68",
+        "source_id": "GO:0035673",
+        "target_id": "http://identifiers.org/wormbase/WBGene00003876",
+        "type": "enabled_by"
+      },
+      {
+        "id": "0e5dc33d7e18552792935eac91c988b9862920cf2d240e42dd996313e0827a68",
+        "source_id": "GO:0016671",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "77049b2211b4b9507c9fd64d7e8ca3b0460ecec0d33bc29a8d6523c885aa0a43",
+        "source_id": "GO:0004103",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "a356a6260424b53f9446d55cd2f7514fada276c0cac3a9badad64027628075a2",
+        "source_id": "GO:0005509",
+        "target_id": "http://identifiers.org/wormbase/WBGene00000802",
+        "type": "enabled_by"
+      },
+      {
+        "id": "5fa8eda672ce28158c9684b2f1db934fcaf42102484a74c400d2ea3a30c312eb",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00009239",
+        "type": "enabled_by"
+      },
+      {
+        "id": "6e06b317f0ce8146d5258d113ee463bffa79440486a8785f4b72b159359724c2",
+        "source_id": "GO:0046923",
+        "target_id": "http://identifiers.org/wormbase/WBGene00001331",
+        "type": "enabled_by"
+      },
+      {
+        "id": "9b299a66576ae3c0a4f01ed4e8ad2cd2567cd962d281456a108393a4341b1481",
+        "source_id": "GO:0003729",
+        "target_id": "http://identifiers.org/wormbase/WBGene00008940",
+        "type": "enabled_by"
+      },
+      {
+        "id": "3008e0453042ce00ff39dfce2a36bc51aa035bafe623290d64b04a6e5de6014e",
+        "source_id": "GO:0042302",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "e4c511590ce56522f272162d14bc9c55113c2051627ce675aed1435b3123d205",
+        "source_id": "GO:0016671",
+        "target_id": "http://identifiers.org/wormbase/WBGene00001334",
+        "type": "enabled_by"
+      },
+      {
+        "id": "588937b468805591fa3ca143ea9074cf26d62d7c24e5966bd8a748688be65df2",
+        "source_id": "GO:0004656",
+        "target_id": "http://identifiers.org/wormbase/WBGene00001077",
+        "type": "enabled_by"
+      },
+      {
+        "id": "bdfb5cebbffe3dc1e7805ba9873c318a66906f3e74e3d7cf276f7ad34c79e30a",
+        "source_id": "GO:0003824",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "32a8ecd6b0dfa34e5a6ef66d1e72d99f329d3d324e70d04cd747b0007c0c2327",
+        "source_id": "GO:0003756",
+        "target_id": "http://identifiers.org/wormbase/WBGene00003963",
+        "type": "enabled_by"
+      },
+      {
+        "id": "16687edd5ef6eb5bd24a1f8f05d2330c54d77415563af182c399376ba085b01d",
+        "source_id": "GO:0016787",
+        "target_id": "http://identifiers.org/wormbase/WBGene00020472",
+        "type": "enabled_by"
+      },
+      {
+        "id": "e847712cc0bc625368c0ccdb1218ab1187f6dd465e0d872c3c1975b191a5f0aa",
+        "source_id": "GO:0001228",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002783",
+        "type": "enabled_by"
+      },
+      {
+        "id": "9e01903e24d9c8c3479aac92f2143128938852250fa96e9b6c7b2cb573b8a19d",
+        "source_id": "GO:0005524",
+        "target_id": "http://identifiers.org/wormbase/WBGene00011771",
+        "type": "enabled_by"
+      },
+      {
+        "id": "314753d3ec1716b38ddc851ffaf1e160e4a168d2bf6b1defa9f4e28406b94daf",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00012766",
+        "type": "enabled_by"
+      },
+      {
+        "id": "ea4e1a3f3cf9fb163dfb8c179c7a0c52e41ca34837031262f49f39f77fe954ae",
+        "source_id": "GO:0004364",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "32c23fa956e0e5e1c9adb15437ff9d046e0c7af85b267688af106aa6c2ba3461",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00012606",
+        "type": "enabled_by"
+      },
+      {
+        "id": "a2beaeeb06c69cd8a7d048b9a898f9bcef8723cb2385e322952202113e8d75fb",
+        "source_id": "GO:0003756",
+        "target_id": "http://identifiers.org/wormbase/WBGene00015752",
+        "type": "enabled_by"
+      },
+      {
+        "id": "a49d7c3f8df06afd754f9478f18800a174381a97d6d6113892de382163ae2733",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00020109",
+        "type": "enabled_by"
+      },
+      {
+        "id": "bc255b4945ebd92bbd2eae978068f2cdd3f45e90f766e3dec7521cf2c3629781",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00021883",
+        "type": "enabled_by"
+      },
+      {
+        "id": "7ab24cb19e8fe30875985b465faa905fa4cfa32d27cbe4ebcb5c522d3ff66e51",
+        "source_id": "GO:0019706",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "c4d1529bb787711da729e9462969c00a887cdfb5caf855566c0c6328fb6ca57d",
+        "source_id": "GO:0015036",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "40b4a0e31cdb17fa5f5b9111a137d7565aed31f7856808b7b508eafd7cd25617",
+        "source_id": "GO:0000166",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "ea569e96c0bbc43a936adbf927ee84e35ecd05dfb0983f07535706233ce4c862",
+        "source_id": "GO:0005096",
+        "target_id": "GO:0036498",
+        "type": "part_of"
+      },
+      {
+        "id": "72597d09837e62d34b538ed1fbf0b287e40b1fc0323b454bee78c67b71c06ae4",
+        "source_id": "GO:0004521",
+        "target_id": "http://identifiers.org/wormbase/WBGene00002147",
+        "type": "enabled_by"
+      },
+      {
+        "id": "00ddc55a3d9258eafa0a08047e1f20962365b010d061b4a4dc4c091675f5a913",
+        "source_id": "GO:0003674",
+        "target_id": "http://identifiers.org/wormbase/WBGene00007992",
+        "type": "enabled_by"
       }
     ]
   },
@@ -710,271 +3588,1335 @@
       "node_bindings": [
         {
           "qg_id": "n0",
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418379"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00018269"
         },
         {
           "qg_id": "n1",
-          "kg_id": "GO:0004692"
+          "kg_id": "GO:0003824"
         }
       ],
       "edge_bindings": [
         {
           "qg_id": "e0",
           "kg_id": "3f81eb24f85ea74c1d9577d8460b03d01929d4d79d5b90797dc73be637be443e",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         }
       ],
       "extra_nodes": [
         {
-          "kg_id": "UniProtKB:Q9Y233"
+          "kg_id": "GO:0004867"
         },
         {
-          "kg_id": "UniProtKB:O00408"
+          "kg_id": "GO:1903894"
         },
         {
-          "kg_id": "CHEBI:17202"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00015168"
         },
         {
-          "kg_id": "CHEBI:17345"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002015"
         },
         {
-          "kg_id": "UniProtKB:Q13237"
+          "kg_id": "GO:0003980"
         },
         {
-          "kg_id": "UniProtKB:Q9HCR9"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00018737"
         },
         {
-          "kg_id": "UniProtKB:Q01064"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00008132"
         },
         {
-          "kg_id": "GO:0004692"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00018604"
         },
         {
-          "kg_id": "GO:0008150"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00019813"
         },
         {
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-30991"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002026"
         },
         {
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418378"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00020486"
         },
         {
-          "kg_id": "CHEBI:16192"
+          "kg_id": "GO:0004854"
         },
         {
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418473"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00001045"
         },
         {
-          "kg_id": "CHEBI:16356"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00021626"
         },
         {
-          "kg_id": "UniProtKB:O76083"
+          "kg_id": "GO:0004521"
         },
         {
-          "kg_id": "CHEBI:16027"
+          "kg_id": "GO:0035673"
         },
         {
-          "kg_id": "GO:0047555"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00000512"
         },
         {
-          "kg_id": "GO:0005829"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00009925"
         },
         {
-          "kg_id": "UniProtKB:Q13976-1"
+          "kg_id": "GO:0005484"
         },
         {
-          "kg_id": "CHEBI:28806"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00008148"
         },
         {
-          "kg_id": "CHEBI:17713"
+          "kg_id": "GO:0004475"
         },
         {
-          "kg_id": "UniProtKB:O76074"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00003963"
         },
         {
-          "kg_id": "UniProtKB:P54750"
+          "kg_id": "GO:0051861"
         },
         {
-          "kg_id": "GO:0032991"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00010496"
         },
         {
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418425"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00018259"
         },
         {
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418495"
+          "kg_id": "GO:0003824"
         },
         {
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418560"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002783"
         },
         {
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418432"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00001630"
         },
         {
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-113578"
+          "kg_id": "GO:0004653"
         },
         {
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00001152"
         },
         {
-          "kg_id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-418379"
+          "kg_id": "http://identifiers.org/wormbase/WBGene00017705"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00006801"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00022702"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00007297"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00006708"
+        },
+        {
+          "kg_id": "GO:0005096"
+        },
+        {
+          "kg_id": "GO:0003676"
+        },
+        {
+          "kg_id": "GO:0005515"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00012766"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00001046"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002271"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00019677"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00019444"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00020781"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00000802"
+        },
+        {
+          "kg_id": "GO:0016787"
+        },
+        {
+          "kg_id": "GO:0008233"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00017016"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00013740"
+        },
+        {
+          "kg_id": "GO:0004842"
+        },
+        {
+          "kg_id": "GO:0043023"
+        },
+        {
+          "kg_id": "GO:0004382"
+        },
+        {
+          "kg_id": "GO:0000166"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00001099"
+        },
+        {
+          "kg_id": "GO:0044183"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002017"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00018152"
+        },
+        {
+          "kg_id": "GO:0005459"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00017244"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00019760"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00011638"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00018853"
+        },
+        {
+          "kg_id": "GO:0004571"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00003818"
+        },
+        {
+          "kg_id": "GO:0036499"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00003766"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00004759"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00000567"
+        },
+        {
+          "kg_id": "GO:0003729"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00001077"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00004949"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00018269"
+        },
+        {
+          "kg_id": "GO:0019706"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00020472"
+        },
+        {
+          "kg_id": "GO:0042302"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00013765"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00009112"
+        },
+        {
+          "kg_id": "GO:0005483"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00017733"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002020"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00007992"
+        },
+        {
+          "kg_id": "GO:0004364"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00011771"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002147"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00000514"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00014249"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00010670"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00008053"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00020109"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002019"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00001749"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00010470"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00000266"
+        },
+        {
+          "kg_id": "GO:0046923"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00018292"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00008877"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00008940"
+        },
+        {
+          "kg_id": "GO:0008446"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00015057"
+        },
+        {
+          "kg_id": "GO:0016887"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002007"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00006411"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00010500"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00000190"
+        },
+        {
+          "kg_id": "GO:0120013"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00013957"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00006959"
+        },
+        {
+          "kg_id": "GO:0004103"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00012606"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00005648"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00011115"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00021868"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00000664"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00001334"
+        },
+        {
+          "kg_id": "GO:0061630"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00000245"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00009784"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00017217"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00020038"
+        },
+        {
+          "kg_id": "GO:0001228"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00006059"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00011529"
+        },
+        {
+          "kg_id": "GO:0003841"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00009783"
+        },
+        {
+          "kg_id": "GO:0000977"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00012550"
+        },
+        {
+          "kg_id": "GO:0048763"
+        },
+        {
+          "kg_id": "GO:0005507"
+        },
+        {
+          "kg_id": "GO:0051082"
+        },
+        {
+          "kg_id": "GO:1903895"
+        },
+        {
+          "kg_id": "GO:0005388"
+        },
+        {
+          "kg_id": "GO:0004871"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00016391"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00011481"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00009239"
+        },
+        {
+          "kg_id": "GO:0003674"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00004804"
+        },
+        {
+          "kg_id": "GO:0036498"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00015660"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00004768"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00019679"
+        },
+        {
+          "kg_id": "GO:0015036"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00008624"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00011535"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00009178"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00021883"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00022570"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00000843"
+        },
+        {
+          "kg_id": "GO:0032217"
+        },
+        {
+          "kg_id": "GO:0003756"
+        },
+        {
+          "kg_id": "GO:0019904"
+        },
+        {
+          "kg_id": "GO:0030246"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00021291"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00008546"
+        },
+        {
+          "kg_id": "GO:0005509"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00016395"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00010040"
+        },
+        {
+          "kg_id": "GO:0030544"
+        },
+        {
+          "kg_id": "GO:0005524"
+        },
+        {
+          "kg_id": "GO:0042500"
+        },
+        {
+          "kg_id": "GO:0004989"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002018"
+        },
+        {
+          "kg_id": "GO:0016671"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00003962"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00021844"
+        },
+        {
+          "kg_id": "GO:0004656"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00016583"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00000683"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00001425"
+        },
+        {
+          "kg_id": "GO:0004176"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00016469"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00002070"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00004736"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00001331"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00004509"
+        },
+        {
+          "kg_id": "GO:0003972"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00015752"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00003876"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00015295"
+        },
+        {
+          "kg_id": "GO:0050577"
+        },
+        {
+          "kg_id": "GO:0004579"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00012757"
+        },
+        {
+          "kg_id": "BFO:0000015"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00019344"
+        },
+        {
+          "kg_id": "http://identifiers.org/wormbase/WBGene00018181"
+        },
+        {
+          "kg_id": "GO:0003974"
+        },
+        {
+          "kg_id": "GO:0004615"
         }
       ],
       "extra_edges": [
         {
-          "kg_id": "5eb6cefbaf9c86da00a1800fbb3dd5665e49ac9ac3f88af0a1182591e5d25ca7",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "574020137f5355cb2fdb37f3e8bcae19c58cc97bcb6b57b9357fdeaca0a7d163",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "e24478f48cf4ab80a36a92964425c2cb89f3e84d6dd57b6285e10058714a4c9b",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "0ac68cfd09983331a5578ced5c7cbd2d2c6e953fe71796cb380da89a1b24d7eb",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "1781daab842dfb8cbc701b02ed8a5d6b1c5fb9820d7e0ef2427a735d81cb5a42",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "9cc035a0eae351df49ac4f12ac23d4e86a9d10e2ae8ce332dfd3c9aebce29cd9",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "166da705b1857bbce5995d0d025bff0017b33d8dbfdbb0ec8b0ced3d53d9877d",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "40fcee9b647306d052b8ce636b1dff83a8faab66ae550b7128c5e5a047cf213a",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "b90bb4d72e924b6f55fe34fa0a7724028944818c42db652537148b197b141568",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "d62db5796d7c10637a0c428f3707e2175ee20bfc164d1e936cf9c6d115e926d7",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "a8512b34b9ce5a4a1c41bc17b60b999ccbc05c57872032bdcb338c10673b12d6",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "0eccd243342cef4240632c3acf907366df425dbd7e73a247e67528fb1a5919f7",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "99750397ec8eac7c628a1285882a5e1069b40e63102f0a72719bcbadc7d0b220",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "551f4b67b4ceffee4322ff445df10ebec557b6834dc7fd5fb20541e81c809404",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "802aeb9e1c9b4eb0964828026e480748aee46caabe8a5d4010de23a8527f367f",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "1e6726fc7b5437058014d9e0ecb26fab35a358322e2332f28231448897b71405",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "721dbde18ce7961a6db2f218b475bab601642a17d726203fb364003ef1d346e4",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "f45ec806bdfaf01ce849294b15d36269665c442e61db9ba032bf29c61efdad5b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "ceee74558aaf5829591fc8754594723bd3cf8958515c0819d73e72a8c8c3732c",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "56faa395d94701aac918cf58b6f17510ae61b9fedcff59941a7e261d020abbc3",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "144ea9176515a692fc316fcc1f64fc45f63a2b7335957dd57d0f5860b1f688c3",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "1068fad189a70ad2c8dc6c240ffd21a43d971d475d91de1986a8b742d30bd6fd",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "11b1f912d36936294bb64a66e0a54046124f21fb243af2842aa385e6a6b9cdc2",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "a84fa7f3f919a11d3791d7ebcd7120d96b234d0844c42b3f1b44bb4a4eee40cb",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "31c8f8fd39fe0fdb99a0abadab921856ba1940c6975e386fe85904b6ef20d52b",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "3965c0740cf064e8a6215125adef06095cab1ecf9d2fdd50cfac3bcb0243831d",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "c925b1d4cc0b8f2aabdfd3516167e44b3d7a408ecdf5811824936d970130c726",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "9695bb6209b872f5b98c66d1c9e0f81f52a5ce33141d35de86d3c5da9a46ba08",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "916d5cdff43014c8754f01791bd5ec4165701b31b2c447dde0b02a8502aed381",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "f17d57ef4ae96d3760ba796f9d3a91ffcfefc0b92e3d024473aef0b74b598012",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "c3b1f2b08b4983cf89f861292c6cbd1a19af11588ed10bf3d0e618e0faa1d093",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "0bed2632e7a971cf624ec762c8a06cca1704abae4685a77828cd246e022b9d5f",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "f1c443e1defba41446a08390efeba20735ffc9aa929e24dc0b1ff63cb891328b",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "81ab846aa4c3b2ff90db2509ff6074e064e5e707fe6e641591e0f4e0a70afe4c",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "ac4738d61b29ff71284cef3c02465b1efad39e2fcea6a256989d0846ed3c6f75",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "76185b79e21b4150a9f9537b94bda84a749eb624cc0d7793d2671fecbbb48727",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "cf633b6395361a148e5fd007ea8b7cdeedbd0388fda4a81ed6e3328ee35a44ee",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "d2633ecd856f88d1ee922bfdb14d3908a5220a53da728ecb7a32d07678f471a8",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "77196ea088dfddeebab6d7c404cacbbf541bd18b1fb73af0324f5ca3164439db",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "03236e497f8c436636051a99b853416ba2f2bee7800fbb21851a2ee9d1057baa",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "e8374f311074c76e7697dd321a5e3ee9eb68b71944b9563cfe3d6581d51d2e18",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "77ccc1563658b733e1e8290379a7b83d9acc70dee797d5ef597c0de140c174b8",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "08d121fedb20e5446861ef801fea6e269353aa179b58dc9ccab5c083cd8110a9",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "8019d2b302f1004d7927a83b271e3d362f38614153f16be36020b9cd02a1567f",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "a52d863eaa8bdaf7404e3c070d1fc0058559a88de7e7fc3d68905eccf84b7401",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "1eb88d233ae929be86191bb055580990418408eecf934547526494ba9294e75b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "e1f15e7aefc40da702f28781db4ae45c9ae884c1f0920cd80fdb78203b514094",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "7b223fa0170a10b61047d538924bc6779f48dc60314dc84d471861d1f581de33",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "e6158fd0a9bdf31e43c7033949a39b9c35ae8e8eee22d409bdbd9d5f3a4a2a9a",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "0c1a4cfe539cad7a0f3af639e1d7ed683646f5b168ee96ab8677582bb5b3526a",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "0b990c20ec21eb2753d52669e2428b5b5c181a397212975bbd4f8d6bf1e10ded",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "209c36fe2c432d10a5f5a5408f70426feea03a37854fe1220c2e8b33c535dd8d",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "bc8025ee7ae47759d973e29b6be8ca092b245de232b210747adac6b825c84cb5",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "b7c3523e5030acfe48670ad74c7cc0c965b10d53c9746a888eb1085d4911f846",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "a20827a8712518723fc4db3725fd53e5f306e2ff95e4e916292787bd4b3ec162",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "29446e41d9ff0dbde3c2fccbbf61671ac9288a20a64f651961c2d76469f20388",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "38ac8ebfb7d5f1452c7537b83371482811cbb51aadbc88de03eaa2c40f22ab3e",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "1fa75f51ef96290b9aa263f0c634e025c01864b2cd29adda652080b314198ff4",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "5412ad0d9881a06ef020c4628eb8b7ab3a5736104cadaf80de4f96c875604de6",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "2a84a3d73d30c02f88accd4a2a12fb829b516b31364a1cc355a79b6c0fb39966",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "982d44c55dfeb93373b77b4d3b689ee87d894d1dd9efbbb4c140e858f70674eb",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "370c91afe0c8ee607882ae96e7552f500dd85b013369e9fa00dcb491a77fa21a",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "6093920baa0dcff0e0ede14ed9edab10c33af4abb1ebb5d01b6bbfda0e8700ad",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "166c8d00cec000b09fa7d914699523d2d0ed8fdba0a375c65f0c52a7242ac1e5",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "d9c04c97b20a5328c6525462c30cb69a130dbcf29a64c85f9bc8dc223f38cb5c",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "1c7def0e079958972e7fbab3f2da4076e84be3cebc7c17c192b850c09ceb4f9e",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "92822f664eb5c4c6f124d5b20b95636253c3b5d3256de75a69512494bc339325",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "97c557ba8a801f254d86c8e7c28ce969cf76021aa4f1e91d40622f5f0d578ef0",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "38b505627ce5614537dfbebe6cf28f3fd51011369435d9241f42a614ec694475",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "7bfa82deafee72ed8d808fc03d7e60ff5dd074733118fd09adc0a620366973c0",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "5b1331f54fc6cc4ecc81a1cb2bf9fe187bfe53ec339910994bb97cd673928a02",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "b11c0da9c988e42f152bb597e24b69e2905928b0a61c9d70d5500f3cc7f9574b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "6ee24a041a8bd63ae52cdac2f4b2253679985d4e40f9f9de787348a984ea07e8",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "97cbf369be1022afca7872ce79aea4e04173bfc58a8f17db4a65d1f3aa8bb23b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "4286caefcc1e4f127ec9fc8c01524718b48952dbc334fc165d3e18693d8df86a",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "569ff4e379cbcda2575958aa3b2e11ec388646be3954ffc8930284f49433d103",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         },
         {
-          "kg_id": "93d01914d3a954b99a870ba31dcd5fc0176d570edb3367c4978e48a8b734678b",
-          "provenance": "http://model.geneontology.org/R-HSA-418457"
+          "kg_id": "703ec7e1bb6fd20b98b8bfd8e3b924918e5bf723cc7ff53a2e91ea1946fd69a1",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "bd2b257f1b2b738aec668df395d70c7915e57c68fa7d403426817c33ef02f67e",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "9120b323786793e1e1c2fff8a313ede16aa3a1fd5af68f05f3c1b74113677ae2",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "5d28d61f065a5f83e932a301695fbda690d56fb2b2731386c100aec8593af279",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "e81e282b6abf3c7a812a4d5d2f4c3fbca70ce22c2b330964f5bf1de4a73ba34e",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4e1bb861fa23206aeb5b01227227ad686a10b1798df4f60b6284c4c978723730",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "9e9fbf6f7875b2dd0a8dcc5918ac83ad770d4ba3c82e536a5b3815f6ada3ffac",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "69697a45169ed816859bdb8992468d283cdb784fc72d9631009a73542eaa437d",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "613792eff6fa68c643ce225c93b801557ed6af5f17e55246876682f179cecd47",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "57ab80ffc683c046cd46d60ad96e7b98bfcc074474df21214eb0efa76b04c51f",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "fdc2e50f8a1adceab6b49cf2769e3705f0fa03df6f43779e6ef3b2463e5a67b4",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "aff4b1d542110f12b2b163f4dda086089735d13c588d40f0a7e94180affc995b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4e7f471f6489d1fbf1f9e916d4e0f7644265babcd329835dda0bdad2a4fd90ef",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "0272100ef3ac14eac566c41baa69806c652bf9f4f732e59db552b61fd6fd7f50",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "d99efeb4bd161853bed9e83499a1cd3883a241136330cdcd31402bda5ba922ce",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4d6627d29724bb2e64a81c0271ffee4e14b8efbefc3bcfc4ee972a00c5c375c0",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "424bbdfe5923bb921edbdccabbb984e050e4c1817455cf4d592701d8cd47434b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "70e0458761be81d5f04c28b81f6e255a99df0d97d529b14ed482841dc1c7a197",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "40ce52d31a3f009d38346bc6873d3acca300ab6fafb544843b247356f2b32cb3",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "e8d7c0b9336b7f194777f91fb311d0e4f189077d4c82e4452a1e18c0753caa2c",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "e1751c9b38925273c39ed1f365dd0bf9787ca034c0ced137483de95d35dc8080",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "1c10ac7de0ecc38c544d4ec26b988341915851781b056f28c579bd8046df0077",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "b7ff3220ae4d88b8c82ece855fc22e137e8de501ab2ec6c8d48ba3f19884687c",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "801eb1f3258bbefefc71597d003d0b905c39986c6860d6ebd9b006e852a0a356",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "a4270896f83262bd8cd9f1591ca3e4ab81308480446a980070e2e0d9a72ae6bf",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4b5402bc8eff67db7b1f0f2f1fcd79c550a3ddf3d2f184c639f107b35923c93d",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "cc9e625c178bfb788be6f8f43a798df0be05792600f9b13fd50c17b6253cd11d",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "2fc7a7c0811e540aebb4e48e3ae4a5e82c53c27a092434b39dc9e44abcc3bb9c",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "8cc77086986ae8cc8c0bdf85f1f601c25ef67c77acc809d022a98075b0bd7c84",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "1dc7c0cb816e4520c43ce3dc510c0561ddcede23db6f5de3d09434024772ef30",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "19c594d6281b438002ecafc2c686b0b9625d60b842a62f82051ce93bb0d7cafb",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "6c6a12daeac2a1fc73b219868da0d461a7dd292b9576f17ad4081698a3e0a8ac",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "fa24e93967f7813203fd4854a799ad9fa2ad94a8b7bc7c806c8d01b665008f90",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "27eb3e5176393ce9df52e5afbc96a3f523b7469f739c0b24d8d4729963972065",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "180280030e518f632e5b4a8409904cde291cdb991276f295bd1d52479ce63191",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "64b121b4b8ee6b78ae6ac9f113aecde2359bda5c91dfea3266fec1c00ab93997",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "7da7e75e36310181e014dc3bd2500dd6114295b73e091971b9e86b85f5df41df",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "a59f888cc7b2f8f72554c9cd2994ab68412ef4ff00e395f65e31a5ba0c3bb656",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "590f4c2113328d0d8e1a9cc0eebd8070c02343045c207abf44f2b2d4b72c3c05",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "54aa9914be4bf017a2e1daff769a2125c43555c033dd794faa1dc9c9722d4a3c",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "e074992a4fe9c699c4077094a322e316e58cef62fd8636fb0e2c61aa0151bf74",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "b594a49ca1a8bcb41cb55bfa3ab378444c4b88b672253fc7704d88b10b1477da",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "86f915486810e97fd9f2fd41824d302cd0c53edb4006b33cb2d17998f5f2030d",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "e81a044774bfdc54129f346936a12ef1b495008113baf19cdd1c1de11ff899f4",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "66227e6809c8926bc0d097baa8f4e602cd1aaa0a42115f0ff02de541130b894b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "c9bb8038814bbc48380b48aa632657ac48e690e5f0453ec55e26ef3246cc371a",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "f82515e2c99db43e0a315ae90f47f7fe0859d0d68d58dfb724d2d81590115456",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "65913aca7415e7b339eef5820b847ba7e0bab7788847f5d6ada9b5905cb29036",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "ef8db48259cde304f84106a249035827cfe423bb607399010235e121ca8e1077",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "c82d68a0d0c269fcd0969f75a3fa2f5af80462df0e337be8ebae32475acf9c70",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "ed4df88cb02b6242ffd9add32a82334d398c326ec7d3ab9130b3d47027f48a8c",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "da33ff1f85cd6063d3a4d394f771348cecd9d40a01f303be7f7b2bca18a3c94b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "497f8b71ec0d4948fb3b94a9c6abe1e5ca2d6576d06df43548342f4c59715ddb",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "594570521d31502c815ac6147e3b6a052a58803c3739d32b1443fabd3bfe4a5c",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "796e70d1c426f8f4a53c8cada23a754ed5748aabf43a2ec726d01a1248b2c6f3",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "339218b9be878abe3b5fea6bcdf1184a0b4f645647f61fcab108e3a26fac48c8",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "f1ffd02c6eea5f930391e9c37a65ce6b30286d22d3ac707856d6277823336640",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "9ae30407edc45497dc425ad547d8ecc0c7924ca3215bfed0007eb8f10d2f7ed7",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "bf0d5ed06ba8c46aca46c90e181bc377b4c792dbda676e27f3ef1f70c7671331",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "605913961a08f828eaa0181902d829321ce801ad15561bb84743258b0e001772",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "2a02cbf922fdfea43adbc8893f9a071ddd6d0e5d50e5de1a0823d5d86d88f90e",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4a0508a7417321c38a4c39a3415c553c86ce1f0e148087560d50f1cd4089d365",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "30554ee6d171248f52668bbdad759ed547cb490cced51d6638d5caa1417bdc50",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "915e16087443525ec8dec568b0052dcd0f34fcde7af1b4dc0b02361c65e3dd49",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "c1b9ee8ff7c09653043d2e24dc204468243b21b50bdb8b5d995428da6dce7bc3",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "aab32c44e40c03f55f83bc38331f767b7a8f823f9dc09cd315f5feb216fb2245",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "1d6ff7c38d87d709256f1987e3eedbad39c24b27e87d1fd4701ceafb63828acc",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "f47dac1c4c55e0364bc8196815788874214b0518816033f75c89b83c5ad9b691",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "42fb66cff12984422670d83b99ff5b7cc39c972a15dc2819996fb25662cc70df",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "b1ed5ce33e3f8a26cd6dd6011b1bf4b4396c02f2fdf86e1378ec639111f88edc",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "e3769d501371313e122590f62595513345531e02428361b5a9748a9bc0d1a3a1",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "bbeb272688c42c337eb21afec7b6351711e3e1ca195574391cec368a6e800b7c",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "5c53dc1c1747b93a8d717a02bcd711ba91ff96dc91a6dd5494afea28c0de4f28",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "7fefbe3a3237b465e3c16cee35f9d77f661b99caf0a342901cdab495dc7abe6d",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "1dda1bffa11b8b1ff63a1d3f4d4ba862935714c9e27f5eb34197a7a0e5f20da2",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "df99d9866303bbbfa056d7d5d48bdbd957f1ee759d7df52352260319c1d3567e",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "c00f1e23777dc3f98572310a96eb2fbb67e3172fd7d73856958b3a19601ee009",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "cf0fced86e06731a0412573f634184ac185ff658e7b492fa33c483a94490d7f9",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "442480c2dadd6727bd262026a6e86014976b57978f7706233be87f23ef9a2bf3",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "2f44a64d666fe9f13506a2fd93705def3e8ec0bb4325ecb946d66046452e88c2",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "fef17837dc0c49b5db6012dffe7081bf94593c7b73761878637ca39b2af241f0",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "9bc555b453008331f2cfee5041ae7b964e167d93d956e8925dcddafa11348bf8",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "2f92824f2403ab70299c490930e5e7ac9fbceae7ca7553986d8fee0751b7068a",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "85e475d1565b8e49fdf166939b8f12725fbec30905379f9337a86f61b122e489",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "48f14b448acc9f3d0b7900a63b674f3b6278fdf2cc150c7ca659c41cc05ba746",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "32f8570f4188ee2507a56ec484e0cd8fdf050846f804245622e076d80cedcbc4",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "21188b33df227d983c4bac5dcae7cc7bed1267b69d92375bf39b4ecc3f9df2da",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "164df75cca98eab9da4306d3f4b611f87f5447bd610bb3943966b55751482feb",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "7f4e4433645da0a83f2277744b2cf9c76ddb4fe7702db566b5b839d63ab78ee9",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "1c24145b3ee4b5dc9527822e2cf32d98ffb2ac872ce6fcf424313d3aa3149a03",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "edf25840b61a97ac9e9b1ddf8e9ade073c6f547685febdd79ce42ae13e9b1c9b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "aa47a4aa3019417013a89334370c90e0484983c039bf495cf6e8f1cc9f50139c",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "39888012b23ab19b0497197fc11903dd87e7a9f5a240a00e639627b13e157059",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "0512eef0199ff056d877c5df6a3fb287daf16445033057ce9cfd60fa680033e6",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "0a5a2ec90fb3c36b6d99f29abd450b7581c09cf2d0ae981b1a746aadec6a3b2f",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "5e43fd3643e2918169de10fec4a9f4ec68a5661c3ec4d5078ba2ff4500f5cdb0",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "d6065d2a43c1d1019fafd436512f69bfe3e0166cbec523268da88adf5cf08840",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "fcafc04a6d2638b875f3c3a08f3e8e1d58de1578f52b6a380d9a956f52789d34",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "6c4f552fc14815fa78bc55ccdd5cb0bd103922a0b826e3eff3f9a0380765c184",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "f89cfddf63baebf9267e0e7bef68ec86cf7888b54b285589210904417a562750",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "905d4ed1d3810ab464b26cdadc9d295be1f5155154694b8ad40f7d2839f71ff1",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "85e933943dd6d50b2a7e1cd06f2756dae7365103ff45f0469b75a70d6377ad5a",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "77bc16134f8e4b279579bae17060a138b390e6791bf3b13e6b6a1122a8ab9fd9",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "a0f22bfc3c9c656a2a61c625adeea9222b49d3cc9cf48d26f3416291a22fc9bd",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4b1d439528d7d8397b1be17e6f3adcc9bc8c6337026ee2582c6f8d49d88124a9",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "efe1ac095aa5e2e9bb7be2b60be979704c80f5def317123e37f14ff0eee84181",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "ff34d6dddfe2b50409cd24969113e0dae8c7a7cbda41a5844fd936c09e5f7e43",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4057fa92a0cea96c80bb1503ffcf393befd9315b4de0bde11d7045da637967ce",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4f7de8b813d15b3b51e78eb2bea7f0c2bfd83ca3ef7e46091aacc862623b20fc",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "2d4f4e3db568ba58b09faf8a10c08119037c28b45f1dab5acf6b0d0c5191a828",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "dc9b6d8f00c671d4d0588e1d686aa44fdee03e968acb96fe5a8050e3707831f6",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "406a012a473011043b2ff96397804dcc38a6d540efc74942cd01049c7601ab91",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "46a3a9b15403b5d7a9f17cef6defbe8f7c36be5f1bc4f985e726e816b262980a",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "381eaf1b4f223aad6be4990e89c01f0681a8914c97ab320f19d32e62c029f97b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "c60e8bddb0916f2fa67c15a95c43fcb98fffdfadece82cafc502277deb68a4c2",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "092463fb4ee73885ea85234142934503151fb104be6beb5a50c7a52e894b8dfa",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "fb1548da7112bf5bb09704258e542d8a49318f15bcc047d282e70f9de3393bed",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "f36203d6a287a72e56b07597f3fc0575d606eb007ef8bf6dcff629f62277b7dc",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "516e7716c139fb856b8f169a5bb9161e9edeb4e12fa784b9483449c0b54407a4",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "19ff402b7f431cb82d85b1b9b3e6667e4fd5d3c0c48d398fe3a655eb815e4b6b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "adc0e4d597b8c2f022a316a744f87f7b6d266b958ce0a6c43909072d7c654b9c",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "b7848a0a541473ef6e22c63318d0a70b276dea9d427dd99a105ed64a66050014",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "2df72f99548e5c5324159712cf2c09ed288aa4e55da14943dd99aa6f370b6c4a",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "2f8bc882ac70b38eab3ea9d8b9635b7ef96173a8ffd5afdcf8666dc6b45963bb",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "f0dfa0ed5e51f982f20e6fd297880eed314adc062bdb1f174fb5276798b749bf",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "33f0881b8d3aa7aab62e47df2a89f326b90c4b46bcc708be4eb613f9df1be330",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "72a0ce439812e5a4785134327f601b898457c6c5b681f966784ca2ca004108bf",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "1f89ec0fcc353371b2db16a6b92fedfff70d983f98d36ab05283dea98419b91b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "ee82438c8c0394906d2df2cb4f4f2568ed84ea958e9d1df3aa089a5b4955343e",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4fcc28d66441d48287e70402cccc5e8536c533a5615912369d1efa375c8385e8",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "8cdc7f8c321cc4fba47fdf01cc64a0e9bdb73af8701c12ac9cc2f21ed79b8a3b",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "878c939fba23e35f9c3b820396f8d24040d84172e6688da70416467d2170d3b9",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "1da32eaac02a382350282191ffc54f057ec2ec35d2210ac1f50be6ace2f71140",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "e644dc1139b94f32952291b461db4d5d0a29325437365164b0be6c2d2830f970",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "93d917ec12bde4c1eba17b452633dd031bf81ec3f417745ade81d3c3e8533ad0",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "f9ba82ef18517bac1b24b5dd34b65de67db7c7250f52ae11c536bcc7df57e0fd",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "7bcd29d34ac2f113333b37d785a82452c068ffbaaed0cc2c9fafc67ee086c92a",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "2f24ed050ad9ba09859d539a4467d1f450e87deff9d00aa132cf6e1ff05d4b84",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "708efd876967d261ac93aab99859b0940052ad0e08268d5736991d6df2176c76",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "9aca1f251975ff891b0787d61ca629889b357c138e7e578f05e2569350f0c242",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4d1c20e771d8091a6e875c3cdb1d183a5581705aaf4a9dc1ca26101f9dd96625",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "00fe5a6fbc67c88458ff238b25d2347488000e30d77bb19f42d69024bf6d5704",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "6970fb2bcbcc3cf16388ecfc59d096ed9434da691d197a42870ea5d646497c8f",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "7e00a3313eaa1c01e7ca58baf69ecb6f8eb9889c213d3a46575743cca548f087",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "8178df48f954cade9f3a89321f7eef7bf65ca6de00f80bade55a9916b752227a",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "f6a3fc87d1cc4660554326e5c329ad7643757b6815266456c34151053628a9ba",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "81c8bccc0bfce0de335a5920ec0baf7a51b95b570851d436de17a003216f54d5",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "144c5b650947953b2c53a00d1ecd48a7a846c9d0af9b2266764cca7894de3f8e",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "1048d5273b2a1b607c9052dc474804c388f80daac4f749daa7d9417856873a33",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
+        },
+        {
+          "kg_id": "4369d2766df1b1fdad44605a33c92ea9ed2848834e95991f143b64de677c9b42",
+          "provenance": "http://model.geneontology.org/5b318d0900000194"
         }
       ]
     }
