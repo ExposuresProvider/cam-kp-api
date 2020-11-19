@@ -76,7 +76,7 @@ object QueryService extends LazyLogging {
       predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty))(edge => {
         for {
           foundPredicates <- getTRAPIQEdgePredicates(edge)
-          predicates = foundPredicates.map(a => sparql" $a ").fold(sparql"")(_ + _)
+          predicates = foundPredicates.map(a => sparql" ${a.predicate} ").fold(sparql"")(_ + _)
           edgeIDVar = Var(edge.id)
           edgeSourceVar = Var(edge.source_id)
           edgeTargetVar = Var(edge.target_id)
@@ -381,7 +381,9 @@ object QueryService extends LazyLogging {
     SPARQLQueryExecutor.runSelectQueryAs[SlotStuff](queryText.toQuery)
   }
 
-  private def getTRAPIQEdgePredicates(edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, List[IRI]] =
+  final private case class Predicate(predicate: IRI)
+
+  private def getTRAPIQEdgePredicates(edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, List[Predicate]] =
     for {
       edgeType <- ZIO.fromOption(edge.`type`).orElseFail(new Exception("failed to get edge type"))
       queryText = sparql"""
@@ -391,9 +393,7 @@ object QueryService extends LazyLogging {
                      FILTER NOT EXISTS { ?predicate a $BiolinkMLSlotDefinition }
                    }
                    """
-      querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
-      predicates = querySolutions
-        .flatMap(qs => qs.varNames.asScala.filter(a => qs.contains(a)).map(v => IRI(qs.get(v).toString)))
+      predicates <- SPARQLQueryExecutor.runSelectQueryAs[Predicate](queryText.toQuery)
     } yield predicates
 
 }
