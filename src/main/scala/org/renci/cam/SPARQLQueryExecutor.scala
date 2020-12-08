@@ -4,7 +4,7 @@ import java.nio.charset.StandardCharsets
 
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
-import org.apache.jena.query.{Query, ResultSet, ResultSetFactory}
+import org.apache.jena.query.{Query, QuerySolution, ResultSet, ResultSetFactory}
 import org.http4s._
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder
@@ -42,11 +42,11 @@ object SPARQLQueryExecutor extends LazyLogging {
   def runSelectQueryAs[T: FromQuerySolution](query: Query): RIO[ZConfig[AppConfig] with HttpClient, List[T]] =
     for {
       resultSet <- runSelectQuery(query)
-      results = resultSet.asScala.map(FromQuerySolution.mapSolution[T]).toList
+      results = resultSet.map(FromQuerySolution.mapSolution[T])
       validResults <- ZIO.foreach(results)(ZIO.fromTry(_))
     } yield validResults
 
-  def runSelectQuery(query: Query): RIO[ZConfig[AppConfig] with HttpClient, ResultSet] =
+  def runSelectQuery(query: Query): RIO[ZConfig[AppConfig] with HttpClient, List[QuerySolution]] =
     for {
       appConfig <- zio.config.getConfig[AppConfig]
       _ = logger.debug("query: {}", query)
@@ -54,6 +54,6 @@ object SPARQLQueryExecutor extends LazyLogging {
       uri = appConfig.sparqlEndpoint
       request = Request[Task](Method.POST, uri).withEntity(query)
       response <- client.expect[ResultSet](request)
-    } yield response
+    } yield response.asScala.toList
 
 }
