@@ -56,8 +56,12 @@ package object domain {
   object BiolinkClass {
 
     def apply(label: String): BiolinkClass = {
-      val camelLabel = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, label)
-      BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}$camelLabel"))
+      if (label.contains("_")) {
+        val camelLabel = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, label)
+        BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}$camelLabel"))
+      } else {
+        BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}$label"))
+      }
     }
 
   }
@@ -102,5 +106,7 @@ package object domain {
                                 results: Option[List[TRAPIResult]])
 
   final case class TRAPIQueryRequestBody(message: TRAPIMessage)
+
+  final case class TRAPIPredicateResponse()
 
 }
