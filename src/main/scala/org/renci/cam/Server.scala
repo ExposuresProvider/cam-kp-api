@@ -3,7 +3,7 @@ package org.renci.cam
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
-import io.circe.{Decoder, Encoder, Printer}
+import io.circe.{Decoder, Encoder, KeyEncoder, Printer}
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -34,14 +34,23 @@ object Server extends App with LazyLogging {
 
   import LocalTapirJsonCirce._
 
-  val predicatesEndpoint: ZEndpoint[Unit, String, String] = endpoint.get.in("predicates").errorOut(stringBody).out(jsonBody[String])
+  val predicatesEndpointZ: URIO[Has[BiolinkData], ZEndpoint[Unit, String, String]] =
+    for {
+      biolinkData <- biolinkData
+    } yield endpoint.get
+      .in("predicates")
+      .errorOut(stringBody)
+      .out(stringBody)
+      .summary("Get predicates used at this service")
 
-  val predicatesRouteR: URIO[ZConfig[AppConfig], HttpRoutes[Task]] = predicatesEndpoint.toRoutesR { case () =>
-    val program = for {
-      response <- Task.effect("")
-    } yield response
-    program.mapError(error => error.getMessage)
-  }
+  def predicatesRouteR(predicatesEndpoint: ZEndpoint[Unit, String, String])
+    : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
+    predicatesEndpoint.toRoutesR { case () =>
+      val program = for {
+        response <- PredicatesService.run()
+      } yield response
+      program.mapError(error => error.getMessage)
+    }
 
   val queryEndpointZ: URIO[Has[BiolinkData], ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage]] =
     for {
@@ -86,8 +95,9 @@ object Server extends App with LazyLogging {
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- getConfig[AppConfig]
+        predicatesEndpoint <- predicatesEndpointZ
+        predicatesRoute <- predicatesRouteR(predicatesEndpoint)
         queryEndpoint <- queryEndpointZ
-        predicatesRoute <- predicatesRouteR
         queryRoute <- queryRouteR(queryEndpoint)
         routes = queryRoute <+> predicatesRoute
         openAPI = List(queryEndpoint, predicatesEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
