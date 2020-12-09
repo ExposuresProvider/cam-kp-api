@@ -17,7 +17,7 @@ import org.renci.cam.domain._
 import zio.config.ZConfig
 import zio.{Has, RIO, Task, ZIO, config => _}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object QueryService extends LazyLogging {
 
@@ -71,7 +71,7 @@ object QueryService extends LazyLogging {
   def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[QuerySolution]] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
-      predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty))(edge => {
+      predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
         for {
           foundPredicates <- getTRAPIQEdgePredicates(edge)
           predicates = foundPredicates.map(a => sparql" $a ").fold(sparql"")(_ + _)
@@ -79,12 +79,12 @@ object QueryService extends LazyLogging {
           edgeSourceVar = Var(edge.source_id)
           edgeTargetVar = Var(edge.target_id)
           sparqlChunk =
-          sparql"""
+            sparql"""
                  VALUES $edgeIDVar { $predicates }
                  $edgeSourceVar $edgeIDVar $edgeTargetVar .
               """
         } yield (edge, sparqlChunk)
-      })
+      }
       (edges, sparqlLines) = predicates.unzip
       nodesToDirectTypes =
         queryGraph.nodes
@@ -126,14 +126,14 @@ object QueryService extends LazyLogging {
         getTRAPINodeBindings(queryGraph, querySolution, biolinkData.prefixes) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
       }
       allEdgeBindings = trapiBindings.flatMap(_._2)
-      allCamIds = allEdgeBindings.toSet[TRAPIEdgeBinding].flatMap(_.provenance)
+      allCamIds = allEdgeBindings.to(Set).flatMap(_.provenance)
       prov2CAMStuffTripleMap <- ZIO.foreachPar(allCamIds)(prov => getCAMStuff(IRI(prov)).map(prov -> _)).map(_.toMap)
-      allCAMTriples = prov2CAMStuffTripleMap.values.toSet.flatten
+      allCAMTriples = prov2CAMStuffTripleMap.values.to(Set).flatten
       allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj, t.obj))
-      slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.toList, biolinkData.classes)
+      slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.to(List), biolinkData.classes)
       extraKGNodes = getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, biolinkData)
       allPredicates = allCAMTriples.map(_.pred)
-      slotStuffList <- getSlotStuff(allPredicates.toList)
+      slotStuffList <- getSlotStuff(allPredicates.to(List))
       extraKGEdges = allCAMTriples.flatMap { triple =>
         for {
           slotStuff <- slotStuffList.find(_.kid == triple.pred)
@@ -145,28 +145,22 @@ object QueryService extends LazyLogging {
           TRAPIEdge(knowledgeGraphId, triple.subj, triple.obj, predBLTermOpt)
         }
       }
-      results <- ZIO.foreach(trapiBindings) { case (resultNodeBindings, resultEdgeBindings) =>
+      results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) =>
         val provsAndCamTriples =
-          resultEdgeBindings.flatMap(_.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).toSet.flatten).toMap
-        val nodes = provsAndCamTriples.values.flatten.toSet[Triple].flatMap(t => Set(t.subj, t.obj))
+          resultEdgeBindings.flatMap(_.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).to(Set).flatten).toMap
+        val nodes = provsAndCamTriples.values.flatten.to(Set).flatMap(t => Set(t.subj, t.obj))
         val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(None, applyPrefix(n.value, biolinkData.prefixes)))
-        ZIO
-          .foreach(provsAndCamTriples.toIterable) { case (prov, triples) =>
-            ZIO.foreach(triples) { triple =>
-              for {
-                predBLTermOpt <- ZIO.effectTotal(biolinkData.predicates.find(a => a.iri == triple.pred))
-              } yield {
-                val edgeKey = TRAPIEdgeKey(predBLTermOpt, triple.subj.value, triple.obj.value).asJson.deepDropNullValues.noSpaces
-                val kgId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
-                TRAPIEdgeBinding(None, kgId, Some(prov))
-              }
+        val extraKGEdgeBindings = provsAndCamTriples
+          .to(Set)
+          .flatMap { case (prov, triples) =>
+            triples.map { triple =>
+              val predBLTermOpt = biolinkData.predicates.find(a => a.iri == triple.pred)
+              val edgeKey = TRAPIEdgeKey(predBLTermOpt, triple.subj.value, triple.obj.value).asJson.deepDropNullValues.noSpaces
+              val kgId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+              TRAPIEdgeBinding(None, kgId, Some(prov))
             }
           }
-          .map(_.flatten.toSet)
-          .map { extraKGEdgeBindings =>
-            TRAPIResult(resultNodeBindings, resultEdgeBindings, Some(extraKGNodeBindings.toList), Some(extraKGEdgeBindings.toList))
-          }
-
+        TRAPIResult(resultNodeBindings, resultEdgeBindings, Some(extraKGNodeBindings.to(List)), Some(extraKGEdgeBindings.to(List)))
       }
       trapiKGNodes = initialKGNodes ++ extraKGNodes
       trapiKGEdges = initialKGEdges ++ extraKGEdges
@@ -177,7 +171,7 @@ object QueryService extends LazyLogging {
     querySolutions: List[QuerySolution]): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[TRAPINode]] = {
     val allOntClassIRIsZ = ZIO
       .foreach(querySolutions) { qs =>
-        ZIO.foreach(qs.varNames.asScala.filter(_.endsWith("_type")).toIterable) { typeVar =>
+        ZIO.foreach(qs.varNames.asScala.filter(_.endsWith("_type")).to(Iterable)) { typeVar =>
           ZIO.effect(IRI(qs.getResource(typeVar).getURI)).mapError { e =>
             new Exception(s"Value of _type variable $typeVar is not a URI", e)
           }
@@ -200,7 +194,7 @@ object QueryService extends LazyLogging {
               nodeIRI <- ZIO.fromOption(nodeMap.get(n.id)).orElseFail(new Exception(s"Missing node IRI: ${n.id}"))
               labelAndTypes = termToLabelAndTypes.getOrElse(IRI(nodeIRI), (None, List(BiolinkNamedThing)))
               (labelOpt, biolinkTypes) = labelAndTypes
-              biolinkTypesSet = biolinkTypes.toSet
+              biolinkTypesSet = biolinkTypes.to(Set)
               nodeBiolinkTypes = biolinkData.classes.filter(c => biolinkTypesSet(c.iri))
             } yield TRAPINode(applyPrefix(nodeIRI, biolinkData.prefixes), labelOpt, nodeBiolinkTypes)
           }
@@ -252,7 +246,7 @@ object QueryService extends LazyLogging {
       IRI(solution.getResource(queryEdge.target_id).getURI)
     )
     for {
-      provs <- getProvenance(solutionTriples.toSet)
+      provs <- getProvenance(solutionTriples.to(Set))
       querySolutionsToEdgeBindings <- ZIO.foreach(querySolutions) { querySolution =>
         for {
           edgeBindings <- ZIO.foreach(queryGraph.edges) { e =>
@@ -283,7 +277,7 @@ object QueryService extends LazyLogging {
     }
     camNodes.map { node =>
       val (labelOpt, biolinkTypes) = termToLabelAndTypes.getOrElse(node, (None, List(BiolinkNamedThing)))
-      val biolinkTypesSet = biolinkTypes.toSet
+      val biolinkTypesSet = biolinkTypes.to(Set)
       val abbreviatedNodeType = applyPrefix(node.value, biolinkData.prefixes)
       val classes = biolinkData.classes.filter(c => biolinkTypesSet(c.iri))
       TRAPINode(abbreviatedNodeType, labelOpt, classes)
