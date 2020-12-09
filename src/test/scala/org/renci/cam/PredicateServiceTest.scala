@@ -3,14 +3,13 @@ package org.renci.cam
 import java.io.StringReader
 import java.nio.file.{Files, Paths}
 
-import io.circe.{Encoder, KeyEncoder}
-import io.circe.generic.auto._
 import io.circe.syntax._
+import io.circe.{Encoder, KeyEncoder}
 import org.apache.commons.csv.CSVFormat
-import org.apache.commons.lang3.StringUtils
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio.Task
-import zio.test.Assertion.isNonEmpty
+import zio.test.Assertion._
+import zio.test.TestAspect._
 import zio.test._
 
 import scala.collection.JavaConverters._
