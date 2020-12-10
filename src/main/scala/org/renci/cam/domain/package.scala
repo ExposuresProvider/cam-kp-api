@@ -2,6 +2,7 @@ package org.renci.cam
 
 import com.google.common.base.CaseFormat
 import contextual.Case
+import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
 import org.apache.jena.sparql.core.{Var => JenaVar}
 import org.phenoscape.sparql.FromQuerySolution
@@ -57,10 +58,9 @@ package object domain {
 
     def apply(label: String): BiolinkClass = {
       if (label.contains("_")) {
-        val camelLabel = CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, label)
-        BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}$camelLabel"))
+        BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}${CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, label)}"))
       } else {
-        BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}$label"))
+        BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}${StringUtils.capitalize(label)}"))
       }
     }
 
