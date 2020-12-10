@@ -27,7 +27,7 @@ object PredicateServiceTest extends DefaultRunnableSpec {
         triples = records.asScala
           .map(a => PredicatesService.Triple(BiolinkClass(a.get(0)), BiolinkPredicate(a.get(1)), BiolinkClass(a.get(2))))
           .toList
-        map = triples.groupBy(_.subj).mapValues(_.groupBy(_.obj).mapValues(_.map(_.pred)))
+        map = triples.groupBy(_.subj).view.mapValues(_.groupBy(_.obj).view.mapValues(_.map(_.pred)).toMap).toMap
         encoded = {
           implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { predicate => predicate.shorthand }
           implicit val blClassKeyEncoder = new KeyEncoder[BiolinkClass] {
@@ -39,7 +39,7 @@ object PredicateServiceTest extends DefaultRunnableSpec {
         _ = Files.writeString(Paths.get("src/test/resources/predicates.json"), encoded)
       } yield assert(map)(isNonEmpty)
       testCase.provideCustomLayer(testLayer)
-    } @@ ignore
+    } //@@ ignore
   )
 
   def spec = suite("All tests")(mapTest)
