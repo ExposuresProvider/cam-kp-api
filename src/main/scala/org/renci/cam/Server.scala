@@ -47,7 +47,7 @@ object Server extends App with LazyLogging {
     : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
     predicatesEndpoint.toRoutesR { case () =>
       val program = for {
-        response <- PredicatesService.run()
+        response <- PredicatesService.run
       } yield response
       program.mapError(error => error.getMessage)
     }

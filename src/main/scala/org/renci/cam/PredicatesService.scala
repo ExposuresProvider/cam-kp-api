@@ -19,7 +19,7 @@ object PredicatesService extends LazyLogging {
 
   case class Triple(subj: BiolinkClass, pred: BiolinkPredicate, obj: BiolinkClass)
 
-  def run(): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], String] =
+  def run: RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], String] =
     for {
       predicates <- Task.effect(Files.readString(Paths.get(getClass.getClassLoader.getResource("predicates.csv").toURI)))
       records = CSVFormat.DEFAULT.parse(new StringReader(predicates)).getRecords
