@@ -52,8 +52,6 @@ object QueryService extends LazyLogging {
   // instances are not thread-safe; should be retrieved for every use
   private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
 
-  private def convertCase(v: String): String = CaseFormat.UPPER_CAMEL.to(CaseFormat.LOWER_UNDERSCORE, v)
-
   def getNodeTypes(nodes: List[TRAPIQueryNode]): Map[String, IRI] =
     nodes.flatMap { node =>
       (node.`type`, node.curie) match {
