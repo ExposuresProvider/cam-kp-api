@@ -13,7 +13,7 @@ import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio.config.ZConfig
 import zio.{Has, RIO, Task}
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object PredicatesService extends LazyLogging {
 
@@ -29,9 +29,7 @@ object PredicatesService extends LazyLogging {
       map = triples.groupBy(_.subj).view.mapValues(_.groupBy(_.obj).view.mapValues(_.map(_.pred)).toMap).toMap
       result = {
         implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(predicate => predicate.shorthand)
-        implicit val blClassKeyEncoder = new KeyEncoder[BiolinkClass] {
-          override def apply(blClass: BiolinkClass): String = blClass.shorthand
-        }
+        implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => blClass.shorthand
         map.asJson.noSpaces
       }
     } yield result

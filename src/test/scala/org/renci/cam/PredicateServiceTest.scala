@@ -12,7 +12,7 @@ import zio.test.Assertion._
 import zio.test.TestAspect._
 import zio.test._
 
-import scala.collection.JavaConverters._
+import scala.jdk.CollectionConverters._
 
 object PredicateServiceTest extends DefaultRunnableSpec {
 
@@ -29,10 +29,8 @@ object PredicateServiceTest extends DefaultRunnableSpec {
           .toList
         map = triples.groupBy(_.subj).view.mapValues(_.groupBy(_.obj).view.mapValues(_.map(_.pred)).toMap).toMap
         encoded = {
-          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { predicate => predicate.shorthand }
-          implicit val blClassKeyEncoder = new KeyEncoder[BiolinkClass] {
-            override def apply(blClass: BiolinkClass): String = blClass.shorthand
-          }
+          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(predicate => predicate.shorthand)
+          implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => blClass.shorthand
           map.asJson.noSpaces
         }
 //        _ = println("encoded: " + encoded)
