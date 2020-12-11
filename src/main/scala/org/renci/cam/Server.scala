@@ -40,7 +40,7 @@ object Server extends App with LazyLogging {
     } yield endpoint.get
       .in("predicates")
       .errorOut(stringBody)
-      .out(stringBody)
+      .out(jsonBody[String])
       .summary("Get predicates used at this service")
 
   def predicatesRouteR(predicatesEndpoint: ZEndpoint[Unit, String, String])
