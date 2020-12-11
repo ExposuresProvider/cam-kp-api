@@ -37,7 +37,7 @@ object PredicateServiceTest extends DefaultRunnableSpec {
         _ = Files.writeString(Paths.get("src/test/resources/predicates.json"), encoded)
       } yield assert(map)(isNonEmpty)
       testCase.provideCustomLayer(testLayer)
-    } //@@ ignore
+    } @@ ignore
   )
 
   def spec = suite("All tests")(mapTest)
