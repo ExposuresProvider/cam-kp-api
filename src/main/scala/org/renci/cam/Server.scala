@@ -3,7 +3,7 @@ package org.renci.cam
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
-import io.circe.{Decoder, Encoder, KeyEncoder, Printer}
+import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder, Printer}
 import org.http4s._
 import org.http4s.implicits._
 import org.http4s.server.Router
@@ -20,7 +20,7 @@ import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
 import zio._
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{getConfig, ZConfig}
+import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 
@@ -34,16 +34,23 @@ object Server extends App with LazyLogging {
 
   import LocalTapirJsonCirce._
 
-  val predicatesEndpointZ: URIO[Has[BiolinkData], ZEndpoint[Unit, String, String]] =
+  val predicatesEndpointZ: URIO[Has[BiolinkData], ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]] =
     for {
       biolinkData <- biolinkData
     } yield endpoint.get
       .in("predicates")
       .errorOut(stringBody)
-      .out(jsonBody[String])
+      .out(
+        {
+          implicit val blClassKeyDecoder: KeyDecoder[BiolinkClass] = (blClass: String) => Some(BiolinkClass(blClass))
+          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(predicate => predicate.shorthand)
+          implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => blClass.shorthand
+          jsonBody[Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]
+        }
+      )
       .summary("Get predicates used at this service")
 
-  def predicatesRouteR(predicatesEndpoint: ZEndpoint[Unit, String, String])
+  def predicatesRouteR(predicatesEndpoint: ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]])
     : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
     predicatesEndpoint.toRoutesR { case () =>
       val program = for {
