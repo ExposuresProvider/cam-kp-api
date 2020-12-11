@@ -107,6 +107,4 @@ package object domain {
 
   final case class TRAPIQueryRequestBody(message: TRAPIMessage)
 
-  final case class TRAPIPredicateResponse()
-
 }
