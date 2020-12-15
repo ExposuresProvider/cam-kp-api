@@ -2,18 +2,11 @@
   "CIViC": "http://example.org/UNKNOWN/CIViC/",
   "GTOPDB": "http://example.org/UNKNOWN/GTOPDB/",
   "HGVS": "http://example.org/UNKNOWN/HGVS/",
-  "IUPHAR": "http://example.org/UNKNOWN/IUPHAR/",
   "MYVARIANT_HG19": "http://example.org/UNKNOWN/MYVARIANT_HG19/",
   "MYVARIANT_HG38": "http://example.org/UNKNOWN/MYVARIANT_HG38/",
-  "PANTHER": "http://www.pantherdb.org/panther/family.do?clsAccession=",
-  "ZFIN": "http://zfin.org/",
   "dct": "http://example.org/UNKNOWN/dct/",
-  "blml": "https://w3id.org/biolink/biolinkml/meta/",
-  "bl": "https://w3id.org/biolink/vocab/",
   "EMAPA": "http://purl.obolibrary.org/obo/EMAPA_",
-  "SO": "http://purl.obolibrary.org/obo/SO_",
-  "RO": "http://purl.obolibrary.org/obo/RO_",
-  "obo": "http://purl.obolibrary.org/obo/",
-  "sesame": "http://www.openrdf.org/schema/sesame#",
-  "prov": "http://www.w3.org/ns/prov#"
+  "PATO": "http://purl.obolibrary.org/obo/PATO_",
+  "PCO": "http://purl.obolibrary.org/obo/PCO_",
+  "sesame": "http://www.openrdf.org/schema/sesame#"
 }

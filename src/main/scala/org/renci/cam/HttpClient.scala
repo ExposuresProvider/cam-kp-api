@@ -11,12 +11,16 @@ object HttpClient {
 
   type HttpClient = Has[Client[Task]]
 
-  def makeHttpClient: UIO[TaskManaged[Client[Task]]] =
-    ZIO.runtime[Any].map { implicit rts =>
-      BlazeClientBuilder[Task](rts.platform.executor.asEC).withConnectTimeout(Duration(3, MINUTES)).resource.toManaged
+  def makeHttpClient: TaskManaged[Client[Task]] =
+    ZIO.runtime[Any].toManaged_.flatMap { implicit rts =>
+      BlazeClientBuilder[Task](rts.platform.executor.asEC)
+        .withIdleTimeout(Duration(2, MINUTES))
+        .withConnectTimeout(Duration(3, MINUTES))
+        .resource
+        .toManaged
     }
 
-  def makeHttpClientLayer: UIO[TaskLayer[HttpClient]] = makeHttpClient.map(ZLayer.fromManaged)
+  def makeHttpClientLayer: TaskLayer[HttpClient] = makeHttpClient.toLayer
 
   val client: ZIO[HttpClient, Nothing, Client[Task]] = ZIO.service
 
