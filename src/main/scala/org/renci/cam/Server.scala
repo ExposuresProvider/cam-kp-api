@@ -24,6 +24,7 @@ import sttp.tapir.openapi.{Contact, Info, License}
 import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.ztapir._
 import zio._
+import zio.blocking.{blocking, Blocking}
 import zio.config.typesafe.TypesafeConfig
 import zio.config.{getConfig, ZConfig}
 import zio.interop.catz._
@@ -57,7 +58,7 @@ object Server extends App with LazyLogging {
       .summary("Get predicates used at this service")
 
   def predicatesRouteR(predicatesEndpoint: ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]])
-    : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
+    : URIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
     predicatesEndpoint.toRoutesR { case () =>
       val program = for {
         response <- PredicatesService.run
@@ -113,7 +114,7 @@ object Server extends App with LazyLogging {
     Some(License("MIT License", Some("https://opensource.org/licenses/MIT")))
   )
 
-  val server: RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Unit] =
+  val server: RIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- getConfig[AppConfig]
@@ -146,7 +147,7 @@ object Server extends App with LazyLogging {
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = {
-    val appLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer ++ configLayer
+    val appLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer ++ configLayer ++ Blocking.live
     server.provideLayer(appLayer).exitCode
   }
 
