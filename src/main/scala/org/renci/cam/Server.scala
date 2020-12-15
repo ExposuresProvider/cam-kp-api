@@ -1,10 +1,15 @@
 package org.renci.cam
 
+import java.util.Properties
+
+import cats.effect.Blocker
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder, Printer}
 import org.http4s._
+import org.http4s.dsl.Http4sDsl
+import org.http4s.headers.Location
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
@@ -24,6 +29,7 @@ import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 
+import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
 object Server extends App with LazyLogging {
@@ -107,8 +113,11 @@ object Server extends App with LazyLogging {
         queryEndpoint <- queryEndpointZ
         queryRoute <- queryRouteR(queryEndpoint)
         routes = queryRoute <+> predicatesRoute
-        openAPI = List(queryEndpoint, predicatesEndpoint).toOpenAPI("CAM-KP API", "0.1").toYaml
-        docsRoute = new SwaggerHttp4s(openAPI).routes[Task]
+        openAPI: String = List(queryEndpoint, predicatesEndpoint)
+          .toOpenAPI("CAM-KP API", "0.1")
+          .servers(List(sttp.tapir.openapi.Server(appConfig.location)))
+          .toYaml
+        docsRoute = swaggerRoutes(openAPI)
         httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
         httpAppWithLogging = Logger.httpApp(true, false)(httpApp)
         result <-
@@ -128,6 +137,40 @@ object Server extends App with LazyLogging {
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = {
     val appLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer ++ configLayer
     server.provideLayer(appLayer).exitCode
+  }
+
+  // hack using SwaggerHttp4s code to handle running in subdirectory
+  private def swaggerRoutes(yaml: String): HttpRoutes[Task] = {
+    val dsl = Http4sDsl[Task]
+    import dsl._
+    val contextPath = "docs"
+    val yamlName = "docs.yaml"
+    HttpRoutes.of[Task] {
+      case path @ GET -> Root / `contextPath` =>
+        val queryParameters = Map("url" -> Seq(s"$yamlName"))
+        Uri
+          .fromString(s"$contextPath/index.html")
+          .map(uri => uri.setQueryParams(queryParameters))
+          .map(uri => PermanentRedirect(Location(uri)))
+          .getOrElse(NotFound())
+      case GET -> Root / `contextPath` / `yamlName` =>
+        Ok(yaml)
+      case GET -> Root / `contextPath` / swaggerResource =>
+        StaticFile
+          .fromResource[Task](
+            s"/META-INF/resources/webjars/swagger-ui/$swaggerVersion/$swaggerResource",
+            Blocker.liftExecutionContext(ExecutionContext.global)
+          )
+          .getOrElseF(NotFound())
+    }
+  }
+
+  private val swaggerVersion = {
+    val p = new Properties()
+    val pomProperties = getClass.getResourceAsStream("/META-INF/maven/org.webjars/swagger-ui/pom.properties")
+    try p.load(pomProperties)
+    finally pomProperties.close()
+    p.getProperty("version")
   }
 
 }
