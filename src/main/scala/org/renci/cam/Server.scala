@@ -6,7 +6,7 @@ import cats.effect.Blocker
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
-import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder, Printer}
+import io.circe._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.Location
@@ -20,12 +20,12 @@ import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._
+import sttp.tapir.openapi.{Contact, Info, License}
 import sttp.tapir.server.http4s.ztapir._
-import sttp.tapir.swagger.http4s.SwaggerHttp4s
 import sttp.tapir.ztapir._
 import zio._
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{ZConfig, getConfig}
+import zio.config.{getConfig, ZConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 
@@ -104,6 +104,15 @@ object Server extends App with LazyLogging {
       program.mapError(error => error.getMessage)
     }
 
+  val openAPIInfo: Info = Info(
+    "CAM-KP API",
+    "0.1",
+    Some("TRAPI interface to database of Causal Activity Models"),
+    Some("https://opensource.org/licenses/MIT"),
+    Some(Contact(Some("Jim Balhoff"), Some("balhoff@renci.org"), None)),
+    Some(License("MIT License", Some("https://opensource.org/licenses/MIT")))
+  )
+
   val server: RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
@@ -115,6 +124,8 @@ object Server extends App with LazyLogging {
         routes = queryRoute <+> predicatesRoute
         openAPI: String = List(queryEndpoint, predicatesEndpoint)
           .toOpenAPI("CAM-KP API", "0.1")
+          .copy(info = openAPIInfo)
+          .copy(tags = List(sttp.tapir.openapi.Tag("translator")))
           .servers(List(sttp.tapir.openapi.Server(appConfig.location)))
           .toYaml
         docsRoute = swaggerRoutes(openAPI)
