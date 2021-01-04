@@ -66,12 +66,12 @@ object Server extends App with LazyLogging {
       program.mapError(error => error.getMessage)
     }
 
-  val queryEndpointZ: URIO[Has[BiolinkData], ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage]] =
+  val queryEndpointZ: URIO[Has[BiolinkData], ZEndpoint[(Option[Int], TRAPIQueryRequestBody), String, TRAPIMessage]] =
     for {
       biolinkData <- biolinkData
     } yield endpoint.post
       .in("query")
-      .in(query[Int]("limit"))
+      .in(query[Option[Int]]("limit"))
       .in(
         {
           implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
@@ -91,7 +91,7 @@ object Server extends App with LazyLogging {
       )
       .summary("Submit a TRAPI question graph and retrieve matching solutions")
 
-  def queryRouteR(queryEndpoint: ZEndpoint[(Int, TRAPIQueryRequestBody), String, TRAPIMessage])
+  def queryRouteR(queryEndpoint: ZEndpoint[(Option[Int], TRAPIQueryRequestBody), String, TRAPIMessage])
     : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
     queryEndpoint.toRoutesR { case (limit, body) =>
       val program = for {
