@@ -41,6 +41,8 @@ object QueryService extends LazyLogging {
 
   val RDFSSubPropertyOf: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#subPropertyOf")
 
+  val SlotMapping = IRI("http://cam.renci.org/biolink_slot")
+
   final case class TRAPIEdgeKey(`type`: Option[BiolinkPredicate], source_id: String, target_id: String)
 
   final case class Triple(subj: IRI, pred: IRI, obj: IRI)
@@ -381,8 +383,7 @@ object QueryService extends LazyLogging {
       queryText = sparql"""
                    SELECT DISTINCT ?predicate
                    WHERE {
-                     ?predicate $RDFSSubPropertyOf+ ${edgeType.iri} .
-                     FILTER NOT EXISTS { ?predicate a $BiolinkMLSlotDefinition }
+                     ?predicate $SlotMapping ${edgeType.iri} .
                    }
                    """
       predicates <- SPARQLQueryExecutor.runSelectQueryAs[Predicate](queryText.toQuery)
