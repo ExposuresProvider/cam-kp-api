@@ -70,7 +70,8 @@ object QueryService extends LazyLogging {
       .headOption
       .getOrElse(value)
 
-  def run(limit: Int, queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[QuerySolution]] = {
+  def run(limit: Option[Int],
+          queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[QuerySolution]] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
       predicates <- ZIO.foreachPar(queryGraph.edges.filter(_.`type`.nonEmpty)) { edge =>
@@ -104,7 +105,8 @@ object QueryService extends LazyLogging {
         v <- nodeTypes.get(id)
       } yield sparql"$subjVar $RDFType $v ."
       valuesClause = (sparqlLines ++ moreLines).fold(sparql"")(_ + _)
-      limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
+      limitValue = limit.getOrElse(1000)
+      limitSparql = if (limitValue > 0) sparql" LIMIT $limitValue" else sparql""
       queryString = sparql"""
                           SELECT DISTINCT $projection
                           WHERE {
