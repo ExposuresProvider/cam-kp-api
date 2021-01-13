@@ -67,6 +67,6 @@ dockerExposedPorts += 8080
 dockerApiVersion := Some(DockerApiVersion(1, 40))
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
 dockerCommands := dockerCommands.value.flatMap {
-  case cmd @ Cmd("EXPOSE", _) => List(Cmd("RUN", "apk update && apk add bash"), cmd)
+  case cmd @ Cmd("EXPOSE", _) => List(Cmd("RUN", "apk update && apk add bash curl"), cmd)
   case other                  => List(other)
 }
