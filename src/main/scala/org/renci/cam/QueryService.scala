@@ -365,12 +365,12 @@ object QueryService extends LazyLogging {
                      SELECT DISTINCT ?qid ?kid ?biolinkSlot ?label 
                      WHERE { 
                      VALUES (?kid ?qid) { $values }
-                     ?kid $RDFSSubPropertyOf+ ?biolinkSlot .
+                     ?kid $SlotMapping ?biolinkSlot .
                      ?biolinkSlot a $BiolinkMLSlotDefinition .
                      OPTIONAL { ?kid $RDFSLabel ?label . }
                      FILTER NOT EXISTS {
-                       ?kid $RDFSSubPropertyOf+ ?other .
-                       ?other <https://w3id.org/biolink/biolinkml/meta/is_a>+/<https://w3id.org/biolink/biolinkml/meta/mixins>* ?biolinkSlot .
+                       ?kid $SlotMapping ?other .
+                       ?other $BiolinkMLIsA+/<https://w3id.org/biolink/biolinkml/meta/mixins>* ?biolinkSlot .
                        } 
                      }
                      """
