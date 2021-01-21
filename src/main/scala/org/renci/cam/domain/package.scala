@@ -8,10 +8,13 @@ import org.apache.jena.sparql.core.{Var => JenaVar}
 import org.phenoscape.sparql.FromQuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator.SPARQLContext
+import io.circe.generic.extras._
 
 import scala.util.Try
 
 package object domain {
+
+  implicit val config: Configuration = Configuration.default
 
   final case class IRI(value: String)
 
@@ -56,14 +59,17 @@ package object domain {
 
   object BiolinkClass {
 
-    def apply(label: String): BiolinkClass = {
+    def apply(label: String): BiolinkClass =
       if (label.contains("_")) {
         BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}${CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, label)}"))
       } else {
         BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}${StringUtils.capitalize(label)}"))
       }
-    }
 
+  }
+
+  implicit class BiolinkClassOps(blClass: BiolinkClass) {
+    def withBiolinkPrefix = s"biolink:${blClass.shorthand}"
   }
 
   final case class BiolinkPredicate(shorthand: String, iri: IRI) extends BiolinkTerm
@@ -74,30 +80,40 @@ package object domain {
 
   }
 
+  implicit class BiolinkPredicateOps(blPredicate: BiolinkPredicate) {
+    def withBiolinkPrefix = s"biolink:${blPredicate.shorthand}"
+  }
+
   object BiolinkTerm {
 
     val namespace: String = "https://w3id.org/biolink/vocab/"
 
   }
 
-  final case class TRAPIQueryNode(id: String, `type`: Option[BiolinkClass], curie: Option[IRI])
+  final case class TRAPIQueryNode(id: Option[IRI], category: Option[BiolinkClass], is_set: Option[Boolean])
 
-  final case class TRAPIQueryEdge(id: String, source_id: String, target_id: String, `type`: Option[BiolinkPredicate])
+  final case class TRAPIQueryEdge(subject: String, `object`: String, predicate: Option[BiolinkPredicate], relation: Option[String])
 
-  final case class TRAPIQueryGraph(nodes: List[TRAPIQueryNode], edges: List[TRAPIQueryEdge])
+  final case class TRAPIQueryGraph(nodes: Map[String, TRAPIQueryNode], edges: Map[String, TRAPIQueryEdge])
 
-  final case class TRAPINode(id: String, name: Option[String], `type`: List[BiolinkClass])
+  final case class TRAPINode(name: Option[String], category: Option[List[BiolinkClass]], attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPIEdge(id: String, source_id: IRI, target_id: IRI, `type`: Option[BiolinkPredicate])
+  final case class TRAPIEdge(subject: IRI,
+                             `object`: IRI,
+                             relation: Option[String],
+                             predicate: Option[BiolinkPredicate],
+                             attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPIKnowledgeGraph(nodes: List[TRAPINode], edges: List[TRAPIEdge])
+  final case class TRAPIAttribute(name: Option[String], value: String, `type`: IRI,  url: Option[String])
 
-  final case class TRAPINodeBinding(qg_id: Option[String], kg_id: String)
+  final case class TRAPIKnowledgeGraph(nodes: Map[String, TRAPINode], edges: Map[String, TRAPIEdge])
 
-  final case class TRAPIEdgeBinding(qg_id: Option[String], kg_id: String, provenance: Option[String])
+  final case class TRAPINodeBinding(id: IRI)
 
-  final case class TRAPIResult(node_bindings: List[TRAPINodeBinding],
-                               edge_bindings: List[TRAPIEdgeBinding],
+  final case class TRAPIEdgeBinding(id: String, provenance: Option[String])
+
+  final case class TRAPIResult(node_bindings: Map[String, TRAPINodeBinding],
+                               edge_bindings: Map[String, TRAPIEdgeBinding],
                                extra_nodes: Option[List[TRAPINodeBinding]],
                                extra_edges: Option[List[TRAPIEdgeBinding]])
 
@@ -105,6 +121,10 @@ package object domain {
                                 knowledge_graph: Option[TRAPIKnowledgeGraph],
                                 results: Option[List[TRAPIResult]])
 
-  final case class TRAPIQueryRequestBody(message: TRAPIMessage)
+  final case class TRAPIQuery(message: TRAPIMessage)
+
+  final case class TRAPIResponse(message: TRAPIMessage, status: Option[String], description: Option[String], logs: Option[List[LogEntry]])
+
+  final case class LogEntry(timestamp: Option[String], level: Option[String], code: Option[String], message: Option[String])
 
 }
