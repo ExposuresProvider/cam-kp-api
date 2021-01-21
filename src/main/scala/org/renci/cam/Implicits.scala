@@ -1,9 +1,10 @@
 package org.renci.cam
 
+import com.google.common.base.CaseFormat
 import io.circe.Decoder.Result
 import io.circe.{Decoder, DecodingFailure, Encoder, HCursor}
 import org.apache.commons.lang3.StringUtils
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, BiolinkTerm, IRI}
 
 object Implicits {
 
@@ -46,8 +47,20 @@ object Implicits {
     biolinkPredicates.find(a => a.shorthand == s).toRight(s"BiolinkPredicate does not exist: $s")
   }
 
+  def biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { s =>
+    s"biolink:${s.shorthand}"
+  }
+
   def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = Decoder.decodeString.emap { s =>
     biolinkClasses.find(a => a.shorthand == s).toRight(s"BiolinkClass does not exist: $s")
+  }
+
+  def biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap { s =>
+    if (s.shorthand.contains("_")) {
+      s"biolink:${CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, s.shorthand)}"
+    } else {
+      s"biolink:${StringUtils.capitalize(s.shorthand)}"
+    }
   }
 
 }
