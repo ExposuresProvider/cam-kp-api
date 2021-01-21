@@ -1,0 +1,218 @@
+{
+  "message": {
+    "query_graph": {
+      "nodes": {
+        "n0": {
+          "category": "biolink:Gene"
+        },
+        "n1": {
+          "category": "biolink:BiologicalProcess"
+        }
+      },
+      "edges": {
+        "e0": {
+          "subject": "n1",
+          "object": "n0",
+          "predicate": "biolink:has_participant"
+        }
+      }
+    },
+    "knowledge_graph": {
+      "nodes": {
+        "GO:0034220": {
+          "name": "ion transmembrane transport",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:BiologicalProcessOrActivity",
+            "biolink:BiologicalProcess"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/ENVO_02500000": {
+          "name": "environmental system process",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:PlanetaryEntity",
+            "biolink:EnvironmentalProcess"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event": {
+          "name": "Molecular Event",
+          "category": [
+            "biolink:NamedThing"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081": {
+          "name": "V-ATPase:ATP6AP1",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:OrganismalEntity",
+            "biolink:MolecularEntity",
+            "biolink:AnatomicalEntity",
+            "biolink:GenomicEntity",
+            "biolink:MacromolecularMachine",
+            "biolink:MacromolecularComplex",
+            "biolink:CellularComponent"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600": {
+          "name": "V-ATPase",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:OrganismalEntity",
+            "biolink:MolecularEntity",
+            "biolink:AnatomicalEntity",
+            "biolink:GenomicEntity",
+            "biolink:MacromolecularMachine",
+            "biolink:MacromolecularComplex",
+            "biolink:CellularComponent"
+          ]
+        },
+        "http://identifiers.org/ncbigene:537": {
+          "category": [
+            "biolink:NamedThing"
+          ]
+        },
+        "GO:0010008": {
+          "name": "endosome membrane",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:OrganismalEntity",
+            "biolink:AnatomicalEntity",
+            "biolink:CellularComponent"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981": {
+          "name": "ATP6AP1",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:MolecularEntity",
+            "biolink:ChemicalSubstance",
+            "biolink:GenomicEntity",
+            "biolink:MacromolecularMachine",
+            "biolink:GeneOrGeneProduct",
+            "biolink:Gene",
+            "biolink:GeneProduct",
+            "biolink:Protein"
+          ]
+        }
+      },
+      "edges": {
+        "encbigene:537": {
+          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+          "object": "http://identifiers.org/ncbigene:537",
+          "predicate": "biolink:has_input"
+        },
+        "eGO_0034220": {
+          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+          "object": "GO:0034220",
+          "predicate": "biolink:part_of"
+        },
+        "ereacto.owl#REACTO_R-HSA-5215981": {
+          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981",
+          "predicate": "biolink:has_input"
+        },
+        "eGO_0010008": {
+          "subject": "http://purl.obolibrary.org/obo/ENVO_02500000",
+          "object": "GO:0010008",
+          "predicate": "biolink:occurs_in"
+        },
+        "ereacto.owl#REACTO_R-HSA-5252081": {
+          "subject": "http://purl.obolibrary.org/obo/ENVO_02500000",
+          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081",
+          "predicate": "biolink:has_output"
+        },
+        "ereacto.owl#REACTO_R-HSA-912600": {
+          "subject": "http://purl.obolibrary.org/obo/ENVO_02500000",
+          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600",
+          "predicate": "biolink:has_input"
+        },
+        "eENVO_02500000": {
+          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
+          "object": "http://purl.obolibrary.org/obo/ENVO_02500000",
+          "predicate": "biolink:part_of"
+        }
+      }
+    },
+    "results": [
+      {
+        "node_bindings": {
+          "n0": {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981"
+          },
+          "n1": {
+            "id": "GO:0034220"
+          }
+        },
+        "edge_bindings": {
+          "e0": {
+            "id": "http://purl.obolibrary.org/obo/RO_0000057",
+            "provenance": "http://model.geneontology.org/R-HSA-983712"
+          }
+        },
+        "extra_nodes": [
+          {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event"
+          },
+          {
+            "id": "http://purl.obolibrary.org/obo/ENVO_02500000"
+          },
+          {
+            "id": "GO:0034220"
+          },
+          {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981"
+          },
+          {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600"
+          },
+          {
+            "id": "http://identifiers.org/ncbigene:537"
+          },
+          {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081"
+          },
+          {
+            "id": "GO:0010008"
+          }
+        ],
+        "extra_edges": [
+          {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981",
+            "provenance": "http://model.geneontology.org/R-HSA-983712"
+          },
+          {
+            "id": "http://purl.obolibrary.org/obo/GO_0034220",
+            "provenance": "http://model.geneontology.org/R-HSA-983712"
+          },
+          {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081",
+            "provenance": "http://model.geneontology.org/R-HSA-983712"
+          },
+          {
+            "id": "http://purl.obolibrary.org/obo/ENVO_02500000",
+            "provenance": "http://model.geneontology.org/R-HSA-983712"
+          },
+          {
+            "id": "http://identifiers.org/ncbigene:537",
+            "provenance": "http://model.geneontology.org/R-HSA-983712"
+          },
+          {
+            "id": "http://purl.obolibrary.org/obo/GO_0010008",
+            "provenance": "http://model.geneontology.org/R-HSA-983712"
+          },
+          {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600",
+            "provenance": "http://model.geneontology.org/R-HSA-983712"
+          }
+        ]
+      }
+    ]
+  },
+  "status": "Success"
+}
