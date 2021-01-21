@@ -113,9 +113,7 @@ package object domain {
   final case class TRAPIEdgeBinding(id: String, provenance: Option[String])
 
   final case class TRAPIResult(node_bindings: Map[String, TRAPINodeBinding],
-                               edge_bindings: Map[String, TRAPIEdgeBinding],
-                               extra_nodes: Option[List[TRAPINodeBinding]],
-                               extra_edges: Option[List[TRAPIEdgeBinding]])
+                               edge_bindings: Map[String, TRAPIEdgeBinding])
 
   final case class TRAPIMessage(query_graph: Option[TRAPIQueryGraph],
                                 knowledge_graph: Option[TRAPIKnowledgeGraph],

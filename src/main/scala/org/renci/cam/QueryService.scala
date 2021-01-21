@@ -1,6 +1,8 @@
 package org.renci.cam
 
 import com.typesafe.scalalogging.LazyLogging
+import io.circe.generic.auto._
+import io.circe.syntax._
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.QuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation._
@@ -10,6 +12,8 @@ import org.renci.cam.domain._
 import zio.config.ZConfig
 import zio.{Has, RIO, Task, ZIO, config => _}
 
+import java.math.BigInteger
+import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import scala.jdk.CollectionConverters._
 
@@ -156,30 +160,28 @@ object QueryService extends LazyLogging {
         for {
           slotStuff <- slotStuffList.find(_.kid == triple.pred)
           predBLTermOpt = biolinkData.predicates.find(a => a.iri == slotStuff.biolinkSlot)
-        } yield "e" + triple.obj.value.substring(triple.obj.value.lastIndexOf("/") + 1, triple.obj.value.length) -> TRAPIEdge(triple.subj,
-                                                                                                                              triple.obj,
-                                                                                                                              None,
-                                                                                                                              predBLTermOpt,
-                                                                                                                              None)
+          edgeKey = TRAPIEdgeKey(predBLTermOpt, triple.subj.value, triple.obj.value).asJson.deepDropNullValues.noSpaces
+          encodedEdgeKey = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+        } yield encodedEdgeKey -> TRAPIEdge(triple.subj, triple.obj, None, predBLTermOpt, None)
       }.toMap
       _ = logger.warn("extraKGEdges: {}", extraKGEdges)
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) =>
-        val provsAndCamTriples =
-          resultEdgeBindings.flatMap(_._2.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).to(Set).flatten).toMap
-        logger.warn("provsAndCamTriples: {}", provsAndCamTriples)
-        val nodes = provsAndCamTriples.values.flatten.to(Set).flatMap(t => Set(t.subj, t.obj))
-        val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(IRI(applyPrefix(n.value, biolinkData.prefixes))))
-        val extraKGEdgeBindings = provsAndCamTriples
-          .to(Set)
-          .flatMap { case (prov, triples) =>
-            triples.map { triple =>
-              val predBLTermOpt = biolinkData.predicates.find(a => a.iri == triple.pred)
-//              val edgeKey = TRAPIEdgeKey(predBLTermOpt, triple.subj.value, triple.obj.value).asJson.deepDropNullValues.noSpaces
-//              val kgId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
-              TRAPIEdgeBinding(triple.obj.value, Some(prov))
-            }
-          }
-        TRAPIResult(resultNodeBindings, resultEdgeBindings, Some(extraKGNodeBindings.to(List)), Some(extraKGEdgeBindings.to(List)))
+//        val provsAndCamTriples =
+//          resultEdgeBindings.flatMap(_._2.provenance).map(prov => prov2CAMStuffTripleMap.get(prov).to(Set).flatten)
+//        logger.warn("provsAndCamTriples: {}", provsAndCamTriples)
+//        val nodes = provsAndCamTriples.flatten.to(Set).flatMap(t => Set(t.subj, t.obj))
+//        val extraKGNodeBindings = nodes.map(n => TRAPINodeBinding(IRI(applyPrefix(n.value, biolinkData.prefixes))))
+//        val extraKGEdgeBindings = provsAndCamTriples
+//          .to(Set)
+//          .flatMap { case (prov, triples) =>
+//            triples.map { triple =>
+//              val predBLTermOpt = biolinkData.predicates.find(a => a.iri == triple.pred)
+////              val edgeKey = TRAPIEdgeKey(predBLTermOpt, triple.subj.value, triple.obj.value).asJson.deepDropNullValues.noSpaces
+////              val kgId = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+//              TRAPIEdgeBinding(triple.obj.value, Some(prov))
+//            }
+//          }
+        TRAPIResult(resultNodeBindings, resultEdgeBindings /*, Some(extraKGNodeBindings.to(List)), Some(extraKGEdgeBindings.to(List))*/ )
       }
       trapiKGNodes = initialKGNodes ++ extraKGNodes
       trapiKGEdges = initialKGEdges ++ extraKGEdges
@@ -195,11 +197,9 @@ object QueryService extends LazyLogging {
             for {
               source <- ZIO.fromOption(nodeMap.get(v.subject)).orElseFail(new Exception("could not get source id"))
               target <- ZIO.fromOption(nodeMap.get(v.`object`)).orElseFail(new Exception("could not get target id"))
-            } yield "e" + target.value.substring(target.value.lastIndexOf("/") + 1, target.value.length) -> TRAPIEdge(source,
-                                                                                                                      target,
-                                                                                                                      None,
-                                                                                                                      v.predicate,
-                                                                                                                      None)
+              edgeKey = TRAPIEdgeKey(v.predicate, v.subject, v.`object`).asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8)
+              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey)))
+            } yield encodedTRAPIEdge -> TRAPIEdge(source, target, None, v.predicate, None)
           }
         } yield edges.toList
       }
@@ -297,13 +297,13 @@ object QueryService extends LazyLogging {
               predicateRDFNode <- Task.effect(querySolution.get(k).toString)
               sourceRDFNode <- Task.effect(querySolution.get(v.subject).toString)
               targetRDFNode <- Task.effect(querySolution.get(v.`object`).toString)
-//              edgeKey = TRAPIEdgeKey(e.key, e.subject, e.`object`).asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8)
-//              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey)))
+              edgeKey = TRAPIEdgeKey(v.predicate, v.subject, v.`object`).asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8)
+              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey)))
               prov <-
                 ZIO
                   .fromOption(provs.get(TripleString(sourceRDFNode, predicateRDFNode, targetRDFNode)))
                   .orElseFail(new Exception("Unexpected triple string"))
-            } yield k -> TRAPIEdgeBinding(predicateRDFNode, Some(prov))
+            } yield encodedTRAPIEdge -> TRAPIEdgeBinding(predicateRDFNode, Some(prov))
           }
         } yield querySolution -> edgeBindings
       }
