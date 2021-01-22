@@ -8,13 +8,10 @@ import org.apache.jena.sparql.core.{Var => JenaVar}
 import org.phenoscape.sparql.FromQuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator.SPARQLContext
-import io.circe.generic.extras._
 
 import scala.util.Try
 
 package object domain {
-
-  implicit val config: Configuration = Configuration.default
 
   final case class IRI(value: String)
 
