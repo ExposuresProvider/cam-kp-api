@@ -206,8 +206,8 @@
           }
         },
         "edge_bindings": {
-          "4bc27c4e5735a80a00ff52cdb98bf4bdeb5c1d3c5d2f97c90d40ee1fd3f12de4": {
-            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081",
+          "e0": {
+            "id": "4bc27c4e5735a80a00ff52cdb98bf4bdeb5c1d3c5d2f97c90d40ee1fd3f12de4",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -222,8 +222,8 @@
           }
         },
         "edge_bindings": {
-          "68207e4fcca1bce7a4b2b5a107776879b1be4bdb104740d7e6ec74490a743427": {
-            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600",
+          "e0": {
+            "id": "68207e4fcca1bce7a4b2b5a107776879b1be4bdb104740d7e6ec74490a743427",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -238,8 +238,8 @@
           }
         },
         "edge_bindings": {
-          "f8f9aa8f1435fc5d1fa571db8deb176aec1bb09ce3ff964adf0ec86f43818ec4": {
-            "id": "http://purl.obolibrary.org/obo/GO_0010008",
+          "e0": {
+            "id": "f8f9aa8f1435fc5d1fa571db8deb176aec1bb09ce3ff964adf0ec86f43818ec4",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -254,8 +254,8 @@
           }
         },
         "edge_bindings": {
-          "a34bf11db6830966426d314bbbdfc2057eed1fb267755e6f389f39abec157914": {
-            "id": "http://purl.obolibrary.org/obo/ENVO_02500000",
+          "e0": {
+            "id": "a34bf11db6830966426d314bbbdfc2057eed1fb267755e6f389f39abec157914",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -270,8 +270,8 @@
           }
         },
         "edge_bindings": {
-          "f3ebf8d6824286c694ba378b1a2f6711b75eb932fc2c675daf7fb3ef28704110": {
-            "id": "http://purl.obolibrary.org/obo/GO_0034220",
+          "e0": {
+            "id": "f3ebf8d6824286c694ba378b1a2f6711b75eb932fc2c675daf7fb3ef28704110",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -286,8 +286,8 @@
           }
         },
         "edge_bindings": {
-          "262677a43c7556d4fa3fe50bb73fb60907a066b46376e7651c8e6518da2252a7": {
-            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081",
+          "e0": {
+            "id": "262677a43c7556d4fa3fe50bb73fb60907a066b46376e7651c8e6518da2252a7",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -302,8 +302,8 @@
           }
         },
         "edge_bindings": {
-          "7c1917b1e609c9907bce3e562771dc66e6d64108589188927cbab37a2824f0cf": {
-            "id": "http://purl.obolibrary.org/obo/GO_0034220",
+          "e0": {
+            "id": "7c1917b1e609c9907bce3e562771dc66e6d64108589188927cbab37a2824f0cf",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -318,8 +318,8 @@
           }
         },
         "edge_bindings": {
-          "98068e65a69c5566c64d9b1f7adfd5099516e31b17bc3d3cdb30e911353d77ec": {
-            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600",
+          "e0": {
+            "id": "98068e65a69c5566c64d9b1f7adfd5099516e31b17bc3d3cdb30e911353d77ec",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -334,8 +334,8 @@
           }
         },
         "edge_bindings": {
-          "c1fec4a5e8d54f6f7e0633243d65f2a53b2d82ec506e4b671dc7eeb248a06e75": {
-            "id": "http://purl.obolibrary.org/obo/GO_0010008",
+          "e0": {
+            "id": "c1fec4a5e8d54f6f7e0633243d65f2a53b2d82ec506e4b671dc7eeb248a06e75",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -350,8 +350,8 @@
           }
         },
         "edge_bindings": {
-          "bb324c79066bd47924014850ab44dc85fb3c6be41be97d9903119ee14626bf7f": {
-            "id": "http://purl.obolibrary.org/obo/ENVO_02500000",
+          "e0": {
+            "id": "bb324c79066bd47924014850ab44dc85fb3c6be41be97d9903119ee14626bf7f",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -366,8 +366,8 @@
           }
         },
         "edge_bindings": {
-          "c12fab6ef46a159cbc7a864c0aa0e9a416180b86742453580e487d6cb489f583": {
-            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981",
+          "e0": {
+            "id": "c12fab6ef46a159cbc7a864c0aa0e9a416180b86742453580e487d6cb489f583",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -382,8 +382,8 @@
           }
         },
         "edge_bindings": {
-          "111c96642ee491b03334a90676bdadf913b5df61544de885c197303302335c39": {
-            "id": "http://identifiers.org/ncbigene:537",
+          "e0": {
+            "id": "111c96642ee491b03334a90676bdadf913b5df61544de885c197303302335c39",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -398,8 +398,8 @@
           }
         },
         "edge_bindings": {
-          "b35565849e9bd4dd7960dca982d6b2be0544a4ce2a496a240365a608018a6c13": {
-            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981",
+          "e0": {
+            "id": "b35565849e9bd4dd7960dca982d6b2be0544a4ce2a496a240365a608018a6c13",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }
@@ -414,8 +414,8 @@
           }
         },
         "edge_bindings": {
-          "0e951b095fac92204e0286c9f7ee06830312bb48e636827ea852c4fa567cbdf2": {
-            "id": "http://identifiers.org/ncbigene:537",
+          "e0": {
+            "id": "0e951b095fac92204e0286c9f7ee06830312bb48e636827ea852c4fa567cbdf2",
             "provenance": "http://model.geneontology.org/R-HSA-983712"
           }
         }

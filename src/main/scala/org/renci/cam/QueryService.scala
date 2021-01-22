@@ -190,7 +190,7 @@ object QueryService extends LazyLogging {
             logger.warn("edgeKey: {}", edgeKey)
             val encodedEdgeKey = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
             logger.warn("encodedEdgeKey: {}", encodedEdgeKey)
-            val edgeBindings = Map(encodedEdgeKey -> TRAPIEdgeBinding(tripleAndIndex._1.obj.value, Some(provAndTripleSet._1)))
+            val edgeBindings = Map("e0" -> TRAPIEdgeBinding(encodedEdgeKey, Some(provAndTripleSet._1)))
             results += TRAPIResult(nodeBindings, edgeBindings)
           }
         }
