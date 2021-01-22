@@ -19,74 +19,19 @@
     },
     "knowledge_graph": {
       "nodes": {
-        "GO:0034220": {
-          "name": "ion transmembrane transport",
+        "GO:0003830": {
+          "name": "beta-1,4-mannosylglycoprotein 4-beta-N-acetylglucosaminyltransferase activity",
           "category": [
             "biolink:NamedThing",
             "biolink:BiologicalEntity",
-            "biolink:BiologicalProcessOrActivity",
-            "biolink:BiologicalProcess"
-          ]
-        },
-        "http://purl.obolibrary.org/obo/ENVO_02500000": {
-          "name": "environmental system process",
-          "category": [
-            "biolink:NamedThing",
             "biolink:PlanetaryEntity",
-            "biolink:EnvironmentalProcess"
+            "biolink:EnvironmentalProcess",
+            "biolink:BiologicalProcessOrActivity",
+            "biolink:MolecularActivity"
           ]
         },
-        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event": {
-          "name": "Molecular Event",
-          "category": [
-            "biolink:NamedThing"
-          ]
-        },
-        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081": {
-          "name": "V-ATPase:ATP6AP1",
-          "category": [
-            "biolink:NamedThing",
-            "biolink:BiologicalEntity",
-            "biolink:OrganismalEntity",
-            "biolink:MolecularEntity",
-            "biolink:AnatomicalEntity",
-            "biolink:GenomicEntity",
-            "biolink:MacromolecularMachine",
-            "biolink:MacromolecularComplex",
-            "biolink:CellularComponent"
-          ]
-        },
-        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600": {
-          "name": "V-ATPase",
-          "category": [
-            "biolink:NamedThing",
-            "biolink:BiologicalEntity",
-            "biolink:OrganismalEntity",
-            "biolink:MolecularEntity",
-            "biolink:AnatomicalEntity",
-            "biolink:GenomicEntity",
-            "biolink:MacromolecularMachine",
-            "biolink:MacromolecularComplex",
-            "biolink:CellularComponent"
-          ]
-        },
-        "http://identifiers.org/ncbigene:537": {
-          "category": [
-            "biolink:NamedThing"
-          ]
-        },
-        "GO:0010008": {
-          "name": "endosome membrane",
-          "category": [
-            "biolink:NamedThing",
-            "biolink:BiologicalEntity",
-            "biolink:OrganismalEntity",
-            "biolink:AnatomicalEntity",
-            "biolink:CellularComponent"
-          ]
-        },
-        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981": {
-          "name": "ATP6AP1",
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-975897": {
+          "name": "MGAT3",
           "category": [
             "biolink:NamedThing",
             "biolink:BiologicalEntity",
@@ -99,83 +44,131 @@
             "biolink:GeneProduct",
             "biolink:Protein"
           ]
+        },
+        "http://identifiers.org/ncbigene:4248": {
+          "category": [
+            "biolink:NamedThing"
+          ]
+        },
+        "GO:0000139": {
+          "name": "Golgi membrane",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:OrganismalEntity",
+            "biolink:AnatomicalEntity",
+            "biolink:CellularComponent"
+          ]
+        },
+        "UBERON:0001062": {
+          "name": "anatomical entity",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:OrganismalEntity",
+            "biolink:AnatomicalEntity"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-914003": {
+          "name": "UDP-GlcNAc",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:MolecularEntity",
+            "biolink:ChemicalSubstance"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/ENVO_02500000": {
+          "name": "environmental system process",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:PlanetaryEntity",
+            "biolink:EnvironmentalProcess"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-981613": {
+          "name": "Glycoprotein with bifurcating GlcNAc in position 3",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:MolecularEntity",
+            "biolink:ChemicalSubstance",
+            "biolink:GenomicEntity",
+            "biolink:MacromolecularMachine",
+            "biolink:GeneOrGeneProduct",
+            "biolink:GeneProduct",
+            "biolink:Protein"
+          ]
+        },
+        "GO:0008150": {
+          "name": "Biological Process",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:BiologicalProcessOrActivity",
+            "biolink:BiologicalProcess"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-975910": {
+          "name": "NGP",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:MolecularEntity",
+            "biolink:ChemicalSubstance"
+          ]
         }
       },
       "edges": {
-        "c1fec4a5e8d54f6f7e0633243d65f2a53b2d82ec506e4b671dc7eeb248a06e75": {
-          "subject": "http://purl.obolibrary.org/obo/ENVO_02500000",
-          "object": "GO:0010008",
+        "e76decd214002e2268c3c3113237db9177f6900f646c14eb4c70159f08967ccf": {
+          "subject": "GO:0003830",
+          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-975910",
+          "predicate": "biolink:has_input"
+        },
+        "d9ee709d9dfeed86c8939ae77da087e88b7817b6bdf46b65e5f76b4d5f01dc95": {
+          "subject": "GO:0003830",
+          "object": "GO:0000139",
           "predicate": "biolink:occurs_in"
         },
-        "c12fab6ef46a159cbc7a864c0aa0e9a416180b86742453580e487d6cb489f583": {
-          "subject": "http://purl.obolibrary.org/obo/ENVO_02500000",
-          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981",
+        "c158408e0317b1ec7e0c80df4a2d6158ad0d0b56eb69368695cef84586a18f12": {
+          "subject": "GO:0003830",
+          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-914003",
           "predicate": "biolink:has_input"
         },
-        "7c1917b1e609c9907bce3e562771dc66e6d64108589188927cbab37a2824f0cf": {
-          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-          "object": "GO:0034220",
-          "predicate": "biolink:part_of"
+        "0c51f8e81156206d01ee4077988ec591903a7f0425f949f46d1ba4667bc52a74": {
+          "subject": "GO:0003830",
+          "object": "UBERON:0001062",
+          "predicate": "biolink:enabled_by"
         },
-        "f8f9aa8f1435fc5d1fa571db8deb176aec1bb09ce3ff964adf0ec86f43818ec4": {
-          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-          "object": "GO:0010008",
-          "predicate": "biolink:occurs_in"
-        },
-        "98068e65a69c5566c64d9b1f7adfd5099516e31b17bc3d3cdb30e911353d77ec": {
-          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600",
-          "predicate": "biolink:has_input"
-        },
-        "a34bf11db6830966426d314bbbdfc2057eed1fb267755e6f389f39abec157914": {
-          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-          "object": "http://purl.obolibrary.org/obo/ENVO_02500000",
-          "predicate": "biolink:part_of"
-        },
-        "262677a43c7556d4fa3fe50bb73fb60907a066b46376e7651c8e6518da2252a7": {
-          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081",
-          "predicate": "biolink:has_output"
-        },
-        "bb324c79066bd47924014850ab44dc85fb3c6be41be97d9903119ee14626bf7f": {
-          "subject": "http://purl.obolibrary.org/obo/ENVO_02500000",
-          "object": "http://purl.obolibrary.org/obo/ENVO_02500000",
-          "predicate": "biolink:part_of"
-        },
-        "68207e4fcca1bce7a4b2b5a107776879b1be4bdb104740d7e6ec74490a743427": {
-          "subject": "http://purl.obolibrary.org/obo/ENVO_02500000",
-          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600",
-          "predicate": "biolink:has_input"
-        },
-        "111c96642ee491b03334a90676bdadf913b5df61544de885c197303302335c39": {
-          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-          "object": "http://identifiers.org/ncbigene:537",
-          "predicate": "biolink:has_input"
+        "8c91085583759589083177bc01c3fddf80e0f00a1145fe8dd5b6670164522333": {
+          "subject": "GO:0003830",
+          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-975897",
+          "predicate": "biolink:enabled_by"
         },
         "6c80fb013a0ae9e64b6503ae9996cc447f2683ee561928ca8e4693d3984889f8": {
-          "subject": "GO:0034220",
-          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981",
+          "subject": "GO:0008150",
+          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-975897",
           "predicate": "biolink:has_participant"
         },
-        "b35565849e9bd4dd7960dca982d6b2be0544a4ce2a496a240365a608018a6c13": {
-          "subject": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event",
-          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981",
-          "predicate": "biolink:has_input"
-        },
-        "4bc27c4e5735a80a00ff52cdb98bf4bdeb5c1d3c5d2f97c90d40ee1fd3f12de4": {
-          "subject": "http://purl.obolibrary.org/obo/ENVO_02500000",
-          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081",
+        "ec62e4827a58b08b8b0bbb931a8f88d18d506eb2d9eb5fb9626d2e8a0141125d": {
+          "subject": "GO:0003830",
+          "object": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-981613",
           "predicate": "biolink:has_output"
         },
-        "f3ebf8d6824286c694ba378b1a2f6711b75eb932fc2c675daf7fb3ef28704110": {
-          "subject": "http://purl.obolibrary.org/obo/ENVO_02500000",
-          "object": "GO:0034220",
+        "478a3c80ec3e1304f831dee2b6a91bc30765fb39c75d01c76e24c47ca62d5213": {
+          "subject": "GO:0003830",
+          "object": "http://identifiers.org/ncbigene:4248",
+          "predicate": "biolink:enabled_by"
+        },
+        "794c5cd10305e4f341fd3468d5f0ca97c05cf36f55c18927c11ba0bb075867e9": {
+          "subject": "GO:0003830",
+          "object": "http://purl.obolibrary.org/obo/ENVO_02500000",
           "predicate": "biolink:part_of"
         },
-        "0e951b095fac92204e0286c9f7ee06830312bb48e636827ea852c4fa567cbdf2": {
-          "subject": "http://purl.obolibrary.org/obo/ENVO_02500000",
-          "object": "http://identifiers.org/ncbigene:537",
-          "predicate": "biolink:has_input"
+        "dc4a20106c181fd519ca141145d3cbee323d60c6bb65f7a3ac6a12fb71b5d4ca": {
+          "subject": "GO:0003830",
+          "object": "GO:0008150",
+          "predicate": "biolink:part_of"
         }
       }
     },
@@ -183,16 +176,160 @@
       {
         "node_bindings": {
           "n0": {
-            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981"
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-975897"
           },
           "n1": {
-            "id": "GO:0034220"
+            "id": "GO:0008150"
           }
         },
         "edge_bindings": {
           "6c80fb013a0ae9e64b6503ae9996cc447f2683ee561928ca8e4693d3984889f8": {
             "id": "http://purl.obolibrary.org/obo/RO_0000057",
-            "provenance": "http://model.geneontology.org/R-HSA-983712"
+            "provenance": "http://model.geneontology.org/R-HSA-975574"
+          }
+        }
+      },
+      {
+        "node_bindings": {
+          "n0": {
+            "id": "GO:0003830"
+          },
+          "n1": {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-975910"
+          }
+        },
+        "edge_bindings": {
+          "96930639f76a9b76377dccfa8dedba0d333e5980287cc229562e2e40b3e1c5d3": {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-975910",
+            "provenance": "http://model.geneontology.org/R-HSA-975574"
+          }
+        }
+      },
+      {
+        "node_bindings": {
+          "n0": {
+            "id": "GO:0003830"
+          },
+          "n1": {
+            "id": "http://purl.obolibrary.org/obo/ENVO_02500000"
+          }
+        },
+        "edge_bindings": {
+          "f4a6c1e8d3a4a4ed1b0940797128339b3168a8bc66f2af437faa680ed473a634": {
+            "id": "http://purl.obolibrary.org/obo/ENVO_02500000",
+            "provenance": "http://model.geneontology.org/R-HSA-975574"
+          }
+        }
+      },
+      {
+        "node_bindings": {
+          "n0": {
+            "id": "GO:0003830"
+          },
+          "n1": {
+            "id": "http://identifiers.org/ncbigene:4248"
+          }
+        },
+        "edge_bindings": {
+          "301072d5e379ee79634147aa14e602f3c3be6fe97808463954e04478eae46cd0": {
+            "id": "http://identifiers.org/ncbigene:4248",
+            "provenance": "http://model.geneontology.org/R-HSA-975574"
+          }
+        }
+      },
+      {
+        "node_bindings": {
+          "n0": {
+            "id": "GO:0003830"
+          },
+          "n1": {
+            "id": "GO:0008150"
+          }
+        },
+        "edge_bindings": {
+          "3f999dfbb1d3a49c12f45b516b6808d70bddd0bf8655daefda65dda56eabda09": {
+            "id": "http://purl.obolibrary.org/obo/GO_0008150",
+            "provenance": "http://model.geneontology.org/R-HSA-975574"
+          }
+        }
+      },
+      {
+        "node_bindings": {
+          "n0": {
+            "id": "GO:0003830"
+          },
+          "n1": {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-914003"
+          }
+        },
+        "edge_bindings": {
+          "4974109cccb179b501027aa3812ce19f150c06507a8792075432bbfd01f62013": {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-914003",
+            "provenance": "http://model.geneontology.org/R-HSA-975574"
+          }
+        }
+      },
+      {
+        "node_bindings": {
+          "n0": {
+            "id": "GO:0003830"
+          },
+          "n1": {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-981613"
+          }
+        },
+        "edge_bindings": {
+          "860bd4f588a5f65053ac4826222737d696a6d9ca1e8f0ea4fef013d124df37a2": {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-ALL-981613",
+            "provenance": "http://model.geneontology.org/R-HSA-975574"
+          }
+        }
+      },
+      {
+        "node_bindings": {
+          "n0": {
+            "id": "GO:0003830"
+          },
+          "n1": {
+            "id": "GO:0000139"
+          }
+        },
+        "edge_bindings": {
+          "2a3523abb840dce66af48c58943cbe86c48186665ec89221fab3f5fd0c29c9c4": {
+            "id": "http://purl.obolibrary.org/obo/GO_0000139",
+            "provenance": "http://model.geneontology.org/R-HSA-975574"
+          }
+        }
+      },
+      {
+        "node_bindings": {
+          "n0": {
+            "id": "GO:0003830"
+          },
+          "n1": {
+            "id": "UBERON:0001062"
+          }
+        },
+        "edge_bindings": {
+          "b685a56c232ebcd1bba7afaa251400b3ea786bb12742385d3220394d8777105f": {
+            "id": "http://purl.obolibrary.org/obo/UBERON_0001062",
+            "provenance": "http://model.geneontology.org/R-HSA-975574"
+          }
+        }
+      },
+      {
+        "node_bindings": {
+          "n0": {
+            "id": "GO:0003830"
+          },
+          "n1": {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-975897"
+          }
+        },
+        "edge_bindings": {
+          "94039969c1c43263fdead9d4c13f6bf7e65af0c377af55a77bd8a4f567f9551c": {
+            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-975897",
+            "provenance": "http://model.geneontology.org/R-HSA-975574"
           }
         }
       }
