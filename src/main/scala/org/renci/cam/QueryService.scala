@@ -177,14 +177,19 @@ object QueryService extends LazyLogging {
           resultEdgeBindings.flatMap(_._2.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).to(Set).flatten).toMap
         logger.warn("provsAndCamTriples: {}", provsAndCamTriples)
         provsAndCamTriples.foreach { provAndTripleSet =>
+          logger.warn("provAndTripleSet._1 : {}", provAndTripleSet._1)
           provAndTripleSet._2.zipWithIndex.foreach { tripleAndIndex =>
+            logger.warn("tripleAndIndex._1: {}", tripleAndIndex._1)
             val nodeBindings = Map(
               s"n0" -> TRAPINodeBinding(IRI(applyPrefix(tripleAndIndex._1.subj.value, biolinkData.prefixes))),
               s"n1" -> TRAPINodeBinding(IRI(applyPrefix(tripleAndIndex._1.obj.value, biolinkData.prefixes)))
             )
-            val predBLTermOpt = biolinkData.predicates.find(a => a.iri == tripleAndIndex._1.pred)
+            val slotStuff = slotStuffList.find(_.kid == tripleAndIndex._1.pred).get
+            val predBLTermOpt = biolinkData.predicates.find(a => a.iri == slotStuff.biolinkSlot)
             val edgeKey = TRAPIEdgeKey(predBLTermOpt, tripleAndIndex._1.subj.value, tripleAndIndex._1.obj.value).asJson.deepDropNullValues.noSpaces
+            logger.warn("edgeKey: {}", edgeKey)
             val encodedEdgeKey = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+            logger.warn("encodedEdgeKey: {}", encodedEdgeKey)
             val edgeBindings = Map(encodedEdgeKey -> TRAPIEdgeBinding(tripleAndIndex._1.obj.value, Some(provAndTripleSet._1)))
             results += TRAPIResult(nodeBindings, edgeBindings)
           }
@@ -207,8 +212,10 @@ object QueryService extends LazyLogging {
             for {
               source <- ZIO.fromOption(nodeMap.get(v.subject)).orElseFail(new Exception("could not get source id"))
               target <- ZIO.fromOption(nodeMap.get(v.`object`)).orElseFail(new Exception("could not get target id"))
-              edgeKey = TRAPIEdgeKey(v.predicate, v.subject, v.`object`).asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8)
-              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey)))
+              edgeKey = TRAPIEdgeKey(v.predicate, v.subject, v.`object`).asJson.deepDropNullValues.noSpaces
+              _ = logger.warn("edgeKey: {}", edgeKey)
+              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+              _ = logger.warn("encodedTRAPIEdge: {}", encodedTRAPIEdge)
             } yield encodedTRAPIEdge -> TRAPIEdge(source, target, None, v.predicate, None)
           }
         } yield edges.toList
@@ -307,8 +314,12 @@ object QueryService extends LazyLogging {
               predicateRDFNode <- Task.effect(querySolution.get(k).toString)
               sourceRDFNode <- Task.effect(querySolution.get(v.subject).toString)
               targetRDFNode <- Task.effect(querySolution.get(v.`object`).toString)
-              edgeKey = TRAPIEdgeKey(v.predicate, v.subject, v.`object`).asJson.deepDropNullValues.noSpaces.getBytes(StandardCharsets.UTF_8)
-              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey)))
+              _ = logger.warn("k: {}, v: {}", k, v)
+              _ = logger.warn("predicateRDFNode: {}, sourceRDFNode: {}, targetRDFNode: {}", predicateRDFNode, sourceRDFNode, targetRDFNode)
+              edgeKey = TRAPIEdgeKey(v.predicate, sourceRDFNode, targetRDFNode).asJson.deepDropNullValues.noSpaces
+              _ = logger.warn("edgeKey: {}", edgeKey)
+              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+              _ = logger.warn("encodedTRAPIEdge: {}", encodedTRAPIEdge)
               prov <-
                 ZIO
                   .fromOption(provs.get(TripleString(sourceRDFNode, predicateRDFNode, targetRDFNode)))
