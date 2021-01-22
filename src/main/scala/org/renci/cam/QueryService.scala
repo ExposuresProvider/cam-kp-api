@@ -318,13 +318,13 @@ object QueryService extends LazyLogging {
               _ = logger.warn("predicateRDFNode: {}, sourceRDFNode: {}, targetRDFNode: {}", predicateRDFNode, sourceRDFNode, targetRDFNode)
               edgeKey = TRAPIEdgeKey(v.predicate, sourceRDFNode, targetRDFNode).asJson.deepDropNullValues.noSpaces
               _ = logger.warn("edgeKey: {}", edgeKey)
-              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
-              _ = logger.warn("encodedTRAPIEdge: {}", encodedTRAPIEdge)
+              encodedTRAPIEdgeKey = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+              _ = logger.warn("encodedTRAPIEdge: {}", encodedTRAPIEdgeKey)
               prov <-
                 ZIO
                   .fromOption(provs.get(TripleString(sourceRDFNode, predicateRDFNode, targetRDFNode)))
                   .orElseFail(new Exception("Unexpected triple string"))
-            } yield encodedTRAPIEdge -> TRAPIEdgeBinding(predicateRDFNode, Some(prov))
+            } yield k -> TRAPIEdgeBinding(encodedTRAPIEdgeKey, Some(prov))
           }
         } yield querySolution -> edgeBindings
       }
