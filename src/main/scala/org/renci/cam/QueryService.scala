@@ -176,27 +176,8 @@ object QueryService extends LazyLogging {
           }
         } yield provAndTRAPIResults.values.flatten.toSet
       }
-      finalResults = results ++ bindingResults.flatten
 
-//      _ = trapiBindings.foreach { case (resultNodeBindings, resultEdgeBindings) =>
-//        val provsAndCamTriples =
-//          resultEdgeBindings.flatMap(_._2.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).to(Set).flatten).toMap
-//        provsAndCamTriples.foreach { provAndTripleSet =>
-//          provAndTripleSet._2.zipWithIndex.foreach { tripleAndIndex =>
-//            val nodeBindings = Map(
-//              s"n0" -> TRAPINodeBinding(IRI(applyPrefix(tripleAndIndex._1.subj.value, biolinkData.prefixes))),
-//              s"n1" -> TRAPINodeBinding(IRI(applyPrefix(tripleAndIndex._1.obj.value, biolinkData.prefixes)))
-//            )
-//            val slotStuff = slotStuffList.find(_.kid == tripleAndIndex._1.pred).get
-//            val predBLTermOpt = biolinkData.predicates.find(a => a.iri == slotStuff.biolinkSlot)
-//            val edgeKey =
-//              TRAPIEdgeKey(predBLTermOpt, tripleAndIndex._1.subj.value, tripleAndIndex._1.obj.value).asJson.deepDropNullValues.noSpaces
-//            val encodedEdgeKey = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
-//            val edgeBindings = Map("e0" -> TRAPIEdgeBinding(encodedEdgeKey, Some(provAndTripleSet._1)))
-//            results += TRAPIResult(nodeBindings, edgeBindings)
-//          }
-//        }
-//      }
+      finalResults = results ++ bindingResults.flatten
 
       trapiKGNodes = initialKGNodes ++ extraKGNodes
       trapiKGEdges = initialKGEdges ++ extraKGEdges
