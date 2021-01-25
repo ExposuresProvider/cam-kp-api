@@ -62,7 +62,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-new.json"), response)
       } yield assert(response)(isNonEmptyString)
       testCase.provideCustomLayer(testLayer)
-    } //@@ ignore
+    } @@ ignore
   )
 
   val testFindGenesEnablingAnyKindOfCatalyticActivity = suite("testFindGenesEnablingAnyKindOfCatalyticActivity")(
@@ -169,8 +169,8 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   def spec = suite("All tests")(listNodeTypes,
                                 testSimpleQuery,
-                                /*testGene2Process2Process2Gene,
+                                testGene2Process2Process2Gene,
                                 testFindGenesEnablingAnyKindOfCatalyticActivity,
-                                testNegativeRegulationChaining*/)
+                                testNegativeRegulationChaining)
 
 }
