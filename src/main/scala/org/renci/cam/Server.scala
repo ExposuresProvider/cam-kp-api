@@ -6,7 +6,8 @@ import cats.effect.Blocker
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
-import io.circe._
+import io.circe.{Json, _}
+import io.circe.yaml.syntax._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.Location
@@ -130,7 +131,21 @@ object Server extends App with LazyLogging {
           .copy(tags = List(sttp.tapir.openapi.Tag("translator")))
           .servers(List(sttp.tapir.openapi.Server(appConfig.location)))
           .toYaml
-        docsRoute = swaggerRoutes(openAPI)
+        openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
+        info: String =
+          """
+             {
+                "info": {
+                  "x-translator": {
+                    "component": "KP",
+                    "team": "Exposures Provider"
+                  }
+                }
+             }
+          """
+        infoJson <- ZIO.fromEither(io.circe.parser.parse(info))
+        openAPIinfo = infoJson.deepMerge(openAPIJson).asYaml.spaces2
+        docsRoute = swaggerRoutes(openAPIinfo)
         httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
         httpAppWithLogging = Logger.httpApp(true, false)(httpApp)
         result <-
