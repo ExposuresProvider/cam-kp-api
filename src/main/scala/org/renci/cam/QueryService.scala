@@ -154,30 +154,30 @@ object QueryService extends LazyLogging {
 
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
 
-      bindingResults <- ZIO.foreach(trapiBindings) { edgeBindings =>
-        for {
-          provsAndCamTriples <- Task.effect(edgeBindings._2.flatMap(_._2.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).to(Set).flatten).toMap)
-          provAndTRAPIResults <- ZIO.foreach(provsAndCamTriples) { (prov, triples) =>
-            for {
-              trapiResults <- ZIO.foreach(triples.zipWithIndex) { tripleAndIndex =>
-                for {
-                  slotStuff <- ZIO.fromOption(slotStuffList.find(_.kid == tripleAndIndex._1.pred)).orElseFail(new Exception("could not get slotstuff"))
-                  predBLTermOpt = biolinkData.predicates.find(a => a.iri == slotStuff.biolinkSlot)
-                  edgeKey = TRAPIEdgeKey(predBLTermOpt, tripleAndIndex._1.subj.value, tripleAndIndex._1.obj.value).asJson.deepDropNullValues.noSpaces
-                  encodedEdgeKey = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
-                  nodeBindingsMap = Map(
-                    s"n0" -> TRAPINodeBinding(IRI(applyPrefix(tripleAndIndex._1.subj.value, biolinkData.prefixes))),
-                    s"n1" -> TRAPINodeBinding(IRI(applyPrefix(tripleAndIndex._1.obj.value, biolinkData.prefixes)))
-                  )
-                  edgeBindingsMap = Map("e0" -> TRAPIEdgeBinding(encodedEdgeKey, Some(prov)))
-                } yield TRAPIResult(nodeBindingsMap, edgeBindingsMap)
-              }
-            } yield (prov, trapiResults)
-          }
-        } yield provAndTRAPIResults.values.flatten.toSet
-      }
+//      bindingResults <- ZIO.foreach(trapiBindings) { edgeBindings =>
+//        for {
+//          provsAndCamTriples <- Task.effect(edgeBindings._2.flatMap(_._2.provenance).map(prov => prov -> prov2CAMStuffTripleMap.get(prov).to(Set).flatten).toMap)
+//          provAndTRAPIResults <- ZIO.foreach(provsAndCamTriples) { (prov, triples) =>
+//            for {
+//              trapiResults <- ZIO.foreach(triples.zipWithIndex) { tripleAndIndex =>
+//                for {
+//                  slotStuff <- ZIO.fromOption(slotStuffList.find(_.kid == tripleAndIndex._1.pred)).orElseFail(new Exception("could not get slotstuff"))
+//                  predBLTermOpt = biolinkData.predicates.find(a => a.iri == slotStuff.biolinkSlot)
+//                  edgeKey = TRAPIEdgeKey(predBLTermOpt, tripleAndIndex._1.subj.value, tripleAndIndex._1.obj.value).asJson.deepDropNullValues.noSpaces
+//                  encodedEdgeKey = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+//                  nodeBindingsMap = Map(
+//                    s"n0" -> TRAPINodeBinding(IRI(applyPrefix(tripleAndIndex._1.subj.value, biolinkData.prefixes))),
+//                    s"n1" -> TRAPINodeBinding(IRI(applyPrefix(tripleAndIndex._1.obj.value, biolinkData.prefixes)))
+//                  )
+//                  edgeBindingsMap = Map("e0" -> TRAPIEdgeBinding(encodedEdgeKey, Some(prov)))
+//                } yield TRAPIResult(nodeBindingsMap, edgeBindingsMap)
+//              }
+//            } yield (prov, trapiResults)
+//          }
+//        } yield provAndTRAPIResults.values.flatten.toSet
+//      }
 
-      finalResults = results ++ bindingResults.flatten
+      finalResults = results //++ bindingResults.flatten
 
       trapiKGNodes = initialKGNodes ++ extraKGNodes
       trapiKGEdges = initialKGEdges ++ extraKGEdges
