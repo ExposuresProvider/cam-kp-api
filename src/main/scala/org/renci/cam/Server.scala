@@ -51,7 +51,8 @@ object Server extends App with LazyLogging {
       .out(
         {
           implicit val blClassKeyDecoder: KeyDecoder[BiolinkClass] = (blClass: String) => Some(BiolinkClass(blClass))
-          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(predicate => s"biolink:${predicate.shorthand}")
+          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] =
+            Encoder.encodeString.contramap(predicate => s"biolink:${predicate.shorthand}")
           implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => s"biolink:${blClass.shorthand}"
           jsonBody[Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]
         }
@@ -87,7 +88,8 @@ object Server extends App with LazyLogging {
           implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(biolinkData.prefixes)
 //          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
           implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
+          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
+            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
           jsonBody[TRAPIResponse]
         }
       )
@@ -102,8 +104,8 @@ object Server extends App with LazyLogging {
             .fromOption(body.message.query_graph)
             .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
         results <- QueryService.run(limit, queryGraph)
-                message <- QueryService.parseResultSet(queryGraph, results)
-              } yield TRAPIResponse(message, Some("Success"), None, None)
+        message <- QueryService.parseResultSet(queryGraph, results)
+      } yield TRAPIResponse(message, Some("Success"), None, None)
       program.mapError(error => error.getMessage)
     }
 

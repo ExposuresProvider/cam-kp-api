@@ -10,6 +10,7 @@ object Implicits {
 
   private val Curie = "^([^:]*):(.*)$".r
   private val protocols = Set("http", "https", "ftp", "file", "mailto")
+  private val BiolinkNamespace = "https://w3id.org/biolink/vocab/"
 
   def iriDecoder(prefixesMap: Map[String, String]): Decoder[IRI] = new Decoder[IRI] {
 
@@ -44,7 +45,8 @@ object Implicits {
   }
 
   def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = Decoder.decodeString.emap { s =>
-    biolinkPredicates.find(a => a.shorthand == s).toRight(s"BiolinkPredicate does not exist: $s")
+    val localName = s.replace("biolink:", "")
+    biolinkPredicates.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName).toRight(s"BiolinkPredicate does not exist: $s")
   }
 
   def biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { s =>
@@ -52,7 +54,8 @@ object Implicits {
   }
 
   def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = Decoder.decodeString.emap { s =>
-    biolinkClasses.find(a => a.shorthand == s).toRight(s"BiolinkClass does not exist: $s")
+    val localName = s.replace("biolink:", "")
+    biolinkClasses.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName).toRight(s"BiolinkClass does not exist: $s")
   }
 
   def biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap { s =>
