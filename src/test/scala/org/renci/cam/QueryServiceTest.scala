@@ -64,7 +64,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-new.json"), response)
       } yield assert(response)(isNonEmptyString)
       testCase.provideCustomLayer(testLayer)
-    } //@@ ignore
+    } @@ ignore
   )
 
   val testFindGenesEnablingAnyKindOfCatalyticActivity = suite("testFindGenesEnablingAnyKindOfCatalyticActivity")(
