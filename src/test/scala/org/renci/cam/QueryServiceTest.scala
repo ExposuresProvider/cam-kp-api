@@ -21,11 +21,11 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   val listNodeTypes = suite("listNodeTypes")(
     test("testGetNodeTypes") {
-      val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene")), Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")))
-      val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("biological_process")), None)
-      val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", Some(BiolinkPredicate("has_participant")))
+      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+      val e0Edge = TRAPIQueryEdge("n1", "n0", Some(BiolinkPredicate("has_participant")), None)
 
-      val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
+      val queryGraph = TRAPIQueryGraph(Map("n0" ->n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val map = QueryService.getNodeTypes(queryGraph.nodes)
       map.foreach(a => printf("k: %s, v: %s%n", a._1, a._2))
       assert(map)(isNonEmpty)
@@ -43,12 +43,12 @@ object QueryServiceTest extends DefaultRunnableSpec {
           implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
           implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
 
-          val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene")), None /*Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558"))*/ )
-          val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("biological_process")), None)
-          val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", Some(BiolinkPredicate("has_participant")))
-          val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
+          val n0Node = TRAPIQueryNode(None /*Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558"))*/, Some(BiolinkClass("gene")), None)
+          val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+          val e0Edge = TRAPIQueryEdge("n1", "n0", Some(BiolinkPredicate("has_participant")), None)
+          val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
           val message = TRAPIMessage(Some(queryGraph), None, None)
-          val requestBody = TRAPIQueryRequestBody(message)
+          val requestBody = TRAPIQuery(message)
           requestBody.asJson.deepDropNullValues.noSpaces
         }
         _ = println("encoded: " + encoded)
@@ -59,7 +59,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
           .withEntity(encoded)
         response <- httpClient.expect[String](request)
         _ = println("response: " + response)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-new.json"), response)
       } yield assert(response)(isNonEmptyString)
       testCase.provideCustomLayer(testLayer)
     } @@ ignore
@@ -67,12 +67,12 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   val testFindGenesEnablingAnyKindOfCatalyticActivity = suite("testFindGenesEnablingAnyKindOfCatalyticActivity")(
     testM("find genes enabling any kind of catalytic activity") {
-      val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene_or_gene_product")), None)
-      val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("molecular_activity")), Some(IRI("http://purl.obolibrary.org/obo/GO_0003824")))
-      val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", Some(BiolinkPredicate("enabled_by")))
-      val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node), List(e0Edge))
+      val n0Node = TRAPIQueryNode(None, Some(BiolinkClass("gene_or_gene_product")), None)
+      val n1Node = TRAPIQueryNode(Some(IRI("http://purl.obolibrary.org/obo/GO_0003824")), Some(BiolinkClass("molecular_activity")), None)
+      val e0Edge = TRAPIQueryEdge("n1", "n0", Some(BiolinkPredicate("enabled_by")), None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
-      val requestBody = TRAPIQueryRequestBody(message)
+      val requestBody = TRAPIQuery(message)
       val testCase = for {
         httpClient <- HttpClient.client
         biolinkData <- Biolink.biolinkData
@@ -100,16 +100,16 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   val testGene2Process2Process2Gene = suite("testGene2Process2Process2Gene")(
     testM("test gene to process to process to gene") {
-      val n0Node = TRAPIQueryNode("n0", Some(BiolinkClass("gene")), Some(IRI("http://identifiers.org/uniprot/P30530")))
-      val n1Node = TRAPIQueryNode("n1", Some(BiolinkClass("biological_process")), None)
-      val n2Node = TRAPIQueryNode("n2", Some(BiolinkClass("biological_process")), None)
-      val n3Node = TRAPIQueryNode("n3", Some(BiolinkClass("gene")), None)
-      val e0Edge = TRAPIQueryEdge("e0", "n1", "n0", None)
-      val e1Edge = TRAPIQueryEdge("e1", "n1", "n2", None /*Some(CURIEorIRI(None, "enabled_by"))*/ )
-      val e2Edge = TRAPIQueryEdge("e2", "n2", "n3", None)
-      val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node, n2Node, n3Node), List(e0Edge, e1Edge, e2Edge))
+      val n0Node = TRAPIQueryNode(Some(IRI("http://identifiers.org/uniprot/P30530")), Some(BiolinkClass("gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+      val n2Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+      val n3Node = TRAPIQueryNode(None, Some(BiolinkClass("gene")), None)
+      val e0Edge = TRAPIQueryEdge("n1", "n0", None, None)
+      val e1Edge = TRAPIQueryEdge("n1", "n2", None /*Some(CURIEorIRI(None, "enabled_by"))*/, None )
+      val e2Edge = TRAPIQueryEdge("n2", "n3", None, None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node, "n2" -> n2Node, "n3" -> n3Node), Map("e0" -> e0Edge,"e1" ->  e1Edge, "e2" -> e2Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
-      val requestBody = TRAPIQueryRequestBody(message)
+      val requestBody = TRAPIQuery(message)
       val testCase = for {
         httpClient <- HttpClient.client
         biolinkData <- Biolink.biolinkData
@@ -133,19 +133,18 @@ object QueryServiceTest extends DefaultRunnableSpec {
     } @@ ignore
   )
 
-
   val testNegativeRegulationChaining = suite("testNegativeRegulationChaining")(
     testM("negative regulation chaining") {
       val n0Node =
-        TRAPIQueryNode("n0", Some(BiolinkClass("biological_process_or_activity")), Some(IRI("http://purl.obolibrary.org/obo/GO_0004252")))
+        TRAPIQueryNode(Some(IRI("http://purl.obolibrary.org/obo/GO_0004252")), Some(BiolinkClass("biological_process_or_activity")), None)
       val n1Node =
-        TRAPIQueryNode("n1", Some(BiolinkClass("biological_process_or_activity")), Some(IRI("http://purl.obolibrary.org/obo/GO_0003810")))
-      val n2Node = TRAPIQueryNode("n2", Some(BiolinkClass("gene_or_gene_product")), None)
-      val e0Edge = TRAPIQueryEdge("e0", "n0", "n1", Some(BiolinkPredicate("positively_regulates")))
-      val e1Edge = TRAPIQueryEdge("e1", "n1", "n2", Some(BiolinkPredicate("enabled_by")))
-      val queryGraph = TRAPIQueryGraph(List(n0Node, n1Node, n2Node), List(e0Edge, e1Edge))
+        TRAPIQueryNode(Some(IRI("http://purl.obolibrary.org/obo/GO_0003810")), Some(BiolinkClass("biological_process_or_activity")), None)
+      val n2Node = TRAPIQueryNode(None, Some(BiolinkClass("gene_or_gene_product")), None)
+      val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("positively_regulates")), None)
+      val e1Edge = TRAPIQueryEdge("n1", "n2", Some(BiolinkPredicate("enabled_by")), None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node, "n2" -> n2Node), Map("e0" -> e0Edge, "e1" -> e1Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
-      val requestBody = TRAPIQueryRequestBody(message)
+      val requestBody = TRAPIQuery(message)
       val testCase = for {
         httpClient <- HttpClient.client
         biolinkData <- Biolink.biolinkData
