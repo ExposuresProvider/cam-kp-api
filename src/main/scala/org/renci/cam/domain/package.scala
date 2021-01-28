@@ -101,16 +101,15 @@ package object domain {
                              predicate: Option[BiolinkPredicate],
                              attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPIAttribute(name: Option[String], value: String, `type`: IRI,  url: Option[String])
+  final case class TRAPIAttribute(name: Option[String], value: String, `type`: IRI, url: Option[String])
 
-  final case class TRAPIKnowledgeGraph(nodes: Map[String, TRAPINode], edges: Map[String, TRAPIEdge])
+  final case class TRAPIKnowledgeGraph(nodes: Map[IRI, TRAPINode], edges: Map[String, TRAPIEdge])
 
   final case class TRAPINodeBinding(id: IRI)
 
   final case class TRAPIEdgeBinding(id: String, provenance: Option[String])
 
-  final case class TRAPIResult(node_bindings: Map[String, TRAPINodeBinding],
-                               edge_bindings: Map[String, TRAPIEdgeBinding])
+  final case class TRAPIResult(node_bindings: Map[String, TRAPINodeBinding], edge_bindings: Map[String, TRAPIEdgeBinding])
 
   final case class TRAPIMessage(query_graph: Option[TRAPIQueryGraph],
                                 knowledge_graph: Option[TRAPIKnowledgeGraph],
