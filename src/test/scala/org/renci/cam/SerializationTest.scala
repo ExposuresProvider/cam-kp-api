@@ -4,10 +4,11 @@ import java.io.ByteArrayOutputStream
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
-import io.circe.{Decoder, Encoder, HCursor, Json, KeyEncoder}
+import io.circe.{Decoder, Encoder, HCursor, Json, KeyDecoder, KeyEncoder}
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ResultSetFactory, ResultSetFormatter}
@@ -41,7 +42,6 @@ object SerializationTest extends DefaultRunnableSpec {
     } /*@@ ignore*/
   )
 
-
   val testTRAPIQueryRequestBodyEncodingOut = suite("testTRAPIQueryRequestBodyEncodingOut")(
     testM("encoding upon departure") {
       val expected =
@@ -58,6 +58,8 @@ object SerializationTest extends DefaultRunnableSpec {
       val testCase = for {
         biolinkData <- Biolink.biolinkData
       } yield {
+        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
 //        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(biolinkData.prefixes)
 //        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
 //        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
@@ -109,6 +111,8 @@ object SerializationTest extends DefaultRunnableSpec {
       } yield {
         implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
         implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(biolinkData.prefixes)
+        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
         implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.iri.value)
         implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.iri.value)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
@@ -136,6 +140,8 @@ object SerializationTest extends DefaultRunnableSpec {
         biolinkData <- Biolink.biolinkData
       } yield {
         implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
 //        implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoderIn(biolinkData.prefixesMap)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         //        println("encoded: " + encoded)
