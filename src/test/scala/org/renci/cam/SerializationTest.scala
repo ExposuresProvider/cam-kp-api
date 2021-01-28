@@ -48,8 +48,8 @@ object SerializationTest extends DefaultRunnableSpec {
         """{"message":{"query_graph":{"nodes":["n0":{"id":"NCBIGene:558", "category":"biolink:Gene"}, "n1":{"category":"biolink:BiologicalProcess"}],"edges":[{"id":"e0","subject":"n0","object":"n1","predicate":"biolink:has_participant"}]}}}"""
       println("expected: " + expected)
 
-      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("gene")), None)
-      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("Gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("has_participant")), None)
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
@@ -99,8 +99,8 @@ object SerializationTest extends DefaultRunnableSpec {
       val expected =
         """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"https://w3id.org/biolink/vocab/Gene","curie":"http://www.ncbi.nlm.nih.gov/gene/558"},{"id":"n1","type":"https://w3id.org/biolink/vocab/BiologicalProcess"}],"edges":[{"id":"e0","source_id":"n0","target_id":"n1","type":"https://w3id.org/biolink/vocab/has_participant"}]}}}"""
 
-      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("gene")), None)
-      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("Gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("has_participant")), None)
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
@@ -129,8 +129,8 @@ object SerializationTest extends DefaultRunnableSpec {
   val testTRAPIQueryRequestBodyDecoding2 = suite("testTRAPIQueryRequestBodyDecoding2")(
     testM("decoding") {
 
-      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("gene")), None)
-      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("Gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("has_participant")), None)
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
