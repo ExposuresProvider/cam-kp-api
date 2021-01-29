@@ -67,13 +67,6 @@ object QueryService extends LazyLogging {
       .flatten
       .toMap
 
-  def applyPrefix(value: String, prefixes: Map[String, String]): String =
-    prefixes
-      .filter(entry => value.startsWith(entry._2))
-      .map(entry => StringUtils.prependIfMissing(value.substring(entry._2.length, value.length), s"${entry._1}:"))
-      .headOption
-      .getOrElse(value)
-
   def run(limit: Option[Int],
           queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[QuerySolution]] = {
     val nodeTypes = getNodeTypes(queryGraph.nodes)
@@ -204,7 +197,7 @@ object QueryService extends LazyLogging {
 
   private def getTRAPINodes(
     queryGraph: TRAPIQueryGraph,
-    querySolutions: List[QuerySolution]): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Map[String, TRAPINode]] = {
+    querySolutions: List[QuerySolution]): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Map[IRI, TRAPINode]] = {
     val allOntClassIRIsZ = ZIO
       .foreach(querySolutions) { qs =>
         ZIO.foreach(qs.varNames.asScala.filter(_.endsWith("_type")).to(Iterable)) { typeVar =>
@@ -232,8 +225,7 @@ object QueryService extends LazyLogging {
               (labelOpt, biolinkTypes) = labelAndTypes
               biolinkTypesSet = biolinkTypes.to(Set)
               nodeBiolinkTypes = biolinkData.classes.filter(c => biolinkTypesSet(c.iri))
-              prefixApplied = applyPrefix(nodeIRI, biolinkData.prefixes)
-            } yield prefixApplied -> TRAPINode(labelOpt, Some(nodeBiolinkTypes), None)
+            } yield IRI(nodeIRI) -> TRAPINode(labelOpt, Some(nodeBiolinkTypes), None)
           }
         } yield nodes.toList
       }
@@ -271,7 +263,7 @@ object QueryService extends LazyLogging {
       nodeBindings <- ZIO.foreach(queryGraph.nodes) { (k, v) =>
         for {
           nodeIRI <- ZIO.fromOption(nodeMap.get(k)).orElseFail(new Exception(s"Missing node IRI: $k"))
-        } yield k -> TRAPINodeBinding(IRI(applyPrefix(nodeIRI, prefixes)))
+        } yield k -> TRAPINodeBinding(IRI(nodeIRI))
       }
     } yield nodeBindings
 
@@ -350,7 +342,7 @@ object QueryService extends LazyLogging {
 
   private def getExtraKGNodes(camNodes: Set[IRI],
                               slotStuffNodeDetails: List[TermWithLabelAndBiolinkType],
-                              biolinkData: BiolinkData): Map[String, TRAPINode] = {
+                              biolinkData: BiolinkData): Map[IRI, TRAPINode] = {
     val termToLabelAndTypes = slotStuffNodeDetails.groupBy(_.term).map { case (term, termsAndTypes) =>
       val (labels, biolinkTypes) = termsAndTypes.map(t => t.label -> t.biolinkType).unzip
       term -> (labels.flatten.headOption, biolinkTypes)
@@ -359,7 +351,7 @@ object QueryService extends LazyLogging {
       val (labelOpt, biolinkTypes) = termToLabelAndTypes.getOrElse(node, (None, List(BiolinkNamedThing)))
       val biolinkTypesSet = biolinkTypes.to(Set)
       val classes = biolinkData.classes.filter(c => biolinkTypesSet(c.iri))
-      applyPrefix(node.value, biolinkData.prefixes) -> TRAPINode(labelOpt, Some(classes), None)
+      node -> TRAPINode(labelOpt, Some(classes), None)
     }.toMap
     nodeMap
   }

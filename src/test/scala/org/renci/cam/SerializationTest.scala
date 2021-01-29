@@ -4,10 +4,11 @@ import java.io.ByteArrayOutputStream
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
-import io.circe.{Decoder, Encoder, HCursor, Json, KeyEncoder}
+import io.circe.{Decoder, Encoder, HCursor, Json, KeyDecoder, KeyEncoder}
 import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ResultSetFactory, ResultSetFormatter}
@@ -41,15 +42,14 @@ object SerializationTest extends DefaultRunnableSpec {
     } /*@@ ignore*/
   )
 
-
   val testTRAPIQueryRequestBodyEncodingOut = suite("testTRAPIQueryRequestBodyEncodingOut")(
     testM("encoding upon departure") {
       val expected =
         """{"message":{"query_graph":{"nodes":["n0":{"id":"NCBIGene:558", "category":"biolink:Gene"}, "n1":{"category":"biolink:BiologicalProcess"}],"edges":[{"id":"e0","subject":"n0","object":"n1","predicate":"biolink:has_participant"}]}}}"""
       println("expected: " + expected)
 
-      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("gene")), None)
-      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("Gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("has_participant")), None)
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
@@ -58,6 +58,8 @@ object SerializationTest extends DefaultRunnableSpec {
       val testCase = for {
         biolinkData <- Biolink.biolinkData
       } yield {
+        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
 //        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(biolinkData.prefixes)
 //        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
 //        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
@@ -97,8 +99,8 @@ object SerializationTest extends DefaultRunnableSpec {
       val expected =
         """{"message":{"query_graph":{"nodes":[{"id":"n0","type":"https://w3id.org/biolink/vocab/Gene","curie":"http://www.ncbi.nlm.nih.gov/gene/558"},{"id":"n1","type":"https://w3id.org/biolink/vocab/BiologicalProcess"}],"edges":[{"id":"e0","source_id":"n0","target_id":"n1","type":"https://w3id.org/biolink/vocab/has_participant"}]}}}"""
 
-      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("gene")), None)
-      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("Gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("has_participant")), None)
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
@@ -109,6 +111,8 @@ object SerializationTest extends DefaultRunnableSpec {
       } yield {
         implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
         implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(biolinkData.prefixes)
+        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
         implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.iri.value)
         implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.iri.value)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
@@ -125,8 +129,8 @@ object SerializationTest extends DefaultRunnableSpec {
   val testTRAPIQueryRequestBodyDecoding2 = suite("testTRAPIQueryRequestBodyDecoding2")(
     testM("decoding") {
 
-      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("gene")), None)
-      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("Gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("has_participant")), None)
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
@@ -136,6 +140,8 @@ object SerializationTest extends DefaultRunnableSpec {
         biolinkData <- Biolink.biolinkData
       } yield {
         implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
 //        implicit val iriEncoder: Encoder[IRI] = IRI.makeEncoderIn(biolinkData.prefixesMap)
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         //        println("encoded: " + encoded)
