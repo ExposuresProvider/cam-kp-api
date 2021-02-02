@@ -68,7 +68,8 @@ object QueryService extends LazyLogging {
       .toMap
 
   def run(limit: Option[Int],
-          queryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[QuerySolution]] = {
+          submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[QuerySolution]] = {
+    val queryGraph = enforceQueryEdgeTypes(submittedQueryGraph)
     val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
       predicates <- ZIO.foreachPar(queryGraph.edges.filter(edge => edge._2.predicate.nonEmpty)) { (k, v) =>
@@ -115,6 +116,17 @@ object QueryService extends LazyLogging {
                           """
       response <- SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
     } yield response
+  }
+
+  private def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph): TRAPIQueryGraph = {
+    val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
+      val newPredicate = edge.predicate match {
+        case None          => Some(BiolinkPredicate("related_to"))
+        case somePredicate => somePredicate
+      }
+      edgeID -> edge.copy(predicate = newPredicate)
+    }
+    queryGraph.copy(edges = improvedEdgeMap)
   }
 
   def parseResultSet(queryGraph: TRAPIQueryGraph,
