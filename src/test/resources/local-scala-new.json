@@ -19,6 +19,50 @@
     },
     "knowledge_graph": {
       "nodes": {
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event": {
+          "name": "Molecular Event",
+          "category": [
+            "biolink:NamedThing"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600": {
+          "name": "V-ATPase",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:OrganismalEntity",
+            "biolink:MolecularEntity",
+            "biolink:AnatomicalEntity",
+            "biolink:GenomicEntity",
+            "biolink:MacromolecularMachine",
+            "biolink:MacromolecularComplex",
+            "biolink:CellularComponent"
+          ]
+        },
+        "GO:0010008": {
+          "name": "endosome membrane",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:OrganismalEntity",
+            "biolink:AnatomicalEntity",
+            "biolink:CellularComponent"
+          ]
+        },
+        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081": {
+          "name": "V-ATPase:ATP6AP1",
+          "category": [
+            "biolink:NamedThing",
+            "biolink:BiologicalEntity",
+            "biolink:OrganismalEntity",
+            "biolink:MolecularEntity",
+            "biolink:AnatomicalEntity",
+            "biolink:GenomicEntity",
+            "biolink:MacromolecularMachine",
+            "biolink:MacromolecularComplex",
+            "biolink:CellularComponent"
+          ]
+        },
         "GO:0034220": {
           "name": "ion transmembrane transport",
           "category": [
@@ -36,53 +80,9 @@
             "biolink:EnvironmentalProcess"
           ]
         },
-        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#molecular_event": {
-          "name": "Molecular Event",
-          "category": [
-            "biolink:NamedThing"
-          ]
-        },
-        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5252081": {
-          "name": "V-ATPase:ATP6AP1",
-          "category": [
-            "biolink:NamedThing",
-            "biolink:BiologicalEntity",
-            "biolink:OrganismalEntity",
-            "biolink:MolecularEntity",
-            "biolink:AnatomicalEntity",
-            "biolink:GenomicEntity",
-            "biolink:MacromolecularMachine",
-            "biolink:MacromolecularComplex",
-            "biolink:CellularComponent"
-          ]
-        },
-        "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-912600": {
-          "name": "V-ATPase",
-          "category": [
-            "biolink:NamedThing",
-            "biolink:BiologicalEntity",
-            "biolink:OrganismalEntity",
-            "biolink:MolecularEntity",
-            "biolink:AnatomicalEntity",
-            "biolink:GenomicEntity",
-            "biolink:MacromolecularMachine",
-            "biolink:MacromolecularComplex",
-            "biolink:CellularComponent"
-          ]
-        },
         "http://identifiers.org/ncbigene:537": {
           "category": [
             "biolink:NamedThing"
-          ]
-        },
-        "GO:0010008": {
-          "name": "endosome membrane",
-          "category": [
-            "biolink:NamedThing",
-            "biolink:BiologicalEntity",
-            "biolink:OrganismalEntity",
-            "biolink:AnatomicalEntity",
-            "biolink:CellularComponent"
           ]
         },
         "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981": {
@@ -182,18 +182,24 @@
     "results": [
       {
         "node_bindings": {
-          "n0": {
-            "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981"
-          },
-          "n1": {
-            "id": "GO:0034220"
-          }
+          "n0": [
+            {
+              "id": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-5215981"
+            }
+          ],
+          "n1": [
+            {
+              "id": "GO:0034220"
+            }
+          ]
         },
         "edge_bindings": {
-          "e0": {
-            "id": "d054711eec8b70945244c1b6222d881328bdd44ac0bc9c4a1647a0881dcf11a6",
-            "provenance": "http://model.geneontology.org/R-HSA-983712"
-          }
+          "e0": [
+            {
+              "id": "d054711eec8b70945244c1b6222d881328bdd44ac0bc9c4a1647a0881dcf11a6",
+              "provenance": "http://model.geneontology.org/R-HSA-983712"
+            }
+          ]
         }
       }
     ]

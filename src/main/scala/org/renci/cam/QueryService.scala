@@ -137,10 +137,10 @@ object QueryService extends LazyLogging {
       initialKGEdges <- getTRAPIEdges(queryGraph, querySolutions)
       querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, querySolutions)
       trapiBindings <- ZIO.foreach(querySolutions) { querySolution =>
-        getTRAPINodeBindings(queryGraph, querySolution, biolinkData.prefixes) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
+        getTRAPINodeBindings(queryGraph, querySolution) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
       }
       allEdgeBindings = trapiBindings.flatMap(_._2).toMap
-      allCamIds = allEdgeBindings.to(Set).flatMap(_._2.provenance)
+      allCamIds = allEdgeBindings.values.flatten.filter(a => a.provenance.isDefined).map(a => a.provenance.get)
       prov2CAMStuffTripleMap <- ZIO.foreachPar(allCamIds)(prov => getCAMStuff(IRI(prov)).map(prov -> _)).map(_.toMap)
       allCAMTriples = prov2CAMStuffTripleMap.values.to(Set).flatten
       allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj, t.obj))
@@ -267,20 +267,18 @@ object QueryService extends LazyLogging {
     } yield termsAndBiolinkTypes
   }
 
-  private def getTRAPINodeBindings(queryGraph: TRAPIQueryGraph,
-                                   querySolution: QuerySolution,
-                                   prefixes: Map[String, String]): RIO[ZConfig[AppConfig], Map[String, TRAPINodeBinding]] =
+  private def getTRAPINodeBindings(queryGraph: TRAPIQueryGraph, querySolution: QuerySolution): RIO[ZConfig[AppConfig], Map[String, List[TRAPINodeBinding]]] =
     for {
       nodeMap <- Task.effect(queryGraph.nodes.map(n => (n._1, querySolution.get(s"${n._1}_type").toString)))
       nodeBindings <- ZIO.foreach(queryGraph.nodes) { (k, v) =>
         for {
           nodeIRI <- ZIO.fromOption(nodeMap.get(k)).orElseFail(new Exception(s"Missing node IRI: $k"))
-        } yield k -> TRAPINodeBinding(IRI(nodeIRI))
+        } yield k -> List(TRAPINodeBinding(IRI(nodeIRI)))
       }
     } yield nodeBindings
 
   private def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution])
-    : ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[QuerySolution, Map[String, TRAPIEdgeBinding]]] = {
+    : ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] = {
     val solutionTriples = for {
       queryEdge <- queryGraph.edges
       solution <- querySolutions
@@ -305,7 +303,7 @@ object QueryService extends LazyLogging {
                 ZIO
                   .fromOption(provs.get(TripleString(sourceRDFNode, predicateRDFNode, targetRDFNode)))
                   .orElseFail(new Exception("Unexpected triple string"))
-            } yield k -> TRAPIEdgeBinding(encodedTRAPIEdgeKey, Some(prov))
+            } yield k -> List(TRAPIEdgeBinding(encodedTRAPIEdgeKey, Some(prov)))
           }
         } yield querySolution -> edgeBindings
       }
