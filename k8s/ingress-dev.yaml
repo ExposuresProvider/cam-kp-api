@@ -7,10 +7,10 @@ metadata:
 spec:
   tls:
     - hosts:
-        - cam-kp-api.renci.org
+        - cam-kp-api-dev.renci.org
       secretName: cam-kp-api-dev-tls-secret
   rules:
-    - host: cam-kp-api.renci.org
+    - host: cam-kp-api-dev.renci.org
       http:
         paths:
           - backend:
