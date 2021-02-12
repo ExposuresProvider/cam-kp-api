@@ -6,7 +6,8 @@ import cats.effect.Blocker
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
-import io.circe._
+import io.circe.{Json, _}
+import io.circe.yaml.syntax._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.Location
@@ -50,8 +51,9 @@ object Server extends App with LazyLogging {
       .out(
         {
           implicit val blClassKeyDecoder: KeyDecoder[BiolinkClass] = (blClass: String) => Some(BiolinkClass(blClass))
-          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(predicate => predicate.shorthand)
-          implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => blClass.shorthand
+          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] =
+            Encoder.encodeString.contramap(predicate => s"biolink:${predicate.shorthand}")
+          implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => s"biolink:${blClass.shorthand}"
           jsonBody[Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]
         }
       )
@@ -66,32 +68,30 @@ object Server extends App with LazyLogging {
       program.mapError(error => error.getMessage)
     }
 
-  val queryEndpointZ: URIO[Has[BiolinkData], ZEndpoint[(Option[Int], TRAPIQueryRequestBody), String, TRAPIMessage]] =
+  val queryEndpointZ: URIO[Has[BiolinkData], ZEndpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse]] = {
     for {
       biolinkData <- biolinkData
-    } yield endpoint.post
-      .in("query")
-      .in(query[Option[Int]]("limit"))
-      .in(
-        {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-          implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-          jsonBody[TRAPIQueryRequestBody]
-        }
-      )
-      .errorOut(stringBody)
-      .out(
-        {
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
-          jsonBody[TRAPIMessage]
-        }
-      )
-      .summary("Submit a TRAPI question graph and retrieve matching solutions")
+    } yield {
+      implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+      implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(biolinkData.prefixes)
+      implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
+      implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+      implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+      implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
+      implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+      implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+      //          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
+      endpoint.post
+        .in("query")
+        .in(query[Option[Int]]("limit"))
+        .in(jsonBody[TRAPIQuery])
+        .errorOut(stringBody)
+        .out(jsonBody[TRAPIResponse])
+        .summary("Submit a TRAPI question graph and retrieve matching solutions")
+    }
+  }
 
-  def queryRouteR(queryEndpoint: ZEndpoint[(Option[Int], TRAPIQueryRequestBody), String, TRAPIMessage])
+  def queryRouteR(queryEndpoint: ZEndpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse])
     : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
     queryEndpoint.toRoutesR { case (limit, body) =>
       val program = for {
@@ -101,7 +101,7 @@ object Server extends App with LazyLogging {
             .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
         results <- QueryService.run(limit, queryGraph)
         message <- QueryService.parseResultSet(queryGraph, results)
-      } yield message
+      } yield TRAPIResponse(message, Some("Success"), None, None)
       program.mapError(error => error.getMessage)
     }
 
@@ -129,7 +129,21 @@ object Server extends App with LazyLogging {
           .copy(tags = List(sttp.tapir.openapi.Tag("translator")))
           .servers(List(sttp.tapir.openapi.Server(appConfig.location)))
           .toYaml
-        docsRoute = swaggerRoutes(openAPI)
+        openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
+        info: String =
+          """
+             {
+                "info": {
+                  "x-translator": {
+                    "component": "KP",
+                    "team": "Exposures Provider"
+                  }
+                }
+             }
+          """
+        infoJson <- ZIO.fromEither(io.circe.parser.parse(info))
+        openAPIinfo = infoJson.deepMerge(openAPIJson).asYaml.spaces2
+        docsRoute = swaggerRoutes(openAPIinfo)
         httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
         httpAppWithLogging = Logger.httpApp(true, false)(httpApp)
         result <-
