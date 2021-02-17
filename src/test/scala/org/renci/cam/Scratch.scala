@@ -22,26 +22,6 @@ object Scratch extends DefaultRunnableSpec with LazyLogging {
     } //@@ ignore
   )
 
-  val parseBiolinkYAML = suite("parse biolink yaml")(
-    testM("parse biolink yaml") {
-      for {
-        source <- Task.effect(Source.fromInputStream(getClass.getClassLoader.getResourceAsStream("biolink-model.yaml")).mkString)
-        json <- ZIO.fromEither(io.circe.yaml.parser.parse(source))
-        slotKeys <- ZIO.fromOption(json.hcursor.downField("slots").keys).orElseFail(throw new Exception("couldn't get slots"))
-        slots = slotKeys.map(a => a.replaceAll(" ", "_")).toList
-        _ = logger.info("slots: {}", slots)
-        prefixes <- ZIO.fromOption(json.hcursor.downField("prefixes").focus).orElseFail(throw new Exception("couldn't get slots"))
-        prefixesMap <- ZIO.fromEither(prefixes.as[Map[String, String]])
-        _ = logger.info("prefixesMap: {}", prefixesMap)
-//        slots = slotsFromCursor.flatMap(_.hcursor.focus.get.toString())
-
-//        asdf <- ZIO.fromOption().orElseFail(throw new Exception("asdfasd"))
-//        qwer <- ZIO.fromEither(asdf.as[List[String]])
-
-      } yield assert(List(1, 2, 3))(equalTo(List(1, 2, 3)))
-    } //@@ ignore
-  )
-
   val printEncoded = suite("printEncoded")(
     testM("print encoded") {
       val expected = """{["n0":{"id":"NCBIGene:558", "category":"biolink:Gene"}, "n1":{"category":"biolink:BiologicalProcess"}]}"""
@@ -66,5 +46,5 @@ object Scratch extends DefaultRunnableSpec with LazyLogging {
     } //@@ ignore
   )
 
-  def spec = suite("All tests")(scratch, parseBiolinkYAML, printEncoded)
+  def spec = suite("All tests")(scratch, printEncoded)
 }
