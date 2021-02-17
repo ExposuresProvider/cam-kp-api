@@ -18,6 +18,9 @@ javaOptions += "-Xmx8G"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
+configs(IntegrationTest)
+Defaults.itSettings
+
 val zioVersion = "1.0.3"
 val zioConfigVersion = "1.0.0-RC29-1"
 val tapirVersion = "0.16.16"
@@ -53,8 +56,8 @@ libraryDependencies ++= {
     "io.circe"                    %% "circe-generic"            % circeVersion,
     "io.circe"                    %% "circe-parser"             % circeVersion,
     "io.circe"                    %% "circe-yaml"               % circeVersion,
-    "dev.zio"                     %% "zio-test"                 % zioVersion % Test,
-    "dev.zio"                     %% "zio-test-sbt"             % zioVersion % Test,
+    "dev.zio"                     %% "zio-test"                 % zioVersion % "it,test",
+    "dev.zio"                     %% "zio-test-sbt"             % zioVersion % "it,test",
     "com.google.guava"             % "guava"                    % "30.0-jre",
     "ch.qos.logback"               % "logback-classic"          % logbackVersion,
     "com.typesafe.scala-logging"  %% "scala-logging"            % "3.9.2"
