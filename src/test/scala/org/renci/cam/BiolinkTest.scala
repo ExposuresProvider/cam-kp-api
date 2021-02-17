@@ -23,6 +23,6 @@ object Biolink extends DefaultRunnableSpec with LazyLogging {
     }
   )
 
-  def spec = suite("All tests")( parseBiolinkYAML)
+  def spec = suite("All tests")(parseBiolinkYAML)
 
 }
