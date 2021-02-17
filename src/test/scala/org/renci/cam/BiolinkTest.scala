@@ -8,7 +8,7 @@ import zio.test.{DefaultRunnableSpec, assert, suite, testM}
 
 import scala.io.Source
 
-object Biolink extends DefaultRunnableSpec with LazyLogging {
+object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
 
   val parseBiolinkYAML = suite("parse biolink yaml")(
     testM("parse biolink yaml") {

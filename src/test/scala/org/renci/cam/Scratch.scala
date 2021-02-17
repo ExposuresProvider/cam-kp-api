@@ -8,8 +8,6 @@ import zio._
 import zio.test.Assertion._
 import zio.test._
 
-import scala.io.Source
-
 object Scratch extends DefaultRunnableSpec with LazyLogging {
 
 //  val decoder = Decoder.decodeMap(KeyDecoder.decodeKeyString, Decoder.decodeString)

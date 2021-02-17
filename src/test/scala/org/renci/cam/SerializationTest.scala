@@ -14,7 +14,6 @@ import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ResultSetFactory, ResultSetFormatter}
 import org.renci.cam.QueryService.TRAPIEdgeKey
 import org.renci.cam.domain._
-import shapeless.PolyDefns.->
 import zio.Task
 import zio.test.Assertion._
 import zio.test.TestAspect._
@@ -60,21 +59,7 @@ object SerializationTest extends DefaultRunnableSpec {
       } yield {
         implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
         implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-//        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(biolinkData.prefixes)
-//        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
-//        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.shorthand)
-//        implicit val blClassKeyDecoder: KeyDecoder[BiolinkClass] = (blClass: String) => Some(BiolinkClass(blClass))
-//        implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(predicate => s"biolink:${predicate.shorthand}")
-//        implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => s"biolink:${blClass.shorthand}"
-
         implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => s"biolink:${blClass.shorthand}"
-//        implicit val encodeFoo: Encoder[TRAPIQueryNode] = new Encoder[TRAPIQueryNode] {
-//          final def apply(a: TRAPIQueryNode): Json = Json.obj(
-//            ("id", Json.fromString(a.id)),
-//            ("category", Json.fromInt(a.bar))
-//          )
-//        }
-
         implicit val blClassKeyDecoder: Decoder[TRAPIQueryNode] = new Decoder[TRAPIQueryNode] {
           final def apply(c: HCursor): Decoder.Result[TRAPIQueryNode] =
             for {
@@ -82,7 +67,6 @@ object SerializationTest extends DefaultRunnableSpec {
 //      downField("key").as[String]
 //      bar <- c.downField("bar").as[Int]
             } yield TRAPIQueryNode(None, None, None)
-
         }
 //        final case class TRAPIQueryNode(key: String, id: Option[IRI], category: Option[BiolinkClass], is_set: Option[Boolean])
 
@@ -91,7 +75,7 @@ object SerializationTest extends DefaultRunnableSpec {
         assert(expected)(equalsIgnoreCase(encoded))
       }
       testCase.provideCustomLayer(testLayer)
-    } //@@ ignore
+    } @@ ignore
   )
 
   val testTRAPIQueryRequestBodyEncodingIn = suite("testTRAPIQueryRequestBodyEncodingIn")(
@@ -123,7 +107,7 @@ object SerializationTest extends DefaultRunnableSpec {
 //        println("encoded: " + encoded)
 //        println("expected: " + expected)
       testCase.provideCustomLayer(testLayer)
-    } /*@@ ignore*/
+    } @@ ignore
   )
 
   val testTRAPIQueryRequestBodyDecoding2 = suite("testTRAPIQueryRequestBodyDecoding2")(
@@ -277,17 +261,14 @@ object SerializationTest extends DefaultRunnableSpec {
         _ = println("asdf: " + asdf)
       } yield assertCompletes
       testCase.provideCustomLayer(testLayer)
-    } /*@@ ignore*/
+    } @@ ignore
   )
 
   def spec = suite("All tests")(
-//    testIRIWithColonInReference,
-//    testingMessageDigest,
-//    testTRAPIQueryRequestBodyEncodingIn,
-//    testTRAPIQueryRequestBodyEncodingOut
-//    testTRAPIQueryRequestBodyDecoding2,
-//    testParseBlazegraphResponse,
-//    testParseBlazegraphEmptyResults
+    testIRIWithColonInReference,
+    testingMessageDigest,
+    testTRAPIQueryRequestBodyEncodingIn,
+    testTRAPIQueryRequestBodyEncodingOut
   )
 
 }
