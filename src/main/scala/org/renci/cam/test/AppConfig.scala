@@ -1,4 +1,4 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import org.http4s.Uri
 import zio.config._

@@ -1,7 +1,6 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import java.util.Properties
-
 import cats.effect.Blocker
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
@@ -15,9 +14,10 @@ import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger, _}
-import org.renci.cam.Biolink._
-import org.renci.cam.HttpClient.HttpClient
+import Biolink._
+import HttpClient.HttpClient
 import org.renci.cam.domain._
+import org.renci.cam.test.Biolink.BiolinkData
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._
@@ -25,9 +25,9 @@ import sttp.tapir.openapi.{Contact, Info, License}
 import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.ztapir._
 import zio._
-import zio.blocking.{blocking, Blocking}
+import zio.blocking.{Blocking, blocking}
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{getConfig, ZConfig}
+import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 

@@ -1,4 +1,4 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
@@ -6,9 +6,10 @@ import io.circe.syntax._
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.QuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink._
-import org.renci.cam.HttpClient.HttpClient
+import Biolink._
+import HttpClient.HttpClient
 import org.renci.cam.domain._
+import org.renci.cam.test.Biolink.BiolinkData
 import zio.config.ZConfig
 import zio.{Has, RIO, Task, ZIO, config => _}
 
@@ -118,7 +119,7 @@ object QueryService extends LazyLogging {
     } yield response
   }
 
-  private def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph): TRAPIQueryGraph = {
+  def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph): TRAPIQueryGraph = {
     val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
       val newPredicate = edge.predicate match {
         case None          => Some(BiolinkPredicate("related_to"))
@@ -189,7 +190,7 @@ object QueryService extends LazyLogging {
 
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(trapiKGNodes, trapiKGEdges)), Some(finalResults.distinct))
 
-  private def getTRAPIEdges(queryGraph: TRAPIQueryGraph,
+   def getTRAPIEdges(queryGraph: TRAPIQueryGraph,
                             querySolutions: List[QuerySolution]): RIO[ZConfig[AppConfig] with HttpClient, Map[String, TRAPIEdge]] =
     for {
       trapiEdges <- ZIO.foreach(querySolutions) { querySolution =>
@@ -207,7 +208,7 @@ object QueryService extends LazyLogging {
       }
     } yield trapiEdges.flatten.toMap
 
-  private def getTRAPINodes(
+  def getTRAPINodes(
     queryGraph: TRAPIQueryGraph,
     querySolutions: List[QuerySolution]): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Map[IRI, TRAPINode]] = {
     val allOntClassIRIsZ = ZIO
@@ -267,7 +268,7 @@ object QueryService extends LazyLogging {
     } yield termsAndBiolinkTypes
   }
 
-  private def getTRAPINodeBindings(queryGraph: TRAPIQueryGraph, querySolution: QuerySolution): RIO[ZConfig[AppConfig], Map[String, List[TRAPINodeBinding]]] =
+  def getTRAPINodeBindings(queryGraph: TRAPIQueryGraph, querySolution: QuerySolution): RIO[ZConfig[AppConfig], Map[String, List[TRAPINodeBinding]]] =
     for {
       nodeMap <- Task.effect(queryGraph.nodes.map(n => (n._1, querySolution.get(s"${n._1}_type").toString)))
       nodeBindings <- ZIO.foreach(queryGraph.nodes) { (k, v) =>
@@ -277,7 +278,7 @@ object QueryService extends LazyLogging {
       }
     } yield nodeBindings
 
-  private def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution])
+  def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution])
     : ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] = {
     val solutionTriples = for {
       queryEdge <- queryGraph.edges
@@ -350,7 +351,7 @@ object QueryService extends LazyLogging {
       triples <- SPARQLQueryExecutor.runSelectQueryAs[Triple](queryText.toQuery)
     } yield triples
 
-  private def getExtraKGNodes(camNodes: Set[IRI],
+  def getExtraKGNodes(camNodes: Set[IRI],
                               slotStuffNodeDetails: List[TermWithLabelAndBiolinkType],
                               biolinkData: BiolinkData): Map[IRI, TRAPINode] = {
     val termToLabelAndTypes = slotStuffNodeDetails.groupBy(_.term).map { case (term, termsAndTypes) =>

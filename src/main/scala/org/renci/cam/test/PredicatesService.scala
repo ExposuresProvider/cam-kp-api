@@ -1,15 +1,15 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import java.io.{IOException, StringReader}
-
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.csv.CSVFormat
-import org.renci.cam.Biolink.BiolinkData
-import org.renci.cam.HttpClient.HttpClient
+import Biolink.BiolinkData
+import HttpClient.HttpClient
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
+import org.renci.cam.test.Biolink.BiolinkData
 import zio.ZIO.ZIOAutoCloseableOps
 import zio._
-import zio.blocking.{effectBlockingIO, Blocking}
+import zio.blocking.{Blocking, effectBlockingIO}
 import zio.config.ZConfig
 
 import scala.io.Source

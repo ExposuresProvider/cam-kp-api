@@ -1,11 +1,11 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import io.circe.Json
 import org.http4s.circe._
 import org.http4s.headers.Accept
 import org.http4s.implicits._
 import org.http4s.{MediaType, Method, Request}
-import org.renci.cam.HttpClient.HttpClient
+import HttpClient.HttpClient
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio._
 import zio.interop.catz._

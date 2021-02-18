@@ -1,4 +1,4 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
 import org.renci.cam.Scratch.{getClass, printEncoded, scratch}

@@ -1,4 +1,4 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import java.io.ByteArrayOutputStream
 import java.math.BigInteger

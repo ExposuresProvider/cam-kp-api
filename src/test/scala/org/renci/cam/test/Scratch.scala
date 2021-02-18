@@ -1,4 +1,4 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.syntax._
@@ -9,8 +9,6 @@ import zio.test.Assertion._
 import zio.test._
 
 object Scratch extends DefaultRunnableSpec with LazyLogging {
-
-//  val decoder = Decoder.decodeMap(KeyDecoder.decodeKeyString, Decoder.decodeString)
 
   val scratch = suite("ScratchSpec")(
     testM("1") {

@@ -1,4 +1,4 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import org.http4s._
 import org.http4s.headers._

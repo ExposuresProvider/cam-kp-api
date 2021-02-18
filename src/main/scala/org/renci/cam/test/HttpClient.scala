@@ -1,4 +1,4 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import org.http4s.client.Client
 import org.http4s.client.blaze.BlazeClientBuilder

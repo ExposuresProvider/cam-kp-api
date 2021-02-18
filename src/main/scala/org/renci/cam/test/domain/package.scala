@@ -1,4 +1,4 @@
-package org.renci.cam
+package org.renci.cam.test
 
 import com.google.common.base.CaseFormat
 import contextual.Case
