@@ -11,6 +11,7 @@ import zio.Task
 import zio.test.Assertion._
 import zio.test.TestAspect._
 import zio.test._
+import org.renci.cam._
 
 import scala.jdk.CollectionConverters._
 

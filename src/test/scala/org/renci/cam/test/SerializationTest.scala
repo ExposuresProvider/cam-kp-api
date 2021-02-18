@@ -13,6 +13,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ResultSetFactory, ResultSetFormatter}
 import org.renci.cam.QueryService.TRAPIEdgeKey
+import org.renci.cam._
 import org.renci.cam.domain._
 import zio.Task
 import zio.test.Assertion._
@@ -141,7 +142,7 @@ object SerializationTest extends DefaultRunnableSpec {
   )
 
   val testParseBlazegraphResponse = suite("testParseBlazegraphResponse")(
-    test("1") {
+    zio.test.test("1") {
       val response = s"""{
     "head" : {
       "vars" : [ "predicate" ]
@@ -225,7 +226,7 @@ object SerializationTest extends DefaultRunnableSpec {
   )
 
   val testParseBlazegraphEmptyResults = suite("testParseBlazegraphEmptyResults")(
-    test("test empty results") {
+    zio.test.test("test empty results") {
       val response = s"""{
           |"head": { "vars": [ "n1" , "n0" , "n0_type" , "n1_type" , "e0" ] },
           |"results": { "bindings": [ ] }

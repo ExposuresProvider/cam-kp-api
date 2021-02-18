@@ -14,10 +14,9 @@ import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger, _}
-import Biolink._
 import HttpClient.HttpClient
 import org.renci.cam.domain._
-import org.renci.cam.test.Biolink.BiolinkData
+import org.renci.cam.Biolink._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._

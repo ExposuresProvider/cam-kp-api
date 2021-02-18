@@ -8,6 +8,7 @@ import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test.TestAspect._
 import zio.test._
+import org.renci.cam._
 
 object BlazegraphTest extends DefaultRunnableSpec {
 

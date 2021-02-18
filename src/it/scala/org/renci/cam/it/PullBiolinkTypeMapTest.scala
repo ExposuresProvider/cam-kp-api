@@ -12,6 +12,7 @@ import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
 import java.nio.file.{Files, Paths}
+import org.renci.cam._
 
 object PullBiolinkTypeMapTest extends DefaultRunnableSpec {
 

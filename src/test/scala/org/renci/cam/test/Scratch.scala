@@ -3,7 +3,7 @@ package org.renci.cam.test
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import org.renci.cam.domain.{BiolinkClass, IRI, TRAPIQueryNode}
+import org.renci.cam.domain._
 import zio._
 import zio.test.Assertion._
 import zio.test._

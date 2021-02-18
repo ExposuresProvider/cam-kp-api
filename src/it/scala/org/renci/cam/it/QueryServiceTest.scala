@@ -1,11 +1,11 @@
 package org.renci.cam.it
 
 import java.nio.file.{Files, Paths}
-
 import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder}
 import org.http4s._
+import org.renci.cam._
 import org.http4s.headers._
 import org.http4s.implicits._
 import org.renci.cam.domain._

@@ -1,7 +1,6 @@
 package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
-import org.renci.cam.Scratch.{getClass, printEncoded, scratch}
 import zio.{Task, ZIO}
 import zio.test.Assertion.contains
 import zio.test.{DefaultRunnableSpec, assert, suite, testM}
