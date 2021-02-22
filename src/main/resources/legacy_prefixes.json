@@ -1,7 +1,5 @@
 {
   "EMAPA": "http://purl.obolibrary.org/obo/EMAPA_",
-  "PATO": "http://purl.obolibrary.org/obo/PATO_",
   "PCO": "http://purl.obolibrary.org/obo/PCO_",
-  "sesame": "http://www.openrdf.org/schema/sesame#",
-  "NCBIGene": "http://www.ncbi.nlm.nih.gov/gene/"
+  "sesame": "http://www.openrdf.org/schema/sesame#"
 }
