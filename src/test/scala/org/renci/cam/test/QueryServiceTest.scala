@@ -2,7 +2,7 @@ package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
-import org.apache.jena.query.ResultSetFactory
+import org.apache.jena.query.{ResultSet, ResultSetFactory}
 import org.renci.cam._
 import org.renci.cam.domain._
 import zio._
@@ -45,7 +45,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   )
 
   val testEnforceQueryEdgeTypes = suite("testEnforceQueryEdgeTypes")(
-    testM("test enforcing QueryEdge types") {
+    testM("test QueryService.enforceQueryEdgeTypes") {
       val n0Node = TRAPIQueryNode(None, Some(BiolinkClass("Gene")), None)
       val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val e0Edge = TRAPIQueryEdge("n1", "n0", None, None)
@@ -59,12 +59,37 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
 
   val testGetTRAPIEdges = suite("testGetTRAPIEdges")(
     testM("test QueryService.getTRAPIEdges") {
-      val n0Node = TRAPIQueryNode(None, Some(BiolinkClass("Gene")), None)
-      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-      val e0Edge = TRAPIQueryEdge("n1", "n0", None, None)
-      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+      val (queryGraph, resultSet) = getSimpleData
+      val testCase =
+        for {
+          trapiEdges <- QueryService.getTRAPIEdges(queryGraph, resultSet.asScala.toList)
+        } yield assert(trapiEdges.values.map(a => (a.subject, a.`object`)))(
+          contains((IRI("http://purl.obolibrary.org/obo/GO_0008150"),
+                    IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103"))))
+      testCase.provideCustomLayer(testLayer)
+    }
+  )
 
-      val response = """
+  val testGetTRAPINodeBindings = suite("testGetTRAPINodeBindings")(
+    testM("test QueryService.getTRAPINodeBindings") {
+      val (queryGraph, resultSet) = getSimpleData
+      val testCase =
+        for {
+          nodeBindings <- QueryService.getTRAPINodeBindings(queryGraph, resultSet.next())
+        } yield assert(nodeBindings.keys)(
+          contains("n0") && contains("n1")
+        ) && assert(nodeBindings.get("n0").get.map(a => a.id))(contains(IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103")))
+      testCase.provideCustomLayer(testLayer)
+    }
+  )
+
+  def getSimpleData: (TRAPIQueryGraph, ResultSet) = {
+    val n0Node = TRAPIQueryNode(None, Some(BiolinkClass("Gene")), None)
+    val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
+    val e0Edge = TRAPIQueryEdge("n1", "n0", None, None)
+    val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+
+    val response = """
         {
           "head" : {
             "vars" : [ "e0", "n1", "n0", "n0_type", "n1_type" ]
@@ -94,20 +119,12 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
           } ]
           }
         }"""
-      val is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
-      val resultSet = ResultSetFactory.fromJSON(is)
-      is.close()
-      val testCase =
-        for {
-          trapiEdges <- QueryService.getTRAPIEdges(queryGraph, resultSet.asScala.toList)
-          _ = logger.info("trapiEdges: {}", trapiEdges)
-        } yield assert(trapiEdges.values.map(a => (a.subject, a.`object`)))(
-          contains((IRI("http://purl.obolibrary.org/obo/GO_0008150"),
-                    IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103"))))
-      testCase.provideCustomLayer(testLayer)
-    }
-  )
+    val is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
+    val resultSet = ResultSetFactory.fromJSON(is)
+    is.close()
+    (queryGraph, resultSet)
+  }
 
-  def spec = suite("All tests")(testGetNodeTypes, testEnforceQueryEdgeTypes, testGetTRAPIEdges)
+  def spec = suite("All tests")(testGetNodeTypes, testEnforceQueryEdgeTypes, testGetTRAPIEdges, testGetTRAPINodeBindings)
 
 }
