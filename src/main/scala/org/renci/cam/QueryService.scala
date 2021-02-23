@@ -129,6 +129,11 @@ object QueryService extends LazyLogging {
     queryGraph.copy(edges = improvedEdgeMap)
   }
 
+  def getTRAPIEdgeKey(pred: Option[BiolinkPredicate], sub: String, obj: String) = {
+    val edgeKey = TRAPIEdgeKey(pred, sub, obj).asJson.deepDropNullValues.noSpaces
+    String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+  }
+
   def parseResultSet(queryGraph: TRAPIQueryGraph,
                      querySolutions: List[QuerySolution]): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], TRAPIMessage] =
     for {
@@ -152,9 +157,7 @@ object QueryService extends LazyLogging {
         for {
           slotStuff <- slotStuffList.find(_.kid == triple.pred)
           predBLTermOpt = biolinkData.predicates.find(a => a.iri == slotStuff.biolinkSlot)
-          edgeKey = TRAPIEdgeKey(predBLTermOpt, triple.subj.value, triple.obj.value).asJson.deepDropNullValues.noSpaces
-          encodedEdgeKey = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
-        } yield encodedEdgeKey -> TRAPIEdge(triple.subj, triple.obj, None, predBLTermOpt, None)
+        } yield getTRAPIEdgeKey(predBLTermOpt, triple.subj.value, triple.obj.value) -> TRAPIEdge(triple.subj, triple.obj, None, predBLTermOpt, None)
       }.toMap
 
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
@@ -199,9 +202,7 @@ object QueryService extends LazyLogging {
             for {
               source <- ZIO.fromOption(nodeMap.get(v.subject)).orElseFail(new Exception("could not get source id"))
               target <- ZIO.fromOption(nodeMap.get(v.`object`)).orElseFail(new Exception("could not get target id"))
-              edgeKey = TRAPIEdgeKey(v.predicate, v.subject, v.`object`).asJson.deepDropNullValues.noSpaces
-              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
-            } yield encodedTRAPIEdge -> TRAPIEdge(source, target, None, v.predicate, None)
+            } yield getTRAPIEdgeKey(v.predicate, v.subject, v.`object`) -> TRAPIEdge(source, target, None, v.predicate, None)
           }
         } yield edges.toList
       }
