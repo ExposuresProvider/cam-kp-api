@@ -1,0 +1,657 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/renci/cam/PredicatesService.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>package org.renci.cam
+</span>2 <span style=''>
+</span>3 <span style=''>import com.typesafe.scalalogging.LazyLogging
+</span>4 <span style=''>import org.apache.commons.csv.CSVFormat
+</span>5 <span style=''>import org.renci.cam.Biolink.BiolinkData
+</span>6 <span style=''>import org.renci.cam.HttpClient.HttpClient
+</span>7 <span style=''>import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
+</span>8 <span style=''>import zio.ZIO.ZIOAutoCloseableOps
+</span>9 <span style=''>import zio._
+</span>10 <span style=''>import zio.blocking._
+</span>11 <span style=''>import zio.config.ZConfig
+</span>12 <span style=''>
+</span>13 <span style=''>import java.io.StringReader
+</span>14 <span style=''>import java.nio.charset.StandardCharsets
+</span>15 <span style=''>import scala.io.Source
+</span>16 <span style=''>import scala.jdk.CollectionConverters._
+</span>17 <span style=''>
+</span>18 <span style=''>object PredicatesService extends LazyLogging {
+</span>19 <span style=''>
+</span>20 <span style=''>  case class Triple(subj: BiolinkClass, pred: BiolinkPredicate, obj: BiolinkClass)
+</span>21 <span style=''>
+</span>22 <span style=''>  def run: RIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData],
+</span>23 <span style=''>               Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]] =
+</span>24 <span style=''>    </span><span style='background: #F0ADAD'>for {
+</span>25 <span style=''></span><span style='background: #F0ADAD'>      triples &lt;- readPredicates
+</span>26 <span style=''></span><span style='background: #F0ADAD'>    } yield triples.groupBy(_.subj).view.mapValues(_.groupBy(_.obj).view.mapValues(_.map(_.pred)).toMap).toMap</span><span style=''>
+</span>27 <span style=''>
+</span>28 <span style=''>  def readPredicates: ZIO[Blocking, Throwable, List[Triple]] = </span><span style='background: #AEF1AE'>for {
+</span>29 <span style=''></span><span style='background: #AEF1AE'>    predicates &lt;- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream(&quot;/predicates.csv&quot;), StandardCharsets.UTF_8.name()))
+</span>30 <span style=''></span><span style='background: #AEF1AE'>      .bracketAuto { source =&gt;
+</span>31 <span style=''></span><span style='background: #AEF1AE'>        effectBlockingIO(source.getLines().mkString(&quot;\n&quot;))
+</span>32 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>33 <span style=''></span><span style='background: #AEF1AE'>    records &lt;- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(predicates)).getRecords)
+</span>34 <span style=''></span><span style='background: #AEF1AE'>    triples = records.asScala
+</span>35 <span style=''></span><span style='background: #AEF1AE'>      .map(a =&gt; Triple(BiolinkClass(a.get(0)), BiolinkPredicate(a.get(1)), BiolinkClass(a.get(2))))
+</span>36 <span style=''></span><span style='background: #AEF1AE'>      .toList
+</span>37 <span style=''></span><span style='background: #AEF1AE'>  } yield triples</span><span style=''>
+</span>38 <span style=''>
+</span>39 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          211
+        </td>
+        <td>
+          785
+          -
+          933
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.map
+        </td>
+        <td style="background: #F0ADAD">
+          PredicatesService.this.readPredicates.map[scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]]](((triples: List[org.renci.cam.PredicatesService.Triple]) =&gt; triples.groupBy[org.renci.cam.domain.BiolinkClass](((x$1: org.renci.cam.PredicatesService.Triple) =&gt; x$1.subj)).view.mapValues[scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](((x$2: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$2.groupBy[org.renci.cam.domain.BiolinkClass](((x$3: org.renci.cam.PredicatesService.Triple) =&gt; x$3.obj)).view.mapValues[List[org.renci.cam.domain.BiolinkPredicate]](((x$4: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred)))).toMap[org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])]))).toMap[org.renci.cam.domain.BiolinkClass, Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]])])))
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          209
+        </td>
+        <td>
+          928
+          -
+          928
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.&lt;:&lt;.refl
+        </td>
+        <td style="background: #F0ADAD">
+          scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]])]
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          205
+        </td>
+        <td>
+          912
+          -
+          918
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.PredicatesService.Triple.pred
+        </td>
+        <td style="background: #F0ADAD">
+          x$5.pred
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          208
+        </td>
+        <td>
+          874
+          -
+          926
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.toMap
+        </td>
+        <td style="background: #F0ADAD">
+          x$2.groupBy[org.renci.cam.domain.BiolinkClass](((x$3: org.renci.cam.PredicatesService.Triple) =&gt; x$3.obj)).view.mapValues[List[org.renci.cam.domain.BiolinkPredicate]](((x$4: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred)))).toMap[org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])])
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          207
+        </td>
+        <td>
+          921
+          -
+          921
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.&lt;:&lt;.refl
+        </td>
+        <td style="background: #F0ADAD">
+          scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])]
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          210
+        </td>
+        <td>
+          835
+          -
+          933
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.toMap
+        </td>
+        <td style="background: #F0ADAD">
+          triples.groupBy[org.renci.cam.domain.BiolinkClass](((x$1: org.renci.cam.PredicatesService.Triple) =&gt; x$1.subj)).view.mapValues[scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](((x$2: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$2.groupBy[org.renci.cam.domain.BiolinkClass](((x$3: org.renci.cam.PredicatesService.Triple) =&gt; x$3.obj)).view.mapValues[List[org.renci.cam.domain.BiolinkPredicate]](((x$4: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred)))).toMap[org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])]))).toMap[org.renci.cam.domain.BiolinkClass, Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]])])
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          204
+        </td>
+        <td>
+          884
+          -
+          889
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.PredicatesService.Triple.obj
+        </td>
+        <td style="background: #F0ADAD">
+          x$3.obj
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          203
+        </td>
+        <td>
+          851
+          -
+          857
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.PredicatesService.Triple.subj
+        </td>
+        <td style="background: #F0ADAD">
+          x$1.subj
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          206
+        </td>
+        <td>
+          906
+          -
+          919
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.immutable.List.map
+        </td>
+        <td style="background: #F0ADAD">
+          x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred))
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          229
+        </td>
+        <td>
+          998
+          -
+          1495
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.flatMap
+        </td>
+        <td style="background: #AEF1AE">
+          zio.ZIO.ZIOAutoCloseableOps[zio.blocking.Blocking, java.io.IOException, scala.io.BufferedSource](zio.blocking.`package`.effectBlockingIO[scala.io.BufferedSource](scala.io.Source.fromInputStream(PredicatesService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name()))).bracketAuto[zio.blocking.Blocking, java.io.IOException, String](((source: scala.io.BufferedSource) =&gt; zio.blocking.`package`.effectBlockingIO[String](source.getLines().mkString(&quot;\n&quot;)))).flatMap[zio.blocking.Blocking, Throwable, List[org.renci.cam.PredicatesService.Triple]](((predicates: String) =&gt; zio.Task.effect[java.util.List[org.apache.commons.csv.CSVRecord]](org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(predicates)).getRecords()).map[(java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])](((records: java.util.List[org.apache.commons.csv.CSVRecord]) =&gt; {
+  val triples: List[org.renci.cam.PredicatesService.Triple] = scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](records).asScala.map[org.renci.cam.PredicatesService.Triple](((a: org.apache.commons.csv.CSVRecord) =&gt; PredicatesService.this.Triple.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2))))).toList;
+  scala.Tuple2.apply[java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]](records, triples)
+})).map[List[org.renci.cam.PredicatesService.Triple]](((x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])) =&gt; (x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]) @unchecked) match {
+  case (_1: java.util.List[org.apache.commons.csv.CSVRecord], _2: List[org.renci.cam.PredicatesService.Triple]): (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])((records @ _), (triples @ _)) =&gt; triples
+}))))
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          214
+        </td>
+        <td>
+          1039
+          -
+          1141
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.io.Source.fromInputStream
+        </td>
+        <td style="background: #AEF1AE">
+          scala.io.Source.fromInputStream(PredicatesService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name())
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          213
+        </td>
+        <td>
+          1111
+          -
+          1140
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.nio.charset.Charset.name
+        </td>
+        <td style="background: #AEF1AE">
+          java.nio.charset.StandardCharsets.UTF_8.name()
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          212
+        </td>
+        <td>
+          1062
+          -
+          1109
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Class.getResourceAsStream
+        </td>
+        <td style="background: #AEF1AE">
+          PredicatesService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          29
+        </td>
+        <td>
+          215
+        </td>
+        <td>
+          1022
+          -
+          1142
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.blocking.effectBlockingIO
+        </td>
+        <td style="background: #AEF1AE">
+          zio.blocking.`package`.effectBlockingIO[scala.io.BufferedSource](scala.io.Source.fromInputStream(PredicatesService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name()))
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          217
+        </td>
+        <td>
+          1182
+          -
+          1232
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.blocking.effectBlockingIO
+        </td>
+        <td style="background: #AEF1AE">
+          zio.blocking.`package`.effectBlockingIO[String](source.getLines().mkString(&quot;\n&quot;))
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          216
+        </td>
+        <td>
+          1199
+          -
+          1231
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.mkString
+        </td>
+        <td style="background: #AEF1AE">
+          source.getLines().mkString(&quot;\n&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          218
+        </td>
+        <td>
+          1268
+          -
+          1332
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVParser.getRecords
+        </td>
+        <td style="background: #AEF1AE">
+          org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(predicates)).getRecords()
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          227
+        </td>
+        <td>
+          1245
+          -
+          1245
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]](records, triples)
+        </td>
+      </tr><tr>
+        <td>
+          33
+        </td>
+        <td>
+          228
+        </td>
+        <td>
+          1245
+          -
+          1495
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.map
+        </td>
+        <td style="background: #AEF1AE">
+          zio.Task.effect[java.util.List[org.apache.commons.csv.CSVRecord]](org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(predicates)).getRecords()).map[(java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])](((records: java.util.List[org.apache.commons.csv.CSVRecord]) =&gt; {
+  val triples: List[org.renci.cam.PredicatesService.Triple] = scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](records).asScala.map[org.renci.cam.PredicatesService.Triple](((a: org.apache.commons.csv.CSVRecord) =&gt; PredicatesService.this.Triple.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2))))).toList;
+  scala.Tuple2.apply[java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]](records, triples)
+})).map[List[org.renci.cam.PredicatesService.Triple]](((x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])) =&gt; (x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]) @unchecked) match {
+  case (_1: java.util.List[org.apache.commons.csv.CSVRecord], _2: List[org.renci.cam.PredicatesService.Triple]): (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])((records @ _), (triples @ _)) =&gt; triples
+}))
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          220
+        </td>
+        <td>
+          1387
+          -
+          1409
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.BiolinkClass.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0))
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          223
+        </td>
+        <td>
+          1452
+          -
+          1460
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVRecord.get
+        </td>
+        <td style="background: #AEF1AE">
+          a.get(2)
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          225
+        </td>
+        <td>
+          1380
+          -
+          1462
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.PredicatesService.Triple.apply
+        </td>
+        <td style="background: #AEF1AE">
+          PredicatesService.this.Triple.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2)))
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          219
+        </td>
+        <td>
+          1400
+          -
+          1408
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVRecord.get
+        </td>
+        <td style="background: #AEF1AE">
+          a.get(0)
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          222
+        </td>
+        <td>
+          1411
+          -
+          1437
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.BiolinkPredicate.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1))
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          221
+        </td>
+        <td>
+          1428
+          -
+          1436
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVRecord.get
+        </td>
+        <td style="background: #AEF1AE">
+          a.get(1)
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          224
+        </td>
+        <td>
+          1439
+          -
+          1461
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.BiolinkClass.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2))
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          226
+        </td>
+        <td>
+          1348
+          -
+          1477
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.toList
+        </td>
+        <td style="background: #AEF1AE">
+          scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](records).asScala.map[org.renci.cam.PredicatesService.Triple](((a: org.apache.commons.csv.CSVRecord) =&gt; PredicatesService.this.Triple.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2))))).toList
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

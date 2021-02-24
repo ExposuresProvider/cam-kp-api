@@ -1,0 +1,1919 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/renci/cam/Implicits.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>package org.renci.cam
+</span>2 <span style=''>
+</span>3 <span style=''>import com.google.common.base.CaseFormat
+</span>4 <span style=''>import io.circe.Decoder.Result
+</span>5 <span style=''>import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, KeyDecoder, KeyEncoder}
+</span>6 <span style=''>import org.apache.commons.lang3.StringUtils
+</span>7 <span style=''>import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, BiolinkTerm, IRI}
+</span>8 <span style=''>
+</span>9 <span style=''>object Implicits {
+</span>10 <span style=''>
+</span>11 <span style=''>  private val Curie = </span><span style='background: #AEF1AE'>&quot;^([^:]*):(.*)$&quot;.r</span><span style=''>
+</span>12 <span style=''>  private val protocols = </span><span style='background: #AEF1AE'>Set(&quot;http&quot;, &quot;https&quot;, &quot;ftp&quot;, &quot;file&quot;, &quot;mailto&quot;)</span><span style=''>
+</span>13 <span style=''>  private val BiolinkNamespace = </span><span style='background: #AEF1AE'>&quot;https://w3id.org/biolink/vocab/&quot;</span><span style=''>
+</span>14 <span style=''>
+</span>15 <span style=''>  def iriDecoder(prefixesMap: Map[String, String]): Decoder[IRI] = </span><span style='background: #F0ADAD'>new</span><span style=''> Decoder[IRI] {
+</span>16 <span style=''>
+</span>17 <span style=''>    override def apply(c: HCursor): Result[IRI] = </span><span style='background: #F0ADAD'>for {
+</span>18 <span style=''></span><span style='background: #F0ADAD'>      value &lt;- c.value.as[String]
+</span>19 <span style=''></span><span style='background: #F0ADAD'>      iri &lt;- expandCURIEString(value, prefixesMap)
+</span>20 <span style=''></span><span style='background: #F0ADAD'>    } yield iri</span><span style=''>
+</span>21 <span style=''>
+</span>22 <span style=''>  }
+</span>23 <span style=''>
+</span>24 <span style=''>  def iriKeyDecoder(prefixesMap: Map[String, String]): KeyDecoder[IRI] = </span><span style='background: #F0ADAD'>new</span><span style=''> KeyDecoder[IRI] {
+</span>25 <span style=''>    override def apply(key: String): Option[IRI] = </span><span style='background: #F0ADAD'>expandCURIEString(key, prefixesMap).toOption</span><span style=''>
+</span>26 <span style=''>  }
+</span>27 <span style=''>
+</span>28 <span style=''>  def expandCURIEString(curieString: String, prefixesMap: Map[String, String]): Either[DecodingFailure, IRI] =
+</span>29 <span style=''>    </span><span style='background: #AEF1AE'>for {
+</span>30 <span style=''></span><span style='background: #AEF1AE'>      curie &lt;- curieString match {
+</span>31 <span style=''></span><span style='background: #AEF1AE'>        case Curie(p, l) =&gt; Right((p, l))
+</span>32 <span style=''></span><span style='background: #AEF1AE'>        case _           =&gt; </span><span style='background: #F0ADAD'>Left(DecodingFailure(s&quot;CURIE is malformed: $curieString&quot;, Nil))</span><span style='background: #AEF1AE'>
+</span>33 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>34 <span style=''></span><span style='background: #AEF1AE'>      (prefix, local) = curie
+</span>35 <span style=''></span><span style='background: #AEF1AE'>      namespace &lt;-
+</span>36 <span style=''></span><span style='background: #AEF1AE'>        if (protocols(prefix)) </span><span style='background: #F0ADAD'>Right(s&quot;$prefix:&quot;)</span><span style='background: #AEF1AE'>
+</span>37 <span style=''></span><span style='background: #AEF1AE'>        else prefixesMap.get(prefix).toRight(</span><span style='background: #F0ADAD'>DecodingFailure(s&quot;No prefix expansion found for $prefix:$local&quot;, Nil)</span><span style='background: #AEF1AE'>)
+</span>38 <span style=''></span><span style='background: #AEF1AE'>    } yield IRI(s&quot;$namespace$local&quot;)</span><span style=''>
+</span>39 <span style=''>
+</span>40 <span style=''>  def iriEncoderOut(prefixesMap: Map[String, String]): Encoder[IRI] = </span><span style='background: #F0ADAD'>Encoder.encodeString.contramap { iri =&gt;
+</span>41 <span style=''></span><span style='background: #F0ADAD'>    compactIRIIfPossible(iri, prefixesMap)
+</span>42 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
+</span>43 <span style=''>
+</span>44 <span style=''>  def iriKeyEncoder(prefixesMap: Map[String, String]): KeyEncoder[IRI] = </span><span style='background: #F0ADAD'>KeyEncoder.encodeKeyString.contramap { iri: IRI =&gt;
+</span>45 <span style=''></span><span style='background: #F0ADAD'>    compactIRIIfPossible(iri, prefixesMap)
+</span>46 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
+</span>47 <span style=''>
+</span>48 <span style=''>  def compactIRIIfPossible(iri: IRI, prefixesMap: Map[String, String]): String = {
+</span>49 <span style=''>    val startsWith = </span><span style='background: #AEF1AE'>prefixesMap.filter { case (_, namespace) =&gt; iri.value.startsWith(namespace) }</span><span style=''>
+</span>50 <span style=''>    if (</span><span style='background: #AEF1AE'>startsWith.nonEmpty</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>51 <span style=''></span><span style='background: #AEF1AE'>      val (prefix, namespace) = startsWith.maxBy(_._2.length)
+</span>52 <span style=''></span><span style='background: #AEF1AE'>      StringUtils.prependIfMissing(iri.value.drop(namespace.length), s&quot;$prefix:&quot;)
+</span>53 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #AEF1AE'>{
+</span>54 <span style=''></span><span style='background: #AEF1AE'>      val httpsIRI = toHttps(iri.value)
+</span>55 <span style=''></span><span style='background: #AEF1AE'>      val httpsStartsWith = prefixesMap.filter { case (_, namespace) =&gt; httpsIRI.startsWith(namespace) }
+</span>56 <span style=''></span><span style='background: #AEF1AE'>      if (httpsStartsWith.nonEmpty) </span><span style='background: #F0ADAD'>{
+</span>57 <span style=''></span><span style='background: #F0ADAD'>        val (prefix, namespace) = httpsStartsWith.maxBy(_._2.length)
+</span>58 <span style=''></span><span style='background: #F0ADAD'>        StringUtils.prependIfMissing(httpsIRI.drop(namespace.length), s&quot;$prefix:&quot;)
+</span>59 <span style=''></span><span style='background: #F0ADAD'>      }</span><span style='background: #AEF1AE'> else iri.value
+</span>60 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>61 <span style=''>  }
+</span>62 <span style=''>
+</span>63 <span style=''>  private def toHttps(uri: String): String = </span><span style='background: #AEF1AE'>uri.replaceFirst(&quot;http:&quot;, &quot;https:&quot;)</span><span style=''>
+</span>64 <span style=''>
+</span>65 <span style=''>  def iriEncoderIn(prefixesMap: Map[String, String]): Encoder[IRI] = </span><span style='background: #F0ADAD'>Encoder.encodeString.contramap { iri =&gt;
+</span>66 <span style=''></span><span style='background: #F0ADAD'>    val startsWith = prefixesMap.filter { case (prefix, namespace) =&gt; iri.value.startsWith(namespace) }
+</span>67 <span style=''></span><span style='background: #F0ADAD'>    if (startsWith.nonEmpty) {
+</span>68 <span style=''></span><span style='background: #F0ADAD'>      val (_, namespace) = startsWith.maxBy(_._2.length)
+</span>69 <span style=''></span><span style='background: #F0ADAD'>      s&quot;$namespace${iri.value.drop(namespace.length)}&quot;
+</span>70 <span style=''></span><span style='background: #F0ADAD'>    } else iri.value
+</span>71 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
+</span>72 <span style=''>
+</span>73 <span style=''>  def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = </span><span style='background: #F0ADAD'>Decoder.decodeString.emap { s =&gt;
+</span>74 <span style=''></span><span style='background: #F0ADAD'>    val localName = s.replace(&quot;biolink:&quot;, &quot;&quot;)
+</span>75 <span style=''></span><span style='background: #F0ADAD'>    biolinkPredicates.find(a =&gt; a.iri.value.replace(BiolinkNamespace, &quot;&quot;) == localName).toRight(s&quot;BiolinkPredicate does not exist: $s&quot;)
+</span>76 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
+</span>77 <span style=''>
+</span>78 <span style=''>  def biolinkPredicateEncoder: Encoder[BiolinkPredicate] = </span><span style='background: #AEF1AE'>Encoder.encodeString.contramap { s =&gt;
+</span>79 <span style=''></span><span style='background: #AEF1AE'>    s&quot;biolink:${s.shorthand}&quot;
+</span>80 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>81 <span style=''>
+</span>82 <span style=''>  def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = </span><span style='background: #F0ADAD'>Decoder.decodeString.emap { s =&gt;
+</span>83 <span style=''></span><span style='background: #F0ADAD'>    val localName = s.replace(&quot;biolink:&quot;, &quot;&quot;)
+</span>84 <span style=''></span><span style='background: #F0ADAD'>    biolinkClasses.find(a =&gt; a.iri.value.replace(BiolinkNamespace, &quot;&quot;) == localName).toRight(s&quot;BiolinkClass does not exist: $s&quot;)
+</span>85 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
+</span>86 <span style=''>
+</span>87 <span style=''>  def biolinkClassEncoder: Encoder[BiolinkClass] = </span><span style='background: #AEF1AE'>Encoder.encodeString.contramap { s =&gt;
+</span>88 <span style=''></span><span style='background: #AEF1AE'>    if (s.shorthand.contains(&quot;_&quot;)) {
+</span>89 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>s&quot;biolink:${CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, s.shorthand)}&quot;</span><span style='background: #AEF1AE'>
+</span>90 <span style=''></span><span style='background: #AEF1AE'>    } else {
+</span>91 <span style=''></span><span style='background: #AEF1AE'>      s&quot;biolink:${StringUtils.capitalize(s.shorthand)}&quot;
+</span>92 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>93 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>94 <span style=''>
+</span>95 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          11
+        </td>
+        <td>
+          122
+        </td>
+        <td>
+          346
+          -
+          362
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;^([^:]*):(.*)$&quot;
+        </td>
+      </tr><tr>
+        <td>
+          11
+        </td>
+        <td>
+          123
+        </td>
+        <td>
+          346
+          -
+          364
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.StringOps.r
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.augmentString(&quot;^([^:]*):(.*)$&quot;).r
+        </td>
+      </tr><tr>
+        <td>
+          12
+        </td>
+        <td>
+          124
+        </td>
+        <td>
+          391
+          -
+          436
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableFactory.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.Set.apply[String](&quot;http&quot;, &quot;https&quot;, &quot;ftp&quot;, &quot;file&quot;, &quot;mailto&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          13
+        </td>
+        <td>
+          125
+        </td>
+        <td>
+          470
+          -
+          503
+        </td>
+        <td>
+          Literal
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          &quot;https://w3id.org/biolink/vocab/&quot;
+        </td>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          129
+        </td>
+        <td>
+          572
+          -
+          575
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.Implicits.$anon.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new $anon()
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          128
+        </td>
+        <td>
+          642
+          -
+          748
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.util.Either.flatMap
+        </td>
+        <td style="background: #F0ADAD">
+          c.value.as[String](circe.this.Decoder.decodeString).flatMap[io.circe.DecodingFailure, org.renci.cam.domain.IRI](((value: String) =&gt; Implicits.this.expandCURIEString(value, prefixesMap).map[org.renci.cam.domain.IRI](((iri: org.renci.cam.domain.IRI) =&gt; iri))))
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          126
+        </td>
+        <td>
+          673
+          -
+          673
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          io.circe.Decoder.decodeString
+        </td>
+        <td style="background: #F0ADAD">
+          circe.this.Decoder.decodeString
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          127
+        </td>
+        <td>
+          688
+          -
+          748
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.util.Either.map
+        </td>
+        <td style="background: #F0ADAD">
+          Implicits.this.expandCURIEString(value, prefixesMap).map[org.renci.cam.domain.IRI](((iri: org.renci.cam.domain.IRI) =&gt; iri))
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          131
+        </td>
+        <td>
+          828
+          -
+          831
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.Implicits.$anon.&lt;init&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          new $anon()
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          130
+        </td>
+        <td>
+          901
+          -
+          945
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.util.Either.toOption
+        </td>
+        <td style="background: #F0ADAD">
+          Implicits.this.expandCURIEString(key, prefixesMap).toOption
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          140
+        </td>
+        <td>
+          1078
+          -
+          1078
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[(String, String), (String, String)](curie, x$1)
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          150
+        </td>
+        <td>
+          1066
+          -
+          1500
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.util.Either.flatMap
+        </td>
+        <td style="background: #AEF1AE">
+          curieString match {
+  case Implicits.this.Curie.unapplySeq(&lt;unapply-selector&gt;) &lt;unapply&gt; ((p @ _), (l @ _)) =&gt; scala.`package`.Right.apply[Nothing, (String, String)](scala.Tuple2.apply[String, String](p, l))
+  case _ =&gt; scala.`package`.Left.apply[io.circe.DecodingFailure, Nothing](io.circe.DecodingFailure.apply((&quot;CURIE is malformed: &quot;.+(curieString): String), scala.`package`.Nil))
+}.map[((String, String), (String, String))](((curie: (String, String)) =&gt; {
+  &lt;synthetic&gt; &lt;artifact&gt; private[this] val x$2: ((String, String), String, String) = (curie: (String, String) @unchecked) match {
+    case (x$1 @ (_1: String, _2: String): (String, String)((prefix @ _), (local @ _))) =&gt; scala.Tuple3.apply[(String, String), String, String](x$1, prefix, local)
+  };
+  val x$1: (String, String) = x$2._1;
+  val prefix: String = x$2._2;
+  val local: String = x$2._3;
+  scala.Tuple2.apply[(String, String), (String, String)](curie, x$1)
+})).flatMap[io.circe.DecodingFailure, org.renci.cam.domain.IRI](((x$3: ((String, String), (String, String))) =&gt; (x$3: ((String, String), (String, String)) @unchecked) match {
+  case (_1: (String, String), _2: (String, String)): ((String, String), (String, String))((curie @ _), (_1: String, _2: String): (String, String)((prefix @ _), (local @ _))) =&gt; if (Implicits.this.protocols.apply(prefix))
+  scala.`package`.Right.apply[Nothing, String]((&quot;&quot;.+(prefix).+(&quot;:&quot;): String))
+else
+  prefixesMap.get(prefix).toRight[io.circe.DecodingFailure](io.circe.DecodingFailure.apply((&quot;No prefix expansion found for &quot;.+(prefix).+(&quot;:&quot;).+(local): String), scala.`package`.Nil)).map[org.renci.cam.domain.IRI](((namespace: String) =&gt; org.renci.cam.domain.`package`.IRI.apply((&quot;&quot;.+(namespace).+(local): String))))
+}))
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          133
+        </td>
+        <td>
+          1135
+          -
+          1148
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.util.Right.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.`package`.Right.apply[Nothing, (String, String)](scala.Tuple2.apply[String, String](p, l))
+        </td>
+      </tr><tr>
+        <td>
+          31
+        </td>
+        <td>
+          132
+        </td>
+        <td>
+          1141
+          -
+          1147
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[String, String](p, l)
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          134
+        </td>
+        <td>
+          1235
+          -
+          1238
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Nil
+        </td>
+        <td style="background: #F0ADAD">
+          scala.`package`.Nil
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          136
+        </td>
+        <td>
+          1177
+          -
+          1240
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.util.Left.apply
+        </td>
+        <td style="background: #F0ADAD">
+          scala.`package`.Left.apply[io.circe.DecodingFailure, Nothing](io.circe.DecodingFailure.apply((&quot;CURIE is malformed: &quot;.+(curieString): String), scala.`package`.Nil))
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          135
+        </td>
+        <td>
+          1182
+          -
+          1239
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          io.circe.DecodingFailure.apply
+        </td>
+        <td style="background: #F0ADAD">
+          io.circe.DecodingFailure.apply((&quot;CURIE is malformed: &quot;.+(curieString): String), scala.`package`.Nil)
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          137
+        </td>
+        <td>
+          1255
+          -
+          1255
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Tuple3._1
+        </td>
+        <td style="background: #AEF1AE">
+          x$2._1
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          139
+        </td>
+        <td>
+          1264
+          -
+          1264
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Tuple3._3
+        </td>
+        <td style="background: #AEF1AE">
+          x$2._3
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          138
+        </td>
+        <td>
+          1256
+          -
+          1256
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Tuple3._2
+        </td>
+        <td style="background: #AEF1AE">
+          x$2._2
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          149
+        </td>
+        <td>
+          1285
+          -
+          1500
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.util.Either.map
+        </td>
+        <td style="background: #AEF1AE">
+          if (Implicits.this.protocols.apply(prefix))
+  scala.`package`.Right.apply[Nothing, String]((&quot;&quot;.+(prefix).+(&quot;:&quot;): String))
+else
+  prefixesMap.get(prefix).toRight[io.circe.DecodingFailure](io.circe.DecodingFailure.apply((&quot;No prefix expansion found for &quot;.+(prefix).+(&quot;:&quot;).+(local): String), scala.`package`.Nil)).map[org.renci.cam.domain.IRI](((namespace: String) =&gt; org.renci.cam.domain.`package`.IRI.apply((&quot;&quot;.+(namespace).+(local): String))))
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          142
+        </td>
+        <td>
+          1329
+          -
+          1347
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.util.Right.apply
+        </td>
+        <td style="background: #F0ADAD">
+          scala.`package`.Right.apply[Nothing, String]((&quot;&quot;.+(prefix).+(&quot;:&quot;): String))
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          141
+        </td>
+        <td>
+          1310
+          -
+          1327
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.SetOps.apply
+        </td>
+        <td style="background: #AEF1AE">
+          Implicits.this.protocols.apply(prefix)
+        </td>
+      </tr><tr>
+        <td>
+          36
+        </td>
+        <td>
+          143
+        </td>
+        <td>
+          1329
+          -
+          1347
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.util.Right.apply
+        </td>
+        <td style="background: #F0ADAD">
+          scala.`package`.Right.apply[Nothing, String]((&quot;&quot;.+(prefix).+(&quot;:&quot;): String))
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          146
+        </td>
+        <td>
+          1361
+          -
+          1463
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.toRight
+        </td>
+        <td style="background: #AEF1AE">
+          prefixesMap.get(prefix).toRight[io.circe.DecodingFailure](io.circe.DecodingFailure.apply((&quot;No prefix expansion found for &quot;.+(prefix).+(&quot;:&quot;).+(local): String), scala.`package`.Nil))
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          145
+        </td>
+        <td>
+          1393
+          -
+          1462
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          io.circe.DecodingFailure.apply
+        </td>
+        <td style="background: #F0ADAD">
+          io.circe.DecodingFailure.apply((&quot;No prefix expansion found for &quot;.+(prefix).+(&quot;:&quot;).+(local): String), scala.`package`.Nil)
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          147
+        </td>
+        <td>
+          1361
+          -
+          1463
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          scala.Option.toRight
+        </td>
+        <td style="background: #AEF1AE">
+          prefixesMap.get(prefix).toRight[io.circe.DecodingFailure](io.circe.DecodingFailure.apply((&quot;No prefix expansion found for &quot;.+(prefix).+(&quot;:&quot;).+(local): String), scala.`package`.Nil))
+        </td>
+      </tr><tr>
+        <td>
+          37
+        </td>
+        <td>
+          144
+        </td>
+        <td>
+          1458
+          -
+          1461
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Nil
+        </td>
+        <td style="background: #F0ADAD">
+          scala.`package`.Nil
+        </td>
+      </tr><tr>
+        <td>
+          38
+        </td>
+        <td>
+          148
+        </td>
+        <td>
+          1476
+          -
+          1500
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.IRI.apply
+        </td>
+        <td style="background: #AEF1AE">
+          org.renci.cam.domain.`package`.IRI.apply((&quot;&quot;.+(namespace).+(local): String))
+        </td>
+      </tr><tr>
+        <td>
+          40
+        </td>
+        <td>
+          152
+        </td>
+        <td>
+          1572
+          -
+          1658
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          io.circe.Encoder.contramap
+        </td>
+        <td style="background: #F0ADAD">
+          io.circe.Encoder.encodeString.contramap[org.renci.cam.domain.IRI](((iri: org.renci.cam.domain.IRI) =&gt; Implicits.this.compactIRIIfPossible(iri, prefixesMap)))
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          151
+        </td>
+        <td>
+          1616
+          -
+          1654
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.Implicits.compactIRIIfPossible
+        </td>
+        <td style="background: #F0ADAD">
+          Implicits.this.compactIRIIfPossible(iri, prefixesMap)
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          154
+        </td>
+        <td>
+          1733
+          -
+          1830
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          io.circe.KeyEncoder.contramap
+        </td>
+        <td style="background: #F0ADAD">
+          io.circe.KeyEncoder.encodeKeyString.contramap[org.renci.cam.domain.IRI](((iri: org.renci.cam.domain.IRI) =&gt; Implicits.this.compactIRIIfPossible(iri, prefixesMap)))
+        </td>
+      </tr><tr>
+        <td>
+          45
+        </td>
+        <td>
+          153
+        </td>
+        <td>
+          1788
+          -
+          1826
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.Implicits.compactIRIIfPossible
+        </td>
+        <td style="background: #F0ADAD">
+          Implicits.this.compactIRIIfPossible(iri, prefixesMap)
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          155
+        </td>
+        <td>
+          1980
+          -
+          2011
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.startsWith
+        </td>
+        <td style="background: #AEF1AE">
+          iri.value.startsWith(namespace)
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          156
+        </td>
+        <td>
+          1936
+          -
+          2013
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableOps.filter
+        </td>
+        <td style="background: #AEF1AE">
+          prefixesMap.filter(((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String): (String, String)(_, (namespace @ _)) =&gt; iri.value.startsWith(namespace)
+}))
+        </td>
+      </tr><tr>
+        <td>
+          50
+        </td>
+        <td>
+          164
+        </td>
+        <td>
+          2043
+          -
+          2194
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  &lt;synthetic&gt; &lt;artifact&gt; private[this] val x$5: (String, String) = (startsWith.maxBy[Int](((x$4: (String, String)) =&gt; x$4._2.length()))(math.this.Ordering.Int): (String, String) @unchecked) match {
+    case (_1: String, _2: String): (String, String)((prefix @ _), (namespace @ _)) =&gt; scala.Tuple2.apply[String, String](prefix, namespace)
+  };
+  val prefix: String = x$5._1;
+  val namespace: String = x$5._2;
+  org.apache.commons.lang3.StringUtils.prependIfMissing(scala.Predef.augmentString(iri.value).drop(namespace.length()), (&quot;&quot;.+(prefix).+(&quot;:&quot;): String))
+}
+        </td>
+      </tr><tr>
+        <td>
+          50
+        </td>
+        <td>
+          157
+        </td>
+        <td>
+          2022
+          -
+          2041
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.nonEmpty
+        </td>
+        <td style="background: #AEF1AE">
+          startsWith.nonEmpty
+        </td>
+      </tr><tr>
+        <td>
+          51
+        </td>
+        <td>
+          158
+        </td>
+        <td>
+          2056
+          -
+          2056
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Tuple2._1
+        </td>
+        <td style="background: #AEF1AE">
+          x$5._1
+        </td>
+      </tr><tr>
+        <td>
+          51
+        </td>
+        <td>
+          159
+        </td>
+        <td>
+          2064
+          -
+          2064
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Tuple2._2
+        </td>
+        <td style="background: #AEF1AE">
+          x$5._2
+        </td>
+      </tr><tr>
+        <td>
+          52
+        </td>
+        <td>
+          160
+        </td>
+        <td>
+          2142
+          -
+          2151
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.domain.IRI.value
+        </td>
+        <td style="background: #AEF1AE">
+          iri.value
+        </td>
+      </tr><tr>
+        <td>
+          52
+        </td>
+        <td>
+          163
+        </td>
+        <td>
+          2113
+          -
+          2188
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.lang3.StringUtils.prependIfMissing
+        </td>
+        <td style="background: #AEF1AE">
+          org.apache.commons.lang3.StringUtils.prependIfMissing(scala.Predef.augmentString(iri.value).drop(namespace.length()), (&quot;&quot;.+(prefix).+(&quot;:&quot;): String))
+        </td>
+      </tr><tr>
+        <td>
+          52
+        </td>
+        <td>
+          162
+        </td>
+        <td>
+          2142
+          -
+          2174
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.StringOps.drop
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Predef.augmentString(iri.value).drop(namespace.length())
+        </td>
+      </tr><tr>
+        <td>
+          52
+        </td>
+        <td>
+          161
+        </td>
+        <td>
+          2157
+          -
+          2173
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.length
+        </td>
+        <td style="background: #AEF1AE">
+          namespace.length()
+        </td>
+      </tr><tr>
+        <td>
+          53
+        </td>
+        <td>
+          178
+        </td>
+        <td>
+          2200
+          -
+          2565
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          {
+  val httpsIRI: String = Implicits.this.toHttps(iri.value);
+  val httpsStartsWith: scala.collection.immutable.Map[String,String] = prefixesMap.filter(((x0$2: (String, String)) =&gt; x0$2 match {
+    case (_1: String, _2: String): (String, String)(_, (namespace @ _)) =&gt; httpsIRI.startsWith(namespace)
+  }));
+  if (httpsStartsWith.nonEmpty)
+    {
+      &lt;synthetic&gt; &lt;artifact&gt; private[this] val x$7: (String, String) = (httpsStartsWith.maxBy[Int](((x$6: (String, String)) =&gt; x$6._2.length()))(math.this.Ordering.Int): (String, String) @unchecked) match {
+        case (_1: String, _2: String): (String, String)((prefix @ _), (namespace @ _)) =&gt; scala.Tuple2.apply[String, String](prefix, namespace)
+      };
+      val prefix: String = x$7._1;
+      val namespace: String = x$7._2;
+      org.apache.commons.lang3.StringUtils.prependIfMissing(scala.Predef.augmentString(httpsIRI).drop(namespace.length()), (&quot;&quot;.+(prefix).+(&quot;:&quot;): String))
+    }
+  else
+    iri.value
+}
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          166
+        </td>
+        <td>
+          2223
+          -
+          2241
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.Implicits.toHttps
+        </td>
+        <td style="background: #AEF1AE">
+          Implicits.this.toHttps(iri.value)
+        </td>
+      </tr><tr>
+        <td>
+          54
+        </td>
+        <td>
+          165
+        </td>
+        <td>
+          2231
+          -
+          2240
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.domain.IRI.value
+        </td>
+        <td style="background: #AEF1AE">
+          iri.value
+        </td>
+      </tr><tr>
+        <td>
+          55
+        </td>
+        <td>
+          167
+        </td>
+        <td>
+          2314
+          -
+          2344
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.startsWith
+        </td>
+        <td style="background: #AEF1AE">
+          httpsIRI.startsWith(namespace)
+        </td>
+      </tr><tr>
+        <td>
+          55
+        </td>
+        <td>
+          168
+        </td>
+        <td>
+          2270
+          -
+          2346
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableOps.filter
+        </td>
+        <td style="background: #AEF1AE">
+          prefixesMap.filter(((x0$2: (String, String)) =&gt; x0$2 match {
+  case (_1: String, _2: String): (String, String)(_, (namespace @ _)) =&gt; httpsIRI.startsWith(namespace)
+}))
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          175
+        </td>
+        <td>
+          2383
+          -
+          2544
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          {
+  &lt;synthetic&gt; &lt;artifact&gt; private[this] val x$7: (String, String) = (httpsStartsWith.maxBy[Int](((x$6: (String, String)) =&gt; x$6._2.length()))(math.this.Ordering.Int): (String, String) @unchecked) match {
+    case (_1: String, _2: String): (String, String)((prefix @ _), (namespace @ _)) =&gt; scala.Tuple2.apply[String, String](prefix, namespace)
+  };
+  val prefix: String = x$7._1;
+  val namespace: String = x$7._2;
+  org.apache.commons.lang3.StringUtils.prependIfMissing(scala.Predef.augmentString(httpsIRI).drop(namespace.length()), (&quot;&quot;.+(prefix).+(&quot;:&quot;): String))
+}
+        </td>
+      </tr><tr>
+        <td>
+          56
+        </td>
+        <td>
+          169
+        </td>
+        <td>
+          2357
+          -
+          2381
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.nonEmpty
+        </td>
+        <td style="background: #AEF1AE">
+          httpsStartsWith.nonEmpty
+        </td>
+      </tr><tr>
+        <td>
+          57
+        </td>
+        <td>
+          171
+        </td>
+        <td>
+          2406
+          -
+          2406
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Tuple2._2
+        </td>
+        <td style="background: #F0ADAD">
+          x$7._2
+        </td>
+      </tr><tr>
+        <td>
+          57
+        </td>
+        <td>
+          170
+        </td>
+        <td>
+          2398
+          -
+          2398
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.Tuple2._1
+        </td>
+        <td style="background: #F0ADAD">
+          x$7._1
+        </td>
+      </tr><tr>
+        <td>
+          58
+        </td>
+        <td>
+          173
+        </td>
+        <td>
+          2491
+          -
+          2522
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.StringOps.drop
+        </td>
+        <td style="background: #F0ADAD">
+          scala.Predef.augmentString(httpsIRI).drop(namespace.length())
+        </td>
+      </tr><tr>
+        <td>
+          58
+        </td>
+        <td>
+          172
+        </td>
+        <td>
+          2505
+          -
+          2521
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.length
+        </td>
+        <td style="background: #F0ADAD">
+          namespace.length()
+        </td>
+      </tr><tr>
+        <td>
+          58
+        </td>
+        <td>
+          174
+        </td>
+        <td>
+          2462
+          -
+          2536
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.lang3.StringUtils.prependIfMissing
+        </td>
+        <td style="background: #F0ADAD">
+          org.apache.commons.lang3.StringUtils.prependIfMissing(scala.Predef.augmentString(httpsIRI).drop(namespace.length()), (&quot;&quot;.+(prefix).+(&quot;:&quot;): String))
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          176
+        </td>
+        <td>
+          2550
+          -
+          2559
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.domain.IRI.value
+        </td>
+        <td style="background: #AEF1AE">
+          iri.value
+        </td>
+      </tr><tr>
+        <td>
+          59
+        </td>
+        <td>
+          177
+        </td>
+        <td>
+          2550
+          -
+          2559
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.renci.cam.domain.IRI.value
+        </td>
+        <td style="background: #AEF1AE">
+          iri.value
+        </td>
+      </tr><tr>
+        <td>
+          63
+        </td>
+        <td>
+          179
+        </td>
+        <td>
+          2616
+          -
+          2651
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.replaceFirst
+        </td>
+        <td style="background: #AEF1AE">
+          uri.replaceFirst(&quot;http:&quot;, &quot;https:&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          65
+        </td>
+        <td>
+          189
+        </td>
+        <td>
+          2722
+          -
+          3033
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          io.circe.Encoder.contramap
+        </td>
+        <td style="background: #F0ADAD">
+          io.circe.Encoder.encodeString.contramap[org.renci.cam.domain.IRI](((iri: org.renci.cam.domain.IRI) =&gt; {
+  val startsWith: scala.collection.immutable.Map[String,String] = prefixesMap.filter(((x0$1: (String, String)) =&gt; x0$1 match {
+    case (_1: String, _2: String): (String, String)((prefix @ _), (namespace @ _)) =&gt; iri.value.startsWith(namespace)
+  }));
+  if (startsWith.nonEmpty)
+    {
+      val namespace: String = (startsWith.maxBy[Int](((x$8: (String, String)) =&gt; x$8._2.length()))(math.this.Ordering.Int): (String, String) @unchecked) match {
+        case (_1: String, _2: String): (String, String)(_, (namespace @ _)) =&gt; namespace
+      };
+      (&quot;&quot;.+(namespace).+(scala.Predef.augmentString(iri.value).drop(namespace.length())): String)
+    }
+  else
+    iri.value
+}))
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          181
+        </td>
+        <td>
+          2783
+          -
+          2865
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableOps.filter
+        </td>
+        <td style="background: #F0ADAD">
+          prefixesMap.filter(((x0$1: (String, String)) =&gt; x0$1 match {
+  case (_1: String, _2: String): (String, String)((prefix @ _), (namespace @ _)) =&gt; iri.value.startsWith(namespace)
+}))
+        </td>
+      </tr><tr>
+        <td>
+          66
+        </td>
+        <td>
+          180
+        </td>
+        <td>
+          2832
+          -
+          2863
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.startsWith
+        </td>
+        <td style="background: #F0ADAD">
+          iri.value.startsWith(namespace)
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          182
+        </td>
+        <td>
+          2874
+          -
+          2893
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.nonEmpty
+        </td>
+        <td style="background: #F0ADAD">
+          startsWith.nonEmpty
+        </td>
+      </tr><tr>
+        <td>
+          67
+        </td>
+        <td>
+          186
+        </td>
+        <td>
+          2895
+          -
+          3014
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          {
+  val namespace: String = (startsWith.maxBy[Int](((x$8: (String, String)) =&gt; x$8._2.length()))(math.this.Ordering.Int): (String, String) @unchecked) match {
+    case (_1: String, _2: String): (String, String)(_, (namespace @ _)) =&gt; namespace
+  };
+  (&quot;&quot;.+(namespace).+(scala.Predef.augmentString(iri.value).drop(namespace.length())): String)
+}
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          185
+        </td>
+        <td>
+          2924
+          -
+          2953
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.maxBy
+        </td>
+        <td style="background: #F0ADAD">
+          startsWith.maxBy[Int](((x$8: (String, String)) =&gt; x$8._2.length()))(math.this.Ordering.Int)
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          184
+        </td>
+        <td>
+          2940
+          -
+          2940
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.math.Ordering.Int
+        </td>
+        <td style="background: #F0ADAD">
+          math.this.Ordering.Int
+        </td>
+      </tr><tr>
+        <td>
+          68
+        </td>
+        <td>
+          183
+        </td>
+        <td>
+          2941
+          -
+          2952
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.length
+        </td>
+        <td style="background: #F0ADAD">
+          x$8._2.length()
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          187
+        </td>
+        <td>
+          3020
+          -
+          3029
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.domain.IRI.value
+        </td>
+        <td style="background: #F0ADAD">
+          iri.value
+        </td>
+      </tr><tr>
+        <td>
+          70
+        </td>
+        <td>
+          188
+        </td>
+        <td>
+          3020
+          -
+          3029
+        </td>
+        <td>
+          Block
+        </td>
+        <td>
+          org.renci.cam.domain.IRI.value
+        </td>
+        <td style="background: #F0ADAD">
+          iri.value
+        </td>
+      </tr><tr>
+        <td>
+          73
+        </td>
+        <td>
+          193
+        </td>
+        <td>
+          3137
+          -
+          3355
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          io.circe.Decoder.emap
+        </td>
+        <td style="background: #F0ADAD">
+          io.circe.Decoder.decodeString.emap[org.renci.cam.domain.BiolinkPredicate](((s: String) =&gt; {
+  val localName: String = s.replace(&quot;biolink:&quot;, &quot;&quot;);
+  biolinkPredicates.find(((a: org.renci.cam.domain.BiolinkPredicate) =&gt; a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName))).toRight[String]((&quot;BiolinkPredicate does not exist: &quot;.+(s): String))
+}))
+        </td>
+      </tr><tr>
+        <td>
+          74
+        </td>
+        <td>
+          190
+        </td>
+        <td>
+          3190
+          -
+          3215
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.replace
+        </td>
+        <td style="background: #F0ADAD">
+          s.replace(&quot;biolink:&quot;, &quot;&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          75
+        </td>
+        <td>
+          191
+        </td>
+        <td>
+          3248
+          -
+          3302
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #F0ADAD">
+          a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName)
+        </td>
+      </tr><tr>
+        <td>
+          75
+        </td>
+        <td>
+          192
+        </td>
+        <td>
+          3220
+          -
+          3351
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.toRight
+        </td>
+        <td style="background: #F0ADAD">
+          biolinkPredicates.find(((a: org.renci.cam.domain.BiolinkPredicate) =&gt; a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName))).toRight[String]((&quot;BiolinkPredicate does not exist: &quot;.+(s): String))
+        </td>
+      </tr><tr>
+        <td>
+          78
+        </td>
+        <td>
+          194
+        </td>
+        <td>
+          3416
+          -
+          3487
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          io.circe.Encoder.contramap
+        </td>
+        <td style="background: #AEF1AE">
+          io.circe.Encoder.encodeString.contramap[org.renci.cam.domain.BiolinkPredicate](((s: org.renci.cam.domain.BiolinkPredicate) =&gt; (&quot;biolink:&quot;.+(s.shorthand): String)))
+        </td>
+      </tr><tr>
+        <td>
+          82
+        </td>
+        <td>
+          198
+        </td>
+        <td>
+          3576
+          -
+          3787
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          io.circe.Decoder.emap
+        </td>
+        <td style="background: #F0ADAD">
+          io.circe.Decoder.decodeString.emap[org.renci.cam.domain.BiolinkClass](((s: String) =&gt; {
+  val localName: String = s.replace(&quot;biolink:&quot;, &quot;&quot;);
+  biolinkClasses.find(((a: org.renci.cam.domain.BiolinkClass) =&gt; a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName))).toRight[String]((&quot;BiolinkClass does not exist: &quot;.+(s): String))
+}))
+        </td>
+      </tr><tr>
+        <td>
+          83
+        </td>
+        <td>
+          195
+        </td>
+        <td>
+          3629
+          -
+          3654
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.replace
+        </td>
+        <td style="background: #F0ADAD">
+          s.replace(&quot;biolink:&quot;, &quot;&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          196
+        </td>
+        <td>
+          3684
+          -
+          3738
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #F0ADAD">
+          a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName)
+        </td>
+      </tr><tr>
+        <td>
+          84
+        </td>
+        <td>
+          197
+        </td>
+        <td>
+          3659
+          -
+          3783
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Option.toRight
+        </td>
+        <td style="background: #F0ADAD">
+          biolinkClasses.find(((a: org.renci.cam.domain.BiolinkClass) =&gt; a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName))).toRight[String]((&quot;BiolinkClass does not exist: &quot;.+(s): String))
+        </td>
+      </tr><tr>
+        <td>
+          87
+        </td>
+        <td>
+          202
+        </td>
+        <td>
+          3840
+          -
+          4081
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          io.circe.Encoder.contramap
+        </td>
+        <td style="background: #AEF1AE">
+          io.circe.Encoder.encodeString.contramap[org.renci.cam.domain.BiolinkClass](((s: org.renci.cam.domain.BiolinkClass) =&gt; if (s.shorthand.contains(&quot;_&quot;))
+  (&quot;biolink:&quot;.+(LOWER_UNDERSCORE.to(UPPER_CAMEL, s.shorthand)): String)
+else
+  (&quot;biolink:&quot;.+(org.apache.commons.lang3.StringUtils.capitalize(s.shorthand)): String)))
+        </td>
+      </tr><tr>
+        <td>
+          88
+        </td>
+        <td>
+          199
+        </td>
+        <td>
+          3886
+          -
+          3911
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.String.contains
+        </td>
+        <td style="background: #AEF1AE">
+          s.shorthand.contains(&quot;_&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          89
+        </td>
+        <td>
+          200
+        </td>
+        <td>
+          3921
+          -
+          4002
+        </td>
+        <td>
+          Typed
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #F0ADAD">
+          (&quot;biolink:&quot;.+(LOWER_UNDERSCORE.to(UPPER_CAMEL, s.shorthand)): String)
+        </td>
+      </tr><tr>
+        <td>
+          91
+        </td>
+        <td>
+          201
+        </td>
+        <td>
+          4022
+          -
+          4071
+        </td>
+        <td>
+          Typed
+        </td>
+        <td>
+          &lt;nosymbol&gt;
+        </td>
+        <td style="background: #AEF1AE">
+          (&quot;biolink:&quot;.+(org.apache.commons.lang3.StringUtils.capitalize(s.shorthand)): String)
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>

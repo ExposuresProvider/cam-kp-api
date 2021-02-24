@@ -1,0 +1,299 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/renci/cam/HttpClient.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>package org.renci.cam
+</span>2 <span style=''>
+</span>3 <span style=''>import org.http4s.client.Client
+</span>4 <span style=''>import org.http4s.client.blaze.BlazeClientBuilder
+</span>5 <span style=''>import zio._
+</span>6 <span style=''>import zio.interop.catz._
+</span>7 <span style=''>
+</span>8 <span style=''>import scala.concurrent.duration.{Duration, MINUTES}
+</span>9 <span style=''>
+</span>10 <span style=''>object HttpClient {
+</span>11 <span style=''>
+</span>12 <span style=''>  type HttpClient = Has[Client[Task]]
+</span>13 <span style=''>
+</span>14 <span style=''>  def makeHttpClient: TaskManaged[Client[Task]] =
+</span>15 <span style=''>    </span><span style='background: #AEF1AE'>ZIO.runtime[Any].toManaged_.flatMap { implicit rts =&gt;
+</span>16 <span style=''></span><span style='background: #AEF1AE'>      BlazeClientBuilder[Task](rts.platform.executor.asEC)
+</span>17 <span style=''></span><span style='background: #AEF1AE'>        .withIdleTimeout(Duration(2, MINUTES))
+</span>18 <span style=''></span><span style='background: #AEF1AE'>        .withConnectTimeout(Duration(3, MINUTES))
+</span>19 <span style=''></span><span style='background: #AEF1AE'>        .resource
+</span>20 <span style=''></span><span style='background: #AEF1AE'>        .toManaged
+</span>21 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>22 <span style=''>
+</span>23 <span style=''>  def makeHttpClientLayer: TaskLayer[HttpClient] = </span><span style='background: #AEF1AE'>makeHttpClient.toLayer</span><span style=''>
+</span>24 <span style=''>
+</span>25 <span style=''>  val client: ZIO[HttpClient, Nothing, Client[Task]] = </span><span style='background: #AEF1AE'>ZIO.service</span><span style=''>
+</span>26 <span style=''>
+</span>27 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          15
+        </td>
+        <td>
+          119
+        </td>
+        <td>
+          313
+          -
+          565
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZManaged.flatMap
+        </td>
+        <td style="background: #AEF1AE">
+          zio.ZIO.runtime[Any].toManaged_.flatMap[Any, Throwable, org.http4s.client.Client[zio.Task]](((implicit rts: zio.Runtime[Any]) =&gt; zio.interop.catz.catsIOResourceSyntax[[+A]zio.Task[A], org.http4s.client.Client[zio.Task]](org.http4s.client.blaze.BlazeClientBuilder.apply[zio.Task](rts.platform.executor.asEC, org.http4s.client.blaze.BlazeClientBuilder.apply$default$2[zio.Task])(zio.interop.catz.taskEffectInstance[Any](rts)).withIdleTimeout(scala.concurrent.duration.Duration.apply(2L, MINUTES)).withConnectTimeout(scala.concurrent.duration.Duration.apply(3L, MINUTES)).resource).toManaged[Any](zio.interop.catz.taskEffectInstance[Any](rts), zio.interop.catz.taskEffectInstance[Any](rts))))
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          112
+        </td>
+        <td>
+          397
+          -
+          397
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          zio.interop.CatsEffectInstances.taskEffectInstance
+        </td>
+        <td style="background: #AEF1AE">
+          zio.interop.catz.taskEffectInstance[Any](rts)
+        </td>
+      </tr><tr>
+        <td>
+          16
+        </td>
+        <td>
+          111
+        </td>
+        <td>
+          391
+          -
+          391
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          org.http4s.client.blaze.BlazeClientBuilder.apply$default$2
+        </td>
+        <td style="background: #AEF1AE">
+          org.http4s.client.blaze.BlazeClientBuilder.apply$default$2[zio.Task]
+        </td>
+      </tr><tr>
+        <td>
+          17
+        </td>
+        <td>
+          113
+        </td>
+        <td>
+          451
+          -
+          471
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.concurrent.duration.Duration.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.concurrent.duration.Duration.apply(2L, MINUTES)
+        </td>
+      </tr><tr>
+        <td>
+          18
+        </td>
+        <td>
+          114
+        </td>
+        <td>
+          501
+          -
+          521
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.concurrent.duration.Duration.apply
+        </td>
+        <td style="background: #AEF1AE">
+          scala.concurrent.duration.Duration.apply(3L, MINUTES)
+        </td>
+      </tr><tr>
+        <td>
+          19
+        </td>
+        <td>
+          115
+        </td>
+        <td>
+          373
+          -
+          540
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.http4s.client.blaze.BlazeClientBuilder.resource
+        </td>
+        <td style="background: #AEF1AE">
+          org.http4s.client.blaze.BlazeClientBuilder.apply[zio.Task](rts.platform.executor.asEC, org.http4s.client.blaze.BlazeClientBuilder.apply$default$2[zio.Task])(zio.interop.catz.taskEffectInstance[Any](rts)).withIdleTimeout(scala.concurrent.duration.Duration.apply(2L, MINUTES)).withConnectTimeout(scala.concurrent.duration.Duration.apply(3L, MINUTES)).resource
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          116
+        </td>
+        <td>
+          550
+          -
+          550
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          zio.interop.CatsEffectInstances.taskEffectInstance
+        </td>
+        <td style="background: #AEF1AE">
+          zio.interop.catz.taskEffectInstance[Any](rts)
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          118
+        </td>
+        <td>
+          373
+          -
+          559
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          zio.interop.CatsIOResourceSyntax.toManaged
+        </td>
+        <td style="background: #AEF1AE">
+          zio.interop.catz.catsIOResourceSyntax[[+A]zio.Task[A], org.http4s.client.Client[zio.Task]](org.http4s.client.blaze.BlazeClientBuilder.apply[zio.Task](rts.platform.executor.asEC, org.http4s.client.blaze.BlazeClientBuilder.apply$default$2[zio.Task])(zio.interop.catz.taskEffectInstance[Any](rts)).withIdleTimeout(scala.concurrent.duration.Duration.apply(2L, MINUTES)).withConnectTimeout(scala.concurrent.duration.Duration.apply(3L, MINUTES)).resource).toManaged[Any](zio.interop.catz.taskEffectInstance[Any](rts), zio.interop.catz.taskEffectInstance[Any](rts))
+        </td>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          117
+        </td>
+        <td>
+          550
+          -
+          550
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          zio.interop.CatsEffectInstances.taskEffectInstance
+        </td>
+        <td style="background: #AEF1AE">
+          zio.interop.catz.taskEffectInstance[Any](rts)
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          120
+        </td>
+        <td>
+          618
+          -
+          640
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          zio.ZManaged.toLayer
+        </td>
+        <td style="background: #AEF1AE">
+          HttpClient.this.makeHttpClient.toLayer[org.http4s.client.Client[zio.Task]]((izumi.reflect.Tag.apply[org.http4s.client.Client[zio.Task]](classOf[org.http4s.client.Client], izumi.reflect.macrortti.LightTypeTag.parse[Nothing]((1298671694: Int), (&quot;\u0001\u0000\u0018org.http4s.client.Client\u0001\u0000\u0003\u0000\u0001\u0000\u00031:0\u0001\u0000\u0007zio.ZIO\u0003\u0000\u0004\u0000\u0001\tscala.Any\u0001\u0001\u0001\u0000\u0004\u0000\u0001\u0013java.lang.Throwable\u0001\u0001\u0002\u0000\u0004\u0000\u0001\u0090\u0003\u0001\u0001\u0002\u0001\u0000\u0001&quot;: String), (&quot;\u0000\u0002\u0003\u0000\u0003\u0000\u00010\u0000\u00011\u0000\u00012\u0001\u0000\u0007zio.ZIO\u0003\u0000\u0004\u0000\u0001\u0090\u0002\u0001\u0001\u0001\u0000\u0004\u0000\u0001\u0090\u0003\u0001\u0001\u0002\u0000\u0004\u0000\u0001\u0090\u0004\u0001\u0001\u0002\u0001\u0001\u0003\u0000\u0003\u0000\u0090\u0002\u0000\u0090\u0003\u0000\u0090\u0004\u0001\u0000\u0017zio.ZIOPlatformSpecific\u0003\u0000\u0004\u0000\u0001\u0090\u0002\u0001\u0001\u0001\u0000\u0004\u0000\u0001\u0090\u0003\u0001\u0001\u0002\u0000\u0004\u0000\u0001\u0090\u0004\u0001\u0001\u0002\u0001\u0001\u0000\u0090\u0005\u0003\u0000\u0004\u0000\u0001\tscala.Any\u0001\u0001\u0001\u0000\u0004\u0000\u0001\u0013java.lang.Throwable\u0001\u0001\u0002\u0000\u0004\u0000\u0001\rzio.package.A\u0001\u0001\u0002\u0001\u0002\u0004\u0000\u0001\u0014java.io.Serializable\u0001\u0001\u0001\u0000\u0090\u0006\u0003\u0000\u0004\u0000\u0001\u0090\u0007\u0001\u0001\u0001\u0000\u0004\u0000\u0001\u0090\b\u0001\u0001\u0002\u0000\u0004\u0000\u0001\u0090\t\u0001\u0001\u0002\u0001\u0001\u0000\u0001\u0090\u0005\u0001\u0001\u0002\u0000\u0001\u0090\n\u0001\u0001\u0000\u0001\u0090\u0006\u0001\u0001&quot;: String), (1: Int))): izumi.reflect.Tag[org.http4s.client.Client[zio.Task]]))
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          121
+        </td>
+        <td>
+          697
+          -
+          708
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          zio.ZIO.service
+        </td>
+        <td style="background: #AEF1AE">
+          zio.ZIO.service[org.http4s.client.Client[zio.Task]]((izumi.reflect.Tag.apply[org.http4s.client.Client[zio.Task]](classOf[org.http4s.client.Client], izumi.reflect.macrortti.LightTypeTag.parse[Nothing]((1298671694: Int), (&quot;\u0001\u0000\u0018org.http4s.client.Client\u0001\u0000\u0003\u0000\u0001\u0000\u00031:0\u0001\u0000\u0007zio.ZIO\u0003\u0000\u0004\u0000\u0001\tscala.Any\u0001\u0001\u0001\u0000\u0004\u0000\u0001\u0013java.lang.Throwable\u0001\u0001\u0002\u0000\u0004\u0000\u0001\u0090\u0003\u0001\u0001\u0002\u0001\u0000\u0001&quot;: String), (&quot;\u0000\u0002\u0003\u0000\u0003\u0000\u00010\u0000\u00011\u0000\u00012\u0001\u0000\u0007zio.ZIO\u0003\u0000\u0004\u0000\u0001\u0090\u0002\u0001\u0001\u0001\u0000\u0004\u0000\u0001\u0090\u0003\u0001\u0001\u0002\u0000\u0004\u0000\u0001\u0090\u0004\u0001\u0001\u0002\u0001\u0001\u0003\u0000\u0003\u0000\u0090\u0002\u0000\u0090\u0003\u0000\u0090\u0004\u0001\u0000\u0017zio.ZIOPlatformSpecific\u0003\u0000\u0004\u0000\u0001\u0090\u0002\u0001\u0001\u0001\u0000\u0004\u0000\u0001\u0090\u0003\u0001\u0001\u0002\u0000\u0004\u0000\u0001\u0090\u0004\u0001\u0001\u0002\u0001\u0001\u0000\u0090\u0005\u0003\u0000\u0004\u0000\u0001\tscala.Any\u0001\u0001\u0001\u0000\u0004\u0000\u0001\u0013java.lang.Throwable\u0001\u0001\u0002\u0000\u0004\u0000\u0001\rzio.package.A\u0001\u0001\u0002\u0001\u0002\u0004\u0000\u0001\u0014java.io.Serializable\u0001\u0001\u0001\u0000\u0090\u0006\u0003\u0000\u0004\u0000\u0001\u0090\u0007\u0001\u0001\u0001\u0000\u0004\u0000\u0001\u0090\b\u0001\u0001\u0002\u0000\u0004\u0000\u0001\u0090\t\u0001\u0001\u0002\u0001\u0001\u0000\u0001\u0090\u0005\u0001\u0001\u0002\u0000\u0001\u0090\n\u0001\u0001\u0000\u0001\u0090\u0006\u0001\u0001&quot;: String), (1: Int))): izumi.reflect.Tag[org.http4s.client.Client[zio.Task]]))
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>
