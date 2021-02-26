@@ -35,6 +35,6 @@ object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
   )
 
   def spec =
-    suite("All tests")(testLocalPrefixes, testGetBiolinkPrefixesFromFile, testGetBiolinkPrefixesAndClassesAndPredicatesFromFile)
+    suite("Biolink tests")(testLocalPrefixes, testGetBiolinkPrefixesFromFile, testGetBiolinkPrefixesAndClassesAndPredicatesFromFile)
 
 }
