@@ -1,10 +1,21 @@
 package org.renci.cam
 
+import java.nio.charset.StandardCharsets
+
 import com.google.common.base.CaseFormat
 import io.circe.Decoder.Result
 import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, KeyDecoder, KeyEncoder}
 import org.apache.commons.lang3.StringUtils
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, BiolinkTerm, IRI}
+import org.apache.jena.query.ResultSetFactory
+import org.http4s.{DecodeFailure, DecodeResult, EntityDecoder, EntityEncoder, MalformedMessageBodyFailure}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
+import zio.Task
+import org.apache.jena.query._
+import org.http4s.implicits._
+import org.apache.commons.io.IOUtils
+import org.http4s._
+import org.http4s.headers.`Content-Type`
+import zio.interop.catz._
 
 object Implicits {
 
@@ -25,7 +36,7 @@ object Implicits {
     override def apply(key: String): Option[IRI] = expandCURIEString(key, prefixesMap).toOption
   }
 
-  private def expandCURIEString(curieString: String, prefixesMap: Map[String, String]): Either[DecodingFailure, IRI] =
+  def expandCURIEString(curieString: String, prefixesMap: Map[String, String]): Either[DecodingFailure, IRI] =
     for {
       curie <- curieString match {
         case Curie(p, l) => Right((p, l))
@@ -37,7 +48,7 @@ object Implicits {
         else prefixesMap.get(prefix).toRight(DecodingFailure(s"No prefix expansion found for $prefix:$local", Nil))
     } yield IRI(s"$namespace$local")
 
-  def iriEncoderOut(prefixesMap: Map[String, String]): Encoder[IRI] = Encoder.encodeString.contramap { iri =>
+  def iriEncoder(prefixesMap: Map[String, String]): Encoder[IRI] = Encoder.encodeString.contramap { iri =>
     compactIRIIfPossible(iri, prefixesMap)
   }
 
@@ -45,7 +56,7 @@ object Implicits {
     compactIRIIfPossible(iri, prefixesMap)
   }
 
-  private def compactIRIIfPossible(iri: IRI, prefixesMap: Map[String, String]): String = {
+  def compactIRIIfPossible(iri: IRI, prefixesMap: Map[String, String]): String = {
     val startsWith = prefixesMap.filter { case (_, namespace) => iri.value.startsWith(namespace) }
     if (startsWith.nonEmpty) {
       val (prefix, namespace) = startsWith.maxBy(_._2.length)
@@ -61,14 +72,6 @@ object Implicits {
   }
 
   private def toHttps(uri: String): String = uri.replaceFirst("http:", "https:")
-
-  def iriEncoderIn(prefixesMap: Map[String, String]): Encoder[IRI] = Encoder.encodeString.contramap { iri =>
-    val startsWith = prefixesMap.filter { case (prefix, namespace) => iri.value.startsWith(namespace) }
-    if (startsWith.nonEmpty) {
-      val (_, namespace) = startsWith.maxBy(_._2.length)
-      s"$namespace${iri.value.drop(namespace.length)}"
-    } else iri.value
-  }
 
   def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = Decoder.decodeString.emap { s =>
     val localName = s.replace("biolink:", "")
