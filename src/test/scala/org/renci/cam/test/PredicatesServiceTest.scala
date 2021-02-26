@@ -12,10 +12,10 @@ object PredicatesServiceTest extends DefaultRunnableSpec with LazyLogging {
     testM("test PredicatesService.readPredicates") {
       for {
         predicates <- PredicatesService.readPredicates
-      } yield assert(predicates)(isNonEmpty) && assert(predicates.map(a => a.obj))(contains(BiolinkClass("MacromolecularMachine")))
+      } yield assert(predicates)(isNonEmpty) && assert(predicates.keys)(contains(BiolinkClass("MacromolecularMachine")))
     }
   )
 
-  def spec = suite("All tests")(testReadPredicates)
+  def spec = suite("PredicateService tests")(testReadPredicates)
 
 }
