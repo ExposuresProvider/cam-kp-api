@@ -1,6 +1,6 @@
 import com.typesafe.sbt.packager.docker._
 
-enablePlugins(JavaAppPackaging, DockerPlugin)
+enablePlugins(JavaAppPackaging, DockerPlugin, ScoverageSbtPlugin)
 
 organization := "org.renci"
 
@@ -20,6 +20,10 @@ testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
 configs(IntegrationTest)
 Defaults.itSettings
+
+coverageEnabled := true
+
+coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci\\.cam\\.Server.*;org\\.renci\\.cam\\.AppConfig.*;org\\.renci\\.cam\\.SPARQLQueryExecutor.*"
 
 val zioVersion = "1.0.3"
 val zioConfigVersion = "1.0.0-RC29-1"
