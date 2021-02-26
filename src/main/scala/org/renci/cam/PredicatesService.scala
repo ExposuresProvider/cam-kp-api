@@ -20,12 +20,9 @@ object PredicatesService extends LazyLogging {
   case class Triple(subj: BiolinkClass, pred: BiolinkPredicate, obj: BiolinkClass)
 
   def run: RIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData],
-               Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]] =
-    for {
-      triples <- readPredicates
-    } yield triples.groupBy(_.subj).view.mapValues(_.groupBy(_.obj).view.mapValues(_.map(_.pred)).toMap).toMap
+               Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]] = readPredicates
 
-  def readPredicates: ZIO[Blocking, Throwable, List[Triple]] = for {
+  def readPredicates: ZIO[Blocking, Throwable, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]] = for {
     predicates <- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream("/predicates.csv"), StandardCharsets.UTF_8.name()))
       .bracketAuto { source =>
         effectBlockingIO(source.getLines().mkString("\n"))
@@ -34,6 +31,6 @@ object PredicatesService extends LazyLogging {
     triples = records.asScala
       .map(a => Triple(BiolinkClass(a.get(0)), BiolinkPredicate(a.get(1)), BiolinkClass(a.get(2))))
       .toList
-  } yield triples
+  } yield triples.groupBy(_.subj).view.mapValues(_.groupBy(_.obj).view.mapValues(_.map(_.pred)).toMap).toMap
 
 }
