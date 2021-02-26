@@ -5,7 +5,7 @@ import org.http4s.circe._
 import org.http4s.headers.Accept
 import org.http4s.implicits._
 import org.http4s.{MediaType, Method, Request}
-import HttpClient.HttpClient
+import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio._
 import zio.interop.catz._
@@ -79,6 +79,7 @@ object Biolink {
       slotsStr <- sourceManaged.use(source => ZIO.effect(source.mkString))
       json <- ZIO.fromEither(io.circe.yaml.parser.parse(slotsStr))
       classesKeys <- ZIO.fromOption(json.hcursor.downField("classes").keys).orElseFail(throw new Exception("couldn't get classes"))
+//      classes = classesKeys.map(a => BiolinkClass(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, a.replaceAll(" ", "_")))).toList
       classes = classesKeys.map(a => BiolinkClass(a.replaceAll(" ", "_"))).toList
       predicateKeys <- ZIO.fromOption(json.hcursor.downField("slots").keys).orElseFail(throw new Exception("couldn't get slots"))
       predicates = predicateKeys.map(a => BiolinkPredicate(a.replaceAll(" ", "_"))).toList
