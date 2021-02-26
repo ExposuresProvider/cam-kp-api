@@ -42,5 +42,5 @@ object Scratch extends DefaultRunnableSpec with LazyLogging {
     } //@@ ignore
   )
 
-  def spec = suite("All tests")(scratch, printEncoded)
+  def spec = suite("Scratch tests")(scratch, printEncoded)
 }
