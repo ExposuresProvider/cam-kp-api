@@ -3,13 +3,16 @@ package org.renci.cam.test
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{ResultSet, ResultSetFactory}
+import org.renci.cam.QueryService.{SlotStuff, TermWithLabelAndBiolinkType, TripleString}
 import org.renci.cam._
 import org.renci.cam.domain._
 import zio._
+import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
 import zio.test.Assertion._
-import zio.test._
+import zio.test.{testM, _}
 
+import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters._
 
@@ -78,7 +81,8 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
           nodeBindings <- QueryService.getTRAPINodeBindings(queryGraph, resultSet.next())
         } yield assert(nodeBindings.keys)(
           contains("n0") && contains("n1")
-        ) && assert(nodeBindings.get("n0").get.map(a => a.id))(contains(IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103")))
+        ) && assert(nodeBindings.get("n0").get.map(a => a.id))(
+          contains(IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103")))
       testCase.provideCustomLayer(testLayer)
     }
   )
@@ -125,6 +129,83 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     (queryGraph, resultSet)
   }
 
-  def spec = suite("All tests")(testGetNodeTypes, testEnforceQueryEdgeTypes, testGetTRAPIEdges, testGetTRAPINodeBindings)
+  val testQueryTexts = suite("testQueryTexts")(
+    testM("test QueryService.getTRAPINodeDetailsQueryText") {
+      val testCase =
+        for {
+          biolinkData <- Biolink.biolinkData
+          nodeIdList = List(
+            IRI("http://purl.obolibrary.org/obo/GO_0047196"),
+            IRI("http://purl.obolibrary.org/obo/GO_0017064")
+          )
+          queryText <- QueryService.getTRAPINodeDetailsQueryText(nodeIdList, biolinkData.classes)
+        } yield assert(queryText.text)(
+          containsString("VALUES ?term {  <http://purl.obolibrary.org/obo/GO_0047196>  <http://purl.obolibrary.org/obo/GO_0017064>  }"))
+      testCase.provideCustomLayer(testLayer)
+    },
+    testM("test QueryService.getProvenanceQueryText") {
+      for {
+        edges <- Task.effect(
+          Set(
+            QueryService.Triple(
+              IRI("http://model.geneontology.org/R-HSA-163567_R-HSA-163595_controller"),
+              IRI("http://purl.obolibrary.org/obo/BFO_0000050"),
+              IRI("http://model.geneontology.org/reaction_R-HSA-163595_location_lociGO_0005811")
+            ),
+            QueryService.Triple(
+              IRI("http://model.geneontology.org/R-HSA-6808466_R-HSA-6808464_controller"),
+              IRI("http://purl.obolibrary.org/obo/BFO_0000050"),
+              IRI("http://model.geneontology.org/reaction_R-HSA-6808464_location_lociGO_0005811")
+            )
+          )
+        )
+        queryText <- QueryService.getProvenanceQueryText(edges)
+      } yield assert(queryText.text)(
+        containsString(
+          "( <http://model.geneontology.org/R-HSA-163567_R-HSA-163595_controller> <http://purl.obolibrary.org/obo/BFO_0000050> <http://model.geneontology.org/reaction_R-HSA-163595_location_lociGO_0005811> )"
+        ) &&
+          containsString(
+            "( <http://model.geneontology.org/R-HSA-6808466_R-HSA-6808464_controller> <http://purl.obolibrary.org/obo/BFO_0000050> <http://model.geneontology.org/reaction_R-HSA-6808464_location_lociGO_0005811> )"
+          )
+      )
+    },
+    testM("test QueryService.getCAMStuffQueryText") {
+      for {
+        queryText <- QueryService.getCAMStuffQueryText(IRI("http://model.geneontology.org/R-HSA-2142753"))
+      } yield assert(queryText.text)(containsString("{ GRAPH <http://model.geneontology.org/R-HSA-2142753>"))
+    },
+    testM("test QueryService.getSlotStuffQueryText") {
+      for {
+        predicates <- Task.effect(
+          List(
+            IRI("http://purl.obolibrary.org/obo/RO_0002333"),
+            IRI("http://purl.obolibrary.org/obo/BFO_0000066"),
+            IRI("http://purl.obolibrary.org/obo/RO_0002234"),
+            IRI("http://purl.obolibrary.org/obo/RO_0002413"),
+            IRI("http://purl.obolibrary.org/obo/BFO_0000050"),
+            IRI("http://purl.obolibrary.org/obo/RO_0002411"),
+            IRI("http://purl.obolibrary.org/obo/RO_0002233")
+          )
+        )
+        queryText <- QueryService.getSlotStuffQueryText(predicates)
+      } yield assert(queryText.text)(
+        containsString("( <http://purl.obolibrary.org/obo/RO_0002333> \"e0000\" )") &&
+          containsString("( <http://purl.obolibrary.org/obo/BFO_0000066> \"e0001\" )") &&
+          containsString("( <http://purl.obolibrary.org/obo/RO_0002234> \"e0002\" )") &&
+          containsString("( <http://purl.obolibrary.org/obo/RO_0002413> \"e0003\" )") &&
+          containsString("( <http://purl.obolibrary.org/obo/BFO_0000050> \"e0004\" )") &&
+          containsString("( <http://purl.obolibrary.org/obo/RO_0002411> \"e0005\" )") &&
+          containsString("( <http://purl.obolibrary.org/obo/RO_0002233> \"e0006\" )")
+      )
+    },
+    testM("test QueryService.getTRAPIQEdgePredicatesQueryText") {
+      for {
+        queryText <- QueryService.getTRAPIQEdgePredicatesQueryText(BiolinkPredicate("has_participant").iri)
+      } yield assert(queryText.text)(
+        containsString("?predicate <http://cam.renci.org/biolink_slot> <https://w3id.org/biolink/vocab/has_participant> ."))
+    }
+  )
+
+  def spec = suite("QueryService tests")(testGetNodeTypes, testEnforceQueryEdgeTypes, testGetTRAPIEdges, testGetTRAPINodeBindings, testQueryTexts)
 
 }
