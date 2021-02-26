@@ -65,11 +65,8 @@ object SerializationTest extends DefaultRunnableSpec {
           final def apply(c: HCursor): Decoder.Result[TRAPIQueryNode] =
             for {
               key <- c.value.as[String]
-//      downField("key").as[String]
-//      bar <- c.downField("bar").as[Int]
             } yield TRAPIQueryNode(None, None, None)
         }
-//        final case class TRAPIQueryNode(key: String, id: Option[IRI], category: Option[BiolinkClass], is_set: Option[Boolean])
 
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         println("encoded: " + encoded)
@@ -95,7 +92,7 @@ object SerializationTest extends DefaultRunnableSpec {
         biolinkData <- Biolink.biolinkData
       } yield {
         implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderIn(biolinkData.prefixes)
+        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
         implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
         implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
         implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.iri.value)
@@ -231,11 +228,11 @@ object SerializationTest extends DefaultRunnableSpec {
           |"head": { "vars": [ "n1" , "n0" , "n0_type" , "n1_type" , "e0" ] },
           |"results": { "bindings": [ ] }
           |}""".stripMargin
-      var is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
-      var resultSet = ResultSetFactory.fromJSON(is)
+      val is = IOUtils.toInputStream(response, StandardCharsets.UTF_8)
+      val resultSet = ResultSetFactory.fromJSON(is)
       is.close()
 
-      var baos = new ByteArrayOutputStream()
+      val baos = new ByteArrayOutputStream()
       ResultSetFormatter.outputAsJSON(baos, resultSet)
       baos.close();
       val json = new String(baos.toByteArray)
@@ -265,7 +262,7 @@ object SerializationTest extends DefaultRunnableSpec {
     } @@ ignore
   )
 
-  def spec = suite("All tests")(
+  def spec = suite("Serialization tests")(
     testIRIWithColonInReference,
     testingMessageDigest,
     testTRAPIQueryRequestBodyEncodingIn,
