@@ -3,16 +3,13 @@ package org.renci.cam.test
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{ResultSet, ResultSetFactory}
-import org.renci.cam.QueryService.{SlotStuff, TermWithLabelAndBiolinkType, TripleString}
 import org.renci.cam._
 import org.renci.cam.domain._
 import zio._
-import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
 import zio.test.Assertion._
 import zio.test.{testM, _}
 
-import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters._
 
@@ -206,6 +203,39 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     }
   )
 
-  def spec = suite("QueryService tests")(testGetNodeTypes, testEnforceQueryEdgeTypes, testGetTRAPIEdges, testGetTRAPINodeBindings, testQueryTexts)
+  val testGetNodesToDirectTypes = suite("testGetNodesToDirectTypes")(
+    zio.test.test("test QueryService.getNodesToDirectTypes") {
+      val (queryGraph, _) = getSimpleData
+      val queryText = QueryService.getNodesToDirectTypes(queryGraph.nodes)
+      assert(queryText.text.trim)(equalTo(
+        "?n0 <http://www.openrdf.org/schema/sesame#directType> ?n0_type .   ?n1 <http://www.openrdf.org/schema/sesame#directType> ?n1_type ."))
+    }
+  )
+
+  val testGetLimit = suite("testGetLimit")(
+    zio.test.test("test QueryService.getLimit") {
+      val queryText = QueryService.getLimit(Some(10))
+      assert(queryText.text.trim)(equalTo("LIMIT 10"))
+    }
+  )
+
+  val testGetProjections = suite("testGetProjections")(
+    zio.test.test("test QueryService.getProjections") {
+      val (queryGraph, _) = getSimpleData
+      val queryText = QueryService.getProjections(queryGraph)
+      assert(queryText.text.trim)(equalTo("?e0  ?n1  ?n0  ?n0_type  ?n1_type"))
+    }
+  )
+
+  def spec = suite("QueryService tests")(
+    testGetNodeTypes,
+    testEnforceQueryEdgeTypes,
+    testGetTRAPIEdges,
+    testGetTRAPINodeBindings,
+    testQueryTexts,
+    testGetNodesToDirectTypes,
+    testGetLimit,
+    testGetProjections
+  )
 
 }
