@@ -44,23 +44,20 @@
 </span>20 <span style=''>  case class Triple(subj: BiolinkClass, pred: BiolinkPredicate, obj: BiolinkClass)
 </span>21 <span style=''>
 </span>22 <span style=''>  def run: RIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData],
-</span>23 <span style=''>               Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]] =
-</span>24 <span style=''>    </span><span style='background: #F0ADAD'>for {
-</span>25 <span style=''></span><span style='background: #F0ADAD'>      triples &lt;- readPredicates
-</span>26 <span style=''></span><span style='background: #F0ADAD'>    } yield triples.groupBy(_.subj).view.mapValues(_.groupBy(_.obj).view.mapValues(_.map(_.pred)).toMap).toMap</span><span style=''>
-</span>27 <span style=''>
-</span>28 <span style=''>  def readPredicates: ZIO[Blocking, Throwable, List[Triple]] = </span><span style='background: #AEF1AE'>for {
-</span>29 <span style=''></span><span style='background: #AEF1AE'>    predicates &lt;- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream(&quot;/predicates.csv&quot;), StandardCharsets.UTF_8.name()))
-</span>30 <span style=''></span><span style='background: #AEF1AE'>      .bracketAuto { source =&gt;
-</span>31 <span style=''></span><span style='background: #AEF1AE'>        effectBlockingIO(source.getLines().mkString(&quot;\n&quot;))
-</span>32 <span style=''></span><span style='background: #AEF1AE'>      }
-</span>33 <span style=''></span><span style='background: #AEF1AE'>    records &lt;- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(predicates)).getRecords)
-</span>34 <span style=''></span><span style='background: #AEF1AE'>    triples = records.asScala
-</span>35 <span style=''></span><span style='background: #AEF1AE'>      .map(a =&gt; Triple(BiolinkClass(a.get(0)), BiolinkPredicate(a.get(1)), BiolinkClass(a.get(2))))
-</span>36 <span style=''></span><span style='background: #AEF1AE'>      .toList
-</span>37 <span style=''></span><span style='background: #AEF1AE'>  } yield triples</span><span style=''>
-</span>38 <span style=''>
-</span>39 <span style=''>}
+</span>23 <span style=''>               Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]] = </span><span style='background: #F0ADAD'>readPredicates</span><span style=''>
+</span>24 <span style=''>
+</span>25 <span style=''>  def readPredicates: ZIO[Blocking, Throwable, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]] = </span><span style='background: #AEF1AE'>for {
+</span>26 <span style=''></span><span style='background: #AEF1AE'>    predicates &lt;- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream(&quot;/predicates.csv&quot;), StandardCharsets.UTF_8.name()))
+</span>27 <span style=''></span><span style='background: #AEF1AE'>      .bracketAuto { source =&gt;
+</span>28 <span style=''></span><span style='background: #AEF1AE'>        effectBlockingIO(source.getLines().mkString(&quot;\n&quot;))
+</span>29 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>30 <span style=''></span><span style='background: #AEF1AE'>    records &lt;- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(predicates)).getRecords)
+</span>31 <span style=''></span><span style='background: #AEF1AE'>    triples = records.asScala
+</span>32 <span style=''></span><span style='background: #AEF1AE'>      .map(a =&gt; Triple(BiolinkClass(a.get(0)), BiolinkPredicate(a.get(1)), BiolinkClass(a.get(2))))
+</span>33 <span style=''></span><span style='background: #AEF1AE'>      .toList
+</span>34 <span style=''></span><span style='background: #AEF1AE'>  } yield triples.groupBy(_.subj).view.mapValues(_.groupBy(_.obj).view.mapValues(_.map(_.pred)).toMap).toMap</span><span style=''>
+</span>35 <span style=''>
+</span>36 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -74,272 +71,36 @@
         <th>Code</th>
       </tr><tr>
         <td>
-          25
+          23
         </td>
         <td>
-          211
+          193
         </td>
         <td>
-          785
+          781
           -
-          933
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          zio.ZIO.map
-        </td>
-        <td style="background: #F0ADAD">
-          PredicatesService.this.readPredicates.map[scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]]](((triples: List[org.renci.cam.PredicatesService.Triple]) =&gt; triples.groupBy[org.renci.cam.domain.BiolinkClass](((x$1: org.renci.cam.PredicatesService.Triple) =&gt; x$1.subj)).view.mapValues[scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](((x$2: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$2.groupBy[org.renci.cam.domain.BiolinkClass](((x$3: org.renci.cam.PredicatesService.Triple) =&gt; x$3.obj)).view.mapValues[List[org.renci.cam.domain.BiolinkPredicate]](((x$4: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred)))).toMap[org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])]))).toMap[org.renci.cam.domain.BiolinkClass, Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]])])))
-        </td>
-      </tr><tr>
-        <td>
-          26
-        </td>
-        <td>
-          209
-        </td>
-        <td>
-          928
-          -
-          928
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.&lt;:&lt;.refl
-        </td>
-        <td style="background: #F0ADAD">
-          scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]])]
-        </td>
-      </tr><tr>
-        <td>
-          26
-        </td>
-        <td>
-          205
-        </td>
-        <td>
-          912
-          -
-          918
+          795
         </td>
         <td>
           Select
         </td>
         <td>
-          org.renci.cam.PredicatesService.Triple.pred
+          org.renci.cam.PredicatesService.readPredicates
         </td>
         <td style="background: #F0ADAD">
-          x$5.pred
+          PredicatesService.this.readPredicates
         </td>
       </tr><tr>
         <td>
           26
         </td>
         <td>
-          208
+          194
         </td>
         <td>
-          874
+          972
           -
-          926
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.IterableOnceOps.toMap
-        </td>
-        <td style="background: #F0ADAD">
-          x$2.groupBy[org.renci.cam.domain.BiolinkClass](((x$3: org.renci.cam.PredicatesService.Triple) =&gt; x$3.obj)).view.mapValues[List[org.renci.cam.domain.BiolinkPredicate]](((x$4: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred)))).toMap[org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])])
-        </td>
-      </tr><tr>
-        <td>
-          26
-        </td>
-        <td>
-          207
-        </td>
-        <td>
-          921
-          -
-          921
-        </td>
-        <td>
-          TypeApply
-        </td>
-        <td>
-          scala.&lt;:&lt;.refl
-        </td>
-        <td style="background: #F0ADAD">
-          scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])]
-        </td>
-      </tr><tr>
-        <td>
-          26
-        </td>
-        <td>
-          210
-        </td>
-        <td>
-          835
-          -
-          933
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.IterableOnceOps.toMap
-        </td>
-        <td style="background: #F0ADAD">
-          triples.groupBy[org.renci.cam.domain.BiolinkClass](((x$1: org.renci.cam.PredicatesService.Triple) =&gt; x$1.subj)).view.mapValues[scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](((x$2: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$2.groupBy[org.renci.cam.domain.BiolinkClass](((x$3: org.renci.cam.PredicatesService.Triple) =&gt; x$3.obj)).view.mapValues[List[org.renci.cam.domain.BiolinkPredicate]](((x$4: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred)))).toMap[org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])]))).toMap[org.renci.cam.domain.BiolinkClass, Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]])])
-        </td>
-      </tr><tr>
-        <td>
-          26
-        </td>
-        <td>
-          204
-        </td>
-        <td>
-          884
-          -
-          889
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.renci.cam.PredicatesService.Triple.obj
-        </td>
-        <td style="background: #F0ADAD">
-          x$3.obj
-        </td>
-      </tr><tr>
-        <td>
-          26
-        </td>
-        <td>
-          203
-        </td>
-        <td>
-          851
-          -
-          857
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.renci.cam.PredicatesService.Triple.subj
-        </td>
-        <td style="background: #F0ADAD">
-          x$1.subj
-        </td>
-      </tr><tr>
-        <td>
-          26
-        </td>
-        <td>
-          206
-        </td>
-        <td>
-          906
-          -
-          919
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.immutable.List.map
-        </td>
-        <td style="background: #F0ADAD">
-          x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred))
-        </td>
-      </tr><tr>
-        <td>
-          29
-        </td>
-        <td>
-          229
-        </td>
-        <td>
-          998
-          -
-          1495
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          zio.ZIO.flatMap
-        </td>
-        <td style="background: #AEF1AE">
-          zio.ZIO.ZIOAutoCloseableOps[zio.blocking.Blocking, java.io.IOException, scala.io.BufferedSource](zio.blocking.`package`.effectBlockingIO[scala.io.BufferedSource](scala.io.Source.fromInputStream(PredicatesService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name()))).bracketAuto[zio.blocking.Blocking, java.io.IOException, String](((source: scala.io.BufferedSource) =&gt; zio.blocking.`package`.effectBlockingIO[String](source.getLines().mkString(&quot;\n&quot;)))).flatMap[zio.blocking.Blocking, Throwable, List[org.renci.cam.PredicatesService.Triple]](((predicates: String) =&gt; zio.Task.effect[java.util.List[org.apache.commons.csv.CSVRecord]](org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(predicates)).getRecords()).map[(java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])](((records: java.util.List[org.apache.commons.csv.CSVRecord]) =&gt; {
-  val triples: List[org.renci.cam.PredicatesService.Triple] = scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](records).asScala.map[org.renci.cam.PredicatesService.Triple](((a: org.apache.commons.csv.CSVRecord) =&gt; PredicatesService.this.Triple.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2))))).toList;
-  scala.Tuple2.apply[java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]](records, triples)
-})).map[List[org.renci.cam.PredicatesService.Triple]](((x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])) =&gt; (x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]) @unchecked) match {
-  case (_1: java.util.List[org.apache.commons.csv.CSVRecord], _2: List[org.renci.cam.PredicatesService.Triple]): (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])((records @ _), (triples @ _)) =&gt; triples
-}))))
-        </td>
-      </tr><tr>
-        <td>
-          29
-        </td>
-        <td>
-          214
-        </td>
-        <td>
-          1039
-          -
-          1141
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.io.Source.fromInputStream
-        </td>
-        <td style="background: #AEF1AE">
-          scala.io.Source.fromInputStream(PredicatesService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name())
-        </td>
-      </tr><tr>
-        <td>
-          29
-        </td>
-        <td>
-          213
-        </td>
-        <td>
-          1111
-          -
-          1140
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.nio.charset.Charset.name
-        </td>
-        <td style="background: #AEF1AE">
-          java.nio.charset.StandardCharsets.UTF_8.name()
-        </td>
-      </tr><tr>
-        <td>
-          29
-        </td>
-        <td>
-          212
-        </td>
-        <td>
-          1062
-          -
-          1109
+          1019
         </td>
         <td>
           Apply
@@ -352,15 +113,83 @@
         </td>
       </tr><tr>
         <td>
-          29
+          26
         </td>
         <td>
-          215
+          196
         </td>
         <td>
-          1022
+          949
           -
-          1142
+          1051
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.io.Source.fromInputStream
+        </td>
+        <td style="background: #AEF1AE">
+          scala.io.Source.fromInputStream(PredicatesService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name())
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          219
+        </td>
+        <td>
+          908
+          -
+          1496
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.flatMap
+        </td>
+        <td style="background: #AEF1AE">
+          zio.ZIO.ZIOAutoCloseableOps[zio.blocking.Blocking, java.io.IOException, scala.io.BufferedSource](zio.blocking.`package`.effectBlockingIO[scala.io.BufferedSource](scala.io.Source.fromInputStream(PredicatesService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name()))).bracketAuto[zio.blocking.Blocking, java.io.IOException, String](((source: scala.io.BufferedSource) =&gt; zio.blocking.`package`.effectBlockingIO[String](source.getLines().mkString(&quot;\n&quot;)))).flatMap[zio.blocking.Blocking, Throwable, Map[org.renci.cam.domain.BiolinkClass,Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]]](((predicates: String) =&gt; zio.Task.effect[java.util.List[org.apache.commons.csv.CSVRecord]](org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(predicates)).getRecords()).map[(java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])](((records: java.util.List[org.apache.commons.csv.CSVRecord]) =&gt; {
+  val triples: List[org.renci.cam.PredicatesService.Triple] = scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](records).asScala.map[org.renci.cam.PredicatesService.Triple](((a: org.apache.commons.csv.CSVRecord) =&gt; PredicatesService.this.Triple.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2))))).toList;
+  scala.Tuple2.apply[java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]](records, triples)
+})).map[Map[org.renci.cam.domain.BiolinkClass,Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]]](((x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])) =&gt; (x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]) @unchecked) match {
+  case (_1: java.util.List[org.apache.commons.csv.CSVRecord], _2: List[org.renci.cam.PredicatesService.Triple]): (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])((records @ _), (triples @ _)) =&gt; triples.groupBy[org.renci.cam.domain.BiolinkClass](((x$1: org.renci.cam.PredicatesService.Triple) =&gt; x$1.subj)).view.mapValues[scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](((x$2: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$2.groupBy[org.renci.cam.domain.BiolinkClass](((x$3: org.renci.cam.PredicatesService.Triple) =&gt; x$3.obj)).view.mapValues[List[org.renci.cam.domain.BiolinkPredicate]](((x$4: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred)))).toMap[org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])]))).toMap[org.renci.cam.domain.BiolinkClass, Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]])])
+}))))
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          195
+        </td>
+        <td>
+          1021
+          -
+          1050
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.nio.charset.Charset.name
+        </td>
+        <td style="background: #AEF1AE">
+          java.nio.charset.StandardCharsets.UTF_8.name()
+        </td>
+      </tr><tr>
+        <td>
+          26
+        </td>
+        <td>
+          197
+        </td>
+        <td>
+          932
+          -
+          1052
         </td>
         <td>
           Apply
@@ -373,15 +202,15 @@
         </td>
       </tr><tr>
         <td>
-          31
+          28
         </td>
         <td>
-          217
+          199
         </td>
         <td>
-          1182
+          1092
           -
-          1232
+          1142
         </td>
         <td>
           Apply
@@ -394,15 +223,15 @@
         </td>
       </tr><tr>
         <td>
-          31
+          28
         </td>
         <td>
-          216
+          198
         </td>
         <td>
-          1199
+          1109
           -
-          1231
+          1141
         </td>
         <td>
           Apply
@@ -415,15 +244,41 @@
         </td>
       </tr><tr>
         <td>
-          33
+          30
         </td>
         <td>
           218
         </td>
         <td>
-          1268
+          1155
           -
-          1332
+          1496
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.map
+        </td>
+        <td style="background: #AEF1AE">
+          zio.Task.effect[java.util.List[org.apache.commons.csv.CSVRecord]](org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(predicates)).getRecords()).map[(java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])](((records: java.util.List[org.apache.commons.csv.CSVRecord]) =&gt; {
+  val triples: List[org.renci.cam.PredicatesService.Triple] = scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](records).asScala.map[org.renci.cam.PredicatesService.Triple](((a: org.apache.commons.csv.CSVRecord) =&gt; PredicatesService.this.Triple.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2))))).toList;
+  scala.Tuple2.apply[java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]](records, triples)
+})).map[Map[org.renci.cam.domain.BiolinkClass,Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]]](((x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])) =&gt; (x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]) @unchecked) match {
+  case (_1: java.util.List[org.apache.commons.csv.CSVRecord], _2: List[org.renci.cam.PredicatesService.Triple]): (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])((records @ _), (triples @ _)) =&gt; triples.groupBy[org.renci.cam.domain.BiolinkClass](((x$1: org.renci.cam.PredicatesService.Triple) =&gt; x$1.subj)).view.mapValues[scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](((x$2: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$2.groupBy[org.renci.cam.domain.BiolinkClass](((x$3: org.renci.cam.PredicatesService.Triple) =&gt; x$3.obj)).view.mapValues[List[org.renci.cam.domain.BiolinkPredicate]](((x$4: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred)))).toMap[org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])]))).toMap[org.renci.cam.domain.BiolinkClass, Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]])])
+}))
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          200
+        </td>
+        <td>
+          1178
+          -
+          1242
         </td>
         <td>
           Apply
@@ -436,15 +291,15 @@
         </td>
       </tr><tr>
         <td>
-          33
+          30
         </td>
         <td>
-          227
+          209
         </td>
         <td>
-          1245
+          1155
           -
-          1245
+          1155
         </td>
         <td>
           Apply
@@ -457,41 +312,15 @@
         </td>
       </tr><tr>
         <td>
-          33
+          32
         </td>
         <td>
-          228
+          202
         </td>
         <td>
-          1245
+          1297
           -
-          1495
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          zio.ZIO.map
-        </td>
-        <td style="background: #AEF1AE">
-          zio.Task.effect[java.util.List[org.apache.commons.csv.CSVRecord]](org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(predicates)).getRecords()).map[(java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])](((records: java.util.List[org.apache.commons.csv.CSVRecord]) =&gt; {
-  val triples: List[org.renci.cam.PredicatesService.Triple] = scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](records).asScala.map[org.renci.cam.PredicatesService.Triple](((a: org.apache.commons.csv.CSVRecord) =&gt; PredicatesService.this.Triple.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2))))).toList;
-  scala.Tuple2.apply[java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]](records, triples)
-})).map[List[org.renci.cam.PredicatesService.Triple]](((x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])) =&gt; (x$6: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple]) @unchecked) match {
-  case (_1: java.util.List[org.apache.commons.csv.CSVRecord], _2: List[org.renci.cam.PredicatesService.Triple]): (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.PredicatesService.Triple])((records @ _), (triples @ _)) =&gt; triples
-}))
-        </td>
-      </tr><tr>
-        <td>
-          35
-        </td>
-        <td>
-          220
-        </td>
-        <td>
-          1387
-          -
-          1409
+          1319
         </td>
         <td>
           Apply
@@ -504,15 +333,15 @@
         </td>
       </tr><tr>
         <td>
-          35
+          32
         </td>
         <td>
-          223
+          205
         </td>
         <td>
-          1452
+          1362
           -
-          1460
+          1370
         </td>
         <td>
           Apply
@@ -525,15 +354,15 @@
         </td>
       </tr><tr>
         <td>
-          35
+          32
         </td>
         <td>
-          225
+          207
         </td>
         <td>
-          1380
+          1290
           -
-          1462
+          1372
         </td>
         <td>
           Apply
@@ -546,15 +375,15 @@
         </td>
       </tr><tr>
         <td>
-          35
+          32
         </td>
         <td>
-          219
+          201
         </td>
         <td>
-          1400
+          1310
           -
-          1408
+          1318
         </td>
         <td>
           Apply
@@ -567,15 +396,15 @@
         </td>
       </tr><tr>
         <td>
-          35
+          32
         </td>
         <td>
-          222
+          204
         </td>
         <td>
-          1411
+          1321
           -
-          1437
+          1347
         </td>
         <td>
           Apply
@@ -588,15 +417,15 @@
         </td>
       </tr><tr>
         <td>
-          35
+          32
         </td>
         <td>
-          221
+          203
         </td>
         <td>
-          1428
+          1338
           -
-          1436
+          1346
         </td>
         <td>
           Apply
@@ -609,15 +438,15 @@
         </td>
       </tr><tr>
         <td>
-          35
+          32
         </td>
         <td>
-          224
+          206
         </td>
         <td>
-          1439
+          1349
           -
-          1461
+          1371
         </td>
         <td>
           Apply
@@ -630,15 +459,15 @@
         </td>
       </tr><tr>
         <td>
-          36
+          33
         </td>
         <td>
-          226
+          208
         </td>
         <td>
-          1348
+          1258
           -
-          1477
+          1387
         </td>
         <td>
           Select
@@ -648,6 +477,174 @@
         </td>
         <td style="background: #AEF1AE">
           scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](records).asScala.map[org.renci.cam.PredicatesService.Triple](((a: org.apache.commons.csv.CSVRecord) =&gt; PredicatesService.this.Triple.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2))))).toList
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          211
+        </td>
+        <td>
+          1447
+          -
+          1452
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.PredicatesService.Triple.obj
+        </td>
+        <td style="background: #AEF1AE">
+          x$3.obj
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          214
+        </td>
+        <td>
+          1484
+          -
+          1484
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.&lt;:&lt;.refl
+        </td>
+        <td style="background: #AEF1AE">
+          scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])]
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          217
+        </td>
+        <td>
+          1398
+          -
+          1496
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.toMap
+        </td>
+        <td style="background: #AEF1AE">
+          triples.groupBy[org.renci.cam.domain.BiolinkClass](((x$1: org.renci.cam.PredicatesService.Triple) =&gt; x$1.subj)).view.mapValues[scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](((x$2: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$2.groupBy[org.renci.cam.domain.BiolinkClass](((x$3: org.renci.cam.PredicatesService.Triple) =&gt; x$3.obj)).view.mapValues[List[org.renci.cam.domain.BiolinkPredicate]](((x$4: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred)))).toMap[org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])]))).toMap[org.renci.cam.domain.BiolinkClass, Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]])])
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          216
+        </td>
+        <td>
+          1491
+          -
+          1491
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.&lt;:&lt;.refl
+        </td>
+        <td style="background: #AEF1AE">
+          scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,List[org.renci.cam.domain.BiolinkPredicate]])]
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          210
+        </td>
+        <td>
+          1414
+          -
+          1420
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.PredicatesService.Triple.subj
+        </td>
+        <td style="background: #AEF1AE">
+          x$1.subj
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          213
+        </td>
+        <td>
+          1469
+          -
+          1482
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.immutable.List.map
+        </td>
+        <td style="background: #AEF1AE">
+          x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred))
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          212
+        </td>
+        <td>
+          1475
+          -
+          1481
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.PredicatesService.Triple.pred
+        </td>
+        <td style="background: #AEF1AE">
+          x$5.pred
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          215
+        </td>
+        <td>
+          1437
+          -
+          1489
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.toMap
+        </td>
+        <td style="background: #AEF1AE">
+          x$2.groupBy[org.renci.cam.domain.BiolinkClass](((x$3: org.renci.cam.PredicatesService.Triple) =&gt; x$3.obj)).view.mapValues[List[org.renci.cam.domain.BiolinkPredicate]](((x$4: List[org.renci.cam.PredicatesService.Triple]) =&gt; x$4.map[org.renci.cam.domain.BiolinkPredicate](((x$5: org.renci.cam.PredicatesService.Triple) =&gt; x$5.pred)))).toMap[org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate]](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, List[org.renci.cam.domain.BiolinkPredicate])])
         </td>
       </tr>
     </table>

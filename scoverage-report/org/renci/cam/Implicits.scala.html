@@ -24,99 +24,102 @@
           <div class="tab-pane active" id="codegrid">
             <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>package org.renci.cam
 </span>2 <span style=''>
-</span>3 <span style=''>import com.google.common.base.CaseFormat
-</span>4 <span style=''>import io.circe.Decoder.Result
-</span>5 <span style=''>import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, KeyDecoder, KeyEncoder}
-</span>6 <span style=''>import org.apache.commons.lang3.StringUtils
-</span>7 <span style=''>import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, BiolinkTerm, IRI}
-</span>8 <span style=''>
-</span>9 <span style=''>object Implicits {
-</span>10 <span style=''>
-</span>11 <span style=''>  private val Curie = </span><span style='background: #AEF1AE'>&quot;^([^:]*):(.*)$&quot;.r</span><span style=''>
-</span>12 <span style=''>  private val protocols = </span><span style='background: #AEF1AE'>Set(&quot;http&quot;, &quot;https&quot;, &quot;ftp&quot;, &quot;file&quot;, &quot;mailto&quot;)</span><span style=''>
-</span>13 <span style=''>  private val BiolinkNamespace = </span><span style='background: #AEF1AE'>&quot;https://w3id.org/biolink/vocab/&quot;</span><span style=''>
-</span>14 <span style=''>
-</span>15 <span style=''>  def iriDecoder(prefixesMap: Map[String, String]): Decoder[IRI] = </span><span style='background: #F0ADAD'>new</span><span style=''> Decoder[IRI] {
-</span>16 <span style=''>
-</span>17 <span style=''>    override def apply(c: HCursor): Result[IRI] = </span><span style='background: #F0ADAD'>for {
-</span>18 <span style=''></span><span style='background: #F0ADAD'>      value &lt;- c.value.as[String]
-</span>19 <span style=''></span><span style='background: #F0ADAD'>      iri &lt;- expandCURIEString(value, prefixesMap)
-</span>20 <span style=''></span><span style='background: #F0ADAD'>    } yield iri</span><span style=''>
+</span>3 <span style=''>import java.nio.charset.StandardCharsets
+</span>4 <span style=''>
+</span>5 <span style=''>import com.google.common.base.CaseFormat
+</span>6 <span style=''>import io.circe.Decoder.Result
+</span>7 <span style=''>import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, KeyDecoder, KeyEncoder}
+</span>8 <span style=''>import org.apache.commons.lang3.StringUtils
+</span>9 <span style=''>import org.apache.jena.query.ResultSetFactory
+</span>10 <span style=''>import org.http4s.{DecodeFailure, DecodeResult, EntityDecoder, EntityEncoder, MalformedMessageBodyFailure}
+</span>11 <span style=''>import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
+</span>12 <span style=''>import zio.Task
+</span>13 <span style=''>import org.apache.jena.query._
+</span>14 <span style=''>import org.http4s.implicits._
+</span>15 <span style=''>import org.apache.commons.io.IOUtils
+</span>16 <span style=''>import org.http4s._
+</span>17 <span style=''>import org.http4s.headers.`Content-Type`
+</span>18 <span style=''>import zio.interop.catz._
+</span>19 <span style=''>
+</span>20 <span style=''>object Implicits {
 </span>21 <span style=''>
-</span>22 <span style=''>  }
-</span>23 <span style=''>
-</span>24 <span style=''>  def iriKeyDecoder(prefixesMap: Map[String, String]): KeyDecoder[IRI] = </span><span style='background: #F0ADAD'>new</span><span style=''> KeyDecoder[IRI] {
-</span>25 <span style=''>    override def apply(key: String): Option[IRI] = </span><span style='background: #F0ADAD'>expandCURIEString(key, prefixesMap).toOption</span><span style=''>
-</span>26 <span style=''>  }
+</span>22 <span style=''>  private val Curie = </span><span style='background: #AEF1AE'>&quot;^([^:]*):(.*)$&quot;.r</span><span style=''>
+</span>23 <span style=''>  private val protocols = </span><span style='background: #AEF1AE'>Set(&quot;http&quot;, &quot;https&quot;, &quot;ftp&quot;, &quot;file&quot;, &quot;mailto&quot;)</span><span style=''>
+</span>24 <span style=''>  private val BiolinkNamespace = </span><span style='background: #AEF1AE'>&quot;https://w3id.org/biolink/vocab/&quot;</span><span style=''>
+</span>25 <span style=''>
+</span>26 <span style=''>  def iriDecoder(prefixesMap: Map[String, String]): Decoder[IRI] = </span><span style='background: #AEF1AE'>new</span><span style=''> Decoder[IRI] {
 </span>27 <span style=''>
-</span>28 <span style=''>  def expandCURIEString(curieString: String, prefixesMap: Map[String, String]): Either[DecodingFailure, IRI] =
-</span>29 <span style=''>    </span><span style='background: #AEF1AE'>for {
-</span>30 <span style=''></span><span style='background: #AEF1AE'>      curie &lt;- curieString match {
-</span>31 <span style=''></span><span style='background: #AEF1AE'>        case Curie(p, l) =&gt; Right((p, l))
-</span>32 <span style=''></span><span style='background: #AEF1AE'>        case _           =&gt; </span><span style='background: #F0ADAD'>Left(DecodingFailure(s&quot;CURIE is malformed: $curieString&quot;, Nil))</span><span style='background: #AEF1AE'>
-</span>33 <span style=''></span><span style='background: #AEF1AE'>      }
-</span>34 <span style=''></span><span style='background: #AEF1AE'>      (prefix, local) = curie
-</span>35 <span style=''></span><span style='background: #AEF1AE'>      namespace &lt;-
-</span>36 <span style=''></span><span style='background: #AEF1AE'>        if (protocols(prefix)) </span><span style='background: #F0ADAD'>Right(s&quot;$prefix:&quot;)</span><span style='background: #AEF1AE'>
-</span>37 <span style=''></span><span style='background: #AEF1AE'>        else prefixesMap.get(prefix).toRight(</span><span style='background: #F0ADAD'>DecodingFailure(s&quot;No prefix expansion found for $prefix:$local&quot;, Nil)</span><span style='background: #AEF1AE'>)
-</span>38 <span style=''></span><span style='background: #AEF1AE'>    } yield IRI(s&quot;$namespace$local&quot;)</span><span style=''>
-</span>39 <span style=''>
-</span>40 <span style=''>  def iriEncoderOut(prefixesMap: Map[String, String]): Encoder[IRI] = </span><span style='background: #F0ADAD'>Encoder.encodeString.contramap { iri =&gt;
-</span>41 <span style=''></span><span style='background: #F0ADAD'>    compactIRIIfPossible(iri, prefixesMap)
-</span>42 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
-</span>43 <span style=''>
-</span>44 <span style=''>  def iriKeyEncoder(prefixesMap: Map[String, String]): KeyEncoder[IRI] = </span><span style='background: #F0ADAD'>KeyEncoder.encodeKeyString.contramap { iri: IRI =&gt;
-</span>45 <span style=''></span><span style='background: #F0ADAD'>    compactIRIIfPossible(iri, prefixesMap)
-</span>46 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
-</span>47 <span style=''>
-</span>48 <span style=''>  def compactIRIIfPossible(iri: IRI, prefixesMap: Map[String, String]): String = {
-</span>49 <span style=''>    val startsWith = </span><span style='background: #AEF1AE'>prefixesMap.filter { case (_, namespace) =&gt; iri.value.startsWith(namespace) }</span><span style=''>
-</span>50 <span style=''>    if (</span><span style='background: #AEF1AE'>startsWith.nonEmpty</span><span style=''>) </span><span style='background: #AEF1AE'>{
-</span>51 <span style=''></span><span style='background: #AEF1AE'>      val (prefix, namespace) = startsWith.maxBy(_._2.length)
-</span>52 <span style=''></span><span style='background: #AEF1AE'>      StringUtils.prependIfMissing(iri.value.drop(namespace.length), s&quot;$prefix:&quot;)
-</span>53 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #AEF1AE'>{
-</span>54 <span style=''></span><span style='background: #AEF1AE'>      val httpsIRI = toHttps(iri.value)
-</span>55 <span style=''></span><span style='background: #AEF1AE'>      val httpsStartsWith = prefixesMap.filter { case (_, namespace) =&gt; httpsIRI.startsWith(namespace) }
-</span>56 <span style=''></span><span style='background: #AEF1AE'>      if (httpsStartsWith.nonEmpty) </span><span style='background: #F0ADAD'>{
-</span>57 <span style=''></span><span style='background: #F0ADAD'>        val (prefix, namespace) = httpsStartsWith.maxBy(_._2.length)
-</span>58 <span style=''></span><span style='background: #F0ADAD'>        StringUtils.prependIfMissing(httpsIRI.drop(namespace.length), s&quot;$prefix:&quot;)
-</span>59 <span style=''></span><span style='background: #F0ADAD'>      }</span><span style='background: #AEF1AE'> else iri.value
-</span>60 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
-</span>61 <span style=''>  }
-</span>62 <span style=''>
-</span>63 <span style=''>  private def toHttps(uri: String): String = </span><span style='background: #AEF1AE'>uri.replaceFirst(&quot;http:&quot;, &quot;https:&quot;)</span><span style=''>
-</span>64 <span style=''>
-</span>65 <span style=''>  def iriEncoderIn(prefixesMap: Map[String, String]): Encoder[IRI] = </span><span style='background: #F0ADAD'>Encoder.encodeString.contramap { iri =&gt;
-</span>66 <span style=''></span><span style='background: #F0ADAD'>    val startsWith = prefixesMap.filter { case (prefix, namespace) =&gt; iri.value.startsWith(namespace) }
-</span>67 <span style=''></span><span style='background: #F0ADAD'>    if (startsWith.nonEmpty) {
-</span>68 <span style=''></span><span style='background: #F0ADAD'>      val (_, namespace) = startsWith.maxBy(_._2.length)
-</span>69 <span style=''></span><span style='background: #F0ADAD'>      s&quot;$namespace${iri.value.drop(namespace.length)}&quot;
-</span>70 <span style=''></span><span style='background: #F0ADAD'>    } else iri.value
-</span>71 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
-</span>72 <span style=''>
-</span>73 <span style=''>  def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = </span><span style='background: #F0ADAD'>Decoder.decodeString.emap { s =&gt;
-</span>74 <span style=''></span><span style='background: #F0ADAD'>    val localName = s.replace(&quot;biolink:&quot;, &quot;&quot;)
-</span>75 <span style=''></span><span style='background: #F0ADAD'>    biolinkPredicates.find(a =&gt; a.iri.value.replace(BiolinkNamespace, &quot;&quot;) == localName).toRight(s&quot;BiolinkPredicate does not exist: $s&quot;)
-</span>76 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
-</span>77 <span style=''>
-</span>78 <span style=''>  def biolinkPredicateEncoder: Encoder[BiolinkPredicate] = </span><span style='background: #AEF1AE'>Encoder.encodeString.contramap { s =&gt;
-</span>79 <span style=''></span><span style='background: #AEF1AE'>    s&quot;biolink:${s.shorthand}&quot;
-</span>80 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
-</span>81 <span style=''>
-</span>82 <span style=''>  def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = </span><span style='background: #F0ADAD'>Decoder.decodeString.emap { s =&gt;
-</span>83 <span style=''></span><span style='background: #F0ADAD'>    val localName = s.replace(&quot;biolink:&quot;, &quot;&quot;)
-</span>84 <span style=''></span><span style='background: #F0ADAD'>    biolinkClasses.find(a =&gt; a.iri.value.replace(BiolinkNamespace, &quot;&quot;) == localName).toRight(s&quot;BiolinkClass does not exist: $s&quot;)
-</span>85 <span style=''></span><span style='background: #F0ADAD'>  }</span><span style=''>
-</span>86 <span style=''>
-</span>87 <span style=''>  def biolinkClassEncoder: Encoder[BiolinkClass] = </span><span style='background: #AEF1AE'>Encoder.encodeString.contramap { s =&gt;
-</span>88 <span style=''></span><span style='background: #AEF1AE'>    if (s.shorthand.contains(&quot;_&quot;)) {
-</span>89 <span style=''></span><span style='background: #AEF1AE'>      </span><span style='background: #F0ADAD'>s&quot;biolink:${CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, s.shorthand)}&quot;</span><span style='background: #AEF1AE'>
-</span>90 <span style=''></span><span style='background: #AEF1AE'>    } else {
-</span>91 <span style=''></span><span style='background: #AEF1AE'>      s&quot;biolink:${StringUtils.capitalize(s.shorthand)}&quot;
-</span>92 <span style=''></span><span style='background: #AEF1AE'>    }
-</span>93 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
-</span>94 <span style=''>
-</span>95 <span style=''>}
+</span>28 <span style=''>    override def apply(c: HCursor): Result[IRI] = </span><span style='background: #AEF1AE'>for {
+</span>29 <span style=''></span><span style='background: #AEF1AE'>      value &lt;- c.value.as[String]
+</span>30 <span style=''></span><span style='background: #AEF1AE'>      iri &lt;- expandCURIEString(value, prefixesMap)
+</span>31 <span style=''></span><span style='background: #AEF1AE'>    } yield iri</span><span style=''>
+</span>32 <span style=''>
+</span>33 <span style=''>  }
+</span>34 <span style=''>
+</span>35 <span style=''>  def iriKeyDecoder(prefixesMap: Map[String, String]): KeyDecoder[IRI] = </span><span style='background: #AEF1AE'>new</span><span style=''> KeyDecoder[IRI] {
+</span>36 <span style=''>    override def apply(key: String): Option[IRI] = </span><span style='background: #AEF1AE'>expandCURIEString(key, prefixesMap).toOption</span><span style=''>
+</span>37 <span style=''>  }
+</span>38 <span style=''>
+</span>39 <span style=''>  def expandCURIEString(curieString: String, prefixesMap: Map[String, String]): Either[DecodingFailure, IRI] =
+</span>40 <span style=''>    </span><span style='background: #AEF1AE'>for {
+</span>41 <span style=''></span><span style='background: #AEF1AE'>      curie &lt;- curieString match {
+</span>42 <span style=''></span><span style='background: #AEF1AE'>        case Curie(p, l) =&gt; Right((p, l))
+</span>43 <span style=''></span><span style='background: #AEF1AE'>        case _           =&gt; </span><span style='background: #F0ADAD'>Left(DecodingFailure(s&quot;CURIE is malformed: $curieString&quot;, Nil))</span><span style='background: #AEF1AE'>
+</span>44 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>45 <span style=''></span><span style='background: #AEF1AE'>      (prefix, local) = curie
+</span>46 <span style=''></span><span style='background: #AEF1AE'>      namespace &lt;-
+</span>47 <span style=''></span><span style='background: #AEF1AE'>        if (protocols(prefix)) </span><span style='background: #F0ADAD'>Right(s&quot;$prefix:&quot;)</span><span style='background: #AEF1AE'>
+</span>48 <span style=''></span><span style='background: #AEF1AE'>        else prefixesMap.get(prefix).toRight(DecodingFailure(s&quot;No prefix expansion found for $prefix:$local&quot;, </span><span style='background: #F0ADAD'>Nil</span><span style='background: #AEF1AE'>))
+</span>49 <span style=''></span><span style='background: #AEF1AE'>    } yield IRI(s&quot;$namespace$local&quot;)</span><span style=''>
+</span>50 <span style=''>
+</span>51 <span style=''>  def iriEncoder(prefixesMap: Map[String, String]): Encoder[IRI] = </span><span style='background: #AEF1AE'>Encoder.encodeString.contramap { iri =&gt;
+</span>52 <span style=''></span><span style='background: #AEF1AE'>    compactIRIIfPossible(iri, prefixesMap)
+</span>53 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>54 <span style=''>
+</span>55 <span style=''>  def iriKeyEncoder(prefixesMap: Map[String, String]): KeyEncoder[IRI] = </span><span style='background: #AEF1AE'>KeyEncoder.encodeKeyString.contramap { iri: IRI =&gt;
+</span>56 <span style=''></span><span style='background: #AEF1AE'>    compactIRIIfPossible(iri, prefixesMap)
+</span>57 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>58 <span style=''>
+</span>59 <span style=''>  def compactIRIIfPossible(iri: IRI, prefixesMap: Map[String, String]): String = {
+</span>60 <span style=''>    val startsWith = </span><span style='background: #AEF1AE'>prefixesMap.filter { case (_, namespace) =&gt; iri.value.startsWith(namespace) }</span><span style=''>
+</span>61 <span style=''>    if (</span><span style='background: #AEF1AE'>startsWith.nonEmpty</span><span style=''>) </span><span style='background: #AEF1AE'>{
+</span>62 <span style=''></span><span style='background: #AEF1AE'>      val (prefix, namespace) = startsWith.maxBy(_._2.length)
+</span>63 <span style=''></span><span style='background: #AEF1AE'>      StringUtils.prependIfMissing(iri.value.drop(namespace.length), s&quot;$prefix:&quot;)
+</span>64 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''> else </span><span style='background: #AEF1AE'>{
+</span>65 <span style=''></span><span style='background: #AEF1AE'>      val httpsIRI = toHttps(iri.value)
+</span>66 <span style=''></span><span style='background: #AEF1AE'>      val httpsStartsWith = prefixesMap.filter { case (_, namespace) =&gt; httpsIRI.startsWith(namespace) }
+</span>67 <span style=''></span><span style='background: #AEF1AE'>      if (httpsStartsWith.nonEmpty) </span><span style='background: #F0ADAD'>{
+</span>68 <span style=''></span><span style='background: #F0ADAD'>        val (prefix, namespace) = httpsStartsWith.maxBy(_._2.length)
+</span>69 <span style=''></span><span style='background: #F0ADAD'>        StringUtils.prependIfMissing(httpsIRI.drop(namespace.length), s&quot;$prefix:&quot;)
+</span>70 <span style=''></span><span style='background: #F0ADAD'>      }</span><span style='background: #AEF1AE'> else iri.value
+</span>71 <span style=''></span><span style='background: #AEF1AE'>    }</span><span style=''>
+</span>72 <span style=''>  }
+</span>73 <span style=''>
+</span>74 <span style=''>  private def toHttps(uri: String): String = </span><span style='background: #AEF1AE'>uri.replaceFirst(&quot;http:&quot;, &quot;https:&quot;)</span><span style=''>
+</span>75 <span style=''>
+</span>76 <span style=''>  def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = </span><span style='background: #AEF1AE'>Decoder.decodeString.emap { s =&gt;
+</span>77 <span style=''></span><span style='background: #AEF1AE'>    val localName = s.replace(&quot;biolink:&quot;, &quot;&quot;)
+</span>78 <span style=''></span><span style='background: #AEF1AE'>    biolinkPredicates.find(a =&gt; a.iri.value.replace(BiolinkNamespace, &quot;&quot;) == localName).toRight(s&quot;BiolinkPredicate does not exist: $s&quot;)
+</span>79 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>80 <span style=''>
+</span>81 <span style=''>  def biolinkPredicateEncoder: Encoder[BiolinkPredicate] = </span><span style='background: #AEF1AE'>Encoder.encodeString.contramap { s =&gt;
+</span>82 <span style=''></span><span style='background: #AEF1AE'>    s&quot;biolink:${s.shorthand}&quot;
+</span>83 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>84 <span style=''>
+</span>85 <span style=''>  def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = </span><span style='background: #AEF1AE'>Decoder.decodeString.emap { s =&gt;
+</span>86 <span style=''></span><span style='background: #AEF1AE'>    val localName = s.replace(&quot;biolink:&quot;, &quot;&quot;)
+</span>87 <span style=''></span><span style='background: #AEF1AE'>    biolinkClasses.find(a =&gt; a.iri.value.replace(BiolinkNamespace, &quot;&quot;) == localName).toRight(s&quot;BiolinkClass does not exist: $s&quot;)
+</span>88 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>89 <span style=''>
+</span>90 <span style=''>  def biolinkClassEncoder: Encoder[BiolinkClass] = </span><span style='background: #AEF1AE'>Encoder.encodeString.contramap { s =&gt;
+</span>91 <span style=''></span><span style='background: #AEF1AE'>    if (s.shorthand.contains(&quot;_&quot;)) {
+</span>92 <span style=''></span><span style='background: #AEF1AE'>      s&quot;biolink:${CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, s.shorthand)}&quot;
+</span>93 <span style=''></span><span style='background: #AEF1AE'>    } else {
+</span>94 <span style=''></span><span style='background: #AEF1AE'>      s&quot;biolink:${StringUtils.capitalize(s.shorthand)}&quot;
+</span>95 <span style=''></span><span style='background: #AEF1AE'>    }
+</span>96 <span style=''></span><span style='background: #AEF1AE'>  }</span><span style=''>
+</span>97 <span style=''>
+</span>98 <span style=''>}
 </span></pre>
           </div>
           <div class="tab-pane" id="statementlist">
@@ -130,15 +133,15 @@
         <th>Code</th>
       </tr><tr>
         <td>
-          11
+          22
         </td>
         <td>
           122
         </td>
         <td>
-          346
+          729
           -
-          362
+          745
         </td>
         <td>
           Literal
@@ -151,15 +154,15 @@
         </td>
       </tr><tr>
         <td>
-          11
+          22
         </td>
         <td>
           123
         </td>
         <td>
-          346
+          729
           -
-          364
+          747
         </td>
         <td>
           Select
@@ -172,15 +175,15 @@
         </td>
       </tr><tr>
         <td>
-          12
+          23
         </td>
         <td>
           124
         </td>
         <td>
-          391
+          774
           -
-          436
+          819
         </td>
         <td>
           Apply
@@ -193,15 +196,15 @@
         </td>
       </tr><tr>
         <td>
-          13
+          24
         </td>
         <td>
           125
         </td>
         <td>
-          470
+          853
           -
-          503
+          886
         </td>
         <td>
           Literal
@@ -214,15 +217,15 @@
         </td>
       </tr><tr>
         <td>
-          15
+          26
         </td>
         <td>
           129
         </td>
         <td>
-          572
+          955
           -
-          575
+          958
         </td>
         <td>
           Apply
@@ -230,20 +233,20 @@
         <td>
           org.renci.cam.Implicits.$anon.&lt;init&gt;
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           new $anon()
         </td>
       </tr><tr>
         <td>
-          18
+          29
         </td>
         <td>
           128
         </td>
         <td>
-          642
+          1025
           -
-          748
+          1131
         </td>
         <td>
           Apply
@@ -251,20 +254,20 @@
         <td>
           scala.util.Either.flatMap
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           c.value.as[String](circe.this.Decoder.decodeString).flatMap[io.circe.DecodingFailure, org.renci.cam.domain.IRI](((value: String) =&gt; Implicits.this.expandCURIEString(value, prefixesMap).map[org.renci.cam.domain.IRI](((iri: org.renci.cam.domain.IRI) =&gt; iri))))
         </td>
       </tr><tr>
         <td>
-          18
+          29
         </td>
         <td>
           126
         </td>
         <td>
-          673
+          1056
           -
-          673
+          1056
         </td>
         <td>
           Select
@@ -272,20 +275,20 @@
         <td>
           io.circe.Decoder.decodeString
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           circe.this.Decoder.decodeString
         </td>
       </tr><tr>
         <td>
-          19
+          30
         </td>
         <td>
           127
         </td>
         <td>
-          688
+          1071
           -
-          748
+          1131
         </td>
         <td>
           Apply
@@ -293,20 +296,20 @@
         <td>
           scala.util.Either.map
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           Implicits.this.expandCURIEString(value, prefixesMap).map[org.renci.cam.domain.IRI](((iri: org.renci.cam.domain.IRI) =&gt; iri))
         </td>
       </tr><tr>
         <td>
-          24
+          35
         </td>
         <td>
           131
         </td>
         <td>
-          828
+          1211
           -
-          831
+          1214
         </td>
         <td>
           Apply
@@ -314,20 +317,20 @@
         <td>
           org.renci.cam.Implicits.$anon.&lt;init&gt;
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           new $anon()
         </td>
       </tr><tr>
         <td>
-          25
+          36
         </td>
         <td>
           130
         </td>
         <td>
-          901
+          1284
           -
-          945
+          1328
         </td>
         <td>
           Select
@@ -335,20 +338,20 @@
         <td>
           scala.util.Either.toOption
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           Implicits.this.expandCURIEString(key, prefixesMap).toOption
         </td>
       </tr><tr>
         <td>
-          30
+          41
         </td>
         <td>
           140
         </td>
         <td>
-          1078
+          1461
           -
-          1078
+          1461
         </td>
         <td>
           Apply
@@ -361,15 +364,15 @@
         </td>
       </tr><tr>
         <td>
-          30
+          41
         </td>
         <td>
           150
         </td>
         <td>
-          1066
+          1449
           -
-          1500
+          1883
         </td>
         <td>
           Apply
@@ -398,15 +401,15 @@ else
         </td>
       </tr><tr>
         <td>
-          31
+          42
         </td>
         <td>
           133
         </td>
         <td>
-          1135
+          1518
           -
-          1148
+          1531
         </td>
         <td>
           Apply
@@ -419,15 +422,15 @@ else
         </td>
       </tr><tr>
         <td>
-          31
+          42
         </td>
         <td>
           132
         </td>
         <td>
-          1141
+          1524
           -
-          1147
+          1530
         </td>
         <td>
           Apply
@@ -440,15 +443,15 @@ else
         </td>
       </tr><tr>
         <td>
-          32
+          43
         </td>
         <td>
           134
         </td>
         <td>
-          1235
+          1618
           -
-          1238
+          1621
         </td>
         <td>
           Select
@@ -461,15 +464,15 @@ else
         </td>
       </tr><tr>
         <td>
-          32
+          43
         </td>
         <td>
           136
         </td>
         <td>
-          1177
+          1560
           -
-          1240
+          1623
         </td>
         <td>
           Apply
@@ -482,15 +485,15 @@ else
         </td>
       </tr><tr>
         <td>
-          32
+          43
         </td>
         <td>
           135
         </td>
         <td>
-          1182
+          1565
           -
-          1239
+          1622
         </td>
         <td>
           Apply
@@ -503,15 +506,15 @@ else
         </td>
       </tr><tr>
         <td>
-          34
+          45
         </td>
         <td>
           137
         </td>
         <td>
-          1255
+          1638
           -
-          1255
+          1638
         </td>
         <td>
           Select
@@ -524,15 +527,15 @@ else
         </td>
       </tr><tr>
         <td>
-          34
+          45
         </td>
         <td>
           139
         </td>
         <td>
-          1264
+          1647
           -
-          1264
+          1647
         </td>
         <td>
           Select
@@ -545,15 +548,15 @@ else
         </td>
       </tr><tr>
         <td>
-          34
+          45
         </td>
         <td>
           138
         </td>
         <td>
-          1256
+          1639
           -
-          1256
+          1639
         </td>
         <td>
           Select
@@ -566,15 +569,15 @@ else
         </td>
       </tr><tr>
         <td>
-          35
+          46
         </td>
         <td>
           149
         </td>
         <td>
-          1285
+          1668
           -
-          1500
+          1883
         </td>
         <td>
           Apply
@@ -590,15 +593,15 @@ else
         </td>
       </tr><tr>
         <td>
-          36
+          47
         </td>
         <td>
           142
         </td>
         <td>
-          1329
+          1712
           -
-          1347
+          1730
         </td>
         <td>
           Apply
@@ -611,15 +614,15 @@ else
         </td>
       </tr><tr>
         <td>
-          36
+          47
         </td>
         <td>
           141
         </td>
         <td>
-          1310
+          1693
           -
-          1327
+          1710
         </td>
         <td>
           Apply
@@ -632,15 +635,15 @@ else
         </td>
       </tr><tr>
         <td>
-          36
+          47
         </td>
         <td>
           143
         </td>
         <td>
-          1329
+          1712
           -
-          1347
+          1730
         </td>
         <td>
           Block
@@ -653,15 +656,15 @@ else
         </td>
       </tr><tr>
         <td>
-          37
+          48
         </td>
         <td>
           146
         </td>
         <td>
-          1361
+          1744
           -
-          1463
+          1846
         </td>
         <td>
           Apply
@@ -674,15 +677,15 @@ else
         </td>
       </tr><tr>
         <td>
-          37
+          48
         </td>
         <td>
           145
         </td>
         <td>
-          1393
+          1776
           -
-          1462
+          1845
         </td>
         <td>
           Apply
@@ -690,20 +693,20 @@ else
         <td>
           io.circe.DecodingFailure.apply
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           io.circe.DecodingFailure.apply((&quot;No prefix expansion found for &quot;.+(prefix).+(&quot;:&quot;).+(local): String), scala.`package`.Nil)
         </td>
       </tr><tr>
         <td>
-          37
+          48
         </td>
         <td>
           147
         </td>
         <td>
-          1361
+          1744
           -
-          1463
+          1846
         </td>
         <td>
           Block
@@ -716,15 +719,15 @@ else
         </td>
       </tr><tr>
         <td>
-          37
+          48
         </td>
         <td>
           144
         </td>
         <td>
-          1458
+          1841
           -
-          1461
+          1844
         </td>
         <td>
           Select
@@ -737,15 +740,15 @@ else
         </td>
       </tr><tr>
         <td>
-          38
+          49
         </td>
         <td>
           148
         </td>
         <td>
-          1476
+          1859
           -
-          1500
+          1883
         </td>
         <td>
           Apply
@@ -758,15 +761,15 @@ else
         </td>
       </tr><tr>
         <td>
-          40
+          51
         </td>
         <td>
           152
         </td>
         <td>
-          1572
+          1952
           -
-          1658
+          2038
         </td>
         <td>
           Apply
@@ -774,20 +777,20 @@ else
         <td>
           io.circe.Encoder.contramap
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           io.circe.Encoder.encodeString.contramap[org.renci.cam.domain.IRI](((iri: org.renci.cam.domain.IRI) =&gt; Implicits.this.compactIRIIfPossible(iri, prefixesMap)))
         </td>
       </tr><tr>
         <td>
-          41
+          52
         </td>
         <td>
           151
         </td>
         <td>
-          1616
+          1996
           -
-          1654
+          2034
         </td>
         <td>
           Apply
@@ -795,20 +798,20 @@ else
         <td>
           org.renci.cam.Implicits.compactIRIIfPossible
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           Implicits.this.compactIRIIfPossible(iri, prefixesMap)
         </td>
       </tr><tr>
         <td>
-          44
+          55
         </td>
         <td>
           154
         </td>
         <td>
-          1733
+          2113
           -
-          1830
+          2210
         </td>
         <td>
           Apply
@@ -816,20 +819,20 @@ else
         <td>
           io.circe.KeyEncoder.contramap
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           io.circe.KeyEncoder.encodeKeyString.contramap[org.renci.cam.domain.IRI](((iri: org.renci.cam.domain.IRI) =&gt; Implicits.this.compactIRIIfPossible(iri, prefixesMap)))
         </td>
       </tr><tr>
         <td>
-          45
+          56
         </td>
         <td>
           153
         </td>
         <td>
-          1788
+          2168
           -
-          1826
+          2206
         </td>
         <td>
           Apply
@@ -837,20 +840,20 @@ else
         <td>
           org.renci.cam.Implicits.compactIRIIfPossible
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           Implicits.this.compactIRIIfPossible(iri, prefixesMap)
         </td>
       </tr><tr>
         <td>
-          49
+          60
         </td>
         <td>
           155
         </td>
         <td>
-          1980
+          2360
           -
-          2011
+          2391
         </td>
         <td>
           Apply
@@ -863,15 +866,15 @@ else
         </td>
       </tr><tr>
         <td>
-          49
+          60
         </td>
         <td>
           156
         </td>
         <td>
-          1936
+          2316
           -
-          2013
+          2393
         </td>
         <td>
           Apply
@@ -886,15 +889,15 @@ else
         </td>
       </tr><tr>
         <td>
-          50
+          61
         </td>
         <td>
           164
         </td>
         <td>
-          2043
+          2423
           -
-          2194
+          2574
         </td>
         <td>
           Block
@@ -914,15 +917,15 @@ else
         </td>
       </tr><tr>
         <td>
-          50
+          61
         </td>
         <td>
           157
         </td>
         <td>
-          2022
+          2402
           -
-          2041
+          2421
         </td>
         <td>
           Select
@@ -935,15 +938,15 @@ else
         </td>
       </tr><tr>
         <td>
-          51
+          62
         </td>
         <td>
           158
         </td>
         <td>
-          2056
+          2436
           -
-          2056
+          2436
         </td>
         <td>
           Select
@@ -956,15 +959,15 @@ else
         </td>
       </tr><tr>
         <td>
-          51
+          62
         </td>
         <td>
           159
         </td>
         <td>
-          2064
+          2444
           -
-          2064
+          2444
         </td>
         <td>
           Select
@@ -977,15 +980,15 @@ else
         </td>
       </tr><tr>
         <td>
-          52
+          63
         </td>
         <td>
           160
         </td>
         <td>
-          2142
+          2522
           -
-          2151
+          2531
         </td>
         <td>
           Select
@@ -998,15 +1001,15 @@ else
         </td>
       </tr><tr>
         <td>
-          52
+          63
         </td>
         <td>
           163
         </td>
         <td>
-          2113
+          2493
           -
-          2188
+          2568
         </td>
         <td>
           Apply
@@ -1019,15 +1022,15 @@ else
         </td>
       </tr><tr>
         <td>
-          52
+          63
         </td>
         <td>
           162
         </td>
         <td>
-          2142
+          2522
           -
-          2174
+          2554
         </td>
         <td>
           Apply
@@ -1040,15 +1043,15 @@ else
         </td>
       </tr><tr>
         <td>
-          52
+          63
         </td>
         <td>
           161
         </td>
         <td>
-          2157
+          2537
           -
-          2173
+          2553
         </td>
         <td>
           Apply
@@ -1061,15 +1064,15 @@ else
         </td>
       </tr><tr>
         <td>
-          53
+          64
         </td>
         <td>
           178
         </td>
         <td>
-          2200
+          2580
           -
-          2565
+          2945
         </td>
         <td>
           Block
@@ -1098,15 +1101,15 @@ else
         </td>
       </tr><tr>
         <td>
-          54
+          65
         </td>
         <td>
           166
         </td>
         <td>
-          2223
+          2603
           -
-          2241
+          2621
         </td>
         <td>
           Apply
@@ -1119,15 +1122,15 @@ else
         </td>
       </tr><tr>
         <td>
-          54
+          65
         </td>
         <td>
           165
         </td>
         <td>
-          2231
+          2611
           -
-          2240
+          2620
         </td>
         <td>
           Select
@@ -1140,15 +1143,15 @@ else
         </td>
       </tr><tr>
         <td>
-          55
+          66
         </td>
         <td>
           167
         </td>
         <td>
-          2314
+          2694
           -
-          2344
+          2724
         </td>
         <td>
           Apply
@@ -1161,15 +1164,15 @@ else
         </td>
       </tr><tr>
         <td>
-          55
+          66
         </td>
         <td>
           168
         </td>
         <td>
-          2270
+          2650
           -
-          2346
+          2726
         </td>
         <td>
           Apply
@@ -1184,15 +1187,15 @@ else
         </td>
       </tr><tr>
         <td>
-          56
+          67
         </td>
         <td>
           175
         </td>
         <td>
-          2383
+          2763
           -
-          2544
+          2924
         </td>
         <td>
           Block
@@ -1212,15 +1215,15 @@ else
         </td>
       </tr><tr>
         <td>
-          56
+          67
         </td>
         <td>
           169
         </td>
         <td>
-          2357
+          2737
           -
-          2381
+          2761
         </td>
         <td>
           Select
@@ -1233,15 +1236,15 @@ else
         </td>
       </tr><tr>
         <td>
-          57
+          68
         </td>
         <td>
           171
         </td>
         <td>
-          2406
+          2786
           -
-          2406
+          2786
         </td>
         <td>
           Select
@@ -1254,15 +1257,15 @@ else
         </td>
       </tr><tr>
         <td>
-          57
+          68
         </td>
         <td>
           170
         </td>
         <td>
-          2398
+          2778
           -
-          2398
+          2778
         </td>
         <td>
           Select
@@ -1275,15 +1278,15 @@ else
         </td>
       </tr><tr>
         <td>
-          58
+          69
         </td>
         <td>
           173
         </td>
         <td>
-          2491
+          2871
           -
-          2522
+          2902
         </td>
         <td>
           Apply
@@ -1296,15 +1299,15 @@ else
         </td>
       </tr><tr>
         <td>
-          58
+          69
         </td>
         <td>
           172
         </td>
         <td>
-          2505
+          2885
           -
-          2521
+          2901
         </td>
         <td>
           Apply
@@ -1317,15 +1320,15 @@ else
         </td>
       </tr><tr>
         <td>
-          58
+          69
         </td>
         <td>
           174
         </td>
         <td>
-          2462
+          2842
           -
-          2536
+          2916
         </td>
         <td>
           Apply
@@ -1338,15 +1341,15 @@ else
         </td>
       </tr><tr>
         <td>
-          59
+          70
         </td>
         <td>
           176
         </td>
         <td>
-          2550
+          2930
           -
-          2559
+          2939
         </td>
         <td>
           Select
@@ -1359,15 +1362,15 @@ else
         </td>
       </tr><tr>
         <td>
-          59
+          70
         </td>
         <td>
           177
         </td>
         <td>
-          2550
+          2930
           -
-          2559
+          2939
         </td>
         <td>
           Block
@@ -1380,15 +1383,15 @@ else
         </td>
       </tr><tr>
         <td>
-          63
+          74
         </td>
         <td>
           179
         </td>
         <td>
-          2616
+          2996
           -
-          2651
+          3031
         </td>
         <td>
           Apply
@@ -1401,245 +1404,15 @@ else
         </td>
       </tr><tr>
         <td>
-          65
-        </td>
-        <td>
-          189
-        </td>
-        <td>
-          2722
-          -
-          3033
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          io.circe.Encoder.contramap
-        </td>
-        <td style="background: #F0ADAD">
-          io.circe.Encoder.encodeString.contramap[org.renci.cam.domain.IRI](((iri: org.renci.cam.domain.IRI) =&gt; {
-  val startsWith: scala.collection.immutable.Map[String,String] = prefixesMap.filter(((x0$1: (String, String)) =&gt; x0$1 match {
-    case (_1: String, _2: String): (String, String)((prefix @ _), (namespace @ _)) =&gt; iri.value.startsWith(namespace)
-  }));
-  if (startsWith.nonEmpty)
-    {
-      val namespace: String = (startsWith.maxBy[Int](((x$8: (String, String)) =&gt; x$8._2.length()))(math.this.Ordering.Int): (String, String) @unchecked) match {
-        case (_1: String, _2: String): (String, String)(_, (namespace @ _)) =&gt; namespace
-      };
-      (&quot;&quot;.+(namespace).+(scala.Predef.augmentString(iri.value).drop(namespace.length())): String)
-    }
-  else
-    iri.value
-}))
-        </td>
-      </tr><tr>
-        <td>
-          66
-        </td>
-        <td>
-          181
-        </td>
-        <td>
-          2783
-          -
-          2865
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          scala.collection.IterableOps.filter
-        </td>
-        <td style="background: #F0ADAD">
-          prefixesMap.filter(((x0$1: (String, String)) =&gt; x0$1 match {
-  case (_1: String, _2: String): (String, String)((prefix @ _), (namespace @ _)) =&gt; iri.value.startsWith(namespace)
-}))
-        </td>
-      </tr><tr>
-        <td>
-          66
-        </td>
-        <td>
-          180
-        </td>
-        <td>
-          2832
-          -
-          2863
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.String.startsWith
-        </td>
-        <td style="background: #F0ADAD">
-          iri.value.startsWith(namespace)
-        </td>
-      </tr><tr>
-        <td>
-          67
-        </td>
-        <td>
-          182
-        </td>
-        <td>
-          2874
-          -
-          2893
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.collection.IterableOnceOps.nonEmpty
-        </td>
-        <td style="background: #F0ADAD">
-          startsWith.nonEmpty
-        </td>
-      </tr><tr>
-        <td>
-          67
-        </td>
-        <td>
-          186
-        </td>
-        <td>
-          2895
-          -
-          3014
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          &lt;nosymbol&gt;
-        </td>
-        <td style="background: #F0ADAD">
-          {
-  val namespace: String = (startsWith.maxBy[Int](((x$8: (String, String)) =&gt; x$8._2.length()))(math.this.Ordering.Int): (String, String) @unchecked) match {
-    case (_1: String, _2: String): (String, String)(_, (namespace @ _)) =&gt; namespace
-  };
-  (&quot;&quot;.+(namespace).+(scala.Predef.augmentString(iri.value).drop(namespace.length())): String)
-}
-        </td>
-      </tr><tr>
-        <td>
-          68
-        </td>
-        <td>
-          185
-        </td>
-        <td>
-          2924
-          -
-          2953
-        </td>
-        <td>
-          ApplyToImplicitArgs
-        </td>
-        <td>
-          scala.collection.IterableOnceOps.maxBy
-        </td>
-        <td style="background: #F0ADAD">
-          startsWith.maxBy[Int](((x$8: (String, String)) =&gt; x$8._2.length()))(math.this.Ordering.Int)
-        </td>
-      </tr><tr>
-        <td>
-          68
-        </td>
-        <td>
-          184
-        </td>
-        <td>
-          2940
-          -
-          2940
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          scala.math.Ordering.Int
-        </td>
-        <td style="background: #F0ADAD">
-          math.this.Ordering.Int
-        </td>
-      </tr><tr>
-        <td>
-          68
+          76
         </td>
         <td>
           183
         </td>
         <td>
-          2941
+          3135
           -
-          2952
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.String.length
-        </td>
-        <td style="background: #F0ADAD">
-          x$8._2.length()
-        </td>
-      </tr><tr>
-        <td>
-          70
-        </td>
-        <td>
-          187
-        </td>
-        <td>
-          3020
-          -
-          3029
-        </td>
-        <td>
-          Select
-        </td>
-        <td>
-          org.renci.cam.domain.IRI.value
-        </td>
-        <td style="background: #F0ADAD">
-          iri.value
-        </td>
-      </tr><tr>
-        <td>
-          70
-        </td>
-        <td>
-          188
-        </td>
-        <td>
-          3020
-          -
-          3029
-        </td>
-        <td>
-          Block
-        </td>
-        <td>
-          org.renci.cam.domain.IRI.value
-        </td>
-        <td style="background: #F0ADAD">
-          iri.value
-        </td>
-      </tr><tr>
-        <td>
-          73
-        </td>
-        <td>
-          193
-        </td>
-        <td>
-          3137
-          -
-          3355
+          3353
         </td>
         <td>
           Apply
@@ -1647,7 +1420,7 @@ else
         <td>
           io.circe.Decoder.emap
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           io.circe.Decoder.decodeString.emap[org.renci.cam.domain.BiolinkPredicate](((s: String) =&gt; {
   val localName: String = s.replace(&quot;biolink:&quot;, &quot;&quot;);
   biolinkPredicates.find(((a: org.renci.cam.domain.BiolinkPredicate) =&gt; a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName))).toRight[String]((&quot;BiolinkPredicate does not exist: &quot;.+(s): String))
@@ -1655,15 +1428,15 @@ else
         </td>
       </tr><tr>
         <td>
-          74
+          77
         </td>
         <td>
-          190
+          180
         </td>
         <td>
-          3190
+          3188
           -
-          3215
+          3213
         </td>
         <td>
           Apply
@@ -1671,41 +1444,20 @@ else
         <td>
           java.lang.String.replace
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           s.replace(&quot;biolink:&quot;, &quot;&quot;)
         </td>
       </tr><tr>
         <td>
-          75
+          78
         </td>
         <td>
-          191
+          182
         </td>
         <td>
-          3248
+          3218
           -
-          3302
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.Object.==
-        </td>
-        <td style="background: #F0ADAD">
-          a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName)
-        </td>
-      </tr><tr>
-        <td>
-          75
-        </td>
-        <td>
-          192
-        </td>
-        <td>
-          3220
-          -
-          3351
+          3349
         </td>
         <td>
           Apply
@@ -1713,7 +1465,7 @@ else
         <td>
           scala.Option.toRight
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           biolinkPredicates.find(((a: org.renci.cam.domain.BiolinkPredicate) =&gt; a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName))).toRight[String]((&quot;BiolinkPredicate does not exist: &quot;.+(s): String))
         </td>
       </tr><tr>
@@ -1721,12 +1473,33 @@ else
           78
         </td>
         <td>
-          194
+          181
         </td>
         <td>
-          3416
+          3246
           -
-          3487
+          3300
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName)
+        </td>
+      </tr><tr>
+        <td>
+          81
+        </td>
+        <td>
+          184
+        </td>
+        <td>
+          3414
+          -
+          3485
         </td>
         <td>
           Apply
@@ -1739,15 +1512,15 @@ else
         </td>
       </tr><tr>
         <td>
-          82
+          85
         </td>
         <td>
-          198
+          188
         </td>
         <td>
-          3576
+          3574
           -
-          3787
+          3785
         </td>
         <td>
           Apply
@@ -1755,7 +1528,7 @@ else
         <td>
           io.circe.Decoder.emap
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           io.circe.Decoder.decodeString.emap[org.renci.cam.domain.BiolinkClass](((s: String) =&gt; {
   val localName: String = s.replace(&quot;biolink:&quot;, &quot;&quot;);
   biolinkClasses.find(((a: org.renci.cam.domain.BiolinkClass) =&gt; a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName))).toRight[String]((&quot;BiolinkClass does not exist: &quot;.+(s): String))
@@ -1763,15 +1536,15 @@ else
         </td>
       </tr><tr>
         <td>
-          83
+          86
         </td>
         <td>
-          195
+          185
         </td>
         <td>
-          3629
+          3627
           -
-          3654
+          3652
         </td>
         <td>
           Apply
@@ -1779,41 +1552,20 @@ else
         <td>
           java.lang.String.replace
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           s.replace(&quot;biolink:&quot;, &quot;&quot;)
         </td>
       </tr><tr>
         <td>
-          84
+          87
         </td>
         <td>
-          196
+          187
         </td>
         <td>
-          3684
+          3657
           -
-          3738
-        </td>
-        <td>
-          Apply
-        </td>
-        <td>
-          java.lang.Object.==
-        </td>
-        <td style="background: #F0ADAD">
-          a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName)
-        </td>
-      </tr><tr>
-        <td>
-          84
-        </td>
-        <td>
-          197
-        </td>
-        <td>
-          3659
-          -
-          3783
+          3781
         </td>
         <td>
           Apply
@@ -1821,7 +1573,7 @@ else
         <td>
           scala.Option.toRight
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           biolinkClasses.find(((a: org.renci.cam.domain.BiolinkClass) =&gt; a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName))).toRight[String]((&quot;BiolinkClass does not exist: &quot;.+(s): String))
         </td>
       </tr><tr>
@@ -1829,12 +1581,33 @@ else
           87
         </td>
         <td>
-          202
+          186
         </td>
         <td>
-          3840
+          3682
           -
-          4081
+          3736
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Object.==
+        </td>
+        <td style="background: #AEF1AE">
+          a.iri.value.replace(Implicits.this.BiolinkNamespace, &quot;&quot;).==(localName)
+        </td>
+      </tr><tr>
+        <td>
+          90
+        </td>
+        <td>
+          192
+        </td>
+        <td>
+          3838
+          -
+          4079
         </td>
         <td>
           Apply
@@ -1850,15 +1623,15 @@ else
         </td>
       </tr><tr>
         <td>
-          88
+          91
         </td>
         <td>
-          199
+          189
         </td>
         <td>
-          3886
+          3884
           -
-          3911
+          3909
         </td>
         <td>
           Apply
@@ -1871,15 +1644,15 @@ else
         </td>
       </tr><tr>
         <td>
-          89
+          92
         </td>
         <td>
-          200
+          190
         </td>
         <td>
-          3921
+          3919
           -
-          4002
+          4000
         </td>
         <td>
           Typed
@@ -1887,20 +1660,20 @@ else
         <td>
           &lt;nosymbol&gt;
         </td>
-        <td style="background: #F0ADAD">
+        <td style="background: #AEF1AE">
           (&quot;biolink:&quot;.+(LOWER_UNDERSCORE.to(UPPER_CAMEL, s.shorthand)): String)
         </td>
       </tr><tr>
         <td>
-          91
+          94
         </td>
         <td>
-          201
+          191
         </td>
         <td>
-          4022
+          4020
           -
-          4071
+          4069
         </td>
         <td>
           Typed
