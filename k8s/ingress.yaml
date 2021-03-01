@@ -1,0 +1,18 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  name: cam-kp-api-ingress
+  annotations:
+    kubernetes.io/ingress.class: public
+spec:
+  tls:
+    - hosts:
+        - cam-kp-api.renci.org
+      secretName: cam-kp-api-dev-tls-secret
+  rules:
+    - host: cam-kp-api.renci.org
+      http:
+        paths:
+          - backend:
+              serviceName: cam-kp-api-web-service
+              servicePort: 8080
