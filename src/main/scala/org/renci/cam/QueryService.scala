@@ -1,6 +1,5 @@
 package org.renci.cam
 
-import cats.effect.syntax.effect
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.syntax._
@@ -57,17 +56,6 @@ object QueryService extends LazyLogging {
   // instances are not thread-safe; should be retrieved for every use
   private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
 
-  def getNodeTypes(nodes: Map[String, TRAPIQueryNode]): Map[String, IRI] =
-    nodes
-      .map(entry =>
-        (entry._2.category, entry._2.id) match {
-          case (_, Some(c))    => List(entry._1 -> c)
-          case (Some(t), None) => List(entry._1 -> t.iri)
-          case (None, None)    => Nil
-        })
-      .flatten
-      .toMap
-
   def run(limit: Option[Int],
           submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], List[QuerySolution]] = {
     val queryGraph = enforceQueryEdgeTypes(submittedQueryGraph)
@@ -88,27 +76,17 @@ object QueryService extends LazyLogging {
         } yield (v, sparqlChunk)
       }
       (edges, sparqlLines) = predicates.unzip
-      nodesToDirectTypes =
-        queryGraph.nodes
-          .map { node =>
-            val nodeVar = Var(node._1)
-            val nodeTypeVar = Var(s"${node._1}_type")
-            sparql""" $nodeVar $SesameDirectType $nodeTypeVar .  """
-          }
-          .fold(sparql"")(_ + _)
-      projectionVariableNames = queryGraph.edges.flatMap(entry => List(entry._1)) ++ edges.flatMap(e =>
-        List(e.subject, e.`object`)) ++ queryGraph.nodes.map(entry => s"${entry._1}_type")
-      projection = projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
+      nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
+      projections = getProjections(queryGraph)
       moreLines = for {
         id <- edges.flatMap(a => List(a.subject, a.`object`))
         subjVar = Var(id)
         v <- nodeTypes.get(id)
       } yield sparql"$subjVar $RDFType $v ."
       valuesClause = (sparqlLines ++ moreLines).fold(sparql"")(_ + _)
-      limitValue = limit.getOrElse(1000)
-      limitSparql = if (limitValue > 0) sparql" LIMIT $limitValue" else sparql""
+      limitSparql = getLimit(limit)
       queryString = sparql"""
-                          SELECT DISTINCT $projection
+                          SELECT DISTINCT $projections
                           WHERE {
                             $nodesToDirectTypes
                             $valuesClause
@@ -117,22 +95,6 @@ object QueryService extends LazyLogging {
                           """
       response <- SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
     } yield response
-  }
-
-  def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph): TRAPIQueryGraph = {
-    val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
-      val newPredicate = edge.predicate match {
-        case None          => Some(BiolinkPredicate("related_to"))
-        case somePredicate => somePredicate
-      }
-      edgeID -> edge.copy(predicate = newPredicate)
-    }
-    queryGraph.copy(edges = improvedEdgeMap)
-  }
-
-  def getTRAPIEdgeKey(pred: Option[BiolinkPredicate], sub: String, obj: String) = {
-    val edgeKey = TRAPIEdgeKey(pred, sub, obj).asJson.deepDropNullValues.noSpaces
-    String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
   }
 
   def parseResultSet(queryGraph: TRAPIQueryGraph,
@@ -171,6 +133,54 @@ object QueryService extends LazyLogging {
       trapiKGEdges = initialKGEdges ++ extraKGEdges
 
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(trapiKGNodes, trapiKGEdges)), Some(finalResults.distinct))
+
+  def getNodeTypes(nodes: Map[String, TRAPIQueryNode]): Map[String, IRI] =
+    nodes
+      .map(entry =>
+        (entry._2.category, entry._2.id) match {
+          case (_, Some(c))    => List(entry._1 -> c)
+          case (Some(t), None) => List(entry._1 -> t.iri)
+          case (None, None)    => Nil
+        })
+      .flatten
+      .toMap
+
+  def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]) =
+    nodes
+      .map { node =>
+        val nodeVar = Var(node._1)
+        val nodeTypeVar = Var(s"${node._1}_type")
+        sparql""" $nodeVar $SesameDirectType $nodeTypeVar .  """
+      }
+      .fold(sparql"")(_ + _)
+
+  def getLimit(limit: Option[Int]) = {
+    val limitValue = limit.getOrElse(1000)
+    if (limitValue > 0) sparql" LIMIT $limitValue" else sparql""
+  }
+
+  def getProjections(queryGraph: TRAPIQueryGraph) = {
+    val projectionVariableNames =
+      queryGraph.edges.flatMap(entry => List(entry._1)) ++ queryGraph.edges.flatMap(e => List(e._2.subject, e._2.`object`)) ++ queryGraph.nodes.map(entry =>
+        s"${entry._1}_type")
+    projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
+  }
+
+  def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph): TRAPIQueryGraph = {
+    val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
+      val newPredicate = edge.predicate match {
+        case None          => Some(BiolinkPredicate("related_to"))
+        case somePredicate => somePredicate
+      }
+      edgeID -> edge.copy(predicate = newPredicate)
+    }
+    queryGraph.copy(edges = improvedEdgeMap)
+  }
+
+  def getTRAPIEdgeKey(pred: Option[BiolinkPredicate], sub: String, obj: String) = {
+    val edgeKey = TRAPIEdgeKey(pred, sub, obj).asJson.deepDropNullValues.noSpaces
+    String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
+  }
 
   def getTRAPIEdges(queryGraph: TRAPIQueryGraph,
                     querySolutions: List[QuerySolution]): RIO[ZConfig[AppConfig] with HttpClient, Map[String, TRAPIEdge]] =
