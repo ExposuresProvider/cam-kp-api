@@ -1,5 +1,11 @@
 {
   "EMAPA": "http://purl.obolibrary.org/obo/EMAPA_",
   "PCO": "http://purl.obolibrary.org/obo/PCO_",
-  "sesame": "http://www.openrdf.org/schema/sesame#"
+  "sesame": "http://www.openrdf.org/schema/sesame#",
+  "NCBIGene": "http://www.ncbi.nlm.nih.gov/gene/",
+  "ENVO": "http://purl.obolibrary.org/obo/ENVO_",
+  "CARO": "http://purl.obolibrary.org/obo/CARO_",
+  "ZFA": "http://purl.obolibrary.org/obo/ZFA_",
+  "BFO": "http://purl.obolibrary.org/obo/BFO_",
+  "WBbt": "http://purl.obolibrary.org/obo/WBbt_"
 }

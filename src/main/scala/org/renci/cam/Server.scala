@@ -135,7 +135,7 @@ object Server extends App with LazyLogging {
                 "info": {
                   "x-translator": {
                     "component": "KP",
-                    "team": "Exposures Provider"
+                    "team": ["Exposures Provider"]
                   }
                 }
              }
