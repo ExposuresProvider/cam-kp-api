@@ -29,7 +29,7 @@ object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
       for {
         (prefixes, classes, predicates) <- Biolink.getBiolinkPrefixesAndClassesAndPredicatesFromFile
       } yield assert(prefixes)(isNonEmpty) && assert(prefixes.keys)(contains("GOREL")) && assert(classes)(isNonEmpty) && assert(classes)(
-        contains(BiolinkClass("biological_entity"))) && assert(predicates)(isNonEmpty) && assert(predicates)(
+        contains(BiolinkClass("BiologicalEntity"))) && assert(predicates)(isNonEmpty) && assert(predicates)(
         contains(BiolinkPredicate("related_to")))
     }
   )
