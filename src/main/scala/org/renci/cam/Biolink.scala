@@ -1,9 +1,7 @@
 package org.renci.cam
 
-import com.google.common.base.CaseFormat
 import io.circe.Json
-import org.apache.commons.lang3.{ArrayUtils, StringUtils}
-import org.apache.jena.atlas.lib.ListUtils
+import org.apache.commons.lang3.StringUtils
 import org.http4s.circe._
 import org.http4s.headers.Accept
 import org.http4s.implicits._
@@ -13,7 +11,6 @@ import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio._
 import zio.interop.catz._
 
-import java.util
 import scala.io.Source
 
 object Biolink {
