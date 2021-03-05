@@ -1,6 +1,9 @@
 package org.renci.cam
 
+import com.google.common.base.CaseFormat
 import io.circe.Json
+import org.apache.commons.lang3.{ArrayUtils, StringUtils}
+import org.apache.jena.atlas.lib.ListUtils
 import org.http4s.circe._
 import org.http4s.headers.Accept
 import org.http4s.implicits._
@@ -10,6 +13,7 @@ import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio._
 import zio.interop.catz._
 
+import java.util
 import scala.io.Source
 
 object Biolink {
@@ -79,10 +83,9 @@ object Biolink {
       slotsStr <- sourceManaged.use(source => ZIO.effect(source.mkString))
       json <- ZIO.fromEither(io.circe.yaml.parser.parse(slotsStr))
       classesKeys <- ZIO.fromOption(json.hcursor.downField("classes").keys).orElseFail(throw new Exception("couldn't get classes"))
-//      classes = classesKeys.map(a => BiolinkClass(CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, a.replaceAll(" ", "_")))).toList
-      classes = classesKeys.map(a => BiolinkClass(a.replaceAll(" ", "_"))).toList
+      classes = classesKeys.map(a => a.split(" ").toList.map(a => StringUtils.capitalize(a)).mkString).map(a => BiolinkClass(a)).toList
       predicateKeys <- ZIO.fromOption(json.hcursor.downField("slots").keys).orElseFail(throw new Exception("couldn't get slots"))
-      predicates = predicateKeys.map(a => BiolinkPredicate(a.replaceAll(" ", "_"))).toList
+      predicates = predicateKeys.map(a => BiolinkPredicate(a.replaceAll(",", "").replaceAll(" ", "_"))).toList
       prefixes <- ZIO.fromOption(json.hcursor.downField("prefixes").focus).orElseFail(throw new Exception("couldn't get prefixes"))
       prefixesMap <- ZIO.fromEither(prefixes.as[Map[String, String]])
     } yield (prefixesMap, classes, predicates)
