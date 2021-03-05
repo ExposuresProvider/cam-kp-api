@@ -3,9 +3,15 @@ package org.renci.cam.test
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
+import io.circe.generic.auto._
+import io.circe.parser._
+import io.circe.syntax._
+import io.circe.{Decoder, Encoder, HCursor, Json, KeyDecoder, KeyEncoder}
+import org.renci.cam.Implicits
 import org.renci.cam.domain._
-import zio._
+import zio.ZIO
 import zio.test.Assertion._
+import zio.test.TestAspect.ignore
 import zio.test._
 
 object Scratch extends DefaultRunnableSpec with LazyLogging {
@@ -15,7 +21,7 @@ object Scratch extends DefaultRunnableSpec with LazyLogging {
       for {
         list <- ZIO.effect(List(1, 2, 3))
       } yield assert(list)(equalTo(List(1, 2, 3)))
-    } //@@ ignore
+    } @@ ignore
   )
 
   val printEncoded = suite("printEncoded")(
@@ -24,7 +30,7 @@ object Scratch extends DefaultRunnableSpec with LazyLogging {
       println("expected: " + expected)
 
       val n0Node = TRAPIQueryNode(Some(IRI("http://www.ncbi.nlm.nih.gov/gene/558")), Some(BiolinkClass("gene")), None)
-      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("biological_process")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
 
       for {
         nodes <- ZIO.effect(Map("n0" -> n0Node, "n1" -> n1Node))
@@ -39,8 +45,9 @@ object Scratch extends DefaultRunnableSpec with LazyLogging {
         println(n0Node.asJson.deepDropNullValues.noSpaces)
         assert(nodes)(isNonEmpty)
       }
-    } //@@ ignore
+    } @@ ignore
   )
+
 
   def spec = suite("Scratch tests")(scratch, printEncoded)
 }
