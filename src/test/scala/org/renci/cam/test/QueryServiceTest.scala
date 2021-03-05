@@ -3,6 +3,8 @@ package org.renci.cam.test
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{ResultSet, ResultSetFactory}
+import org.renci.cam.Biolink.BiolinkData
+import org.renci.cam.QueryService.TermWithLabelAndBiolinkType
 import org.renci.cam._
 import org.renci.cam.domain._
 import zio._
@@ -14,8 +16,6 @@ import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters._
 
 object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
-
-  val testLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer >+> TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
   val testGetNodeTypes = suite("testGetNodeTypes")(
     testM("test get node types sans id") {
@@ -60,27 +60,23 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   val testGetTRAPIEdges = suite("testGetTRAPIEdges")(
     testM("test QueryService.getTRAPIEdges") {
       val (queryGraph, resultSet) = getSimpleData
-      val testCase =
-        for {
-          trapiEdges <- QueryService.getTRAPIEdges(queryGraph, resultSet.asScala.toList)
-        } yield assert(trapiEdges.values.map(a => (a.subject, a.`object`)))(
-          contains((IRI("http://purl.obolibrary.org/obo/GO_0008150"),
-                    IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103"))))
-      testCase.provideCustomLayer(testLayer)
+      for {
+        trapiEdges <- QueryService.getTRAPIEdges(queryGraph, resultSet.asScala.toList)
+      } yield assert(trapiEdges.values.map(a => (a.subject, a.`object`)))(
+        contains((IRI("http://purl.obolibrary.org/obo/GO_0008150"),
+                  IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103"))))
     }
   )
 
   val testGetTRAPINodeBindings = suite("testGetTRAPINodeBindings")(
     testM("test QueryService.getTRAPINodeBindings") {
       val (queryGraph, resultSet) = getSimpleData
-      val testCase =
-        for {
-          nodeBindings <- QueryService.getTRAPINodeBindings(queryGraph, resultSet.next())
-        } yield assert(nodeBindings.keys)(
-          contains("n0") && contains("n1")
-        ) && assert(nodeBindings.get("n0").get.map(a => a.id))(
-          contains(IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103")))
-      testCase.provideCustomLayer(testLayer)
+      for {
+        nodeBindings <- QueryService.getTRAPINodeBindings(queryGraph, resultSet.next())
+      } yield assert(nodeBindings.keys)(
+        contains("n0") && contains("n1")
+      ) && assert(nodeBindings.get("n0").get.map(a => a.id))(
+        contains(IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103")))
     }
   )
 
@@ -128,17 +124,14 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
 
   val testQueryTexts = suite("testQueryTexts")(
     testM("test QueryService.getTRAPINodeDetailsQueryText") {
-      val testCase =
-        for {
-          biolinkData <- Biolink.biolinkData
-          nodeIdList = List(
-            IRI("http://purl.obolibrary.org/obo/GO_0047196"),
-            IRI("http://purl.obolibrary.org/obo/GO_0017064")
-          )
-          queryText <- QueryService.getTRAPINodeDetailsQueryText(nodeIdList, biolinkData.classes)
-        } yield assert(queryText.text)(
-          containsString("VALUES ?term {  <http://purl.obolibrary.org/obo/GO_0047196>  <http://purl.obolibrary.org/obo/GO_0017064>  }"))
-      testCase.provideCustomLayer(testLayer)
+      val nodeIdList = List(
+        IRI("http://purl.obolibrary.org/obo/GO_0047196"),
+        IRI("http://purl.obolibrary.org/obo/GO_0017064")
+      )
+      for {
+        queryText <- QueryService.getTRAPINodeDetailsQueryText(nodeIdList, BiolinkClass("NamedThing"), BiolinkPredicate("is_a"))
+      } yield assert(queryText.text)(
+        containsString("VALUES ?term {  <http://purl.obolibrary.org/obo/GO_0047196>  <http://purl.obolibrary.org/obo/GO_0017064>  }"))
     },
     testM("test QueryService.getProvenanceQueryText") {
       for {
@@ -184,7 +177,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
             IRI("http://purl.obolibrary.org/obo/RO_0002233")
           )
         )
-        queryText <- QueryService.getSlotStuffQueryText(predicates)
+        queryText <- QueryService.getSlotStuffQueryText(predicates, BiolinkPredicate("is_a"))
       } yield assert(queryText.text)(
         containsString("( <http://purl.obolibrary.org/obo/RO_0002333> \"e0000\" )") &&
           containsString("( <http://purl.obolibrary.org/obo/BFO_0000066> \"e0001\" )") &&
