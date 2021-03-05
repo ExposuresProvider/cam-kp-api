@@ -1,21 +1,10 @@
 package org.renci.cam
 
-import java.nio.charset.StandardCharsets
-
 import com.google.common.base.CaseFormat
 import io.circe.Decoder.Result
-import io.circe.{Decoder, DecodingFailure, Encoder, HCursor, KeyDecoder, KeyEncoder}
+import io.circe._
 import org.apache.commons.lang3.StringUtils
-import org.apache.jena.query.ResultSetFactory
-import org.http4s.{DecodeFailure, DecodeResult, EntityDecoder, EntityEncoder, MalformedMessageBodyFailure}
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
-import zio.Task
-import org.apache.jena.query._
-import org.http4s.implicits._
-import org.apache.commons.io.IOUtils
-import org.http4s._
-import org.http4s.headers.`Content-Type`
-import zio.interop.catz._
 
 object Implicits {
 
@@ -79,7 +68,18 @@ object Implicits {
   }
 
   def biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { s =>
-    s"biolink:${s.shorthand}"
+    s.withBiolinkPrefix
+  }
+
+  def biolinkClassKeyEncoder: KeyEncoder[BiolinkClass] = KeyEncoder.encodeKeyString.contramap { bc: BiolinkClass =>
+    bc.withBiolinkPrefix
+  }
+
+  def biolinkClassKeyDecoder(biolinkClasses: List[BiolinkClass]): KeyDecoder[BiolinkClass] = new KeyDecoder[BiolinkClass] {
+    override def apply(key: String): Option[BiolinkClass] = {
+      val localName = key.replace("biolink:", "")
+      biolinkClasses.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName).toRight(s"BiolinkClass does not exist: $key")
+    }.toOption
   }
 
   def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = Decoder.decodeString.emap { s =>
