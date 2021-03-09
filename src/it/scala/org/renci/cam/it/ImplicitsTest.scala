@@ -39,8 +39,8 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
     testM("test Implicits.compactIRIIfPossible with unknown prefix") {
       val testCase = for {
         biolinkData <- Biolink.biolinkData
-        json = Implicits.compactIRIIfPossible(IRI("http://www.ncbi.nlm.nih.gov/gene/558"), biolinkData.prefixes)
-      } yield assert(json)(equalTo("http://www.ncbi.nlm.nih.gov/gene/558"))
+        json = Implicits.compactIRIIfPossible(IRI("http://asdfasdf/gene/558"), biolinkData.prefixes)
+      } yield assert(json)(equalTo("http://asdfasdf/gene/558"))
       testCase.provideCustomLayer(testLayer)
     },
     testM("test Implicits.compactIRIIfPossible with already compacted iri") {
