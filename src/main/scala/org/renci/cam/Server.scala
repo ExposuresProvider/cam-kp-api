@@ -98,8 +98,7 @@ object Server extends App with LazyLogging {
           ZIO
             .fromOption(body.message.query_graph)
             .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
-        results <- QueryService.run(limit, queryGraph)
-        message <- QueryService.parseResultSet(queryGraph, results)
+        message <- QueryService.run(limit, queryGraph)
       } yield TRAPIResponse(message, Some("Success"), None, None)
       program.mapError(error => error.getMessage)
     }
