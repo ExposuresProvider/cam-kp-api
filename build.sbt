@@ -18,9 +18,10 @@ javaOptions += "-Xmx8G"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
+publishArtifact in (Compile, packageDoc) := false
+
 configs(IntegrationTest)
 Defaults.itSettings
-
 coverageEnabled := false
 IntegrationTest / parallelExecution := false
 
