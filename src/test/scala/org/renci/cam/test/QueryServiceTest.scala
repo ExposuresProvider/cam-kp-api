@@ -129,7 +129,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         IRI("http://purl.obolibrary.org/obo/GO_0017064")
       )
       for {
-        queryText <- QueryService.getTRAPINodeDetailsQueryText(nodeIdList, BiolinkClass("NamedThing"), BiolinkPredicate("is_a"))
+        queryText <- QueryService.getTRAPINodeDetailsQueryText(nodeIdList, BiolinkClass("NamedThing"))
       } yield assert(queryText.text)(
         containsString("VALUES ?term {  <http://purl.obolibrary.org/obo/GO_0047196>  <http://purl.obolibrary.org/obo/GO_0017064>  }"))
     },
@@ -177,7 +177,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
             IRI("http://purl.obolibrary.org/obo/RO_0002233")
           )
         )
-        queryText <- QueryService.getSlotStuffQueryText(predicates, BiolinkPredicate("is_a"))
+        queryText <- QueryService.getSlotStuffQueryText(predicates)
       } yield assert(queryText.text)(
         containsString("( <http://purl.obolibrary.org/obo/RO_0002333> \"e0000\" )") &&
           containsString("( <http://purl.obolibrary.org/obo/BFO_0000066> \"e0001\" )") &&
