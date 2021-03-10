@@ -11,16 +11,17 @@ import zio.blocking.Blocking
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
+import zio.test.environment.testEnvironment
 
 object PredicatesServiceTest extends DefaultRunnableSpec {
 
   val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = zio.test.environment.testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer
+  val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
 
   val predicatesServiceTest = suite("PredicatesService test")(
     testM("test parsing predicates and for the existence of IndividualOrganism") {
-      val testCase = for {
+      for {
         httpClient <- HttpClient.client
         biolinkData <- Biolink.biolinkData
         request = Request[Task](Method.GET, uri"http://127.0.0.1:8080/predicates").withHeaders(`Content-Type`(MediaType.application.json))
@@ -37,10 +38,9 @@ object PredicatesServiceTest extends DefaultRunnableSpec {
 
         assert(map)(isRight) && assert(map.toOption.get.keys)(contains(BiolinkClass("IndividualOrganism")))
       }
-      testCase.provideCustomLayer(testLayer)
     }
   )
 
-  def spec = suite("PredicateService tests")(predicatesServiceTest)
+  def spec = suite("PredicateService tests")(predicatesServiceTest).provideLayerShared(testLayer)
 
 }

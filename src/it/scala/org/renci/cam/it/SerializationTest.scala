@@ -9,12 +9,13 @@ import org.renci.cam._
 import org.renci.cam.domain._
 import zio.test.Assertion._
 import zio.test._
+import zio.test.environment.testEnvironment
 
 import java.nio.file.{Files, Paths}
 
 object SerializationTest extends DefaultRunnableSpec {
 
-  val testLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
+  val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer).mapError(TestFailure.die)
 
   val testTRAPIQueryRequestBodyEncodingOut = suite("testTRAPIQueryRequestBodyEncodingOut")(
     testM("encoding upon departure") {
@@ -28,7 +29,7 @@ object SerializationTest extends DefaultRunnableSpec {
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
-      val testCase = for {
+      for {
         biolinkData <- Biolink.biolinkData
       } yield {
 
@@ -51,7 +52,6 @@ object SerializationTest extends DefaultRunnableSpec {
         //println("encoded: " + encoded)
         assert(expected)(equalsIgnoreCase(encoded))
       }
-      testCase.provideCustomLayer(testLayer)
     }
   )
 
@@ -67,7 +67,7 @@ object SerializationTest extends DefaultRunnableSpec {
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
-      val testCase = for {
+      for {
         biolinkData <- Biolink.biolinkData
       } yield {
         implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
@@ -78,13 +78,11 @@ object SerializationTest extends DefaultRunnableSpec {
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
         assert(expected)(equalsIgnoreCase(encoded))
       }
-      testCase.provideCustomLayer(testLayer)
     }
   )
 
   val testTRAPIQueryRequestBodyDecoding2 = suite("testTRAPIQueryRequestBodyDecoding2")(
     testM("decoding") {
-
       val n0Node = TRAPIQueryNode(Some(IRI("http://identifiers.org/ncbigene/558")), Some(BiolinkClass("Gene")), None)
       val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("has_participant")), None)
@@ -92,7 +90,7 @@ object SerializationTest extends DefaultRunnableSpec {
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
-      val testCase = for {
+      for {
         biolinkData <- Biolink.biolinkData
       } yield {
         implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
@@ -108,13 +106,12 @@ object SerializationTest extends DefaultRunnableSpec {
 //        println("node map: " + decoded.toOption.get.message.query_graph.get.nodes)
         assertCompletes
       }
-      testCase.provideCustomLayer(testLayer)
     }
   )
 
   val testIRIWithColonInReference = suite("testIRIWithColonInReference")(
     testM("test iri with colon in reference") {
-      val testCase = for {
+      for {
         biolinkData <- Biolink.biolinkData
         iri = IRI("http://identifiers.org/mgi/MGI:1914846")
         startsWith = biolinkData.prefixes.filter { case (_, namespace) => iri.value.startsWith(namespace) }
@@ -128,7 +125,6 @@ object SerializationTest extends DefaultRunnableSpec {
           }
 //        _ = println("asdf: " + asdf)
       } yield assertCompletes
-      testCase.provideCustomLayer(testLayer)
     }
   )
 
@@ -137,7 +133,7 @@ object SerializationTest extends DefaultRunnableSpec {
       val originalMap: Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]] = Map(
         BiolinkClass("IndividualOrganism") -> Map(BiolinkClass("Occurrent") ->
           List(BiolinkPredicate("participates_in"), BiolinkPredicate("related_to"))))
-      val testCase = for {
+      for {
         biolinkData <- Biolink.biolinkData
       } yield {
 
@@ -152,7 +148,6 @@ object SerializationTest extends DefaultRunnableSpec {
 
         assert(map)(isRight) && assert(map.toOption.get.keys)(contains(BiolinkClass("IndividualOrganism")))
       }
-      testCase.provideCustomLayer(testLayer)
     }
   )
 
@@ -161,6 +156,6 @@ object SerializationTest extends DefaultRunnableSpec {
     testTRAPIQueryRequestBodyEncodingIn,
     testTRAPIQueryRequestBodyEncodingOut,
     messingWithMaps
-  )
+  ).provideLayerShared(testLayer)
 
 }

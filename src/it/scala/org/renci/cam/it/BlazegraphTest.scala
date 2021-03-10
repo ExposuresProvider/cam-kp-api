@@ -8,11 +8,11 @@ import zio.Task
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
+import zio.test.environment.testEnvironment
 
 object BlazegraphTest extends DefaultRunnableSpec {
 
-  val camkpapiLayer = HttpClient.makeHttpClientLayer
-  val testLayer = zio.test.environment.testEnvironment ++ camkpapiLayer
+  val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer).mapError(TestFailure.die)
 
   val testBlazegraphServiceDirectly = suite("testBlazegraphServiceDirectly")(
     testM("test Blazegraph service directly") {
@@ -70,7 +70,7 @@ object BlazegraphTest extends DefaultRunnableSpec {
                 }
                 LIMIT   1"""
 
-      val testCase = for {
+      for {
         httpClient <- HttpClient.client
         uri = uri"https://stars-app.renci.org/cam/sparql"
           .withQueryParam("query", query)
@@ -78,12 +78,11 @@ object BlazegraphTest extends DefaultRunnableSpec {
         request = Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json),
                                                               `Content-Type`(MediaType.application.json))
         response <- httpClient.expect[String](request)
-        _ = println(response)
+//        _ = println(response)
       } yield assert(response)(isNonEmptyString)
-      testCase.provideCustomLayer(testLayer)
     }
   )
 
-  def spec = suite("Blazegraph tests")(testBlazegraphServiceDirectly)
+  def spec = suite("Blazegraph tests")(testBlazegraphServiceDirectly).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }

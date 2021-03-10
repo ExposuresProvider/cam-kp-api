@@ -10,17 +10,17 @@ import zio._
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
+import zio.test.environment.testEnvironment
 
 object BiolinkTest extends DefaultRunnableSpec {
 
-  val camkpapiLayer = HttpClient.makeHttpClientLayer
-  val testLayer = zio.test.environment.testEnvironment ++ camkpapiLayer
+  val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer).mapError(TestFailure.die)
 
   val decoder = Decoder.decodeMap(KeyDecoder.decodeKeyString, Decoder.decodeString)
 
   val testDownloadParseAndFilter = suite("BiolinkTest")(
     testM("download, parse, & filter") {
-      val testCase = for {
+      for {
         httpClient <- HttpClient.client
         uri = uri"https://biolink.github.io/biolink-model/context.jsonld"
         request = Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`ld+json`),
@@ -33,10 +33,9 @@ object BiolinkTest extends DefaultRunnableSpec {
 //        _ <- ZIO.effect(Files.write(Paths.get("src/main/resources/prefixes.json"), filteredJson.toString().getBytes))
         map <- ZIO.fromEither(decoder.decodeJson(filteredJson))
       } yield assert(response)(isNonEmptyString) && assert(map.keys)(contains("NCBIGENE") && contains("CHEBI") && contains("GO"))
-      testCase.provideCustomLayer(testLayer)
     }
   )
 
-  def spec = suite("Biolink tests")(testDownloadParseAndFilter)
+  def spec = suite("Biolink tests")(testDownloadParseAndFilter).provideLayerShared(testLayer)
 
 }
