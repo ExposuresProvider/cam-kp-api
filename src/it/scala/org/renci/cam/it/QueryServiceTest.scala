@@ -125,7 +125,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 //        _ = println("response: " + response)
 //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-gene-to-process-to-process-to-gene.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testNegativeRegulationChaining = suite("testNegativeRegulationChaining")(
