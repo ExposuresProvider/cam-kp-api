@@ -68,7 +68,6 @@ object QueryServiceTest extends DefaultRunnableSpec {
       for {
         httpClient <- HttpClient.client
         biolinkData <- Biolink.biolinkData
-//        _ = println("biolinkData.prefixes: " + biolinkData.prefixes)
         encoded = {
           implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
           implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
@@ -81,7 +80,6 @@ object QueryServiceTest extends DefaultRunnableSpec {
         }
 //        _ = println("encoded: " + encoded)
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        //uri = uri"http://127.0.0.1:6434/query".withQueryParam("limit", 1) // python
         request = Request[Task](Method.POST, uri)
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
           .withEntity(encoded)
@@ -99,7 +97,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val n2Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val n3Node = TRAPIQueryNode(None, Some(BiolinkClass("Gene")), None)
       val e0Edge = TRAPIQueryEdge("n1", "n0", None, None)
-      val e1Edge = TRAPIQueryEdge("n1", "n2", None /*Some(CURIEorIRI(None, "enabled_by"))*/, None)
+      val e1Edge = TRAPIQueryEdge("n1", "n2", Some(BiolinkPredicate("enabled_by")), None)
       val e2Edge = TRAPIQueryEdge("n2", "n3", None, None)
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node, "n2" -> n2Node, "n3" -> n3Node),
                                        Map("e0" -> e0Edge, "e1" -> e1Edge, "e2" -> e2Edge))
@@ -120,7 +118,6 @@ object QueryServiceTest extends DefaultRunnableSpec {
         }
 //        _ = println("encoded: " + encoded)
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        //uri = uri"http://127.0.0.1:6434/query".withQueryParam("limit", 1) // python
         request = Request[Task](Method.POST, uri)
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
           .withEntity(encoded)
@@ -138,7 +135,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val n1Node =
         TRAPIQueryNode(Some(IRI("http://purl.obolibrary.org/obo/GO_0003810")), Some(BiolinkClass("BiologicalProcessOrActivity")), None)
       val n2Node = TRAPIQueryNode(None, Some(BiolinkClass("GeneOrGeneProduct")), None)
-      val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("PositivelyRegulates")), None)
+      val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("positively_regulates")), None)
       val e1Edge = TRAPIQueryEdge("n1", "n2", Some(BiolinkPredicate("enabled_by")), None)
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node, "n2" -> n2Node), Map("e0" -> e0Edge, "e1" -> e1Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -157,7 +154,6 @@ object QueryServiceTest extends DefaultRunnableSpec {
           requestBody.asJson.deepDropNullValues.noSpaces
         }
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        //uri = uri"http://127.0.0.1:6434/query".withQueryParam("limit", 1) // python
         request = Request[Task](Method.POST, uri)
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
           .withEntity(encoded)
@@ -165,7 +161,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 //        _ = println("response: " + response)
 //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   def spec = suite("QueryService tests")(testSimpleQuery,
