@@ -45,16 +45,16 @@ object QueryServiceTest extends DefaultRunnableSpec {
           val requestBody = TRAPIQuery(message)
           requestBody.asJson.deepDropNullValues.noSpaces
         }
-//        _ = println("encoded: " + encoded)
+        _ = println("encoded: " + encoded)
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
         request = Request[Task](Method.POST, uri)
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
           .withEntity(encoded)
         response <- httpClient.expect[String](request)
 //        _ = println("response: " + response)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-new.json"), response)
+//        _ = Files.writeString(Paths.get("src/test/resources/local-scala-new.json"), response)
       } yield assert(response)(isNonEmptyString)
-    }
+    } //@@ TestAspect.ignore
   )
 
   val testFindGenesEnablingAnyKindOfCatalyticActivity = suite("testFindGenesEnablingAnyKindOfCatalyticActivity")(
@@ -78,7 +78,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
             Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
           requestBody.asJson.deepDropNullValues.noSpaces
         }
-//        _ = println("encoded: " + encoded)
+        _ = println("encoded: " + encoded)
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
         request = Request[Task](Method.POST, uri)
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
@@ -87,7 +87,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 //        _ = println("response: " + response)
 //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-find-genes-enabling-catalytic-activity.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testGene2Process2Process2Gene = suite("testGene2Process2Process2Gene")(
@@ -116,7 +116,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
             Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
           requestBody.asJson.deepDropNullValues.noSpaces
         }
-//        _ = println("encoded: " + encoded)
+        _ = println("encoded: " + encoded)
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
         request = Request[Task](Method.POST, uri)
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
@@ -153,6 +153,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
             Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
           requestBody.asJson.deepDropNullValues.noSpaces
         }
+        _ = println("encoded: " + encoded)
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
         request = Request[Task](Method.POST, uri)
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
