@@ -55,7 +55,7 @@ libraryDependencies ++= {
     "org.http4s"                  %% "http4s-blaze-client"              % http4sVersion,
     "org.http4s"                  %% "http4s-circe"                     % http4sVersion,
     "org.apache.jena"              % "apache-jena-libs"                 % "3.16.0",
-    "org.phenoscape"              %% "sparql-utils"                     % "1.3",
+    "org.phenoscape"              %% "sparql-utils"                     % "1.3.1",
     "org.apache.commons"           % "commons-text"                     % "1.9",
     "org.apache.commons"           % "commons-csv"                      % "1.8",
     "io.circe"                    %% "circe-core"                       % circeVersion,
