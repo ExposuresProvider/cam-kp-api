@@ -39,7 +39,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
           val n0Node = TRAPIQueryNode(None, Some(BiolinkClass("Gene")), None)
           val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-          val e0Edge = TRAPIQueryEdge("n1", "n0", Some(BiolinkPredicate("has_participant")), None)
+          val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("has_participant")), None, "n1", "n0")
           val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
           val message = TRAPIMessage(Some(queryGraph), None, None)
           val requestBody = TRAPIQuery(message)
@@ -61,7 +61,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
     testM("find genes enabling any kind of catalytic activity") {
       val n0Node = TRAPIQueryNode(None, Some(BiolinkClass("GeneOrGeneProduct")), None)
       val n1Node = TRAPIQueryNode(Some(IRI("http://purl.obolibrary.org/obo/GO_0003824")), Some(BiolinkClass("MolecularActivity")), None)
-      val e0Edge = TRAPIQueryEdge("n1", "n0", Some(BiolinkPredicate("enabled_by")), None)
+      val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("enabled_by")), None, "n1", "n0")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
@@ -96,9 +96,9 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val n2Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
       val n3Node = TRAPIQueryNode(None, Some(BiolinkClass("Gene")), None)
-      val e0Edge = TRAPIQueryEdge("n1", "n0", None, None)
-      val e1Edge = TRAPIQueryEdge("n1", "n2", Some(BiolinkPredicate("enabled_by")), None)
-      val e2Edge = TRAPIQueryEdge("n2", "n3", None, None)
+      val e0Edge = TRAPIQueryEdge(None, None, "n1", "n0")
+      val e1Edge = TRAPIQueryEdge(Some(BiolinkPredicate("enabled_by")), None, "n1", "n2")
+      val e2Edge = TRAPIQueryEdge(None, None, "n2", "n3")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node, "n2" -> n2Node, "n3" -> n3Node),
                                        Map("e0" -> e0Edge, "e1" -> e1Edge, "e2" -> e2Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -135,8 +135,8 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val n1Node =
         TRAPIQueryNode(Some(IRI("http://purl.obolibrary.org/obo/GO_0003810")), Some(BiolinkClass("BiologicalProcessOrActivity")), None)
       val n2Node = TRAPIQueryNode(None, Some(BiolinkClass("GeneOrGeneProduct")), None)
-      val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("positively_regulates")), None)
-      val e1Edge = TRAPIQueryEdge("n1", "n2", Some(BiolinkPredicate("enabled_by")), None)
+      val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("positively_regulates")), None, "n0", "n1")
+      val e1Edge = TRAPIQueryEdge(Some(BiolinkPredicate("enabled_by")), None, "n1", "n2")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node, "n2" -> n2Node), Map("e0" -> e0Edge, "e1" -> e1Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
