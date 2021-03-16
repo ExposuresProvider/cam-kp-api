@@ -48,23 +48,12 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     testM("test QueryService.enforceQueryEdgeTypes") {
       val n0Node = TRAPIQueryNode(None, Some(BiolinkClass("Gene")), None)
       val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-      val e0Edge = TRAPIQueryEdge("n1", "n0", None, None)
+      val e0Edge = TRAPIQueryEdge(None, None, "n1", "n0")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       for {
         nodeTypes <- ZIO.effect(QueryService.enforceQueryEdgeTypes(queryGraph))
       } yield assert(nodeTypes.edges)(hasKey("e0")) && assert(nodeTypes.edges.get("e0").get.predicate.get)(
         equalTo(BiolinkPredicate("related_to")))
-    }
-  )
-
-  val testGetTRAPIEdges = suite("testGetTRAPIEdges")(
-    testM("test QueryService.getTRAPIEdges") {
-      val (queryGraph, resultSet) = getSimpleData
-      for {
-        trapiEdges <- QueryService.getTRAPIEdges(queryGraph, resultSet.asScala.toList)
-      } yield assert(trapiEdges.values.map(a => (a.subject, a.`object`)))(
-        contains((IRI("http://purl.obolibrary.org/obo/GO_0008150"),
-                  IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103"))))
     }
   )
 
@@ -83,11 +72,10 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   def getSimpleData: (TRAPIQueryGraph, ResultSet) = {
     val n0Node = TRAPIQueryNode(None, Some(BiolinkClass("Gene")), None)
     val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-    val e0Edge = TRAPIQueryEdge("n1", "n0", None, None)
+    val e0Edge = TRAPIQueryEdge(None, None, "n1", "n0")
     val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
 
-    val response = """
-        {
+    val response = """{
           "head" : {
             "vars" : [ "e0", "n1", "n0", "n0_type", "n1_type" ]
           },
@@ -129,7 +117,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         IRI("http://purl.obolibrary.org/obo/GO_0017064")
       )
       for {
-        queryText <- QueryService.getTRAPINodeDetailsQueryText(nodeIdList, BiolinkClass("NamedThing"))
+        queryText <- Task.effect(QueryService.getTRAPINodeDetailsQueryText(nodeIdList, BiolinkClass("NamedThing")))
       } yield assert(queryText.text)(
         containsString("VALUES ?term {  <http://purl.obolibrary.org/obo/GO_0047196>  <http://purl.obolibrary.org/obo/GO_0017064>  }"))
     },
@@ -149,7 +137,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
             )
           )
         )
-        queryText <- QueryService.getProvenanceQueryText(edges)
+        queryText <- Task.effect(QueryService.getProvenanceQueryText(edges))
       } yield assert(queryText.text)(
         containsString(
           "( <http://model.geneontology.org/R-HSA-163567_R-HSA-163595_controller> <http://purl.obolibrary.org/obo/BFO_0000050> <http://model.geneontology.org/reaction_R-HSA-163595_location_lociGO_0005811> )"
@@ -161,7 +149,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     },
     testM("test QueryService.getCAMStuffQueryText") {
       for {
-        queryText <- QueryService.getCAMStuffQueryText(IRI("http://model.geneontology.org/R-HSA-2142753"))
+        queryText <- Task.effect(QueryService.getCAMStuffQueryText(IRI("http://model.geneontology.org/R-HSA-2142753")))
       } yield assert(queryText.text)(containsString("{ GRAPH <http://model.geneontology.org/R-HSA-2142753>"))
     },
     testM("test QueryService.getSlotStuffQueryText") {
@@ -177,7 +165,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
             IRI("http://purl.obolibrary.org/obo/RO_0002233")
           )
         )
-        queryText <- QueryService.getSlotStuffQueryText(predicates)
+        queryText <- Task.effect(QueryService.getSlotStuffQueryText(predicates))
       } yield assert(queryText.text)(
         containsString("( <http://purl.obolibrary.org/obo/RO_0002333> \"e0000\" )") &&
           containsString("( <http://purl.obolibrary.org/obo/BFO_0000066> \"e0001\" )") &&
@@ -190,7 +178,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     },
     testM("test QueryService.getTRAPIQEdgePredicatesQueryText") {
       for {
-        queryText <- QueryService.getTRAPIQEdgePredicatesQueryText(BiolinkPredicate("has_participant").iri)
+        queryText <- Task.effect(QueryService.getTRAPIQEdgePredicatesQueryText(BiolinkPredicate("has_participant").iri))
       } yield assert(queryText.text)(
         containsString("?predicate <http://cam.renci.org/biolink_slot> <https://w3id.org/biolink/vocab/has_participant> ."))
     }
@@ -223,12 +211,11 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   def spec = suite("QueryService tests")(
     testGetNodeTypes,
     testEnforceQueryEdgeTypes,
-    testGetTRAPIEdges,
     testGetTRAPINodeBindings,
     testQueryTexts,
     testGetNodesToDirectTypes,
     testGetLimit,
     testGetProjections
-  )
+  ) @@ TestAspect.sequential
 
 }

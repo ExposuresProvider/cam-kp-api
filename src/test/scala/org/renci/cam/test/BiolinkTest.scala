@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.renci.cam.Biolink
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio.test.Assertion._
-import zio.test.{assert, suite, testM, DefaultRunnableSpec}
+import zio.test.{DefaultRunnableSpec, TestAspect, assert, suite, testM}
 
 object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
 
@@ -35,6 +35,6 @@ object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
   )
 
   def spec =
-    suite("Biolink tests")(testLocalPrefixes, testGetBiolinkPrefixesFromFile, testGetBiolinkPrefixesAndClassesAndPredicatesFromFile)
+    suite("Biolink tests")(testLocalPrefixes, testGetBiolinkPrefixesFromFile, testGetBiolinkPrefixesAndClassesAndPredicatesFromFile)  @@ TestAspect.sequential
 
 }
