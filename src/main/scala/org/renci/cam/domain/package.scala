@@ -60,7 +60,7 @@ package object domain {
       if (label.contains("_")) {
         BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}${CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, label)}"))
       } else {
-        BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}${StringUtils.capitalize(label)}"))
+        BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}$label"))
       }
 
   }

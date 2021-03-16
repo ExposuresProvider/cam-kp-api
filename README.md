@@ -8,4 +8,4 @@
 
 - `sbt docker:stage`
 - `sbt docker:publishLocal`
-- `docker run -p 8080:8080 -it cam-kp-api:0.1` (or detached mode: `docker run -p 8080:8080 -d cam-kp-api:0.1`)
+- `docker run -p 8080:8080 -it renciorg/cam-kp-api:0.1` (or detached mode: `docker run -p 8080:8080 -d renciorg/cam-kp-api:0.1`)
