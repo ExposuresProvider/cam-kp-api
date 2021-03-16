@@ -1,7 +1,6 @@
 package org.renci.cam
 
 import java.util.Properties
-
 import cats.effect.Blocker
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
@@ -15,9 +14,9 @@ import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger, _}
-import org.renci.cam.Biolink._
-import org.renci.cam.HttpClient.HttpClient
+import HttpClient.HttpClient
 import org.renci.cam.domain._
+import org.renci.cam.Biolink._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._
@@ -25,9 +24,9 @@ import sttp.tapir.openapi.{Contact, Info, License}
 import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.ztapir._
 import zio._
-import zio.blocking.{blocking, Blocking}
+import zio.blocking.{Blocking, blocking}
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{getConfig, ZConfig}
+import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 
@@ -73,7 +72,7 @@ object Server extends App with LazyLogging {
       biolinkData <- biolinkData
     } yield {
       implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-      implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoderOut(biolinkData.prefixes)
+      implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
       implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
       implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
       implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
@@ -99,8 +98,7 @@ object Server extends App with LazyLogging {
           ZIO
             .fromOption(body.message.query_graph)
             .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
-        results <- QueryService.run(limit, queryGraph)
-        message <- QueryService.parseResultSet(queryGraph, results)
+        message <- QueryService.run(limit, queryGraph)
       } yield TRAPIResponse(message, Some("Success"), None, None)
       program.mapError(error => error.getMessage)
     }
@@ -136,7 +134,7 @@ object Server extends App with LazyLogging {
                 "info": {
                   "x-translator": {
                     "component": "KP",
-                    "team": "Exposures Provider"
+                    "team": ["Exposures Provider"]
                   }
                 }
              }
