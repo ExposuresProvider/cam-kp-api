@@ -6,20 +6,16 @@ import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{Query, QuerySolution, ResultSet, ResultSetFactory}
 import org.http4s._
-import org.http4s.client.Client
-import org.http4s.client.blaze.BlazeClientBuilder
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.phenoscape.sparql.FromQuerySolution
-import org.renci.cam.HttpClient.HttpClient
+import HttpClient.HttpClient
 import zio.ZIO.ZIOAutoCloseableOps
-import zio._
 import zio.config.ZConfig
 import zio.interop.catz._
-import zio.{RIO, Task, TaskManaged, UIO, ZIO, config => _}
+import zio.{RIO, Task, ZIO, config => _}
 
-import scala.collection.JavaConverters._
-import scala.concurrent.duration.{Duration, MINUTES}
+import scala.jdk.CollectionConverters._
 
 object SPARQLQueryExecutor extends LazyLogging {
 

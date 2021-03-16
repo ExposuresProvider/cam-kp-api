@@ -1,6 +1,7 @@
 package org.renci.cam
 
 import io.circe.Json
+import org.apache.commons.lang3.StringUtils
 import org.http4s.circe._
 import org.http4s.headers.Accept
 import org.http4s.implicits._
@@ -50,7 +51,7 @@ object Biolink {
       source <- Managed.fromAutoCloseable(Task.effect(Source.fromInputStream(fileStream)))
     } yield source
     for {
-      prefixesStr <- sourceManaged.use(source => ZIO.effect(source.getLines.mkString))
+      prefixesStr <- sourceManaged.use(source => ZIO.effect(source.getLines().mkString))
       prefixesJson <- Task.effect(io.circe.parser.parse(prefixesStr).getOrElse(Json.Null))
       curies <- ZIO.fromEither(prefixesJson.as[Map[String, String]])
     } yield curies
@@ -62,14 +63,15 @@ object Biolink {
       source <- Managed.fromAutoCloseable(Task.effect(Source.fromInputStream(fileStream)))
     } yield source
     for {
-      prefixesStr <- sourceManaged.use(source => ZIO.effect(source.getLines.mkString))
+      prefixesStr <- sourceManaged.use(source => ZIO.effect(source.getLines().mkString))
       prefixesJson <- ZIO.fromEither(io.circe.parser.parse(prefixesStr))
       prefixes <- ZIO.fromEither(prefixesJson.as[Map[String, String]])
     } yield prefixes
   }
 
   // originates from https://biolink.github.io/biolink-model/biolink-model.yaml
-  def getBiolinkPrefixesAndClassesAndPredicatesFromFile: ZIO[Any, Throwable, (Map[String, String], List[BiolinkClass], List[BiolinkPredicate])] = {
+  def getBiolinkPrefixesAndClassesAndPredicatesFromFile
+    : ZIO[Any, Throwable, (Map[String, String], List[BiolinkClass], List[BiolinkPredicate])] = {
     val sourceManaged = for {
       source <-
         Managed.fromAutoCloseable(Task.effect(Source.fromInputStream(getClass.getClassLoader.getResourceAsStream("biolink-model.yaml"))))
@@ -78,9 +80,9 @@ object Biolink {
       slotsStr <- sourceManaged.use(source => ZIO.effect(source.mkString))
       json <- ZIO.fromEither(io.circe.yaml.parser.parse(slotsStr))
       classesKeys <- ZIO.fromOption(json.hcursor.downField("classes").keys).orElseFail(throw new Exception("couldn't get classes"))
-      classes = classesKeys.map(a => BiolinkClass(a.replaceAll(" ", "_"))).toList
+      classes = classesKeys.map(a => a.split(" ").toList.map(a => StringUtils.capitalize(a)).mkString).map(a => BiolinkClass(a)).toList
       predicateKeys <- ZIO.fromOption(json.hcursor.downField("slots").keys).orElseFail(throw new Exception("couldn't get slots"))
-      predicates = predicateKeys.map(a => BiolinkPredicate(a.replaceAll(" ", "_"))).toList
+      predicates = predicateKeys.map(a => BiolinkPredicate(a.replaceAll(",", "").replaceAll(" ", "_"))).toList
       prefixes <- ZIO.fromOption(json.hcursor.downField("prefixes").focus).orElseFail(throw new Exception("couldn't get prefixes"))
       prefixesMap <- ZIO.fromEither(prefixes.as[Map[String, String]])
     } yield (prefixesMap, classes, predicates)
