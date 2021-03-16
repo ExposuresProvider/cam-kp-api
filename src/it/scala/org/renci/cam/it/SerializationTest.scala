@@ -11,8 +11,6 @@ import zio.test.Assertion._
 import zio.test._
 import zio.test.environment.testEnvironment
 
-import java.nio.file.{Files, Paths}
-
 object SerializationTest extends DefaultRunnableSpec {
 
   val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer).mapError(TestFailure.die)
@@ -24,7 +22,7 @@ object SerializationTest extends DefaultRunnableSpec {
 
       val n0Node = TRAPIQueryNode(Some(IRI("http://identifiers.org/ncbigene/558")), Some(BiolinkClass("Gene")), None)
       val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-      val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("has_participant")), None)
+      val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("has_participant")), None, "n0", "n1")
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -62,7 +60,7 @@ object SerializationTest extends DefaultRunnableSpec {
 
       val n0Node = TRAPIQueryNode(Some(IRI("http://identifiers.org/ncbigene/558")), Some(BiolinkClass("Gene")), None)
       val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-      val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("has_participant")), None)
+      val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("has_participant")), None, "n0", "n1")
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -85,7 +83,7 @@ object SerializationTest extends DefaultRunnableSpec {
     testM("decoding") {
       val n0Node = TRAPIQueryNode(Some(IRI("http://identifiers.org/ncbigene/558")), Some(BiolinkClass("Gene")), None)
       val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-      val e0Edge = TRAPIQueryEdge("n0", "n1", Some(BiolinkPredicate("has_participant")), None)
+      val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("has_participant")), None, "n0", "n1")
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
