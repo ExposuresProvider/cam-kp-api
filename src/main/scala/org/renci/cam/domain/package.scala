@@ -60,7 +60,7 @@ package object domain {
       if (label.contains("_")) {
         BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}${CaseFormat.LOWER_UNDERSCORE.to(CaseFormat.UPPER_CAMEL, label)}"))
       } else {
-        BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}$label"))
+        BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}${StringUtils.capitalize(label)}"))
       }
 
   }
@@ -89,25 +89,25 @@ package object domain {
 
   final case class TRAPIQueryNode(id: Option[IRI], category: Option[BiolinkClass], is_set: Option[Boolean])
 
-  final case class TRAPIQueryEdge(subject: String, `object`: String, predicate: Option[BiolinkPredicate], relation: Option[String])
+  final case class TRAPIQueryEdge(predicate: Option[BiolinkPredicate], relation: Option[String], subject: String, `object`: String)
 
   final case class TRAPIQueryGraph(nodes: Map[String, TRAPIQueryNode], edges: Map[String, TRAPIQueryEdge])
 
   final case class TRAPINode(name: Option[String], category: Option[List[BiolinkClass]], attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPIEdge(subject: IRI,
-                             `object`: IRI,
+  final case class TRAPIEdge(predicate: Option[BiolinkPredicate],
                              relation: Option[String],
-                             predicate: Option[BiolinkPredicate],
+                             subject: IRI,
+                             `object`: IRI,
                              attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPIAttribute(name: Option[String], value: String, `type`: IRI, url: Option[String])
+  final case class TRAPIAttribute(name: Option[String], value: String, `type`: IRI, url: Option[String], source: Option[String])
 
   final case class TRAPIKnowledgeGraph(nodes: Map[IRI, TRAPINode], edges: Map[String, TRAPIEdge])
 
   final case class TRAPINodeBinding(id: IRI)
 
-  final case class TRAPIEdgeBinding(id: String, provenance: Option[String])
+  final case class TRAPIEdgeBinding(id: String)
 
   final case class TRAPIResult(node_bindings: Map[String, List[TRAPINodeBinding]], edge_bindings: Map[String, List[TRAPIEdgeBinding]])
 
