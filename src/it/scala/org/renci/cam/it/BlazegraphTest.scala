@@ -78,7 +78,7 @@ object BlazegraphTest extends DefaultRunnableSpec {
         request = Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json),
                                                               `Content-Type`(MediaType.application.json))
         response <- httpClient.expect[String](request)
-//        _ = println(response)
+        _ = println(response)
       } yield assert(response)(isNonEmptyString)
     }
   )
