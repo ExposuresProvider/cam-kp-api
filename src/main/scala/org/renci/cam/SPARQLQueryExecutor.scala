@@ -9,7 +9,7 @@ import org.http4s._
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.phenoscape.sparql.FromQuerySolution
-import org.renci.cam.HttpClient.HttpClient
+import HttpClient.HttpClient
 import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.ZConfig
 import zio.interop.catz._
