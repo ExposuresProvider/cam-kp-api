@@ -187,7 +187,7 @@ object QueryService extends LazyLogging {
             for {
               source <- ZIO.fromOption(nodeMap.get(v.subject)).orElseFail(new Exception("could not get source id"))
               target <- ZIO.fromOption(nodeMap.get(v.`object`)).orElseFail(new Exception("could not get target id"))
-            } yield getTRAPIEdgeKey(v.predicate, v.subject, v.`object`) -> TRAPIEdge(source, target, None, v.predicate, None)
+            } yield getTRAPIEdgeKey(v.predicate, source.value, target.value) -> TRAPIEdge(source, target, None, v.predicate, None)
           }
         } yield edges.toList
       }
@@ -283,8 +283,10 @@ object QueryService extends LazyLogging {
             for {
               predicateRDFNode <- Task.effect(querySolution.get(k).toString)
               sourceRDFNode <- Task.effect(querySolution.get(v.subject).toString)
+              sourceType <- Task.effect(querySolution.get(s"${v.subject}_type").toString)
               targetRDFNode <- Task.effect(querySolution.get(v.`object`).toString)
-              edgeKey = getTRAPIEdgeKey(v.predicate, sourceRDFNode, targetRDFNode)
+              targetType <- Task.effect(querySolution.get(s"${v.`object`}_type").toString)
+              edgeKey = getTRAPIEdgeKey(v.predicate, sourceType, targetType)
             } yield k -> List(TRAPIEdgeBinding(edgeKey, provs.get(TripleString(sourceRDFNode, predicateRDFNode, targetRDFNode))))
           }
         } yield querySolution -> edgeBindings
