@@ -198,12 +198,10 @@ object QueryService extends LazyLogging {
               source = querySolution.getResource(v.subject).getURI
               predicate = querySolution.getResource(k).getURI
               target = querySolution.getResource(v.`object`).getURI
-              edgeKey = TRAPIEdgeKey(sourceType.value, v.predicate, targetType.value).asJson.deepDropNullValues.noSpaces
               tripleString = TripleString(source, predicate, target)
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
-              encodedTRAPIEdge = String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
               attributes = List(TRAPIAttribute(Some("provenance"), provValue, IRI(source), None, None))
-            } yield encodedTRAPIEdge -> TRAPIEdge(v.predicate, None, sourceType, targetType, Some(attributes))
+            } yield getTRAPIEdgeKey(sourceType.value, v.predicate, targetType.value) -> TRAPIEdge(v.predicate, None, sourceType, targetType, Some(attributes))
           }
         } yield edges.toList
       }
@@ -286,8 +284,6 @@ object QueryService extends LazyLogging {
         for {
           edgeBindings <- ZIO.foreach(queryGraph.edges) { (k, v) =>
             for {
-              sourceRDFNode <- Task.effect(querySolution.get(v.subject).toString)
-              targetRDFNode <- Task.effect(querySolution.get(v.`object`).toString)
               sourceType <- Task.effect(querySolution.get(s"${v.subject}_type").toString)
               targetType <- Task.effect(querySolution.get(s"${v.`object`}_type").toString)
               edgeKey = getTRAPIEdgeKey(sourceType, v.predicate, targetType)
