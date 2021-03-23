@@ -15,6 +15,8 @@ import zio.test.Assertion._
 import zio.test._
 import zio.test.environment.testEnvironment
 
+import java.nio.file.{Files, Paths}
+
 object QueryServiceTest extends DefaultRunnableSpec {
 
   val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
@@ -50,7 +52,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
           .withEntity(encoded)
         response <- httpClient.expect[String](request)
 //        _ = println("response: " + response)
-//        _ = Files.writeString(Paths.get("src/test/resources/local-scala-new.json"), response)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
       } yield assert(response)(isNonEmptyString)
     } //@@ TestAspect.ignore
   )
@@ -204,7 +206,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         TRAPIQueryNode(Some(IRI("DRUGBANK:DB00394")), Some(BiolinkClass("Drug")), None)
       val n1Node =
         TRAPIQueryNode(None, Some(BiolinkClass("Disease")), None)
-      val e0Edge = TRAPIQueryEdge(None, None, "n1", "n0")
+      val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("treated_by")), None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
@@ -274,7 +276,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         TRAPIQueryNode(Some(IRI("NCBIGENE:1017")), Some(BiolinkClass("Gene")), None)
       val n1Node =
         TRAPIQueryNode(None, Some(BiolinkClass("Pathway")), None)
-      val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("correlated_with")), None, "n0", "n1")
+      val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
