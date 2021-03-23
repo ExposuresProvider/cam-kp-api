@@ -23,11 +23,23 @@ object Biolink {
   def getBiolinkData: ZIO[HttpClient, Throwable, BiolinkData] =
     for {
       (biolinkPrefixes, classes, predicates) <- getBiolinkPrefixesAndClassesAndPredicatesFromFile
-      local <- localPrefixes
-//      prefixes <- getBiolinkPrefixesFromFile
+      legacy <- localPrefixes
       prefixes <- getBiolinkPrefixesFromURL.orElse(getBiolinkPrefixesFromFile)
-      combined = local ++ biolinkPrefixes ++ prefixes
+      prefixOverrides <- getPrefixOverrides
+      combined = legacy ++ biolinkPrefixes ++ prefixes ++ prefixOverrides
     } yield BiolinkData(combined, classes, predicates)
+
+  def getPrefixOverrides: ZIO[Any, Throwable, Map[String, String]] = {
+    val sourceManaged = for {
+      fileStream <- Managed.fromAutoCloseable(Task.effect(getClass.getClassLoader.getResourceAsStream("prefixesOverrides.json")))
+      source <- Managed.fromAutoCloseable(Task.effect(Source.fromInputStream(fileStream)))
+    } yield source
+    for {
+      prefixesStr <- sourceManaged.use(source => ZIO.effect(source.getLines().mkString))
+      prefixesJson <- Task.effect(io.circe.parser.parse(prefixesStr).getOrElse(Json.Null))
+      mappings <- ZIO.fromEither(prefixesJson.as[Map[String, String]])
+    } yield mappings
+  }
 
   def getBiolinkPrefixesFromURL: ZIO[HttpClient, Throwable, Map[String, String]] =
     for {
