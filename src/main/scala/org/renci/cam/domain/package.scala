@@ -73,7 +73,26 @@ package object domain {
 
   object BiolinkPredicate {
 
-    def apply(label: String): BiolinkPredicate = BiolinkPredicate(label, IRI(s"${BiolinkTerm.namespace}$label"))
+    implicit val embedInSPARQL = SPARQLInterpolator.embed[BiolinkPredicate](Case(SPARQLContext, SPARQLContext) { pred =>
+      val pss = new ParameterizedSparqlString()
+      pss.appendIri(pred.iri.value)
+      pss.toString
+    })
+
+    implicit object BiolinkPredicateFromQuerySolution extends FromQuerySolution[BiolinkPredicate] {
+
+      def fromQuerySolution(qs: QuerySolution, variablePath: String = ""): Try[BiolinkPredicate] =
+        getResource(qs, variablePath).map(r => BiolinkPredicate(r.getURI))
+
+    }
+
+    def apply(label: String): BiolinkPredicate = {
+      if (!label.startsWith(BiolinkTerm.namespace)) {
+        BiolinkPredicate(label, IRI(s"${BiolinkTerm.namespace}$label"))
+      } else {
+        BiolinkPredicate(label, IRI(s"$label"))
+      }
+    }
 
   }
 
@@ -89,7 +108,7 @@ package object domain {
 
   final case class TRAPIQueryNode(id: Option[IRI], category: Option[BiolinkClass], is_set: Option[Boolean])
 
-  final case class TRAPIQueryEdge(predicate: Option[BiolinkPredicate], relation: Option[String], subject: String, `object`: String)
+  final case class TRAPIQueryEdge(predicate: Option[List[BiolinkPredicate]], relation: Option[String], subject: String, `object`: String)
 
   final case class TRAPIQueryGraph(nodes: Map[String, TRAPIQueryNode], edges: Map[String, TRAPIQueryEdge])
 
