@@ -182,7 +182,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         pred <- Task.effect(sparql" ${BiolinkPredicate("has_participant")} ")
         queryText <- Task.effect(QueryService.getTRAPIQEdgePredicatesQueryText(pred))
       } yield assert(queryText.text)(
-        containsString("?predicate <http://cam.renci.org/biolink_slot> <https://w3id.org/biolink/vocab/has_participant> ."))
+        containsString("?biolinkPredicate {  <https://w3id.org/biolink/vocab/has_participant>  }"))
     }
   )
 
