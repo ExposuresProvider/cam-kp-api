@@ -3,6 +3,7 @@ package org.renci.cam.test
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{ResultSet, ResultSetFactory}
+import org.phenoscape.sparql.SPARQLInterpolation.SPARQLStringContext
 import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam.QueryService.TermWithLabelAndBiolinkType
 import org.renci.cam._
@@ -53,7 +54,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
       for {
         nodeTypes <- ZIO.effect(QueryService.enforceQueryEdgeTypes(queryGraph))
       } yield assert(nodeTypes.edges)(hasKey("e0")) && assert(nodeTypes.edges.get("e0").get.predicate.get)(
-        equalTo(BiolinkPredicate("related_to")))
+        equalTo(List(BiolinkPredicate("related_to"))))
     }
   )
 
@@ -178,7 +179,8 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     },
     testM("test QueryService.getTRAPIQEdgePredicatesQueryText") {
       for {
-        queryText <- Task.effect(QueryService.getTRAPIQEdgePredicatesQueryText(BiolinkPredicate("has_participant").iri))
+        pred <- Task.effect(sparql" ${BiolinkPredicate("has_participant")} ")
+        queryText <- Task.effect(QueryService.getTRAPIQEdgePredicatesQueryText(pred))
       } yield assert(queryText.text)(
         containsString("?predicate <http://cam.renci.org/biolink_slot> <https://w3id.org/biolink/vocab/has_participant> ."))
     }
