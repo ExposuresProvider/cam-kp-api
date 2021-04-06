@@ -18,11 +18,11 @@ object SerializationTest extends DefaultRunnableSpec {
   val testTRAPIQueryRequestBodyEncodingOut = suite("testTRAPIQueryRequestBodyEncodingOut")(
     testM("encoding upon departure") {
       val expected =
-        """{"message":{"query_graph":{"nodes":{"n0":{"id":"NCBIGENE:558","category":"biolink:Gene"},"n1":{"category":"biolink:BiologicalProcess"}},"edges":{"e0":{"predicate":"biolink:has_participant","subject":"n0","object":"n1"}}}}}"""
+        """{"message":{"query_graph":{"nodes":{"n0":{"id":"NCBIGENE:558","category":"biolink:Gene"},"n1":{"category":"biolink:BiologicalProcess"}},"edges":{"e0":{"predicate":["biolink:has_participant"],"subject":"n0","object":"n1"}}}}}"""
 
       val n0Node = TRAPIQueryNode(Some(IRI("http://identifiers.org/ncbigene/558")), Some(BiolinkClass("Gene")), None)
       val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-      val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("has_participant")), None, "n0", "n1")
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n0", "n1")
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -56,11 +56,11 @@ object SerializationTest extends DefaultRunnableSpec {
   val testTRAPIQueryRequestBodyEncodingIn = suite("testTRAPIQueryRequestBodyEncodingIn")(
     testM("encoding upon arrival") {
       val expected =
-        """{"message":{"query_graph":{"nodes":{"n0":{"id":"http://identifiers.org/ncbigene/558","category":"https://w3id.org/biolink/vocab/Gene"},"n1":{"category":"https://w3id.org/biolink/vocab/BiologicalProcess"}},"edges":{"e0":{"predicate":"https://w3id.org/biolink/vocab/has_participant","subject":"n0","object":"n1"}}}}}"""
+        """{"message":{"query_graph":{"nodes":{"n0":{"id":"http://identifiers.org/ncbigene/558","category":"https://w3id.org/biolink/vocab/Gene"},"n1":{"category":"https://w3id.org/biolink/vocab/BiologicalProcess"}},"edges":{"e0":{"predicate":["https://w3id.org/biolink/vocab/has_participant"],"subject":"n0","object":"n1"}}}}}"""
 
       val n0Node = TRAPIQueryNode(Some(IRI("http://identifiers.org/ncbigene/558")), Some(BiolinkClass("Gene")), None)
       val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-      val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("has_participant")), None, "n0", "n1")
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n0", "n1")
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -83,7 +83,7 @@ object SerializationTest extends DefaultRunnableSpec {
     testM("decoding") {
       val n0Node = TRAPIQueryNode(Some(IRI("http://identifiers.org/ncbigene/558")), Some(BiolinkClass("Gene")), None)
       val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-      val e0Edge = TRAPIQueryEdge(Some(BiolinkPredicate("has_participant")), None, "n0", "n1")
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n0", "n1")
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
