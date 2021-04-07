@@ -28,10 +28,14 @@ object BiolinkTest extends DefaultRunnableSpec {
         response <- httpClient.expect[String](request)
         parsed <- ZIO.fromEither(parse(response))
         contextJson <- ZIO.fromOption(parsed.hcursor.downField("@context").focus)
-        filteredJson = contextJson.deepDropNullValues.mapObject(f =>
-          f.filter(pred => pred._2.isString && pred._1 != "type" && pred._1 != "id" && pred._1 != "@vocab"))
-//        _ <- ZIO.effect(Files.write(Paths.get("src/main/resources/prefixes.json"), filteredJson.toString().getBytes))
-        map <- ZIO.fromEither(decoder.decodeJson(filteredJson))
+        contextJsonObject <- ZIO.fromOption(contextJson.asObject)
+        firstPass = contextJsonObject.toIterable.filter(entry => entry._2.isObject && entry._2.asObject.get.contains("@id") && entry._2.asObject.get.contains("@prefix")).map(entry => {
+          entry._1 -> entry._2.hcursor.downField("@id").focus.get.toString()
+        }).toMap
+        secondPass = contextJsonObject.toIterable.filter(entry => entry._2.isString).map(entry => {
+          entry._1 -> entry._2.toString()
+        }).toMap
+        map = firstPass ++ secondPass
       } yield assert(response)(isNonEmptyString) && assert(map.keys)(contains("NCBIGENE") && contains("CHEBI") && contains("GO"))
     }
   )
