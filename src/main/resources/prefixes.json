@@ -122,6 +122,7 @@
   "PUBCHEM.COMPOUND" : "http://identifiers.org/pubchem.compound/",
   "PUBCHEM.SUBSTANCE" : "http://identifiers.org/pubchem.substance/",
   "PathWhiz" : "http://smpdb.ca/pathways/#",
+  "REACTO" : "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#",
   "REACT" : "http://www.reactome.org/PathwayBrowser/#/",
   "REPODB" : "http://apps.chiragjpgroup.org/repoDB/",
   "RFAM" : "http://identifiers.org/rfam/",
