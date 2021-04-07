@@ -54,7 +54,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 //        _ = println("response: " + response)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } //@@ TestAspect.ignore
+    } @@ TestAspect.ignore
   )
 
   val testFindGenesEnablingAnyKindOfCatalyticActivity = suite("testFindGenesEnablingAnyKindOfCatalyticActivity")(
@@ -354,12 +354,12 @@ object QueryServiceTest extends DefaultRunnableSpec {
         BiolinkPredicate("decreases_expression_of"),
         BiolinkPredicate("increases_degradation_of"),
         BiolinkPredicate("negatively_regulates__entity_to_entity"),
-        BiolinkPredicate("disrupts")
-//        BiolinkPredicate("directly_negatively_regulates"),
-//        BiolinkPredicate("inhibits"),
-//        BiolinkPredicate("inhibitor"),
-//        BiolinkPredicate("channel_blocker"),
-//        BiolinkPredicate("may_inhibit_effect_of")
+        BiolinkPredicate("disrupts"),
+        BiolinkPredicate("directly_negatively_regulates"),
+        BiolinkPredicate("inhibits"),
+        BiolinkPredicate("inhibitor"),
+        BiolinkPredicate("channel_blocker"),
+        BiolinkPredicate("may_inhibit_effect_of")
       )
       val e0Edge = TRAPIQueryEdge(Some(predicateList), None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n1Node, "n1" -> n0Node), Map("e0" -> e0Edge))
