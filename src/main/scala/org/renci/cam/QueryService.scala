@@ -56,10 +56,10 @@ object QueryService extends LazyLogging {
 
   def run(limit: Option[Int],
           submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], TRAPIMessage] = {
-    val queryGraph = enforceQueryEdgeTypes(submittedQueryGraph)
-    val nodeTypes = getNodeTypes(queryGraph.nodes)
     for {
       biolinkData <- biolinkData
+      queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+      nodeTypes = getNodeTypes(queryGraph.nodes)
       namedThingBiolinkClass <- ZIO
         .fromOption(biolinkData.classes.find(a => a.shorthand == "NamedThing"))
         .orElseFail(new Exception("Could not find BiolinkClass:NamedThing"))
@@ -89,7 +89,8 @@ object QueryService extends LazyLogging {
         id <- edges.flatMap(a => List(a.subject, a.`object`))
         subjVar = Var(id)
         v <- nodeTypes.get(id)
-      } yield sparql"$subjVar $RDFType $v ."
+        ret = sparql"$subjVar $RDFType $v ."
+      } yield ret
       valuesClause = (sparqlLines ++ moreLines).fold(sparql"")(_ + _)
       limitSparql = getLimit(limit)
       queryString =
@@ -172,13 +173,14 @@ object QueryService extends LazyLogging {
     projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
   }
 
-  def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph): TRAPIQueryGraph = {
+  def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph, biolinkPredicates: List[BiolinkPredicate]): TRAPIQueryGraph = {
     val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
       val newPredicate = edge.predicate match {
         case None          => Some(List(BiolinkPredicate("related_to")))
         case somePredicate => somePredicate
       }
-      edgeID -> edge.copy(predicate = newPredicate)
+      val filteredPredicates = newPredicate.get.filter(pred => biolinkPredicates.contains(pred))
+      edgeID -> edge.copy(predicate = Some(filteredPredicates))
     }
     queryGraph.copy(edges = improvedEdgeMap)
   }
