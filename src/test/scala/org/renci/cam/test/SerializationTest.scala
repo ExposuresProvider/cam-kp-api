@@ -26,11 +26,11 @@ object SerializationTest extends DefaultRunnableSpec {
       for {
         messageDigest <- Task.effect(MessageDigest.getInstance("SHA-256"))
         firstTRAPIEdge <- Task.effect(
-          TRAPIEdgeKey(Some(BiolinkPredicate("asdfasdf")), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces
+          TRAPIEdgeKey("qwerqwer", Some(BiolinkPredicate("asdfasdf")), "zxcvzxcv").asJson.deepDropNullValues.noSpaces
             .getBytes(StandardCharsets.UTF_8))
         first <- Task.effect(String.format("%064x", new BigInteger(1, messageDigest.digest(firstTRAPIEdge))))
         secondTRAPIEdge <- Task.effect(
-          TRAPIEdgeKey(Some(BiolinkPredicate("asdfasdf")), "qwerqwer", "zxcvzxcv").asJson.deepDropNullValues.noSpaces
+          TRAPIEdgeKey("qwerqwer", Some(BiolinkPredicate("asdfasdf")), "zxcvzxcv").asJson.deepDropNullValues.noSpaces
             .getBytes(StandardCharsets.UTF_8))
         second <- Task.effect(String.format("%064x", new BigInteger(1, messageDigest.digest(secondTRAPIEdge))))
       } yield assert(first)(equalTo(second))
@@ -140,6 +140,6 @@ object SerializationTest extends DefaultRunnableSpec {
     }
   )
 
-  def spec = suite("Serialization tests")(testingMessageDigest, testParseBlazegraphResponse, testParseBlazegraphEmptyResults)
+  def spec = suite("Serialization tests")(testingMessageDigest, testParseBlazegraphResponse, testParseBlazegraphEmptyResults)  @@ TestAspect.sequential
 
 }

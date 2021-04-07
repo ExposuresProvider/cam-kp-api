@@ -35,13 +35,11 @@ object QueryService extends LazyLogging {
 
   val BiolinkMLIsA: IRI = IRI("https://w3id.org/biolink/biolinkml/meta/is_a")
 
-//  val BiolinkNamedThing: IRI = IRI("https://w3id.org/biolink/vocab/NamedThing")
-
   val RDFSSubPropertyOf: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#subPropertyOf")
 
-  val SlotMapping = IRI("http://cam.renci.org/biolink_slot")
+  val SlotMapping: IRI = IRI("http://cam.renci.org/biolink_slot")
 
-  final case class TRAPIEdgeKey(`type`: Option[BiolinkPredicate], source_id: String, target_id: String)
+  final case class TRAPIEdgeKey(source_id: String, `type`: Option[BiolinkPredicate], target_id: String)
 
   final case class Triple(subj: IRI, pred: IRI, obj: IRI)
 
@@ -51,7 +49,7 @@ object QueryService extends LazyLogging {
 
   final case class TermWithLabelAndBiolinkType(term: IRI, biolinkType: IRI, label: Option[String])
 
-  final case class Predicate(predicate: IRI)
+  final case class Predicate(biolinkPredicate: BiolinkPredicate, predicate: IRI)
 
   // instances are not thread-safe; should be retrieved for every use
   private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
@@ -65,16 +63,21 @@ object QueryService extends LazyLogging {
       namedThingBiolinkClass <- ZIO
         .fromOption(biolinkData.classes.find(a => a.shorthand == "NamedThing"))
         .orElseFail(new Exception("Could not find BiolinkClass:NamedThing"))
+      predicatesMap <- ZIO.foreach(queryGraph.edges.filter(edge => edge._2.predicate.nonEmpty)) { (k, v) =>
+        for {
+          preds <- getTRAPIQEdgePredicates(v)
+        } yield k -> preds
+      }
       predicates <- ZIO.foreachPar(queryGraph.edges.filter(edge => edge._2.predicate.nonEmpty)) { (k, v) =>
         for {
-          foundPredicates <- getTRAPIQEdgePredicates(v)
-          predicates = foundPredicates.map(a => sparql" $a ").fold(sparql"")(_ + _)
+          foundPredicates <- Task.effect(predicatesMap.values.flatMap(a => a.keys))
+          predicatesQueryText <- Task.effect(foundPredicates.map(a => sparql" $a ").fold(sparql"")(_ + _))
           edgeIDVar = Var(k)
           edgeSourceVar = Var(v.subject)
           edgeTargetVar = Var(v.`object`)
           sparqlChunk =
             sparql"""
-                 VALUES $edgeIDVar { $predicates }
+                 VALUES $edgeIDVar { $predicatesQueryText }
                  $edgeSourceVar $edgeIDVar $edgeTargetVar .
               """
         } yield (v, sparqlChunk)
@@ -98,15 +101,22 @@ object QueryService extends LazyLogging {
           $limitSparql
           """
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
+      solutionTriples = for {
+        queryEdge <- queryGraph.edges
+        solution <- querySolutions
+      } yield Triple(
+        IRI(solution.getResource(queryEdge._2.subject).getURI),
+        IRI(solution.getResource(queryEdge._1).getURI),
+        IRI(solution.getResource(queryEdge._2.`object`).getURI)
+      )
+      provs <- getProvenance(solutionTriples.to(Set))
       initialKGNodes <- getTRAPINodes(queryGraph, querySolutions, biolinkData.classes, namedThingBiolinkClass)
-      initialKGEdges <- getTRAPIEdges(queryGraph, querySolutions)
-      querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, querySolutions)
+      initialKGEdges <- getTRAPIEdges(queryGraph, querySolutions, predicatesMap, provs)
+      querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, querySolutions, predicatesMap)
       trapiBindings <- ZIO.foreach(querySolutions) { querySolution =>
         getTRAPINodeBindings(queryGraph, querySolution) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
       }
-      allEdgeBindings = trapiBindings.flatMap(_._2).toMap
-      allCamIds = allEdgeBindings.values.flatten.filter(a => a.provenance.isDefined).map(a => a.provenance.get)
-      prov2CAMStuffTripleMap <- ZIO.foreachPar(allCamIds)(prov => getCAMStuff(IRI(prov)).map(prov -> _)).map(_.toMap)
+      prov2CAMStuffTripleMap <- ZIO.foreachPar(provs.values)(prov => getCAMStuff(IRI(prov)).map(prov -> _)).map(_.toMap)
       allCAMTriples = prov2CAMStuffTripleMap.values.to(Set).flatten
       allTripleNodes = allCAMTriples.flatMap(t => Set(t.subj, t.obj))
       slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.to(List), namedThingBiolinkClass)
@@ -117,8 +127,8 @@ object QueryService extends LazyLogging {
         for {
           slotStuff <- slotStuffList.find(_.kid == triple.pred)
           predBLTermOpt = biolinkData.predicates.find(a => a.iri == slotStuff.biolinkSlot)
-          key = getTRAPIEdgeKey(predBLTermOpt, triple.subj.value, triple.obj.value)
-          edge = TRAPIEdge(triple.subj, triple.obj, None, predBLTermOpt, None)
+          key = getTRAPIEdgeKey(triple.subj.value, predBLTermOpt, triple.obj.value)
+          edge = TRAPIEdge(predBLTermOpt, None, triple.subj, triple.obj, None)
         } yield key -> edge
       }.toMap
 
@@ -141,7 +151,7 @@ object QueryService extends LazyLogging {
       .flatten
       .toMap
 
-  def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]) =
+  def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
     nodes
       .map { node =>
         val nodeVar = Var(node._1)
@@ -150,12 +160,12 @@ object QueryService extends LazyLogging {
       }
       .fold(sparql"")(_ + _)
 
-  def getLimit(limit: Option[Int]) = {
+  def getLimit(limit: Option[Int]): QueryText = {
     val limitValue = limit.getOrElse(1000)
     if (limitValue > 0) sparql" LIMIT $limitValue" else sparql""
   }
 
-  def getProjections(queryGraph: TRAPIQueryGraph) = {
+  def getProjections(queryGraph: TRAPIQueryGraph): QueryText = {
     val projectionVariableNames =
       queryGraph.edges.flatMap(entry => List(entry._1)) ++ queryGraph.edges.flatMap(e =>
         List(e._2.subject, e._2.`object`)) ++ queryGraph.nodes.map(entry => s"${entry._1}_type")
@@ -165,7 +175,7 @@ object QueryService extends LazyLogging {
   def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph): TRAPIQueryGraph = {
     val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
       val newPredicate = edge.predicate match {
-        case None          => Some(BiolinkPredicate("related_to"))
+        case None          => Some(List(BiolinkPredicate("related_to")))
         case somePredicate => somePredicate
       }
       edgeID -> edge.copy(predicate = newPredicate)
@@ -173,21 +183,34 @@ object QueryService extends LazyLogging {
     queryGraph.copy(edges = improvedEdgeMap)
   }
 
-  def getTRAPIEdgeKey(pred: Option[BiolinkPredicate], sub: String, obj: String) = {
-    val edgeKey = TRAPIEdgeKey(pred, sub, obj).asJson.deepDropNullValues.noSpaces
+  def getTRAPIEdgeKey(sub: String, pred: Option[BiolinkPredicate], obj: String): String = {
+    val edgeKey = TRAPIEdgeKey(sub, pred, obj).asJson.deepDropNullValues.noSpaces
     String.format("%064x", new BigInteger(1, messageDigest.digest(edgeKey.getBytes(StandardCharsets.UTF_8))))
   }
 
-  def getTRAPIEdges(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution]) =
+  def getTRAPIEdges(queryGraph: TRAPIQueryGraph,
+                    querySolutions: List[QuerySolution],
+                    predicatesMap: Map[String, Map[IRI, BiolinkPredicate]],
+                    provs: Map[TripleString, String]): ZIO[Any, Throwable, Map[String, TRAPIEdge]] =
     for {
       trapiEdges <- ZIO.foreach(querySolutions) { querySolution =>
         for {
-          nodeMap <- Task.effect(queryGraph.nodes.map(entry => (entry._1, IRI(querySolution.getResource(s"${entry._1}_type").getURI))))
+          nodeTypeMap <- Task.effect(queryGraph.nodes.map(entry => (entry._1, IRI(querySolution.getResource(s"${entry._1}_type").getURI))))
           edges <- ZIO.foreach(queryGraph.edges) { (k, v) =>
             for {
-              source <- ZIO.fromOption(nodeMap.get(v.subject)).orElseFail(new Exception("could not get source id"))
-              target <- ZIO.fromOption(nodeMap.get(v.`object`)).orElseFail(new Exception("could not get target id"))
-            } yield getTRAPIEdgeKey(v.predicate, source.value, target.value) -> TRAPIEdge(source, target, None, v.predicate, None)
+              sourceType <- ZIO.fromOption(nodeTypeMap.get(v.subject)).orElseFail(new Exception("could not get source id"))
+              targetType <- ZIO.fromOption(nodeTypeMap.get(v.`object`)).orElseFail(new Exception("could not get target id"))
+              source = querySolution.getResource(v.subject).getURI
+              target = querySolution.getResource(v.`object`).getURI
+              predicate = querySolution.getResource(k).getURI
+              tripleString = TripleString(source, predicate, target)
+              provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
+              attributes = List(TRAPIAttribute(Some("provenance"), provValue, IRI(source), None, None))
+              predicatesBLMapping <- ZIO.fromOption(predicatesMap.get(k)).orElseFail(new Exception("no biolink pred mapped value"))
+              blPred = predicatesBLMapping.get(IRI(predicate))
+              trapiEdgeKey = getTRAPIEdgeKey(sourceType.value, blPred, targetType.value)
+              trapiEdge = TRAPIEdge(blPred, None, sourceType, targetType, Some(attributes))
+           } yield trapiEdgeKey -> trapiEdge
           }
         } yield edges.toList
       }
@@ -231,12 +254,10 @@ object QueryService extends LazyLogging {
     } yield trapiNodes.flatten.toMap
   }
 
-  def getTRAPINodeDetailsQueryText(nodeIdList: List[IRI], namedThingBiolinkClass: BiolinkClass) =
-    for {
-      // requiring biolinkType makes some terms not be found when these results are used elsewhere - must be handled there
-      nodeIds <- Task.effect(nodeIdList.map(n => sparql" $n ").fold(sparql"")(_ + _))
-      query <- Task.effect(
-        sparql"""SELECT ?term ?biolinkType (MIN(?term_label) AS ?label)
+  def getTRAPINodeDetailsQueryText(nodeIdList: List[IRI], namedThingBiolinkClass: BiolinkClass): QueryText = {
+    // requiring biolinkType makes some terms not be found when these results are used elsewhere - must be handled there
+    val nodeIds = nodeIdList.map(n => sparql" $n ").fold(sparql"")(_ + _)
+    sparql"""SELECT ?term ?biolinkType (MIN(?term_label) AS ?label)
          WHERE {
            VALUES ?term { $nodeIds }
            ?term $RDFSSubClassOf ?biolinkType .
@@ -244,18 +265,18 @@ object QueryService extends LazyLogging {
            OPTIONAL { ?term $RDFSLabel ?term_label }
          }
          GROUP BY ?term ?biolinkType"""
-      )
-    } yield query
+  }
 
   def getTRAPINodeDetails(
     nodeIdList: List[IRI],
     namedThingBiolinkClass: BiolinkClass): RIO[ZConfig[AppConfig] with HttpClient, List[TermWithLabelAndBiolinkType]] =
     for {
-      queryText <- getTRAPINodeDetailsQueryText(nodeIdList, namedThingBiolinkClass)
+      queryText <- Task.effect(getTRAPINodeDetailsQueryText(nodeIdList, namedThingBiolinkClass))
       termsAndBiolinkTypes <- SPARQLQueryExecutor.runSelectQueryAs[TermWithLabelAndBiolinkType](queryText.toQuery)
     } yield termsAndBiolinkTypes
 
-  def getTRAPINodeBindings(queryGraph: TRAPIQueryGraph, querySolution: QuerySolution) =
+  def getTRAPINodeBindings(queryGraph: TRAPIQueryGraph,
+                           querySolution: QuerySolution): ZIO[Any, Throwable, Map[String, List[TRAPINodeBinding]]] =
     for {
       nodeMap <- Task.effect(queryGraph.nodes.map(n => (n._1, querySolution.get(s"${n._1}_type").toString)))
       nodeBindings <- ZIO.foreach(queryGraph.nodes) { (k, v) =>
@@ -265,50 +286,39 @@ object QueryService extends LazyLogging {
       }
     } yield nodeBindings
 
-  def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution])
-    : ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] = {
-    val solutionTriples = for {
-      queryEdge <- queryGraph.edges
-      solution <- querySolutions
-    } yield Triple(
-      IRI(solution.getResource(queryEdge._2.subject).getURI),
-      IRI(solution.getResource(queryEdge._1).getURI),
-      IRI(solution.getResource(queryEdge._2.`object`).getURI)
-    )
+  def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution], predicatesMap: Map[String, Map[IRI, BiolinkPredicate]])
+    : ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] =
     for {
-      provs <- getProvenance(solutionTriples.to(Set))
       querySolutionsToEdgeBindings <- ZIO.foreach(querySolutions) { querySolution =>
         for {
           edgeBindings <- ZIO.foreach(queryGraph.edges) { (k, v) =>
             for {
-              predicateRDFNode <- Task.effect(querySolution.get(k).toString)
-              sourceRDFNode <- Task.effect(querySolution.get(v.subject).toString)
               sourceType <- Task.effect(querySolution.get(s"${v.subject}_type").toString)
-              targetRDFNode <- Task.effect(querySolution.get(v.`object`).toString)
               targetType <- Task.effect(querySolution.get(s"${v.`object`}_type").toString)
-              edgeKey = getTRAPIEdgeKey(v.predicate, sourceType, targetType)
-            } yield k -> List(TRAPIEdgeBinding(edgeKey, provs.get(TripleString(sourceRDFNode, predicateRDFNode, targetRDFNode))))
+              predicate = querySolution.getResource(k).getURI
+              predicatesBLMapping <- ZIO.fromOption(predicatesMap.get(k)).orElseFail(new Exception("no biolink pred mapped value"))
+              blPred = predicatesBLMapping.get(IRI(predicate))
+              trapiEdgeKey = getTRAPIEdgeKey(sourceType, blPred, targetType)
+              trapiEdgeBinding = List(TRAPIEdgeBinding(trapiEdgeKey))
+            } yield k -> trapiEdgeBinding
           }
         } yield querySolution -> edgeBindings
       }
     } yield querySolutionsToEdgeBindings.toMap
-  }
 
-  def getProvenanceQueryText(edges: Set[Triple]) = {
+  def getProvenanceQueryText(edges: Set[Triple]): QueryText = {
     val values = edges.map(e => sparql"( ${e.subj} ${e.pred} ${e.obj} )").fold(sparql"")(_ + _)
-    Task.effect(
-      sparql"""SELECT ?s ?p ?o ?g ?other
+    sparql"""SELECT ?s ?p ?o ?g ?other
         WHERE {
           VALUES (?s ?p ?o) { $values }
           GRAPH ?g { ?s ?p ?o }
           OPTIONAL { ?g $ProvWasDerivedFrom ?other . }
         }"""
-    )
   }
 
   def getProvenance(edges: Set[Triple]): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, Map[TripleString, String]] =
     for {
-      queryText <- getProvenanceQueryText(edges)
+      queryText <- Task.effect(getProvenanceQueryText(edges))
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
       triplesToGraphs <- ZIO.foreach(querySolutions) { solution =>
         Task.effect {
@@ -319,7 +329,7 @@ object QueryService extends LazyLogging {
       }
     } yield triplesToGraphs.toMap
 
-  def getCAMStuffQueryText(prov: IRI) = Task.effect(
+  def getCAMStuffQueryText(prov: IRI): QueryText =
     sparql"""SELECT DISTINCT (?s_type AS ?subj) (?p AS ?pred) (?o_type AS ?obj)
          WHERE { GRAPH $prov {
              ?s ?p ?o .
@@ -331,11 +341,10 @@ object QueryService extends LazyLogging {
          FILTER(isIRI(?o_type))
          FILTER(isIRI(?s_type))
        }"""
-  )
 
   def getCAMStuff(prov: IRI): RIO[ZConfig[AppConfig] with HttpClient, List[Triple]] =
     for {
-      queryText <- getCAMStuffQueryText(prov)
+      queryText <- Task.effect(getCAMStuffQueryText(prov))
       triples <- SPARQLQueryExecutor.runSelectQueryAs[Triple](queryText.toQuery)
     } yield triples
 
@@ -356,17 +365,15 @@ object QueryService extends LazyLogging {
     nodeMap
   }
 
-  def getSlotStuffQueryText(predicates: List[IRI]) = for {
-    values <- Task.effect(
-      predicates.zipWithIndex
-        .map { case (p, i) =>
-          val id = StringUtils.leftPad(i.toString, 4, '0')
-          val qid = s"e$id"
-          sparql" ( $p $qid ) "
-        }
-        .fold(sparql"")(_ + _))
-    queryText <- Task.effect(
-      sparql"""SELECT DISTINCT ?qid ?kid ?biolinkSlot ?label
+  def getSlotStuffQueryText(predicates: List[IRI]): QueryText = {
+    val values = predicates.zipWithIndex
+      .map { case (p, i) =>
+        val id = StringUtils.leftPad(i.toString, 4, '0')
+        val qid = s"e$id"
+        sparql" ( $p $qid ) "
+      }
+      .fold(sparql"")(_ + _)
+    sparql"""SELECT DISTINCT ?qid ?kid ?biolinkSlot ?label
          WHERE {
            VALUES (?kid ?qid) { $values }
            ?kid $SlotMapping ?biolinkSlot .
@@ -377,27 +384,23 @@ object QueryService extends LazyLogging {
              ?other $BiolinkMLIsA+/<https://w3id.org/biolink/biolinkml/meta/mixins>* ?biolinkSlot .
            }
          }"""
-    )
-  } yield queryText
+  }
 
   def getSlotStuff(predicates: List[IRI]): RIO[ZConfig[AppConfig] with HttpClient, List[SlotStuff]] =
     for {
-      queryText <- getSlotStuffQueryText(predicates)
+      queryText <- Task.effect(getSlotStuffQueryText(predicates))
       results <- SPARQLQueryExecutor.runSelectQueryAs[SlotStuff](queryText.toQuery)
     } yield results
 
-  def getTRAPIQEdgePredicatesQueryText(edgeType: IRI) = Task.effect(
-    sparql"""SELECT DISTINCT ?predicate
-      WHERE {
-        ?predicate $SlotMapping ${edgeType} .
-      }"""
-  )
+  def getTRAPIQEdgePredicatesQueryText(predicates: QueryText): QueryText =
+    sparql"""SELECT DISTINCT ?biolinkPredicate ?predicate WHERE { VALUES ?biolinkPredicate { $predicates } ?predicate $SlotMapping ?biolinkPredicate . }"""
 
-  def getTRAPIQEdgePredicates(edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, List[IRI]] =
+  def getTRAPIQEdgePredicates(edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, Map[IRI, BiolinkPredicate]] =
     for {
-      edgeType <- ZIO.fromOption(edge.predicate).orElseFail(new Exception("failed to get edge type"))
-      queryText <- getTRAPIQEdgePredicatesQueryText(edgeType.iri)
+      edgePredicates <- ZIO.fromOption(edge.predicate).orElseFail(new Exception("failed to get edge type"))
+      queryText <- Task.effect(getTRAPIQEdgePredicatesQueryText(edgePredicates.map(a => sparql" ${a.iri} ").fold(sparql"")(_ + _)))
       predicates <- SPARQLQueryExecutor.runSelectQueryAs[Predicate](queryText.toQuery)
-    } yield predicates.map(_.predicate)
+      ret = predicates.map(p => p.predicate -> p.biolinkPredicate).toMap
+    } yield ret
 
 }

@@ -82,7 +82,7 @@ object Biolink {
       classesKeys <- ZIO.fromOption(json.hcursor.downField("classes").keys).orElseFail(throw new Exception("couldn't get classes"))
       classes = classesKeys.map(a => a.split(" ").toList.map(a => StringUtils.capitalize(a)).mkString).map(a => BiolinkClass(a)).toList
       predicateKeys <- ZIO.fromOption(json.hcursor.downField("slots").keys).orElseFail(throw new Exception("couldn't get slots"))
-      predicates = predicateKeys.map(a => BiolinkPredicate(a.replaceAll(",", "").replaceAll(" ", "_"))).toList
+      predicates = predicateKeys.map(a => BiolinkPredicate(a.replaceAll(",", "_").replaceAll(" ", "_"))).toList
       prefixes <- ZIO.fromOption(json.hcursor.downField("prefixes").focus).orElseFail(throw new Exception("couldn't get prefixes"))
       prefixesMap <- ZIO.fromEither(prefixes.as[Map[String, String]])
     } yield (prefixesMap, classes, predicates)
