@@ -29,7 +29,7 @@ object Implicits {
     for {
       curie <- curieString match {
         case Curie(p, l) => Right((p, l))
-        case _           => Left(DecodingFailure(s"CURIE is malformed: $curieString", Nil))
+        case _ => Left(DecodingFailure(s"CURIE is malformed: $curieString", Nil))
       }
       (prefix, local) = curie
       namespace <-
