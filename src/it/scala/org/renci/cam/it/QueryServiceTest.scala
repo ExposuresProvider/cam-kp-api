@@ -21,11 +21,11 @@ import java.nio.file.{Files, Paths}
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
-  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
+//  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
+  val testLayer = (testEnvironment /*++ camkpapiTestLayer*/ ++ camkpapiLayer).mapError(TestFailure.die)
 
-  def runTest(trapiQuery: TRAPIQuery): RIO[HttpClient with Has[BiolinkData], String] = {
+  def runTest(trapiQuery: TRAPIQuery): RIO[HttpClient with Has[BiolinkData], String] =
     for {
       httpClient <- HttpClient.client
       biolinkData <- Biolink.biolinkData
@@ -47,7 +47,6 @@ object QueryServiceTest extends DefaultRunnableSpec {
       response <- httpClient.expect[String](request)
       //        _ = println("response: " + response)
     } yield response
-  }
 
   val testSimpleQuery = suite("testSimpleQuery")(
     testM("test simple query") {
@@ -58,12 +57,11 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
-         response <- runTest(requestBody)
+        response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
-
 
   val testFindGenesEnablingAnyKindOfCatalyticActivity = suite("testFindGenesEnablingAnyKindOfCatalyticActivity")(
     testM("find genes enabling any kind of catalytic activity") {
@@ -90,7 +88,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val e1Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("enabled_by"))), None, "n1", "n2")
       val e2Edge = TRAPIQueryEdge(None, None, "n2", "n3")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node, "n2" -> n2Node, "n3" -> n3Node),
-        Map("e0" -> e0Edge, "e1" -> e1Edge, "e2" -> e2Edge))
+                                       Map("e0" -> e0Edge, "e1" -> e1Edge, "e2" -> e2Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
@@ -136,10 +134,8 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   val testBeclomethasone = suite("testBeclomethasone")(
     testM("beclomethasone") {
-      val n0Node =
-        TRAPIQueryNode(Some(IRI("DRUGBANK:DB00394")), Some(BiolinkClass("Drug")), None)
-      val n1Node =
-        TRAPIQueryNode(None, Some(BiolinkClass("Disease")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("DRUGBANK:DB00394")), Some(BiolinkClass("Drug")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("Disease")), None)
       val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("treated_by"))), None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -168,10 +164,8 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   val testPathway = suite("testPathway")(
     testM("pathway") {
-      val n0Node =
-        TRAPIQueryNode(Some(IRI("NCBIGENE:1017")), Some(BiolinkClass("Gene")), None)
-      val n1Node =
-        TRAPIQueryNode(None, Some(BiolinkClass("Pathway")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("NCBIGENE:1017")), Some(BiolinkClass("Gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("Pathway")), None)
       val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -186,8 +180,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
   val testSpmsyChemicals = suite("testSpmsyChemicals")(
     testM("spmsyChemicals") {
       val n0Node = TRAPIQueryNode(Some(IRI("UniProtKB:P52788")), Some(BiolinkClass("Gene")), None)
-      val n1Node =
-        TRAPIQueryNode(None, Some(BiolinkClass("ChemicalSubstance")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("ChemicalSubstance")), None)
       val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -247,8 +240,8 @@ object QueryServiceTest extends DefaultRunnableSpec {
   )
 
   def spec = suite("QueryService tests")(
-    testSimpleQuery,
-    testGene2Process2Process2Gene,
+//    testSimpleQuery,
+    testGene2Process2Process2Gene/*,
     testFindGenesEnablingAnyKindOfCatalyticActivity,
     testNegativeRegulationChaining,
     testAcrocyanosis,
@@ -257,7 +250,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
     testPathway,
     testSpmsyChemicals,
     testILSixDownRegulators,
-    testERAD
+    testERAD*/
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
