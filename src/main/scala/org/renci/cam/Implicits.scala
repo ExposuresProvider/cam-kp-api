@@ -62,9 +62,12 @@ object Implicits {
 
   private def toHttps(uri: String): String = uri.replaceFirst("http:", "https:")
 
-  def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = Decoder.decodeString.emap { s =>
+  def biolinkPredicateDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[BiolinkPredicate] = Decoder.decodeString.map { s =>
     val localName = s.replace("biolink:", "")
-    biolinkPredicates.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName).toRight(s"BiolinkPredicate does not exist: $s")
+    biolinkPredicates.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName) match {
+      case Some(pred) => pred
+      case None => BiolinkPredicate(s"$BiolinkPredicate$localName")
+    }
   }
 
   def biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { s =>
