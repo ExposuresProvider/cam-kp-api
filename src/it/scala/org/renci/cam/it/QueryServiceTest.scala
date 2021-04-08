@@ -21,9 +21,9 @@ import java.nio.file.{Files, Paths}
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
-  //val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
+  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = (testEnvironment /*++ camkpapiTestLayer*/ ++ camkpapiLayer).mapError(TestFailure.die)
+  val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
 
   def runTest(trapiQuery: TRAPIQuery): RIO[HttpClient with Has[BiolinkData], String] = {
     for {
@@ -61,7 +61,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
          response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
 
@@ -77,7 +77,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-find-genes-enabling-catalytic-activity.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testGene2Process2Process2Gene = suite("testGene2Process2Process2Gene")(
@@ -97,7 +97,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-gene-to-process-to-process-to-gene.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testNegativeRegulationChaining = suite("testNegativeRegulationChaining")(
@@ -116,7 +116,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testAcrocyanosis = suite("testAcrocyanosis")(
@@ -131,7 +131,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-acrocyanosis.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testBeclomethasone = suite("testBeclomethasone")(
@@ -148,7 +148,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-beclomethasone.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testCorrelatedWith = suite("testCorrelatedWith")(
@@ -163,7 +163,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-correlated-with.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testPathway = suite("testPathway")(
@@ -180,7 +180,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-pathway.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testSpmsyChemicals = suite("testSpmsyChemicals")(
@@ -196,7 +196,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-spmsy-chemicals.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testILSixDownRegulators = suite("testILSixDownRegulators")(
@@ -228,7 +228,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-ILSixDownRegulators.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } //@@ TestAspect.ignore
+    }
   )
 
   val testERAD = suite("testERAD")(
@@ -243,7 +243,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala-erad.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   def spec = suite("QueryService tests")(
