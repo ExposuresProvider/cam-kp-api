@@ -55,7 +55,7 @@ object QueryService extends LazyLogging {
   private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
 
   def run(limit: Option[Int],
-          submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], TRAPIMessage] = {
+          submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], TRAPIMessage] =
     for {
       biolinkData <- biolinkData
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
@@ -63,12 +63,12 @@ object QueryService extends LazyLogging {
       namedThingBiolinkClass <- ZIO
         .fromOption(biolinkData.classes.find(a => a.shorthand == "NamedThing"))
         .orElseFail(new Exception("Could not find BiolinkClass:NamedThing"))
-      predicatesMap <- ZIO.foreach(queryGraph.edges.filter(edge => edge._2.predicate.nonEmpty)) { (k, v) =>
+      predicatesMap <- ZIO.foreach(queryGraph.edges) { (k, v) =>
         for {
           preds <- getTRAPIQEdgePredicates(v)
         } yield k -> preds
       }
-      predicates <- ZIO.foreachPar(queryGraph.edges.filter(edge => edge._2.predicate.nonEmpty)) { (k, v) =>
+      predicates <- ZIO.foreachPar(queryGraph.edges) { (k, v) =>
         for {
           foundPredicates <- Task.effect(predicatesMap.values.flatMap(a => a.keys))
           predicatesQueryText <- Task.effect(foundPredicates.map(a => sparql" $a ").fold(sparql"")(_ + _))
@@ -139,7 +139,6 @@ object QueryService extends LazyLogging {
       trapiKGEdges = initialKGEdges ++ extraKGEdges
 
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(trapiKGNodes, trapiKGEdges)), Some(finalResults.distinct))
-  }
 
   def getNodeTypes(nodes: Map[String, TRAPIQueryNode]): Map[String, IRI] =
     nodes
@@ -212,7 +211,7 @@ object QueryService extends LazyLogging {
               blPred = predicatesBLMapping.get(IRI(predicate))
               trapiEdgeKey = getTRAPIEdgeKey(sourceType.value, blPred, targetType.value)
               trapiEdge = TRAPIEdge(blPred, None, sourceType, targetType, Some(attributes))
-           } yield trapiEdgeKey -> trapiEdge
+            } yield trapiEdgeKey -> trapiEdge
           }
         } yield edges.toList
       }
@@ -288,7 +287,9 @@ object QueryService extends LazyLogging {
       }
     } yield nodeBindings
 
-  def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution], predicatesMap: Map[String, Map[IRI, BiolinkPredicate]])
+  def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph,
+                               querySolutions: List[QuerySolution],
+                               predicatesMap: Map[String, Map[IRI, BiolinkPredicate]])
     : ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] =
     for {
       querySolutionsToEdgeBindings <- ZIO.foreach(querySolutions) { querySolution =>
