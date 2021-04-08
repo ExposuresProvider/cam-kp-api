@@ -54,7 +54,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 //        _ = println("response: " + response)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testFindGenesEnablingAnyKindOfCatalyticActivity = suite("testFindGenesEnablingAnyKindOfCatalyticActivity")(
@@ -87,7 +87,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 //        _ = println("response: " + response)
 //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-find-genes-enabling-catalytic-activity.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testGene2Process2Process2Gene = suite("testGene2Process2Process2Gene")(
@@ -125,7 +125,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 //        _ = println("response: " + response)
 //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-gene-to-process-to-process-to-gene.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testNegativeRegulationChaining = suite("testNegativeRegulationChaining")(
@@ -162,7 +162,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 //        _ = println("response: " + response)
 //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testAcrocyanosis = suite("testAcrocyanosis")(
@@ -197,7 +197,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         //        _ = println("response: " + response)
         //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testBeclomethasone = suite("testBeclomethasone")(
@@ -232,7 +232,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         //        _ = println("response: " + response)
         //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testCorrelatedWith = suite("testCorrelatedWith")(
@@ -267,7 +267,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         //        _ = println("response: " + response)
         //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testPathway = suite("testPathway")(
@@ -302,7 +302,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         //        _ = println("response: " + response)
         //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testSpmsyChemicals = suite("testSpmsyChemicals")(
@@ -337,7 +337,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         //        _ = println("response: " + response)
         //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    } //@@ TestAspect.ignore
   )
 
   val testILSixDownRegulators = suite("testILSixDownRegulators")(
@@ -361,8 +361,8 @@ object QueryServiceTest extends DefaultRunnableSpec {
         BiolinkPredicate("channel_blocker"),
         BiolinkPredicate("may_inhibit_effect_of")
       )
-      val e0Edge = TRAPIQueryEdge(Some(predicateList), None, "n0", "n1")
-      val queryGraph = TRAPIQueryGraph(Map("n0" -> n1Node, "n1" -> n0Node), Map("e0" -> e0Edge))
+      val e0Edge = TRAPIQueryEdge(Some(predicateList), None, "n1", "n0")
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
