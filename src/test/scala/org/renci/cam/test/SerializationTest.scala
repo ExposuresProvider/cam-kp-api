@@ -32,13 +32,13 @@ object SerializationTest extends DefaultRunnableSpec {
       //      implicit val implicitPrefixes = Implicits.iriEncoder(prefixes)
 
       val biolinkData: URIO[Has[BiolinkData], BiolinkData] = ZIO.service
-      (for {
+      for {
         bl <- biolinkData
       } yield {
         implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(bl.prefixes)
         val json = iri.asJson.deepDropNullValues.noSpaces.replace("\"", "")
         assert(json)(equalTo("WB:WBGene00013878"))
-      })
+      }
     }
   )
 
