@@ -22,7 +22,8 @@ import scala.collection.mutable
 
 object SerializationTest extends DefaultRunnableSpec {
 
-  val testLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
+  val testLayer = (HttpClient.makeHttpClientLayer >>> Biolink.makeUtilitiesLayer)
+    .mapError(TestFailure.fail)
 
   val testIRIEncoder = suite("testIRIEncoder")(
     testM("test Implicits.iriEncoder") {
@@ -31,13 +32,13 @@ object SerializationTest extends DefaultRunnableSpec {
       //      implicit val implicitPrefixes = Implicits.iriEncoder(prefixes)
 
       val biolinkData: URIO[Has[BiolinkData], BiolinkData] = ZIO.service
-      for {
+      (for {
         bl <- biolinkData
       } yield {
         implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(bl.prefixes)
         val json = iri.asJson.deepDropNullValues.noSpaces.replace("\"", "")
         assert(json)(equalTo("WB:WBGene00013878"))
-      }
+      })
     }
   )
 
@@ -160,9 +161,8 @@ object SerializationTest extends DefaultRunnableSpec {
     }
   )
 
-  def spec = suite("Serialization tests")(testingMessageDigest,
-                                          testParseBlazegraphResponse,
-                                          testParseBlazegraphEmptyResults,
-                                          testIRIEncoder.provideSomeLayer[TestEnvironment](testLayer))
+  def spec =
+    suite("Serialization tests")(testingMessageDigest, testParseBlazegraphResponse, testParseBlazegraphEmptyResults, testIRIEncoder)
+      .provideCustomLayer(testLayer)
 
 }
