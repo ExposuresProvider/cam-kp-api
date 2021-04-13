@@ -40,10 +40,10 @@ object Biolink {
         ZIO.fromOption(biolinkModelJson.hcursor.downField("@context").focus).orElseFail(new Exception("failed to traverse down to context"))
       contextJsonObject <- ZIO.fromOption(contextJson.asObject).orElseFail(new Exception("failed to get json object from context"))
       firstPass = contextJsonObject.toIterable.filter(entry => entry._2.isObject && entry._2.asObject.get.contains("@id") && entry._2.asObject.get.contains("@prefix")).map(entry => {
-        entry._1 -> entry._2.hcursor.downField("@id").focus.get.toString()
+        entry._1 -> entry._2.hcursor.downField("@id").focus.get.toString();
       }).toMap
       secondPass = contextJsonObject.toIterable.filter(entry => entry._2.isString).map(entry => {
-        entry._1 -> entry._2.toString()
+        entry._1 -> entry._2.toString().replaceAll("\"", "")
       }).toMap
       map = firstPass ++ secondPass
     } yield map
