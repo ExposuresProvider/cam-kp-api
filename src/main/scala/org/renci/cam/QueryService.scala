@@ -396,7 +396,12 @@ object QueryService extends LazyLogging {
     } yield results
 
   def getTRAPIQEdgePredicatesQueryText(predicates: QueryText): QueryText =
-    sparql"""SELECT DISTINCT ?biolinkPredicate ?predicate WHERE { VALUES ?biolinkPredicate { $predicates } ?predicate $SlotMapping ?biolinkPredicate . }"""
+    sparql"""SELECT DISTINCT ?biolinkPredicate ?predicate WHERE {
+        VALUES ?biolinkPredicate { $predicates }
+        ?predicate $SlotMapping ?biolinkPredicate .
+        FILTER EXISTS { ?s ?predicate ?o }
+        <http://www.bigdata.com/queryHints#Query> <http://www.bigdata.com/queryHints#filterExists> "SubQueryLimitOne"
+     }"""
 
   def getTRAPIQEdgePredicates(edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, Map[IRI, BiolinkPredicate]] =
     for {
