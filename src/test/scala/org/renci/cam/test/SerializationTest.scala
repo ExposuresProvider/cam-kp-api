@@ -2,12 +2,14 @@ package org.renci.cam.test
 
 import io.circe.generic.auto._
 import io.circe.syntax._
+import io.circe.{Json, _}
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{ResultSetFactory, ResultSetFormatter}
+import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam.QueryService.TRAPIEdgeKey
 import org.renci.cam._
 import org.renci.cam.domain._
-import zio.Task
+import zio.{Has, Task, URIO, ZIO}
 import zio.test.Assertion._
 import zio.test._
 
@@ -20,6 +22,24 @@ import scala.collection.mutable
 object SerializationTest extends DefaultRunnableSpec {
 
   val testLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
+
+  val testIRIEncoder = suite("testIRIEncoder")(
+    test("test Implicits.iriEncoder") {
+      val iri = IRI("http://identifiers.org/wormbase/WBGene00013878")
+      //      val prefixes: Map[String, String] = Map("NCBIGENE" -> "http://identifiers.org/ncbigene/")
+      //      implicit val implicitPrefixes = Implicits.iriEncoder(prefixes)
+
+      val biolinkData: URIO[Has[BiolinkData], BiolinkData] = ZIO.service
+      val json = for {
+        bl <- biolinkData
+      } yield {
+        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(bl.prefixes)
+        val json = iri.asJson.deepDropNullValues.noSpaces.replace("\"", "")
+        json
+      }
+      assert(json)(equalTo("WB:WBGene00013878"))
+    }
+  )
 
   val testingMessageDigest = suite("testingMessageDigest")(
     testM("test consistency of message digest") {
