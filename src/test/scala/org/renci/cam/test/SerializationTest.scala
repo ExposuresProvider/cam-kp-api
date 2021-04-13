@@ -9,6 +9,7 @@ import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam.QueryService.TRAPIEdgeKey
 import org.renci.cam._
 import org.renci.cam.domain._
+import zio.test.environment.TestEnvironment
 import zio.{Has, Task, URIO, ZIO}
 import zio.test.Assertion._
 import zio.test._
@@ -24,20 +25,19 @@ object SerializationTest extends DefaultRunnableSpec {
   val testLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
 
   val testIRIEncoder = suite("testIRIEncoder")(
-    test("test Implicits.iriEncoder") {
+    testM("test Implicits.iriEncoder") {
       val iri = IRI("http://identifiers.org/wormbase/WBGene00013878")
       //      val prefixes: Map[String, String] = Map("NCBIGENE" -> "http://identifiers.org/ncbigene/")
       //      implicit val implicitPrefixes = Implicits.iriEncoder(prefixes)
 
       val biolinkData: URIO[Has[BiolinkData], BiolinkData] = ZIO.service
-      val json = for {
+      for {
         bl <- biolinkData
       } yield {
         implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(bl.prefixes)
         val json = iri.asJson.deepDropNullValues.noSpaces.replace("\"", "")
-        json
+        assert(json)(equalTo("WB:WBGene00013878"))
       }
-      assert(json)(equalTo("WB:WBGene00013878"))
     }
   )
 
@@ -160,6 +160,9 @@ object SerializationTest extends DefaultRunnableSpec {
     }
   )
 
-  def spec = suite("Serialization tests")(testingMessageDigest, testParseBlazegraphResponse, testParseBlazegraphEmptyResults)
+  def spec = suite("Serialization tests")(testingMessageDigest,
+                                          testParseBlazegraphResponse,
+                                          testParseBlazegraphEmptyResults,
+                                          testIRIEncoder.provideSomeLayer[TestEnvironment](testLayer))
 
 }
