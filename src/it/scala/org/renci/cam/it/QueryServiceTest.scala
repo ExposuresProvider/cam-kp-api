@@ -21,9 +21,9 @@ import java.nio.file.{Files, Paths}
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
-//  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
+  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = (testEnvironment /*++ camkpapiTestLayer*/ ++ camkpapiLayer).mapError(TestFailure.die)
+  val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
 
   def runTest(trapiQuery: TRAPIQuery): RIO[HttpClient with Has[BiolinkData], String] =
     for {
@@ -240,20 +240,17 @@ object QueryServiceTest extends DefaultRunnableSpec {
   )
 
   def spec = suite("QueryService tests")(
-    //these don't work
-    //testGene2Process2Process2Gene,
-    //testAcrocyanosis,
-    //testPathway,
-    //testERAD
-
-    //these work
     testSimpleQuery,
     testFindGenesEnablingAnyKindOfCatalyticActivity,
     testNegativeRegulationChaining,
     testBeclomethasone,
     testCorrelatedWith,
     testSpmsyChemicals,
-    testILSixDownRegulators
+    testILSixDownRegulators,
+    testGene2Process2Process2Gene,
+    testAcrocyanosis,
+    testPathway,
+    testERAD
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
