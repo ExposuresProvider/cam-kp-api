@@ -52,7 +52,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
       val e0Edge = TRAPIQueryEdge(None, None, "n1", "n0")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       for {
-        nodeTypes <- ZIO.effect(QueryService.enforceQueryEdgeTypes(queryGraph))
+        nodeTypes <- ZIO.effect(QueryService.enforceQueryEdgeTypes(queryGraph, List(BiolinkPredicate("related_to"))))
       } yield assert(nodeTypes.edges)(hasKey("e0")) && assert(nodeTypes.edges.get("e0").get.predicate.get)(
         equalTo(List(BiolinkPredicate("related_to"))))
     }
