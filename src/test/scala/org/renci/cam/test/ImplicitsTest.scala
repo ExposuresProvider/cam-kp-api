@@ -35,6 +35,6 @@ object ImplicitsTest extends DefaultRunnableSpec {
     }
   )
 
-  def spec = suite("Implicits tests")(testBiolinkClassEncoder, testBiolinkPredicateEncoder, testIRIEncoder)
+  def spec = suite("Implicits tests")(testBiolinkClassEncoder, testBiolinkPredicateEncoder, testIRIEncoder)  @@ TestAspect.sequential
 
 }

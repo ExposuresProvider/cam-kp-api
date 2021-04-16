@@ -25,9 +25,9 @@ object Biolink {
     for {
       (biolinkPrefixes, classes, predicates) <- getBiolinkPrefixesAndClassesAndPredicatesFromFile
       local <- localPrefixes
-//      prefixes <- getBiolinkPrefixesFromFile
-      prefixes <- getBiolinkPrefixesFromURL.orElse(getBiolinkPrefixesFromFile)
-      combined = local ++ biolinkPrefixes ++ prefixes
+      prefixesFromFile <- getBiolinkPrefixesFromFile
+      prefixesFromURL <- getBiolinkPrefixesFromURL
+      combined = local ++ biolinkPrefixes ++ prefixesFromFile ++ prefixesFromURL
     } yield BiolinkData(combined, classes, predicates)
 
   def getBiolinkPrefixesFromURL: ZIO[HttpClient, Throwable, Map[String, String]] =
@@ -38,12 +38,15 @@ object Biolink {
       biolinkModelJson <- httpClient.expect[Json](request)
       contextJson <-
         ZIO.fromOption(biolinkModelJson.hcursor.downField("@context").focus).orElseFail(new Exception("failed to traverse down to context"))
-      curies <- ZIO.fromEither(
-        contextJson.deepDropNullValues
-          .mapObject(f => f.filter(pred => pred._2.isString && pred._1 != "type" && pred._1 != "id" && pred._1 != "@vocab"))
-          .as[Map[String, String]]
-      )
-    } yield curies
+      contextJsonObject <- ZIO.fromOption(contextJson.asObject).orElseFail(new Exception("failed to get json object from context"))
+      firstPass = contextJsonObject.toIterable.filter(entry => entry._2.isObject && entry._2.asObject.get.contains("@id") && entry._2.asObject.get.contains("@prefix")).map(entry => {
+        entry._1 -> entry._2.hcursor.downField("@id").focus.get.toString().replaceAll("\"", "")
+      }).toMap
+      secondPass = contextJsonObject.toIterable.filter(entry => entry._2.isString).map(entry => {
+        entry._1 -> entry._2.toString().replaceAll("\"", "")
+      }).toMap
+      map = firstPass ++ secondPass
+    } yield map
 
   def getBiolinkPrefixesFromFile: ZIO[Any, Throwable, Map[String, String]] = {
     val sourceManaged = for {
@@ -82,7 +85,7 @@ object Biolink {
       classesKeys <- ZIO.fromOption(json.hcursor.downField("classes").keys).orElseFail(throw new Exception("couldn't get classes"))
       classes = classesKeys.map(a => a.split(" ").toList.map(a => StringUtils.capitalize(a)).mkString).map(a => BiolinkClass(a)).toList
       predicateKeys <- ZIO.fromOption(json.hcursor.downField("slots").keys).orElseFail(throw new Exception("couldn't get slots"))
-      predicates = predicateKeys.map(a => BiolinkPredicate(a.replaceAll(",", "").replaceAll(" ", "_"))).toList
+      predicates = predicateKeys.map(a => BiolinkPredicate(a.replaceAll(",", "_").replaceAll(" ", "_"))).toList
       prefixes <- ZIO.fromOption(json.hcursor.downField("prefixes").focus).orElseFail(throw new Exception("couldn't get prefixes"))
       prefixesMap <- ZIO.fromEither(prefixes.as[Map[String, String]])
     } yield (prefixesMap, classes, predicates)
