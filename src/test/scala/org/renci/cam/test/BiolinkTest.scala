@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.renci.cam.Biolink
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio.test.Assertion._
-import zio.test.{assert, suite, testM, DefaultRunnableSpec}
+import zio.test.{DefaultRunnableSpec, TestAspect, assert, suite, testM}
 
 object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
 
@@ -28,13 +28,15 @@ object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
     testM("test Biolink.getBiolinkPrefixesAndClassesAndPredicatesFromFile") {
       for {
         (prefixes, classes, predicates) <- Biolink.getBiolinkPrefixesAndClassesAndPredicatesFromFile
+        //_ = println("predicates: {}", predicates)
       } yield assert(prefixes)(isNonEmpty) && assert(prefixes.keys)(contains("GOREL")) && assert(classes)(isNonEmpty) && assert(classes)(
         contains(BiolinkClass("BiologicalEntity"))) && assert(predicates)(isNonEmpty) && assert(predicates)(
-        contains(BiolinkPredicate("related_to")))
+        contains(BiolinkPredicate("related_to"))) && assert(predicates)(
+          contains(BiolinkPredicate("negatively_regulates__entity_to_entity")))
     }
   )
 
   def spec =
-    suite("Biolink tests")(testLocalPrefixes, testGetBiolinkPrefixesFromFile, testGetBiolinkPrefixesAndClassesAndPredicatesFromFile)
+    suite("Biolink tests")(testLocalPrefixes, testGetBiolinkPrefixesFromFile, testGetBiolinkPrefixesAndClassesAndPredicatesFromFile)  @@ TestAspect.sequential
 
 }
