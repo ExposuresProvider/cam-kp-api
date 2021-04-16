@@ -19,7 +19,7 @@ package object domain {
 
     implicit val embedInSPARQL = SPARQLInterpolator.embed[IRI](Case(SPARQLContext, SPARQLContext) { iri =>
       val pss = new ParameterizedSparqlString()
-      pss.appendIri(iri.value.replace("\"", ""))
+      pss.appendIri(iri.value)
       pss.toString
     })
 
