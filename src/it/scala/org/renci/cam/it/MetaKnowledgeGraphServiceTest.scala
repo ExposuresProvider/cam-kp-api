@@ -13,18 +13,18 @@ import zio.test.Assertion._
 import zio.test._
 import zio.test.environment.testEnvironment
 
-object PredicatesServiceTest extends DefaultRunnableSpec {
+object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec {
 
   val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
   val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
 
-  val predicatesServiceTest = suite("PredicatesService test")(
+  val metaKnowledgeGraphServiceTest = suite("MetaKnowledgeGraphService test")(
     testM("test parsing predicates and for the existence of IndividualOrganism") {
       for {
         httpClient <- HttpClient.client
         biolinkData <- Biolink.biolinkData
-        request = Request[Task](Method.GET, uri"http://127.0.0.1:8080/predicates").withHeaders(`Content-Type`(MediaType.application.json))
+        request = Request[Task](Method.GET, uri"http://127.0.0.1:8080/meta_knowledge_graph").withHeaders(`Content-Type`(MediaType.application.json))
         response <- httpClient.expect[String](request)
       } yield {
 
@@ -41,6 +41,6 @@ object PredicatesServiceTest extends DefaultRunnableSpec {
     }
   )
 
-  def spec = suite("PredicateService tests")(predicatesServiceTest).provideLayerShared(testLayer)
+  def spec = suite("MetaKnowledgeGraphService tests")(metaKnowledgeGraphServiceTest).provideLayerShared(testLayer)
 
 }
