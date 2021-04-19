@@ -9,12 +9,12 @@ import zio.test._
 
 import java.nio.file.{Files, Paths}
 
-object PredicatesServiceTest extends DefaultRunnableSpec with LazyLogging {
+object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLogging {
 
   val testReadPredicates = suite("readPredicates")(
     testM("test PredicatesService.readPredicates") {
       for {
-        predicates <- PredicatesService.readPredicates
+        predicates <- MetaKnowledgeGraphService.readPredicates
       } yield assert(predicates)(isNonEmpty) && assert(predicates.keys)(contains(BiolinkClass("MacromolecularMachine")))
     }
   )
