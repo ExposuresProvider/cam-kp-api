@@ -15,7 +15,7 @@ import java.nio.charset.StandardCharsets
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 
-object PredicatesService extends LazyLogging {
+object MetaKnowledgeGraphService extends LazyLogging {
 
   case class Triple(subj: BiolinkClass, pred: BiolinkPredicate, obj: BiolinkClass)
 
