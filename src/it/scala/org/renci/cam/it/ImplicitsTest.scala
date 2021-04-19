@@ -71,7 +71,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
         biolinkData <- Biolink.biolinkData
       } yield {
         val predicate = BiolinkPredicate("related_to")
-        val predicateJson = predicate.asJson(Implicits.biolinkPredicateEncoder)
+        val predicateJson = predicate.asJson(Implicits.biolinkPredicateEncoder(biolinkData.prefixes))
         val decoded = predicateJson.as[BiolinkPredicate](Implicits.biolinkPredicateDecoder(biolinkData.predicates)).toOption.get
         assert(predicate)(equalTo(decoded))
       }
