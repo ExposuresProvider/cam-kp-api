@@ -41,11 +41,11 @@ object Server extends App with LazyLogging {
 
   import LocalTapirJsonCirce._
 
-  val predicatesEndpointZ: URIO[Has[BiolinkData], ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]] =
+  val metaKnowledgeGraphEndpointZ: URIO[Has[BiolinkData], ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]] =
     for {
       biolinkData <- biolinkData
     } yield endpoint.get
-      .in("predicates")
+      .in("meta_knowledge_graph")
       .errorOut(stringBody)
       .out(
         {
@@ -56,13 +56,13 @@ object Server extends App with LazyLogging {
           jsonBody[Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]
         }
       )
-      .summary("Get predicates used at this service")
+      .summary("Get MetaKnowledgeGraph used at this service")
 
-  def predicatesRouteR(predicatesEndpoint: ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]])
+  def metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint: ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]])
     : URIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
-    predicatesEndpoint.toRoutesR { case () =>
+    metaKnowledgeGraphEndpoint.toRoutesR { case () =>
       val program = for {
-        response <- PredicatesService.run
+        response <- MetaKnowledgeGraphService.run
       } yield response
       program.mapError(error => error.getMessage)
     }
@@ -116,12 +116,12 @@ object Server extends App with LazyLogging {
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- getConfig[AppConfig]
-        predicatesEndpoint <- predicatesEndpointZ
-        predicatesRoute <- predicatesRouteR(predicatesEndpoint)
+        metaKnowledgeGraphEndpoint <- metaKnowledgeGraphEndpointZ
+        metaKnowledgeGraphRoute <- metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint)
         queryEndpoint <- queryEndpointZ
         queryRoute <- queryRouteR(queryEndpoint)
-        routes = queryRoute <+> predicatesRoute
-        openAPI: String = List(queryEndpoint, predicatesEndpoint)
+        routes = queryRoute <+> metaKnowledgeGraphRoute
+        openAPI: String = List(queryEndpoint, metaKnowledgeGraphEndpoint)
           .toOpenAPI("CAM-KP API", "0.1")
           .copy(info = openAPIInfo)
           .copy(tags = List(sttp.tapir.openapi.Tag("translator")))
