@@ -104,6 +104,19 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
     }
   )
 
+
+  val testBiolinkPredicateEncoder = suite("testBiolinkPredicateEncoder")(
+    testM("test Implicits.biolinkPredicateEncoder") {
+      for {
+        biolinkData <- Biolink.biolinkData
+      } yield {
+        val bc = BiolinkPredicate("related_to")
+        val json = bc.asJson(Implicits.biolinkPredicateEncoder(biolinkData.prefixes)).deepDropNullValues.noSpaces.replace("\"", "")
+        assert(json)(equalTo("biolink:related_to"))
+      }
+    }
+  )
+
   val testIRIKeyEncoder = suite("testIRIKeyEncoder")(
     testM("test Implicits.iriKeyEncoder") {
       for {
