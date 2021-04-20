@@ -8,6 +8,7 @@ import org.apache.jena.sparql.core.{Var => JenaVar}
 import org.phenoscape.sparql.FromQuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator.SPARQLContext
+import org.renci.cam.domain.LogLevels.LogLevel
 
 import scala.util.Try
 
@@ -86,13 +87,12 @@ package object domain {
 
     }
 
-    def apply(label: String): BiolinkPredicate = {
+    def apply(label: String): BiolinkPredicate =
       if (!label.startsWith(BiolinkTerm.namespace)) {
         BiolinkPredicate(label, IRI(s"${BiolinkTerm.namespace}$label"))
       } else {
         BiolinkPredicate(label, IRI(s"$label"))
       }
-    }
 
   }
 
@@ -106,13 +106,25 @@ package object domain {
 
   }
 
-  final case class TRAPIQueryNode(id: Option[IRI], category: Option[BiolinkClass], is_set: Option[Boolean])
+  final case class TRAPIQueryNode(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], is_set: Option[Boolean])
 
-  final case class TRAPIQueryEdge(predicate: Option[List[BiolinkPredicate]], relation: Option[String], subject: String, `object`: String)
+  final case class TRAPIQueryEdge(predicates: Option[List[BiolinkPredicate]],
+                                  relation: Option[String],
+                                  subject: String,
+                                  `object`: String,
+                                  constraints: Option[List[TRAPIQueryConstraint]])
+
+  final case class TRAPIQueryConstraint(id: IRI,
+                                        name: String,
+                                        not: Option[Boolean],
+                                        operator: String,
+                                        value: String,
+                                        unit_id: Option[IRI],
+                                        unit_name: Option[String])
 
   final case class TRAPIQueryGraph(nodes: Map[String, TRAPIQueryNode], edges: Map[String, TRAPIQueryEdge])
 
-  final case class TRAPINode(name: Option[String], category: Option[List[BiolinkClass]], attributes: Option[List[TRAPIAttribute]])
+  final case class TRAPINode(name: Option[String], categories: Option[List[BiolinkClass]], attributes: Option[List[TRAPIAttribute]])
 
   final case class TRAPIEdge(predicate: Option[BiolinkPredicate],
                              relation: Option[String],
@@ -120,7 +132,14 @@ package object domain {
                              `object`: IRI,
                              attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPIAttribute(name: Option[String], value: String, `type`: IRI, url: Option[String], source: Option[String])
+//  final case class TRAPIAttribute(name: Option[String], value: String, `type`: IRI, url: Option[String], source: Option[String])
+  final case class TRAPIAttribute(attribute_type_id: IRI,
+                                  original_attribute_name: Option[String],
+                                  value: List[String],
+                                  value_type_id: IRI,
+                                  attribute_source: Option[String],
+                                  value_url: Option[String],
+                                  description: Option[String])
 
   final case class TRAPIKnowledgeGraph(nodes: Map[IRI, TRAPINode], edges: Map[String, TRAPIEdge])
 
@@ -134,7 +153,7 @@ package object domain {
                                 knowledge_graph: Option[TRAPIKnowledgeGraph],
                                 results: Option[List[TRAPIResult]])
 
-  final case class TRAPIQuery(message: TRAPIMessage)
+  final case class TRAPIQuery(message: TRAPIMessage, log_level: String)
 
   final case class TRAPIResponse(message: TRAPIMessage, status: Option[String], description: Option[String], logs: Option[List[LogEntry]])
 
