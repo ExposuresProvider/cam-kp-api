@@ -140,7 +140,19 @@ object QueryService extends LazyLogging {
 
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(trapiKGNodes, trapiKGEdges)), Some(finalResults.distinct))
 
-  def getNodeTypes(nodes: Map[String, TRAPIQueryNode]): Map[String, IRI] =
+//  final case class TRAPIQueryNode(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], is_set: Option[Boolean])
+//  def getNodeTypes(nodes: Map[String, TRAPIQueryNode]): Map[String, IRI] =
+//    nodes
+//      .map(entry =>
+//        (entry._2.category, entry._2.id) match {
+//          case (_, Some(c))    => List(entry._1 -> c)
+//          case (Some(t), None) => List(entry._1 -> t.iri)
+//          case (None, None)    => Nil
+//        })
+//      .flatten
+//      .toMap
+
+  def getNodeTypes(nodes: Map[String, TRAPIQueryNode]): Map[String, List[IRI]] =
     nodes
       .map(entry =>
         (entry._2.category, entry._2.id) match {
@@ -174,12 +186,12 @@ object QueryService extends LazyLogging {
 
   def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph, biolinkPredicates: List[BiolinkPredicate]): TRAPIQueryGraph = {
     val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
-      val newPredicate = edge.predicate match {
+      val newPredicate = edge.predicates match {
         case None          => Some(List(BiolinkPredicate("related_to")))
         case somePredicate => somePredicate
       }
       val filteredPredicates = newPredicate.get.filter(pred => biolinkPredicates.contains(pred))
-      edgeID -> edge.copy(predicate = Some(filteredPredicates))
+      edgeID -> edge.copy(predicates = Some(filteredPredicates))
     }
     queryGraph.copy(edges = improvedEdgeMap)
   }
@@ -206,7 +218,7 @@ object QueryService extends LazyLogging {
               predicate = querySolution.getResource(k).getURI
               tripleString = TripleString(source, predicate, target)
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
-              attributes = List(TRAPIAttribute(Some("provenance"), provValue, IRI(source), None, None))
+              attributes = List(TRAPIAttribute(IRI(source), Some("provenance"), List(provValue), sourceType, None, None, None))
               predicatesBLMapping <- ZIO.fromOption(predicatesMap.get(k)).orElseFail(new Exception("no biolink pred mapped value"))
               blPred = predicatesBLMapping.get(IRI(predicate))
               trapiEdgeKey = getTRAPIEdgeKey(sourceType.value, blPred, targetType.value)
@@ -405,7 +417,7 @@ object QueryService extends LazyLogging {
 
   def getTRAPIQEdgePredicates(edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, Map[IRI, BiolinkPredicate]] =
     for {
-      edgePredicates <- ZIO.fromOption(edge.predicate).orElseFail(new Exception("failed to get edge type"))
+      edgePredicates <- ZIO.fromOption(edge.predicates).orElseFail(new Exception("failed to get edge type"))
       queryText <- Task.effect(getTRAPIQEdgePredicatesQueryText(edgePredicates.map(a => sparql" ${a.iri} ").fold(sparql"")(_ + _)))
       predicates <- SPARQLQueryExecutor.runSelectQueryAs[Predicate](queryText.toQuery)
       ret = predicates.map(p => p.predicate -> p.biolinkPredicate).toMap
