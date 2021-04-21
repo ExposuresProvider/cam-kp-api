@@ -1,11 +1,12 @@
 package org.renci.cam.it
 
+import io.circe.generic.auto._
 import io.circe.{Decoder, Encoder, parser}
 import org.http4s._
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.renci.cam._
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, MetaKnowledgeGraph}
 import zio.Task
 import zio.blocking.Blocking
 import zio.interop.catz._
@@ -30,13 +31,14 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec {
 
         implicit val biolinkClassKeyDecoder = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
         implicit val biolinkClassKeyEncoder = Implicits.biolinkClassKeyEncoder
+
         implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder
         implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
 
         val parsed = parser.parse(response).toOption.get
-        val map = parsed.as[Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]
+        val mkg = parsed.as[MetaKnowledgeGraph]
 
-        assert(map)(isRight) && assert(map.toOption.get.keys)(contains(BiolinkClass("IndividualOrganism")))
+        assert(mkg)(isRight) && assert(mkg.toOption.get.edges.map(a => a.subject))(contains(BiolinkClass("IndividualOrganism")))
       }
     }
   )
