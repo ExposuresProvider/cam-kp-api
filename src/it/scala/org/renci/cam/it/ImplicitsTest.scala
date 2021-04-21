@@ -71,7 +71,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
         biolinkData <- Biolink.biolinkData
       } yield {
         val predicate = BiolinkPredicate("related_to")
-        val predicateJson = predicate.asJson(Implicits.biolinkPredicateEncoder)
+        val predicateJson = predicate.asJson(Implicits.biolinkPredicateEncoder(biolinkData.prefixes))
         val decoded = predicateJson.as[BiolinkPredicate](Implicits.biolinkPredicateDecoder(biolinkData.predicates)).toOption.get
         assert(predicate)(equalTo(decoded))
       }
@@ -100,6 +100,19 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
         val iriJson = iri.asJson(Implicits.iriEncoder(biolinkData.prefixes))
         val decoded = iriJson.as[IRI](Implicits.iriDecoder(biolinkData.prefixes)).toOption.get
         assert(iri)(equalTo(decoded))
+      }
+    }
+  )
+
+
+  val testBiolinkPredicateEncoder = suite("testBiolinkPredicateEncoder")(
+    testM("test Implicits.biolinkPredicateEncoder") {
+      for {
+        biolinkData <- Biolink.biolinkData
+      } yield {
+        val bc = BiolinkPredicate("related_to")
+        val json = bc.asJson(Implicits.biolinkPredicateEncoder(biolinkData.prefixes)).deepDropNullValues.noSpaces.replace("\"", "")
+        assert(json)(equalTo("biolink:related_to"))
       }
     }
   )

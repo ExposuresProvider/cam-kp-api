@@ -6,7 +6,7 @@ import org.http4s._
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.renci.cam._
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, MetaKnowledgeGraph}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, MetaKnowledgeGraph}
 import zio.Task
 import zio.blocking.Blocking
 import zio.interop.catz._
@@ -25,15 +25,19 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec {
       for {
         httpClient <- HttpClient.client
         biolinkData <- Biolink.biolinkData
-        request = Request[Task](Method.GET, uri"http://127.0.0.1:8080/meta_knowledge_graph").withHeaders(`Content-Type`(MediaType.application.json))
+        request = Request[Task](Method.GET, uri"http://127.0.0.1:8080/meta_knowledge_graph").withHeaders(
+          `Content-Type`(MediaType.application.json))
         response <- httpClient.expect[String](request)
       } yield {
 
-        implicit val biolinkClassKeyDecoder = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
-        implicit val biolinkClassKeyEncoder = Implicits.biolinkClassKeyEncoder
+        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
 
-        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder
+        implicit val blClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+        implicit val blClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+
         implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
 
         val parsed = parser.parse(response).toOption.get
         val mkg = parsed.as[MetaKnowledgeGraph]

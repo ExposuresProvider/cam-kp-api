@@ -66,12 +66,13 @@ object Implicits {
     val localName = s.replace("biolink:", "")
     biolinkPredicates.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName) match {
       case Some(pred) => pred
-      case None => BiolinkPredicate(s"$BiolinkPredicate$localName")
+      case None => BiolinkPredicate(s"$BiolinkNamespace$localName")
     }
   }
 
-  def biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { s =>
-    s.withBiolinkPrefix
+  def biolinkPredicateEncoder(prefixesMap: Map[String, String]): Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { s =>
+    compactIRIIfPossible(s.iri, prefixesMap)
+    //s.withBiolinkPrefix
   }
 
   def biolinkClassKeyEncoder: KeyEncoder[BiolinkClass] = KeyEncoder.encodeKeyString.contramap { bc: BiolinkClass =>

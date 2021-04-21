@@ -42,9 +42,12 @@ object Biolink {
       firstPass = contextJsonObject.toIterable.filter(entry => entry._2.isObject && entry._2.asObject.get.contains("@id") && entry._2.asObject.get.contains("@prefix")).map(entry => {
         entry._1 -> entry._2.hcursor.downField("@id").focus.get.toString().replaceAll("\"", "")
       }).toMap
-      secondPass = contextJsonObject.toIterable.filter(entry => entry._2.isString).map(entry => {
-        entry._1 -> entry._2.toString().replaceAll("\"", "")
-      }).toMap
+      secondPass = contextJsonObject.toIterable
+        .filter(entry => entry._2.isString && !entry._1.equals("@vocab") && !entry._1.equals("id"))
+        .map { entry =>
+          entry._1 -> entry._2.toString().replaceAll("\"", "")
+        }
+        .toMap
       map = firstPass ++ secondPass
     } yield map
 
