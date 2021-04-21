@@ -120,7 +120,6 @@ object QueryService extends LazyLogging {
           }
           $limitSparql
           """
-      _ = logger.warn("queryString: {}", queryString.text)
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
       solutionTriples = for {
         queryEdge <- queryGraph.edges
