@@ -11,14 +11,14 @@ import java.nio.file.{Files, Paths}
 
 object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLogging {
 
-  val testReadMetaKnowledgeGraph = suite("readMetaKnowledgeGraph")(
-    testM("test MetaKnowledgeGraphService.readMetaKnowledgeGraph") {
-      for {
-        predicates <- MetaKnowledgeGraphService.readPredicates
-      } yield assert(predicates)(isNonEmpty) && assert(predicates.keys)(contains(BiolinkClass("MacromolecularMachine")))
-    }
-  )
+//  val testReadMetaKnowledgeGraph = suite("readMetaKnowledgeGraph")(
+//    testM("test MetaKnowledgeGraphService.readMetaKnowledgeGraph") {
+//      for {
+//        predicates <- MetaKnowledgeGraphService.readPredicates
+//      } yield assert(predicates)(isNonEmpty) && assert(predicates.keys)(contains(BiolinkClass("MacromolecularMachine")))
+//    }
+//  )
 
-  def spec = suite("MetaKnowledgeGraphService tests")(testReadMetaKnowledgeGraph)
+  def spec = suite("MetaKnowledgeGraphService tests")(/*testReadMetaKnowledgeGraph*/)
 
 }
