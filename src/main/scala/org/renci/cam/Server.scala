@@ -41,7 +41,7 @@ object Server extends App with LazyLogging {
 
   import LocalTapirJsonCirce._
 
-  val metaKnowledgeGraphEndpointZ: URIO[Has[BiolinkData], ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]] =
+  val metaKnowledgeGraphEndpointZ: URIO[Has[BiolinkData], ZEndpoint[Unit, String, MetaKnowledgeGraph]] =
     for {
       biolinkData <- biolinkData
     } yield endpoint.get
@@ -49,16 +49,21 @@ object Server extends App with LazyLogging {
       .errorOut(stringBody)
       .out(
         {
+          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+
           implicit val blClassKeyDecoder: KeyDecoder[BiolinkClass] = (blClass: String) => Some(BiolinkClass(blClass))
-          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(predicate => s"biolink:${predicate.shorthand}")
           implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => s"biolink:${blClass.shorthand}"
-          jsonBody[Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]
+
+          implicit val blPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder
+
+          jsonBody[MetaKnowledgeGraph]
         }
       )
       .summary("Get MetaKnowledgeGraph used at this service")
 
-  def metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint: ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]])
+  def metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint: ZEndpoint[Unit, String, MetaKnowledgeGraph])
     : URIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
     metaKnowledgeGraphEndpoint.toRoutesR { case () =>
       val program = for {
