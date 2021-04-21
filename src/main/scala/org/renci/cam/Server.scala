@@ -52,11 +52,11 @@ object Server extends App with LazyLogging {
           implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
           implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
 
-          implicit val blClassKeyDecoder: KeyDecoder[BiolinkClass] = (blClass: String) => Some(BiolinkClass(blClass))
-          implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => s"biolink:${blClass.shorthand}"
+          implicit val blClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+          implicit val blClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
 
           implicit val blPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder
+          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
 
           jsonBody[MetaKnowledgeGraph]
         }
