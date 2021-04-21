@@ -59,7 +59,6 @@ object QueryService extends LazyLogging {
     for {
       biolinkData <- biolinkData
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
-      nodeTypes = getNodeTypes(queryGraph.nodes)
       namedThingBiolinkClass <- ZIO
         .fromOption(biolinkData.classes.find(a => a.shorthand == "NamedThing"))
         .orElseFail(new Exception("Could not find BiolinkClass:NamedThing"))
@@ -75,23 +74,43 @@ object QueryService extends LazyLogging {
           edgeIDVar = Var(k)
           edgeSourceVar = Var(v.subject)
           edgeTargetVar = Var(v.`object`)
-          sparqlChunk =
-            sparql"""
-                 VALUES $edgeIDVar { $predicatesQueryText }
-                 $edgeSourceVar $edgeIDVar $edgeTargetVar .
-              """
-        } yield (v, sparqlChunk)
+          predicatesValuesClause = sparql""" VALUES $edgeIDVar { $predicatesQueryText } """
+
+          subjectNode = queryGraph.nodes(v.subject)
+          subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
+            case (Some(c), _) =>
+              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a, $b")
+              sparql" VALUES $edgeSourceVar { $idList } "
+            case (None, Some(t)) =>
+              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a, $b")
+              sparql"$edgeSourceVar $RDFType $idList . "
+            case (None, None) => sparql""
+          }
+
+          objectNode = queryGraph.nodes(v.`object`)
+          objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
+            case (Some(c), _) =>
+              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a, $b")
+              sparql" VALUES $edgeTargetVar { $idList } "
+            case (None, Some(t)) =>
+              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a, $b")
+              sparql"$edgeTargetVar $RDFType $idList . "
+            case (None, None) => sparql""
+          }
+
+          nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
+          ret = sparql"""
+              $predicatesValuesClause
+              $nodesValuesClauses
+              $edgeSourceVar $edgeIDVar $edgeTargetVar .
+            """
+
+        } yield (v, ret)
       }
       (edges, sparqlLines) = predicates.unzip
       nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
       projections = getProjections(queryGraph)
-      moreLines = for {
-        id <- edges.flatMap(a => List(a.subject, a.`object`))
-        subjVar = Var(id)
-        v <- nodeTypes.get(id)
-        ret = sparql"$subjVar $RDFType $v ."
-      } yield ret
-      valuesClause = (sparqlLines ++ moreLines).fold(sparql"")(_ + _)
+      valuesClause = sparqlLines.fold(sparql"")(_ + _)
       limitSparql = getLimit(limit)
       queryString =
         sparql"""SELECT DISTINCT $projections
@@ -101,6 +120,7 @@ object QueryService extends LazyLogging {
           }
           $limitSparql
           """
+      _ = logger.warn("queryString: {}", queryString.text)
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
       solutionTriples = for {
         queryEdge <- queryGraph.edges
@@ -139,29 +159,6 @@ object QueryService extends LazyLogging {
       trapiKGEdges = initialKGEdges ++ extraKGEdges
 
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(trapiKGNodes, trapiKGEdges)), Some(finalResults.distinct))
-
-//  final case class TRAPIQueryNode(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], is_set: Option[Boolean])
-//  def getNodeTypes(nodes: Map[String, TRAPIQueryNode]): Map[String, IRI] =
-//    nodes
-//      .map(entry =>
-//        (entry._2.category, entry._2.id) match {
-//          case (_, Some(c))    => List(entry._1 -> c)
-//          case (Some(t), None) => List(entry._1 -> t.iri)
-//          case (None, None)    => Nil
-//        })
-//      .flatten
-//      .toMap
-
-  def getNodeTypes(nodes: Map[String, TRAPIQueryNode]): Map[String, List[IRI]] =
-    nodes
-      .map(entry =>
-        (entry._2.category, entry._2.id) match {
-          case (_, Some(c))    => List(entry._1 -> c)
-          case (Some(t), None) => List(entry._1 -> t.iri)
-          case (None, None)    => Nil
-        })
-      .flatten
-      .toMap
 
   def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
     nodes
