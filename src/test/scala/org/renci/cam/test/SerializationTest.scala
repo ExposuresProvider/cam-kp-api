@@ -28,8 +28,6 @@ object SerializationTest extends DefaultRunnableSpec {
   val testIRIEncoder = suite("testIRIEncoder")(
     testM("test Implicits.iriEncoder") {
       val iri = IRI("http://identifiers.org/wormbase/WBGene00013878")
-      //      val prefixes: Map[String, String] = Map("NCBIGENE" -> "http://identifiers.org/ncbigene/")
-      //      implicit val implicitPrefixes = Implicits.iriEncoder(prefixes)
 
       val biolinkData: URIO[Has[BiolinkData], BiolinkData] = ZIO.service
       for {
@@ -156,7 +154,6 @@ object SerializationTest extends DefaultRunnableSpec {
       baos.close();
       val json = new String(baos.toByteArray)
 
-//      println("json: " + json)
       assert(json)(isNonEmptyString)
     }
   )
