@@ -92,7 +92,7 @@ package object domain {
       if (!label.startsWith(BiolinkTerm.namespace)) {
         BiolinkPredicate(label, IRI(s"${BiolinkTerm.namespace}$label"))
       } else {
-        BiolinkPredicate(label, IRI(s"$label"))
+        BiolinkPredicate(label.replace(BiolinkTerm.namespace, ""), IRI(s"$label"))
       }
 
   }
