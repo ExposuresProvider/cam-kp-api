@@ -2,6 +2,8 @@ package org.renci.cam
 
 import com.google.common.base.CaseFormat
 import contextual.Case
+import io.circe.Decoder.Result
+import io.circe.{Decoder, HCursor}
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
 import org.apache.jena.sparql.core.{Var => JenaVar}
@@ -86,13 +88,12 @@ package object domain {
 
     }
 
-    def apply(label: String): BiolinkPredicate = {
+    def apply(label: String): BiolinkPredicate =
       if (!label.startsWith(BiolinkTerm.namespace)) {
         BiolinkPredicate(label, IRI(s"${BiolinkTerm.namespace}$label"))
       } else {
         BiolinkPredicate(label, IRI(s"$label"))
       }
-    }
 
   }
 
@@ -107,6 +108,18 @@ package object domain {
   }
 
   final case class TRAPIQueryNode(id: Option[IRI], category: Option[BiolinkClass], is_set: Option[Boolean])
+
+  object PredicateOrPredicateList {
+
+    def decoder(implicit predicateDecoder: Decoder[BiolinkPredicate]): Decoder[List[BiolinkPredicate]] =
+      new Decoder[List[BiolinkPredicate]]() {
+
+        override def apply(c: HCursor): Result[List[BiolinkPredicate]] =
+          c.as[List[BiolinkPredicate]].orElse(c.as[BiolinkPredicate].map(_ :: Nil))
+
+      }
+
+  }
 
   final case class TRAPIQueryEdge(predicate: Option[List[BiolinkPredicate]], relation: Option[String], subject: String, `object`: String)
 
