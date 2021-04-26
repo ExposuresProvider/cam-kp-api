@@ -89,7 +89,6 @@
   "MP" : "http://purl.obolibrary.org/obo/MP_",
   "MSigDB" : "https://www.gsea-msigdb.org/gsea/msigdb/",
   "MetaCyc" : "http://translator.ncats.nih.gov/MetaCyc_",
-  "NCBIGENE" : "http://identifiers.org/ncbigene/",
   "NCBITaxon" : "http://purl.obolibrary.org/obo/NCBITaxon_",
   "NCIT" : "http://purl.obolibrary.org/obo/NCIT_",
   "NDC" : "http://identifiers.org/ndc/",
