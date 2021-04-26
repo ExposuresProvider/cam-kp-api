@@ -24,9 +24,9 @@ import sttp.tapir.openapi.{Contact, Info, License}
 import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.ztapir._
 import zio._
-import zio.blocking.{Blocking, blocking}
+import zio.blocking.{blocking, Blocking}
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{ZConfig, getConfig}
+import zio.config.{getConfig, ZConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 
@@ -79,6 +79,7 @@ object Server extends App with LazyLogging {
       implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
       implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
       implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+      implicit val predicateOrPredicateListDeoder: Decoder[List[BiolinkPredicate]] = PredicateOrPredicateList.decoder
       //          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
       endpoint.post
         .in("query")
