@@ -21,9 +21,9 @@ import java.nio.file.{Files, Paths}
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
-  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
+//  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
+  val testLayer = (testEnvironment /*++ camkpapiTestLayer*/ ++ camkpapiLayer).mapError(TestFailure.die)
 
   def runTest(trapiQuery: TRAPIQuery): RIO[HttpClient with Has[BiolinkData], String] =
     for {
@@ -236,8 +236,23 @@ object QueryServiceTest extends DefaultRunnableSpec {
     }
   )
 
+  val testSimpleQueryRaw = suite("testSimpleQueryRaw")(
+    testM("simple query raw") {
+      val message =
+        """{"message":{"query_graph":{"nodes":{"n0":{"category":"biolink:Gene"},"n1":{"category":"biolink:BiologicalProcess"}},"edges":{"e0":{"predicate":"biolink:has_participant","subject":"n1","object":"n0"}}}}}"""
+      for {
+        httpClient <- HttpClient.client
+        biolinkData <- Biolink.biolinkData
+        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
+        request = Request[Task](Method.POST, uri)
+          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
+          .withEntity(message)
+        response <- httpClient.expect[String](request)
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
   def spec = suite("QueryService tests")(
-    testSimpleQuery,
     testFindGenesEnablingAnyKindOfCatalyticActivity,
     testNegativeRegulationChaining,
     testBeclomethasone,
@@ -247,7 +262,9 @@ object QueryServiceTest extends DefaultRunnableSpec {
     testGene2Process2Process2Gene,
     testAcrocyanosis,
     testPathway,
-    testERAD
+    testERAD,
+    testSimpleQuery,
+    testSimpleQueryRaw
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
