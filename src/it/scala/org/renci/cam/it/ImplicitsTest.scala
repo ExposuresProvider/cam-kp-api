@@ -113,7 +113,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
         val nodeMap: Map[IRI, TRAPINode] =
           Map((IRI("http://identifiers.org/ncbigene/558"), TRAPINode(Some("asdf"), Some(List(BiolinkClass("Gene"))), None)))
         val edgeMap: Map[String, TRAPIEdge] =
-          Map(("zxcv", TRAPIEdge(IRI("zxcv-sub"), IRI("zxcv-obj"), None, Some(BiolinkPredicate("related_to")), None)))
+          Map(("zxcv", TRAPIEdge(Some(BiolinkPredicate("related_to")), None, IRI("zxcv-sub"), IRI("zxcv-obj"), None)))
         val knowledgeGraph = TRAPIKnowledgeGraph(nodeMap, edgeMap)
         val json = knowledgeGraph.asJson.deepDropNullValues.noSpaces
         assert(json)(containsString("\"NCBIGENE:558\":"))

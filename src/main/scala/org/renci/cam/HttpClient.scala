@@ -14,8 +14,10 @@ object HttpClient {
   def makeHttpClient: TaskManaged[Client[Task]] =
     ZIO.runtime[Any].toManaged_.flatMap { implicit rts =>
       BlazeClientBuilder[Task](rts.platform.executor.asEC)
-        .withIdleTimeout(Duration(2, MINUTES))
-        .withConnectTimeout(Duration(3, MINUTES))
+        .withConnectTimeout(Duration(5, MINUTES))
+        .withIdleTimeout(Duration(4, MINUTES))
+        .withRequestTimeout(3, MINUTES)
+        .withResponseHeaderTimeout(2, MINUTES)
         .resource
         .toManaged
     }
