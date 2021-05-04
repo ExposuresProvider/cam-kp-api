@@ -6,9 +6,11 @@ import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder}
 import org.http4s._
 import org.http4s.headers._
 import org.http4s.implicits._
+import org.renci.cam.Biolink.BiolinkData
+import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam._
 import org.renci.cam.domain._
-import zio.Task
+import zio.{Has, RIO, Task, ZIO}
 import zio.blocking.Blocking
 import zio.interop.catz._
 import zio.test.Assertion._
@@ -19,42 +21,43 @@ import java.nio.file.{Files, Paths}
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
-  //val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
+  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = (testEnvironment /*++ camkpapiTestLayer*/ ++ camkpapiLayer).mapError(TestFailure.die)
+  val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
+
+  def runTest(trapiQuery: TRAPIQuery): RIO[HttpClient with Has[BiolinkData], String] =
+    for {
+      httpClient <- HttpClient.client
+      biolinkData <- Biolink.biolinkData
+      encoded = {
+        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
+        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+        trapiQuery.asJson.deepDropNullValues.noSpaces
+      }
+      _ = println("encoded: " + encoded)
+      uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
+      request = Request[Task](Method.POST, uri)
+        .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
+        .withEntity(encoded)
+      response <- httpClient.expect[String](request)
+      //        _ = println("response: " + response)
+    } yield response
 
   val testSimpleQuery = suite("testSimpleQuery")(
     testM("test simple query") {
+      val n0Node = TRAPIQueryNode(None, Some(BiolinkClass("Gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n1", "n0")
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+      val message = TRAPIMessage(Some(queryGraph), None, None)
+      val requestBody = TRAPIQuery(message)
       for {
-        httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
-        encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-          implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-          implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-
-          val n0Node = TRAPIQueryNode(None, Some(BiolinkClass("Gene")), None)
-          val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("BiologicalProcess")), None)
-          val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n1", "n0")
-          val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
-          val message = TRAPIMessage(Some(queryGraph), None, None)
-          val requestBody = TRAPIQuery(message)
-          requestBody.asJson.deepDropNullValues.noSpaces
-        }
-        _ = println("encoded: " + encoded)
-        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        request = Request[Task](Method.POST, uri)
-          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-          .withEntity(encoded)
-        response <- httpClient.expect[String](request)
-//        _ = println("response: " + response)
+        response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } //@@ TestAspect.ignore
+    }
   )
 
   val testFindGenesEnablingAnyKindOfCatalyticActivity = suite("testFindGenesEnablingAnyKindOfCatalyticActivity")(
@@ -66,28 +69,10 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
-        httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
-        encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-          implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-          implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          requestBody.asJson.deepDropNullValues.noSpaces
-        }
-        _ = println("encoded: " + encoded)
-        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        request = Request[Task](Method.POST, uri)
-          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-          .withEntity(encoded)
-        response <- httpClient.expect[String](request)
-//        _ = println("response: " + response)
-//        _ = Files.writeString(Paths.get("src/test/resources/local-scala-find-genes-enabling-catalytic-activity.json"), response)
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-find-genes-enabling-catalytic-activity.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testGene2Process2Process2Gene = suite("testGene2Process2Process2Gene")(
@@ -104,28 +89,10 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
-        httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
-        encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-          implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-          implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          requestBody.asJson.deepDropNullValues.noSpaces
-        }
-        _ = println("encoded: " + encoded)
-        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        request = Request[Task](Method.POST, uri)
-          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-          .withEntity(encoded)
-        response <- httpClient.expect[String](request)
-//        _ = println("response: " + response)
-//        _ = Files.writeString(Paths.get("src/test/resources/local-scala-gene-to-process-to-process-to-gene.json"), response)
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-gene-to-process-to-process-to-gene.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testNegativeRegulationChaining = suite("testNegativeRegulationChaining")(
@@ -141,203 +108,85 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
-        httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
-        encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-          implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-          implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          requestBody.asJson.deepDropNullValues.noSpaces
-        }
-        _ = println("encoded: " + encoded)
-        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        request = Request[Task](Method.POST, uri)
-          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-          .withEntity(encoded)
-        response <- httpClient.expect[String](request)
-//        _ = println("response: " + response)
-//        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testAcrocyanosis = suite("testAcrocyanosis")(
     testM("acrocyanosis") {
-      val n0Node =
-        TRAPIQueryNode(Some(IRI("UMLS:C0221347")), Some(BiolinkClass("PhenotypicFeature")), None)
-      val n1Node =
-        TRAPIQueryNode(None, Some(BiolinkClass("NamedThing")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("UMLS:C0221347")), Some(BiolinkClass("PhenotypicFeature")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("NamedThing")), None)
       val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
-        httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
-        encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-          implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-          implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          requestBody.asJson.deepDropNullValues.noSpaces
-        }
-        _ = println("encoded: " + encoded)
-        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        request = Request[Task](Method.POST, uri)
-          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-          .withEntity(encoded)
-        response <- httpClient.expect[String](request)
-        //        _ = println("response: " + response)
-        //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-acrocyanosis.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testBeclomethasone = suite("testBeclomethasone")(
     testM("beclomethasone") {
-      val n0Node =
-        TRAPIQueryNode(Some(IRI("DRUGBANK:DB00394")), Some(BiolinkClass("Drug")), None)
-      val n1Node =
-        TRAPIQueryNode(None, Some(BiolinkClass("Disease")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("DRUGBANK:DB00394")), Some(BiolinkClass("Drug")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("Disease")), None)
       val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("treated_by"))), None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
-        httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
-        encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-          implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-          implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          requestBody.asJson.deepDropNullValues.noSpaces
-        }
-        _ = println("encoded: " + encoded)
-        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        request = Request[Task](Method.POST, uri)
-          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-          .withEntity(encoded)
-        response <- httpClient.expect[String](request)
-        //        _ = println("response: " + response)
-        //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-beclomethasone.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testCorrelatedWith = suite("testCorrelatedWith")(
     testM("correlatedWith") {
-      val n0Node =
-        TRAPIQueryNode(Some(IRI("MONDO:0004979")), Some(BiolinkClass("Disease")), None)
-      val n1Node =
-        TRAPIQueryNode(None, Some(BiolinkClass("ChemicalSubstance")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("MONDO:0004979")), Some(BiolinkClass("Disease")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("ChemicalSubstance")), None)
       val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("correlated_with"))), None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
-        httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
-        encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-          implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-          implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          requestBody.asJson.deepDropNullValues.noSpaces
-        }
-        _ = println("encoded: " + encoded)
-        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        request = Request[Task](Method.POST, uri)
-          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-          .withEntity(encoded)
-        response <- httpClient.expect[String](request)
-        //        _ = println("response: " + response)
-        //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-correlated-with.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testPathway = suite("testPathway")(
     testM("pathway") {
-      val n0Node =
-        TRAPIQueryNode(Some(IRI("NCBIGENE:1017")), Some(BiolinkClass("Gene")), None)
-      val n1Node =
-        TRAPIQueryNode(None, Some(BiolinkClass("Pathway")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("NCBIGENE:1017")), Some(BiolinkClass("Gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("Pathway")), None)
       val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
-        httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
-        encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-          implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-          implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          requestBody.asJson.deepDropNullValues.noSpaces
-        }
-        _ = println("encoded: " + encoded)
-        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        request = Request[Task](Method.POST, uri)
-          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-          .withEntity(encoded)
-        response <- httpClient.expect[String](request)
-        //        _ = println("response: " + response)
-        //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-pathway.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testSpmsyChemicals = suite("testSpmsyChemicals")(
     testM("spmsyChemicals") {
-      val n0Node =
-        TRAPIQueryNode(Some(IRI("UniProtKB:P52788")), Some(BiolinkClass("Gene")), None)
-      val n1Node =
-        TRAPIQueryNode(None, Some(BiolinkClass("ChemicalSubstance")), None)
+      val n0Node = TRAPIQueryNode(Some(IRI("UniProtKB:P52788")), Some(BiolinkClass("Gene")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("ChemicalSubstance")), None)
       val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1")
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
-        httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
-        encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-          implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-          implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          requestBody.asJson.deepDropNullValues.noSpaces
-        }
-        _ = println("encoded: " + encoded)
-        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
-        request = Request[Task](Method.POST, uri)
-          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-          .withEntity(encoded)
-        response <- httpClient.expect[String](request)
-        //        _ = println("response: " + response)
-        //        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-spmsy-chemicals.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } @@ TestAspect.ignore
+    }
   )
 
   val testILSixDownRegulators = suite("testILSixDownRegulators")(
@@ -354,53 +203,68 @@ object QueryServiceTest extends DefaultRunnableSpec {
         BiolinkPredicate("decreases_expression_of"),
         BiolinkPredicate("increases_degradation_of"),
         BiolinkPredicate("negatively_regulates__entity_to_entity"),
-        BiolinkPredicate("disrupts")
-//        BiolinkPredicate("directly_negatively_regulates"),
-//        BiolinkPredicate("inhibits"),
-//        BiolinkPredicate("inhibitor"),
-//        BiolinkPredicate("channel_blocker"),
-//        BiolinkPredicate("may_inhibit_effect_of")
+        BiolinkPredicate("disrupts"),
+        BiolinkPredicate("directly_negatively_regulates"),
+        BiolinkPredicate("inhibits"),
+        BiolinkPredicate("inhibitor"),
+        BiolinkPredicate("channel_blocker"),
+        BiolinkPredicate("may_inhibit_effect_of")
       )
-      val e0Edge = TRAPIQueryEdge(Some(predicateList), None, "n0", "n1")
-      val queryGraph = TRAPIQueryGraph(Map("n0" -> n1Node, "n1" -> n0Node), Map("e0" -> e0Edge))
+      val e0Edge = TRAPIQueryEdge(Some(predicateList), None, "n1", "n0")
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val requestBody = TRAPIQuery(message)
       for {
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-ILSixDownRegulators.json"), response)
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
+  val testERAD = suite("testERAD")(
+    testM("erad") {
+      val n0Node = TRAPIQueryNode(Some(IRI("GO:0036503")), Some(BiolinkClass("BiologicalProcess")), None)
+      val n1Node = TRAPIQueryNode(None, Some(BiolinkClass("GeneOrGeneProduct")), None)
+      val e0Edge = TRAPIQueryEdge(None, None, "n1", "n0")
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+      val message = TRAPIMessage(Some(queryGraph), None, None)
+      val requestBody = TRAPIQuery(message)
+      for {
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/test/resources/local-scala-erad.json"), response)
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
+  val testSimpleQueryRaw = suite("testSimpleQueryRaw")(
+    testM("simple query raw") {
+      val message =
+        """{"message":{"query_graph":{"nodes":{"n0":{"category":"biolink:Gene"},"n1":{"category":"biolink:BiologicalProcess"}},"edges":{"e0":{"predicate":"biolink:has_participant","subject":"n1","object":"n0"}}}}}"""
+      for {
         httpClient <- HttpClient.client
         biolinkData <- Biolink.biolinkData
-        encoded = {
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-          implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-          implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-          requestBody.asJson.deepDropNullValues.noSpaces
-        }
-        _ = println("encoded: " + encoded)
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
         request = Request[Task](Method.POST, uri)
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-          .withEntity(encoded)
+          .withEntity(message)
         response <- httpClient.expect[String](request)
-        //        _ = println("response: " + response)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-ILSixDownRegulators.json"), response)
       } yield assert(response)(isNonEmptyString)
-    } //@@ TestAspect.ignore
+    }
   )
 
   def spec = suite("QueryService tests")(
-    testSimpleQuery,
-    testGene2Process2Process2Gene,
     testFindGenesEnablingAnyKindOfCatalyticActivity,
     testNegativeRegulationChaining,
-    testAcrocyanosis,
     testBeclomethasone,
     testCorrelatedWith,
-    testPathway,
     testSpmsyChemicals,
-    testILSixDownRegulators
+    testILSixDownRegulators,
+    testGene2Process2Process2Gene,
+    testAcrocyanosis,
+    testPathway,
+    testERAD,
+    testSimpleQuery,
+    testSimpleQueryRaw
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }

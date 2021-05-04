@@ -2,6 +2,8 @@ package org.renci.cam
 
 import com.google.common.base.CaseFormat
 import contextual.Case
+import io.circe.Decoder.Result
+import io.circe.{Decoder, HCursor}
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
 import org.apache.jena.sparql.core.{Var => JenaVar}
@@ -86,13 +88,12 @@ package object domain {
 
     }
 
-    def apply(label: String): BiolinkPredicate = {
+    def apply(label: String): BiolinkPredicate =
       if (!label.startsWith(BiolinkTerm.namespace)) {
         BiolinkPredicate(label, IRI(s"${BiolinkTerm.namespace}$label"))
       } else {
-        BiolinkPredicate(label, IRI(s"$label"))
+        BiolinkPredicate(label.replace(BiolinkTerm.namespace, ""), IRI(s"$label"))
       }
-    }
 
   }
 

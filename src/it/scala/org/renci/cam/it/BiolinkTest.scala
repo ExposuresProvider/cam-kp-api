@@ -8,7 +8,7 @@ import org.http4s.implicits._
 import org.renci.cam._
 import zio._
 import zio.interop.catz._
-import zio.test.Assertion._
+import zio.test.Assertion.{contains, _}
 import zio.test._
 import zio.test.environment.testEnvironment
 
@@ -28,11 +28,24 @@ object BiolinkTest extends DefaultRunnableSpec {
         response <- httpClient.expect[String](request)
         parsed <- ZIO.fromEither(parse(response))
         contextJson <- ZIO.fromOption(parsed.hcursor.downField("@context").focus)
-        filteredJson = contextJson.deepDropNullValues.mapObject(f =>
-          f.filter(pred => pred._2.isString && pred._1 != "type" && pred._1 != "id" && pred._1 != "@vocab"))
-//        _ <- ZIO.effect(Files.write(Paths.get("src/main/resources/prefixes.json"), filteredJson.toString().getBytes))
-        map <- ZIO.fromEither(decoder.decodeJson(filteredJson))
-      } yield assert(response)(isNonEmptyString) && assert(map.keys)(contains("NCBIGENE") && contains("CHEBI") && contains("GO"))
+        contextJsonObject <- ZIO.fromOption(contextJson.asObject)
+        firstPass = contextJsonObject.toIterable
+          .filter(entry => entry._2.isObject && entry._2.asObject.get.contains("@id") && entry._2.asObject.get.contains("@prefix"))
+          .map { entry =>
+            entry._1 -> entry._2.hcursor.downField("@id").focus.get.toString().replaceAll("\"", "")
+          }
+          .toMap
+        secondPass = contextJsonObject.toIterable
+          .filter(entry => entry._2.isString && !entry._1.equals("@vocab") && !entry._1.equals("id"))
+          .map { entry =>
+            entry._1 -> entry._2.toString().replaceAll("\"", "")
+          }
+          .toMap
+        map = firstPass ++ secondPass
+        _ = println(map)
+      } yield assert(response)(isNonEmptyString) && assert(map.keys)(
+        contains("NCBIGENE") && contains("CHEBI") && contains("GO") && contains("biolink") && not(contains("@vocab")) && not(
+          contains("id"))) && assert(map.values)(contains("https://w3id.org/biolink/vocab/"))
     }
   )
 
