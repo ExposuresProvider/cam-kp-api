@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
-import io.circe.{KeyDecoder, KeyEncoder}
+import io.circe.{Decoder, KeyDecoder, KeyEncoder}
 import org.renci.cam.domain._
 import org.renci.cam.{AppConfig, Biolink, HttpClient, Implicits}
 import zio.ZIO
@@ -18,6 +18,21 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
 
   val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer >+> TypesafeConfig.fromDefaultLoader(
     AppConfig.config)).mapError(TestFailure.die)
+
+  val testBiolinkPredicateOrPredicateListDecoder = suite("testBiolinkPredicateOrPredicateListDecoder")(
+    testM("test Implicits.predicateOrPredicateListDecoder") {
+      for {
+        biolinkData <- Biolink.biolinkData
+      } yield {
+        val dataAsList = """["biolink:participates_in","biolink:related_to"]"""
+        val data = """"biolink:related_to""""
+        implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] = Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
+        val ret = decode[List[BiolinkPredicate]](data)
+        val retWithListData = decode[List[BiolinkPredicate]](dataAsList)
+        assert(ret.toOption.get)(contains(BiolinkPredicate("related_to"))) && assert(retWithListData.toOption.get)(contains(BiolinkPredicate("related_to")))
+      }
+    }
+  )
 
   val testIRIEncoder = suite("testIRIEncoder")(
     testM("test Implicits.iriEncoder") {
@@ -71,7 +86,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
         biolinkData <- Biolink.biolinkData
       } yield {
         val predicate = BiolinkPredicate("related_to")
-        val predicateJson = predicate.asJson(Implicits.biolinkPredicateEncoder)
+        val predicateJson = predicate.asJson(Implicits.biolinkPredicateEncoder(biolinkData.prefixes))
         val decoded = predicateJson.as[BiolinkPredicate](Implicits.biolinkPredicateDecoder(biolinkData.predicates)).toOption.get
         assert(predicate)(equalTo(decoded))
       }
@@ -100,6 +115,19 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
         val iriJson = iri.asJson(Implicits.iriEncoder(biolinkData.prefixes))
         val decoded = iriJson.as[IRI](Implicits.iriDecoder(biolinkData.prefixes)).toOption.get
         assert(iri)(equalTo(decoded))
+      }
+    }
+  )
+
+
+  val testBiolinkPredicateEncoder = suite("testBiolinkPredicateEncoder")(
+    testM("test Implicits.biolinkPredicateEncoder") {
+      for {
+        biolinkData <- Biolink.biolinkData
+      } yield {
+        val bc = BiolinkPredicate("related_to")
+        val json = bc.asJson(Implicits.biolinkPredicateEncoder(biolinkData.prefixes)).deepDropNullValues.noSpaces.replace("\"", "")
+        assert(json)(equalTo("biolink:related_to"))
       }
     }
   )
@@ -143,7 +171,8 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
     testBiolinkClassDecoder,
     testIRIDecoder,
     testIRIKeyEncoder,
-    testIRIKeyDecoder
+    testIRIKeyDecoder,
+    testBiolinkPredicateOrPredicateListDecoder
   ).provideLayerShared(testLayer)
 
 }

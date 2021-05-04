@@ -30,13 +30,10 @@ object QueryServiceTest extends DefaultRunnableSpec {
       httpClient <- HttpClient.client
       biolinkData <- Biolink.biolinkData
       encoded = {
-        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
         implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
         implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
-        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-          Encoder.encodeString.contramap(blTerm => blTerm.withBiolinkPrefix)
+        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
         trapiQuery.asJson.deepDropNullValues.noSpaces
       }
       _ = println("encoded: " + encoded)
@@ -239,8 +236,23 @@ object QueryServiceTest extends DefaultRunnableSpec {
     }
   )
 
+  val testSimpleQueryRaw = suite("testSimpleQueryRaw")(
+    testM("simple query raw") {
+      val message =
+        """{"message":{"query_graph":{"nodes":{"n0":{"category":"biolink:Gene"},"n1":{"category":"biolink:BiologicalProcess"}},"edges":{"e0":{"predicate":"biolink:has_participant","subject":"n1","object":"n0"}}}}}"""
+      for {
+        httpClient <- HttpClient.client
+        biolinkData <- Biolink.biolinkData
+        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
+        request = Request[Task](Method.POST, uri)
+          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
+          .withEntity(message)
+        response <- httpClient.expect[String](request)
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
   def spec = suite("QueryService tests")(
-    testSimpleQuery,
     testFindGenesEnablingAnyKindOfCatalyticActivity,
     testNegativeRegulationChaining,
     testBeclomethasone,
@@ -250,7 +262,9 @@ object QueryServiceTest extends DefaultRunnableSpec {
     testGene2Process2Process2Gene,
     testAcrocyanosis,
     testPathway,
-    testERAD
+    testERAD,
+    testSimpleQuery,
+    testSimpleQueryRaw
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }

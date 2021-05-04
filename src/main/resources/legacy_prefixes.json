@@ -6,5 +6,6 @@
   "CARO": "http://purl.obolibrary.org/obo/CARO_",
   "ZFA": "http://purl.obolibrary.org/obo/ZFA_",
   "BFO": "http://purl.obolibrary.org/obo/BFO_",
-  "WBbt": "http://purl.obolibrary.org/obo/WBbt_"
+  "WBbt": "http://purl.obolibrary.org/obo/WBbt_",
+  "REACTO" : "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#"
 }
