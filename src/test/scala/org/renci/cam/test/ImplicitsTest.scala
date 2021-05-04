@@ -18,14 +18,6 @@ object ImplicitsTest extends DefaultRunnableSpec {
     }
   )
 
-  val testBiolinkPredicateEncoder = suite("testBiolinkPredicateEncoder")(
-    test("test Implicits.biolinkPredicateEncoder") {
-      val bc = BiolinkPredicate("related_to")
-      val json = bc.asJson(Implicits.biolinkPredicateEncoder).deepDropNullValues.noSpaces.replace("\"", "")
-      assert(json)(equalTo("biolink:related_to"))
-    }
-  )
-
   val testIRIEncoder = suite("testIRIEncoder")(
     test("test Implicits.iriEncoder") {
       val iri = IRI("http://identifiers.org/ncbigene/558")
@@ -35,6 +27,6 @@ object ImplicitsTest extends DefaultRunnableSpec {
     }
   )
 
-  def spec = suite("Implicits tests")(testBiolinkClassEncoder, testBiolinkPredicateEncoder, testIRIEncoder)
+  def spec = suite("Implicits tests")(testBiolinkClassEncoder, testIRIEncoder)  @@ TestAspect.sequential
 
 }
