@@ -31,9 +31,11 @@ object QueryService extends LazyLogging {
 
   val SesameDirectType: IRI = IRI("http://www.openrdf.org/schema/sesame#directType")
 
-  val BiolinkMLSlotDefinition: IRI = IRI("https://w3id.org/biolink/biolinkml/meta/types/SlotDefinition")
+  val BiolinkMLSlotDefinition: IRI = IRI("https://w3id.org/linkml/SlotDefinition")
 
-  val BiolinkMLIsA: IRI = IRI("https://w3id.org/biolink/biolinkml/meta/is_a")
+  val BiolinkMLIsA: IRI = IRI("https://w3id.org/linkml/is_a")
+
+  val BiolinkMLMixins: IRI = IRI("https://w3id.org/linkml/mixins")
 
   val RDFSSubPropertyOf: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#subPropertyOf")
 
@@ -153,10 +155,16 @@ object QueryService extends LazyLogging {
 
   def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
     nodes
-      .map { node =>
-        val nodeVar = Var(node._1)
-        val nodeTypeVar = Var(s"${node._1}_type")
-        sparql""" $nodeVar $SesameDirectType $nodeTypeVar .  """
+      .map { case (varLabel, TRAPIQueryNode(id, _, _)) =>
+        val nodeVar = Var(varLabel)
+        val nodeTypeVar = Var(s"${varLabel}_type")
+        id match {
+          // Make sure the query sends back the ID they asked for...
+          // This is good for things with redundant IDs, like genes, but
+          // maybe not ideal if they asked something like 'catalytic activity'
+          case Some(termID) => sparql" BIND($termID AS $nodeTypeVar) "
+          case None         => sparql" $nodeVar $SesameDirectType $nodeTypeVar .  "
+        }
       }
       .fold(sparql"")(_ + _)
 
@@ -384,7 +392,7 @@ object QueryService extends LazyLogging {
            OPTIONAL { ?kid $RDFSLabel ?label . }
            FILTER NOT EXISTS {
              ?kid $SlotMapping ?other .
-             ?other $BiolinkMLIsA+/<https://w3id.org/biolink/biolinkml/meta/mixins>* ?biolinkSlot .
+             ?other $BiolinkMLIsA+/$BiolinkMLMixins* ?biolinkSlot .
            }
          }"""
   }
