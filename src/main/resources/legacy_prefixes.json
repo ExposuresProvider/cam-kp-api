@@ -1,12 +1,11 @@
 {
-  "CIViC": "http://example.org/UNKNOWN/CIViC/",
-  "GTOPDB": "http://example.org/UNKNOWN/GTOPDB/",
-  "HGVS": "http://example.org/UNKNOWN/HGVS/",
-  "MYVARIANT_HG19": "http://example.org/UNKNOWN/MYVARIANT_HG19/",
-  "MYVARIANT_HG38": "http://example.org/UNKNOWN/MYVARIANT_HG38/",
-  "dct": "http://example.org/UNKNOWN/dct/",
   "EMAPA": "http://purl.obolibrary.org/obo/EMAPA_",
-  "PATO": "http://purl.obolibrary.org/obo/PATO_",
   "PCO": "http://purl.obolibrary.org/obo/PCO_",
-  "sesame": "http://www.openrdf.org/schema/sesame#"
+  "sesame": "http://www.openrdf.org/schema/sesame#",
+  "ENVO": "http://purl.obolibrary.org/obo/ENVO_",
+  "CARO": "http://purl.obolibrary.org/obo/CARO_",
+  "ZFA": "http://purl.obolibrary.org/obo/ZFA_",
+  "BFO": "http://purl.obolibrary.org/obo/BFO_",
+  "WBbt": "http://purl.obolibrary.org/obo/WBbt_",
+  "REACTO" : "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#"
 }
