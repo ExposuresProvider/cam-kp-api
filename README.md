@@ -8,7 +8,7 @@ CAMs (Causal Activity Models) are small knowledge graphs built using the [Web On
 
 [Click here for the term definitions.](https://docs.google.com/spreadsheets/d/1C8hKXacxtQC5UzXI4opQs1r4pBJ_5hqgXrZH_raYQ4w/edit#gid=1581951609)
 
-## Querying the database
+## Query Process
 
 Anyone can query the database by posting the query here: [CAM-KP API](https://stars-app.renci.org/cam-kp/docs/index.html?url=docs.yaml#/default/postQuery). Click here for some [example queries](https://github.com/NCATS-Tangerine/cam-kp-api/wiki/Example-Queries).
 
@@ -21,3 +21,7 @@ Anyone can query the database by posting the query here: [CAM-KP API](https://st
 - `sbt docker:stage`
 - `sbt docker:publishLocal`
 - `docker run -p 8080:8080 -it renciorg/cam-kp-api:0.1` (or detached mode: `docker run -p 8080:8080 -d renciorg/cam-kp-api:0.1`)
+
+## Issue Management
+
+Anyone can create new issues by clicking on "New issue" button on the [issues](https://github.com/NCATS-Tangerine/cam-kp-api/issues) page of this repository. Click here for the [current issues](https://github.com/NCATS-Tangerine/cam-kp-api/issues).
