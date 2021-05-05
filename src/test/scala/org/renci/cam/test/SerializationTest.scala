@@ -25,21 +25,6 @@ object SerializationTest extends DefaultRunnableSpec {
   val testLayer = (HttpClient.makeHttpClientLayer >>> Biolink.makeUtilitiesLayer)
     .mapError(TestFailure.fail)
 
-  val testIRIEncoder = suite("testIRIEncoder")(
-    testM("test Implicits.iriEncoder") {
-      val iri = IRI("http://identifiers.org/wormbase/WBGene00013878")
-
-      val biolinkData: URIO[Has[BiolinkData], BiolinkData] = ZIO.service
-      for {
-        bl <- biolinkData
-      } yield {
-        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(bl.prefixes)
-        val json = iri.asJson.deepDropNullValues.noSpaces.replace("\"", "")
-        assert(json)(equalTo("WB:WBGene00013878"))
-      }
-    }
-  )
-
   val testingMessageDigest = suite("testingMessageDigest")(
     testM("test consistency of message digest") {
       for {
@@ -159,8 +144,8 @@ object SerializationTest extends DefaultRunnableSpec {
   )
 
   def spec =
-    suite("Serialization tests")(testingMessageDigest, testParseBlazegraphResponse, testParseBlazegraphEmptyResults, testIRIEncoder)
-      .provideCustomLayer(testLayer) @@ TestAspect.sequential
-
+    suite("Serialization tests")(testingMessageDigest,
+                                 testParseBlazegraphResponse,
+                                 testParseBlazegraphEmptyResults) @@ TestAspect.sequential
 
 }
