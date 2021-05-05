@@ -109,18 +109,6 @@ package object domain {
 
   final case class TRAPIQueryNode(id: Option[IRI], category: Option[BiolinkClass], is_set: Option[Boolean])
 
-  object PredicateOrPredicateList {
-
-    def decoder(implicit predicateDecoder: Decoder[BiolinkPredicate]): Decoder[List[BiolinkPredicate]] =
-      new Decoder[List[BiolinkPredicate]]() {
-
-        override def apply(c: HCursor): Result[List[BiolinkPredicate]] =
-          c.as[List[BiolinkPredicate]].orElse(c.as[BiolinkPredicate].map(_ :: Nil))
-
-      }
-
-  }
-
   final case class TRAPIQueryEdge(predicate: Option[List[BiolinkPredicate]], relation: Option[String], subject: String, `object`: String)
 
   final case class TRAPIQueryGraph(nodes: Map[String, TRAPIQueryNode], edges: Map[String, TRAPIQueryEdge])

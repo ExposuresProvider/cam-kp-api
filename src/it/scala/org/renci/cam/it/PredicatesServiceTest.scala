@@ -30,7 +30,7 @@ object PredicatesServiceTest extends DefaultRunnableSpec {
 
         implicit val biolinkClassKeyDecoder = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
         implicit val biolinkClassKeyEncoder = Implicits.biolinkClassKeyEncoder
-        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder
+        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
         implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
 
         val parsed = parser.parse(response).toOption.get
