@@ -256,17 +256,17 @@ object QueryServiceTest extends DefaultRunnableSpec {
   )
 
   def spec = suite("QueryService tests")(
-    testFindGenesEnablingAnyKindOfCatalyticActivity,
-    testNegativeRegulationChaining,
-    testBeclomethasone,
-    testCorrelatedWith,
-    testSpmsyChemicals,
-    testILSixDownRegulators,
-    testGene2Process2Process2Gene,
-    testAcrocyanosis,
-    testPathway,
-    testERAD,
-    testSimpleQueryRaw,
+//    testFindGenesEnablingAnyKindOfCatalyticActivity,
+//    testNegativeRegulationChaining,
+//    testBeclomethasone,
+//    testCorrelatedWith,
+//    testSpmsyChemicals,
+//    testILSixDownRegulators,
+//    testGene2Process2Process2Gene,
+//    testAcrocyanosis,
+//    testPathway,
+//    testERAD,
+//    testSimpleQueryRaw,
     testSimpleQuery
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
