@@ -79,6 +79,15 @@ object Implicits {
     bc.withBiolinkPrefix
   }
 
+  def predicateOrPredicateListDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[List[BiolinkPredicate]] = new Decoder[List[BiolinkPredicate]]() {
+    implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkPredicates)
+
+    override def apply(c: HCursor): Result[List[BiolinkPredicate]] =
+      for {
+        ret <- c.as[List[BiolinkPredicate]].orElse(c.as[BiolinkPredicate].map(_ :: Nil))
+      } yield ret
+  }
+
   def biolinkClassKeyDecoder(biolinkClasses: List[BiolinkClass]): KeyDecoder[BiolinkClass] = new KeyDecoder[BiolinkClass] {
     override def apply(key: String): Option[BiolinkClass] = {
       val localName = key.replace("biolink:", "")
