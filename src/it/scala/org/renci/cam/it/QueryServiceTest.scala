@@ -245,7 +245,6 @@ object QueryServiceTest extends DefaultRunnableSpec {
       """{"message":{"query_graph":{"nodes":{"n0":{"categories":["biolink:Gene","biolink:GeneOrGeneProduct"]},"n1":{"categories":["biolink:BiologicalProcess"]}},"edges":{"e0":{"predicates":"biolink:has_participant","subject":"n1","object":"n0"}}}}}"""
       for {
         httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
         request = Request[Task](Method.POST, uri)
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
@@ -261,7 +260,6 @@ object QueryServiceTest extends DefaultRunnableSpec {
         """{"message":{"query_graph":{"nodes":{"n0":{"categories":["biolink:Gene","biolink:GeneOrGeneProduct"]},"n1":{"categories":["biolink:BiologicalProcess"]}},"edges":{"e0":{"predicates":["biolink:has_participant"],"subject":"n1","object":"n0"}}}}}"""
       for {
         httpClient <- HttpClient.client
-        biolinkData <- Biolink.biolinkData
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
         request = Request[Task](Method.POST, uri)
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
@@ -272,16 +270,16 @@ object QueryServiceTest extends DefaultRunnableSpec {
   )
 
   def spec = suite("QueryService tests")(
-//    testFindGenesEnablingAnyKindOfCatalyticActivity,
-//    testNegativeRegulationChaining,
-//    testBeclomethasone,
-//    testCorrelatedWith,
-//    testSpmsyChemicals,
-//    testILSixDownRegulators,
-//    testGene2Process2Process2Gene,
-//    testAcrocyanosis,
-//    testPathway,
-//    testERAD,
+    testFindGenesEnablingAnyKindOfCatalyticActivity,
+    testNegativeRegulationChaining,
+    testBeclomethasone,
+    testCorrelatedWith,
+    testSpmsyChemicals,
+    testILSixDownRegulators,
+    testGene2Process2Process2Gene,
+    testAcrocyanosis,
+    testPathway,
+    testERAD,
     testSimpleQueryRawWithSinglePredicate,
     testSimpleQueryRaw
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
