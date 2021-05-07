@@ -239,11 +239,24 @@ object QueryServiceTest extends DefaultRunnableSpec {
     }
   )
 
+  val testSimpleQueryRawWithSinglePredicate = suite("testSimpleQueryRawWithSinglePredicate")(
+    testM("simple query raw with single predicate") {
+      val message =
+      """{"message":{"query_graph":{"nodes":{"n0":{"categories":["biolink:Gene","biolink:GeneOrGeneProduct"]},"n1":{"categories":["biolink:BiologicalProcess"]}},"edges":{"e0":{"predicates":"biolink:has_participant","subject":"n1","object":"n0"}}}}}"""
+      for {
+        httpClient <- HttpClient.client
+        biolinkData <- Biolink.biolinkData
+        uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
+        request = Request[Task](Method.POST, uri)
+          .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
+          .withEntity(message)
+        response <- httpClient.expect[String](request)
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
   val testSimpleQueryRaw = suite("testSimpleQueryRaw")(
     testM("simple query raw") {
-//      val message =
-//        """{"message":{"query_graph":{"nodes":{"n0":{"category":"biolink:Gene"},"n1":{"category":"biolink:BiologicalProcess"}},"edges":{"e0":{"predicate":"biolink:has_participant","subject":"n1","object":"n0"}}}}}"""
-
       val message =
         """{"message":{"query_graph":{"nodes":{"n0":{"categories":["biolink:Gene","biolink:GeneOrGeneProduct"]},"n1":{"categories":["biolink:BiologicalProcess"]}},"edges":{"e0":{"predicates":["biolink:has_participant"],"subject":"n1","object":"n0"}}}}}"""
       for {
@@ -269,8 +282,8 @@ object QueryServiceTest extends DefaultRunnableSpec {
 //    testAcrocyanosis,
 //    testPathway,
 //    testERAD,
-//    testSimpleQueryRaw,
-    testSimpleQuery
+    testSimpleQueryRawWithSinglePredicate,
+    testSimpleQueryRaw
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
