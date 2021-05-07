@@ -3,11 +3,6 @@ package org.renci.cam.test
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.syntax._
 import io.circe.{Encoder, Json}
-import io.circe.generic.auto._
-import io.circe.parser._
-import io.circe.syntax._
-import io.circe.{Decoder, Encoder, HCursor, Json, KeyDecoder, KeyEncoder}
-import org.renci.cam.Implicits
 import org.renci.cam.domain._
 import zio.ZIO
 import zio.test.Assertion._
@@ -47,7 +42,6 @@ object Scratch extends DefaultRunnableSpec with LazyLogging {
       }
     } @@ ignore
   )
-
 
   def spec = suite("Scratch tests")(scratch, printEncoded)
 }

@@ -2,7 +2,7 @@ package org.renci.cam.it
 
 import io.circe.generic.auto._
 import io.circe.syntax._
-import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder}
+import io.circe.{Encoder, KeyEncoder}
 import org.http4s._
 import org.http4s.headers._
 import org.http4s.implicits._
@@ -10,12 +10,12 @@ import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam._
 import org.renci.cam.domain._
-import zio.{Has, RIO, Task, ZIO}
 import zio.blocking.Blocking
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
 import zio.test.environment.testEnvironment
+import zio.{Has, RIO, Task}
 
 import java.nio.file.{Files, Paths}
 
@@ -241,8 +241,11 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   val testSimpleQueryRaw = suite("testSimpleQueryRaw")(
     testM("simple query raw") {
+//      val message =
+//        """{"message":{"query_graph":{"nodes":{"n0":{"category":"biolink:Gene"},"n1":{"category":"biolink:BiologicalProcess"}},"edges":{"e0":{"predicate":"biolink:has_participant","subject":"n1","object":"n0"}}}}}"""
+
       val message =
-        """{"message":{"query_graph":{"nodes":{"n0":{"category":"biolink:Gene"},"n1":{"category":"biolink:BiologicalProcess"}},"edges":{"e0":{"predicate":"biolink:has_participant","subject":"n1","object":"n0"}}}}}"""
+        """{"message":{"query_graph":{"nodes":{"n0":{"categories":["biolink:Gene","biolink:GeneOrGeneProduct"]},"n1":{"categories":["biolink:BiologicalProcess"]}},"edges":{"e0":{"predicates":["biolink:has_participant"],"subject":"n1","object":"n0"}}}}}"""
       for {
         httpClient <- HttpClient.client
         biolinkData <- Biolink.biolinkData

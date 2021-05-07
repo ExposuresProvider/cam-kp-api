@@ -1,14 +1,8 @@
 package org.renci.cam.test
 
-import com.typesafe.scalalogging.LazyLogging
-import io.circe.Encoder
 import io.circe.syntax._
-import org.renci.cam.Biolink.BiolinkData
+import org.renci.cam.Implicits
 import org.renci.cam.domain._
-import org.renci.cam.test.SerializationTest.{suite, testM}
-import org.renci.cam.{AppConfig, Biolink, HttpClient, Implicits}
-import zio.{Has, URIO, ZIO}
-import zio.config.typesafe.TypesafeConfig
 import zio.test.Assertion._
 import zio.test._
 

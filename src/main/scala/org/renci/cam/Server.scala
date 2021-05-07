@@ -1,11 +1,10 @@
 package org.renci.cam
 
-import java.util.Properties
 import cats.effect.Blocker
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
+import io.circe._
 import io.circe.generic.auto._
-import io.circe.{Json, _}
 import io.circe.yaml.syntax._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
@@ -14,9 +13,9 @@ import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger, _}
-import HttpClient.HttpClient
-import org.renci.cam.domain._
 import org.renci.cam.Biolink._
+import org.renci.cam.HttpClient.HttpClient
+import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._
@@ -24,12 +23,13 @@ import sttp.tapir.openapi.{Contact, Info, License}
 import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.ztapir._
 import zio._
-import zio.blocking.{Blocking, blocking}
+import zio.blocking.Blocking
 import zio.config.typesafe.TypesafeConfig
 import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 
+import java.util.Properties
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 

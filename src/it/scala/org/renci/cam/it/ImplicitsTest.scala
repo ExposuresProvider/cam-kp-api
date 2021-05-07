@@ -8,12 +8,12 @@ import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder}
 import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam.domain._
 import org.renci.cam.{AppConfig, Biolink, HttpClient, Implicits}
-import zio.{Has, URIO, ZIO}
 import zio.config.typesafe.TypesafeConfig
 import zio.test.Assertion._
 import zio.test.TestAspect._
 import zio.test._
 import zio.test.environment.testEnvironment
+import zio.{Has, URIO, ZIO}
 
 object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
 
@@ -42,10 +42,12 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
       } yield {
         val dataAsList = """["biolink:participates_in","biolink:related_to"]"""
         val data = """"biolink:related_to""""
-        implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] = Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
+        implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
+          Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
         val ret = decode[List[BiolinkPredicate]](data)
         val retWithListData = decode[List[BiolinkPredicate]](dataAsList)
-        assert(ret.toOption.get)(contains(BiolinkPredicate("related_to"))) && assert(retWithListData.toOption.get)(contains(BiolinkPredicate("related_to")))
+        assert(ret.toOption.get)(contains(BiolinkPredicate("related_to"))) && assert(retWithListData.toOption.get)(
+          contains(BiolinkPredicate("related_to")))
       }
     }
   )
@@ -134,7 +136,6 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
       }
     }
   )
-
 
   val testBiolinkPredicateEncoder = suite("testBiolinkPredicateEncoder")(
     testM("test Implicits.biolinkPredicateEncoder") {

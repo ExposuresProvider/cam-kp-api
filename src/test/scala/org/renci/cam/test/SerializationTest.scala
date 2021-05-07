@@ -2,15 +2,11 @@ package org.renci.cam.test
 
 import io.circe.generic.auto._
 import io.circe.syntax._
-import io.circe.{Json, _}
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{ResultSetFactory, ResultSetFormatter}
-import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam.QueryService.TRAPIEdgeKey
-import org.renci.cam._
 import org.renci.cam.domain._
-import zio.test.environment.TestEnvironment
-import zio.{Has, Task, URIO, ZIO}
+import zio.Task
 import zio.test.Assertion._
 import zio.test._
 

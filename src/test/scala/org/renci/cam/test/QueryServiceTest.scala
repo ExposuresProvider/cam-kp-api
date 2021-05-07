@@ -4,17 +4,13 @@ import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{ResultSet, ResultSetFactory}
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLStringContext
-import org.renci.cam.Biolink.BiolinkData
-import org.renci.cam.QueryService.TermWithLabelAndBiolinkType
 import org.renci.cam._
 import org.renci.cam.domain._
 import zio._
-import zio.config.typesafe.TypesafeConfig
 import zio.test.Assertion._
-import zio.test.{testM, _}
+import zio.test._
 
 import java.nio.charset.StandardCharsets
-import scala.jdk.CollectionConverters._
 
 object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
 
@@ -181,8 +177,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
       for {
         pred <- Task.effect(sparql" ${BiolinkPredicate("has_participant")} ")
         queryText <- Task.effect(QueryService.getTRAPIQEdgePredicatesQueryText(pred))
-      } yield assert(queryText.text)(
-        containsString("?biolinkPredicate {  <https://w3id.org/biolink/vocab/has_participant>  }"))
+      } yield assert(queryText.text)(containsString("?biolinkPredicate {  <https://w3id.org/biolink/vocab/has_participant>  }"))
     }
   )
 

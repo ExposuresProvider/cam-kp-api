@@ -29,7 +29,7 @@ object Implicits {
     for {
       curie <- curieString match {
         case Curie(p, l) => Right((p, l))
-        case _ => Left(DecodingFailure(s"CURIE is malformed: $curieString", Nil))
+        case _           => Left(DecodingFailure(s"CURIE is malformed: $curieString", Nil))
       }
       (prefix, local) = curie
       namespace <-
@@ -66,33 +66,37 @@ object Implicits {
     val localName = s.replace("biolink:", "")
     biolinkPredicates.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName) match {
       case Some(pred) => pred
-      case None => BiolinkPredicate(s"$BiolinkNamespace$localName")
+      case None       => BiolinkPredicate(s"$BiolinkNamespace$localName")
     }
   }
 
   def biolinkPredicateEncoder(prefixesMap: Map[String, String]): Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { s =>
     compactIRIIfPossible(s.iri, prefixesMap)
-    //s.withBiolinkPrefix
+  //s.withBiolinkPrefix
   }
 
   def biolinkClassKeyEncoder: KeyEncoder[BiolinkClass] = KeyEncoder.encodeKeyString.contramap { bc: BiolinkClass =>
     bc.withBiolinkPrefix
   }
 
-  def predicateOrPredicateListDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[List[BiolinkPredicate]] = new Decoder[List[BiolinkPredicate]]() {
-    implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkPredicates)
+  def predicateOrPredicateListDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[List[BiolinkPredicate]] =
+    new Decoder[List[BiolinkPredicate]]() {
+      implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkPredicates)
 
-    override def apply(c: HCursor): Result[List[BiolinkPredicate]] =
-      for {
-        ret <- c.as[List[BiolinkPredicate]].orElse(c.as[BiolinkPredicate].map(_ :: Nil))
-      } yield ret
-  }
+      override def apply(c: HCursor): Result[List[BiolinkPredicate]] =
+        for {
+          ret <- c.as[List[BiolinkPredicate]].orElse(c.as[BiolinkPredicate].map(_ :: Nil))
+        } yield ret
+
+    }
 
   def biolinkClassKeyDecoder(biolinkClasses: List[BiolinkClass]): KeyDecoder[BiolinkClass] = new KeyDecoder[BiolinkClass] {
+
     override def apply(key: String): Option[BiolinkClass] = {
       val localName = key.replace("biolink:", "")
       biolinkClasses.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName).toRight(s"BiolinkClass does not exist: $key")
     }.toOption
+
   }
 
   def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = Decoder.decodeString.emap { s =>

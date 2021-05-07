@@ -6,7 +6,7 @@ import io.circe.syntax._
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.QuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{biolinkData, BiolinkData}
+import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain._
 import zio.config.ZConfig
