@@ -88,10 +88,19 @@ object Server extends App with LazyLogging {
       implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
       implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] = Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
 
+      val example = {
+        val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("Gene"), BiolinkClass("GeneOrGeneProduct"))), None)
+        val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
+        val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n1", "n0", None)
+        val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+        val message = TRAPIMessage(Some(queryGraph), None, None)
+        TRAPIQuery(message, None)
+      }
+
       endpoint.post
         .in("query")
         .in(query[Option[Int]]("limit"))
-        .in(jsonBody[TRAPIQuery])
+        .in(jsonBody[TRAPIQuery].example(example))
         .errorOut(stringBody)
         .out(jsonBody[TRAPIResponse])
         .summary("Submit a TRAPI question graph and retrieve matching solutions")
