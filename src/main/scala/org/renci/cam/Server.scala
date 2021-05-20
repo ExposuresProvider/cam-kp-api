@@ -133,6 +133,7 @@ object Server extends App with LazyLogging {
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- getConfig[AppConfig]
+        biolinkData <- biolinkData
         metaKnowledgeGraphEndpoint <- metaKnowledgeGraphEndpointZ
         metaKnowledgeGraphRoute <- metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint)
         queryEndpoint <- queryEndpointZ
@@ -146,12 +147,16 @@ object Server extends App with LazyLogging {
           .toYaml
         openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
         info: String =
-          """
+          s"""
              {
                 "info": {
                   "x-translator": {
+                    "biolink-version": "${biolinkData.version}",
                     "component": "KP",
                     "team": ["Exposures Provider"]
+                  },
+                  "x-trapi": {
+                    "version": "1.1.0"
                   }
                 }
              }
