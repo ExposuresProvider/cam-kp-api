@@ -71,7 +71,7 @@ libraryDependencies ++= {
   )
 }
 
-dockerBaseImage := "openjdk:14-alpine"
+dockerBaseImage := "openjdk:15-alpine"
 daemonUser in Docker := "camkpapi"
 dockerExposedPorts += 8080
 dockerApiVersion := Some(DockerApiVersion(1, 40))
