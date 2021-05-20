@@ -16,7 +16,7 @@ object Scratch extends DefaultRunnableSpec with LazyLogging {
       for {
         list <- ZIO.effect(List(1, 2, 3))
       } yield assert(list)(equalTo(List(1, 2, 3)))
-    } @@ ignore
+    }
   )
 
   val printEncoded = suite("printEncoded")(
