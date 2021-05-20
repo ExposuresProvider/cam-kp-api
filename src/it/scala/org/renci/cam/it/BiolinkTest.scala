@@ -1,20 +1,27 @@
 package org.renci.cam.it
 
 import io.circe._
+import io.circe.generic.auto._
 import io.circe.parser._
+import io.circe.syntax._
 import org.http4s._
 import org.http4s.headers._
 import org.http4s.implicits._
+import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam._
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio._
 import zio.interop.catz._
 import zio.test.Assertion.{contains, _}
 import zio.test._
 import zio.test.environment.testEnvironment
 
+import java.nio.file.{Files, Paths}
+import scala.collection.immutable.ListMap
+
 object BiolinkTest extends DefaultRunnableSpec {
 
-  val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer).mapError(TestFailure.die)
+  val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer).mapError(TestFailure.die)
 
   val decoder = Decoder.decodeMap(KeyDecoder.decodeKeyString, Decoder.decodeString)
 
@@ -49,6 +56,25 @@ object BiolinkTest extends DefaultRunnableSpec {
     }
   )
 
-  def spec = suite("Biolink tests")(testDownloadParseAndFilter).provideLayerShared(testLayer)
+  val writeUberBiolinkDataToFile = suite("writeUberBiolinkDataToFile")(
+    testM("write uber BiolinkData to file") {
+      for {
+        (biolinkPrefixes, classes, predicates, version) <- Biolink.getBiolinkPrefixesAndClassesAndPredicatesFromModel
+        prefixes <- Biolink.getBiolinkPrefixesFromContext
+        prefixOverrides <- Biolink.getPrefixOverrides
+        combined_prefixes = biolinkPrefixes ++ prefixes ++ prefixOverrides
+        sorted_combined_prefixes = ListMap(combined_prefixes.toSeq.sortBy(_._1): _*)
+        biolinkData = BiolinkData(version, sorted_combined_prefixes, classes.sortBy(_.shorthand), predicates.sortBy(_.shorthand))
+        biolinkDataJson = {
+          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+          biolinkData.asJson.deepDropNullValues.noSpaces
+        }
+        _ = Files.writeString(Paths.get("src/main/resources/biolink-data.json"), biolinkDataJson)
+      } yield assert(biolinkDataJson)(isNonEmptyString)
+    }
+  )
+
+  def spec = suite("Biolink tests")( testDownloadParseAndFilter, writeUberBiolinkDataToFile).provideLayerShared(testLayer)
 
 }
