@@ -56,18 +56,31 @@ object BiolinkTest extends DefaultRunnableSpec {
     }
   )
 
+  val downloadBiolinkFiles = suite("downloadBiolinkFiles")(
+    testM("test downloadBiolinkFiles") {
+      for {
+        _ <- Biolink.downloadBiolinkContextJsonLD
+        _ <- Biolink.downloadBiolinkModelYaml
+      } yield assertCompletes
+    }
+  )
+
   val writeUberBiolinkDataToFile = suite("writeUberBiolinkDataToFile")(
     testM("write uber BiolinkData to file") {
       for {
-        (biolinkPrefixes, classes, predicates, version) <- Biolink.getBiolinkPrefixesAndClassesAndPredicatesFromModel
-        prefixes <- Biolink.getBiolinkPrefixesFromContext
+        (biolinkPrefixes, classes, predicates, version) <- Biolink.parseBiolinkModelYaml
+        prefixes <- Biolink.parseBiolinkContext
         prefixOverrides <- Biolink.getPrefixOverrides
         combined_prefixes = biolinkPrefixes ++ prefixes ++ prefixOverrides
         sorted_combined_prefixes = ListMap(combined_prefixes.toSeq.sortBy(_._1): _*)
         biolinkData = BiolinkData(version, sorted_combined_prefixes, classes.sortBy(_.shorthand), predicates.sortBy(_.shorthand))
         biolinkDataJson = {
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap { s =>
+            s.shorthand
+          }
+          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { s =>
+            s.shorthand
+          }
           biolinkData.asJson.deepDropNullValues.noSpaces
         }
         _ = Files.writeString(Paths.get("src/main/resources/biolink-data.json"), biolinkDataJson)
@@ -75,6 +88,6 @@ object BiolinkTest extends DefaultRunnableSpec {
     }
   )
 
-  def spec = suite("Biolink tests")( testDownloadParseAndFilter, writeUberBiolinkDataToFile).provideLayerShared(testLayer)
+  def spec = suite("Biolink tests")(downloadBiolinkFiles, writeUberBiolinkDataToFile).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
