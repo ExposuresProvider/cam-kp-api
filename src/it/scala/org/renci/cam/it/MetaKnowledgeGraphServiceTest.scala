@@ -1,12 +1,13 @@
 package org.renci.cam.it
 
+import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
-import io.circe.{Decoder, Encoder, parser}
+import io.circe.{Decoder, parser}
 import org.http4s._
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.renci.cam._
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, MetaKnowledgeGraph}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, MetaKnowledgeGraph}
 import zio.Task
 import zio.blocking.Blocking
 import zio.interop.catz._
@@ -14,7 +15,7 @@ import zio.test.Assertion._
 import zio.test._
 import zio.test.environment.testEnvironment
 
-object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec {
+object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLogging {
 
   val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
@@ -30,18 +31,21 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec {
         response <- httpClient.expect[String](request)
       } yield {
 
-        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+//        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+//        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
 
+//        logger.info("biolinkData.classes: {}", biolinkData.classes)
         implicit val blClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-        implicit val blClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+//        implicit val blClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
 
+//        logger.info("biolinkData.predicates: {}", biolinkData.predicates)
         implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+//        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
 
         val parsed = parser.parse(response).toOption.get
+//        logger.info("parsed: {}", parsed)
         val mkg = parsed.as[MetaKnowledgeGraph]
-
+//        logger.info("mkg: {}", mkg)
         assert(mkg)(isRight) && assert(mkg.toOption.get.edges.map(a => a.subject))(contains(BiolinkClass("IndividualOrganism")))
       }
     }
