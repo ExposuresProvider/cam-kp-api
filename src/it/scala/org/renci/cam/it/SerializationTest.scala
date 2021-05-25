@@ -1,5 +1,6 @@
 package org.renci.cam.it
 
+import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._
@@ -11,7 +12,7 @@ import zio.test.Assertion._
 import zio.test._
 import zio.test.environment.testEnvironment
 
-object SerializationTest extends DefaultRunnableSpec {
+object SerializationTest extends DefaultRunnableSpec with LazyLogging {
 
   val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer).mapError(TestFailure.die)
 
@@ -135,8 +136,10 @@ object SerializationTest extends DefaultRunnableSpec {
         biolinkData <- Biolink.biolinkData
       } yield {
 
-        implicit val biolinkClassKeyDecoder = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
-        implicit val biolinkClassKeyEncoder = Implicits.biolinkClassKeyEncoder
+//        logger.info("predicates: {}", biolinkData.predicates)
+
+        implicit val biolinkClassKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder
+        implicit val biolinkClassKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
         implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
         implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
 
