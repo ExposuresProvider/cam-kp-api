@@ -2,7 +2,7 @@ package org.renci.cam.it
 
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
-import io.circe.{Decoder, parser}
+import io.circe.{Decoder, KeyDecoder, KeyEncoder, parser}
 import org.http4s._
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
@@ -30,6 +30,8 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLoggin
           `Content-Type`(MediaType.application.json))
         response <- httpClient.expect[String](request)
       } yield {
+        implicit val iriKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder
+        implicit val iriKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
 
 //        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
 //        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
