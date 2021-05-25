@@ -3,17 +3,19 @@ package org.renci.cam
 import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
+import io.circe.syntax._
 import org.apache.commons.lang3.StringUtils
-import org.http4s.circe._
 import org.http4s.headers.Accept
 import org.http4s.implicits._
 import org.http4s.{MediaType, Method, Request}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio._
+import zio.blocking.{effectBlockingIO, Blocking}
 import zio.interop.catz._
 
-import scala.collection.immutable.ListMap
+import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Paths}
 import scala.io.Source
 
 object Biolink extends LazyLogging {
@@ -55,14 +57,25 @@ object Biolink extends LazyLogging {
     } yield mappings
   }
 
-  def getBiolinkPrefixesFromContext: ZIO[HttpClient, Throwable, Map[String, String]] =
+  def downloadBiolinkContextJsonLD: ZIO[HttpClient, Throwable, Unit] =
     for {
       httpClient <- HttpClient.client
       uri = uri"https://biolink.github.io/biolink-model/context.jsonld"
       request = Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`ld+json`))
-      biolinkModelJson <- httpClient.expect[Json](request)
+      response <- httpClient.expect[String](request)
+      _ = Files.writeString(Paths.get("src/main/resources/context.jsonld"), response)
+    } yield ()
+
+  def parseBiolinkContext: ZIO[Blocking, Throwable, Map[String, String]] =
+    for {
+      contextData <- effectBlockingIO(
+        Source.fromInputStream(getClass.getResourceAsStream("/context.jsonld"), StandardCharsets.UTF_8.name()))
+        .bracketAuto { source =>
+          effectBlockingIO(source.getLines().mkString("\n"))
+        }
+      biolinkContextJson <- ZIO.fromEither(io.circe.parser.parse(contextData))
       contextJson <-
-        ZIO.fromOption(biolinkModelJson.hcursor.downField("@context").focus).orElseFail(new Exception("failed to traverse down to context"))
+        ZIO.fromOption(biolinkContextJson.hcursor.downField("@context").focus).orElseFail(new Exception("failed to traverse down to context"))
       contextJsonObject <- ZIO.fromOption(contextJson.asObject).orElseFail(new Exception("failed to get json object from context"))
       firstPass = contextJsonObject.toIterable
         .filter(entry => entry._2.isObject && entry._2.asObject.get.contains("@id") && entry._2.asObject.get.contains("@prefix"))
@@ -79,16 +92,24 @@ object Biolink extends LazyLogging {
       map = firstPass ++ secondPass
     } yield map
 
-  def getBiolinkPrefixesAndClassesAndPredicatesFromModel
-    : ZIO[HttpClient, Throwable, (Map[String, String], List[BiolinkClass], List[BiolinkPredicate], String)] =
+  def downloadBiolinkModelYaml: ZIO[HttpClient, Throwable, Unit] =
     for {
       httpClient <- HttpClient.client
       uri = uri"https://biolink.github.io/biolink-model/biolink-model.yaml"
-      _ = logger.info("here 1")
       request = Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`raml+yaml`))
-      biolinkModelYaml <- httpClient.expect[String](request)
-      json <- ZIO.fromEither(io.circe.yaml.parser.parse(biolinkModelYaml))
-      _ = logger.info("here 2")
+      response <- httpClient.expect[String](request)
+      _ = Files.writeString(Paths.get("src/main/resources/biolink-model.yaml"), response)
+    } yield ()
+
+  def parseBiolinkModelYaml
+    : ZIO[Blocking, Throwable, (Map[String, String], List[BiolinkClass], List[BiolinkPredicate], String)] =
+    for {
+      biolinkYamlData <- effectBlockingIO(
+        Source.fromInputStream(getClass.getResourceAsStream("/biolink-model.yaml"), StandardCharsets.UTF_8.name()))
+        .bracketAuto { source =>
+          effectBlockingIO(source.getLines().mkString("\n"))
+        }
+      json <- ZIO.fromEither(io.circe.yaml.parser.parse(biolinkYamlData))
       classesKeys <- ZIO.fromOption(json.hcursor.downField("classes").keys).orElseFail(throw new Exception("couldn't get classes"))
       classes = classesKeys.map(a => a.split(" ").toList.map(a => StringUtils.capitalize(a)).mkString).map(a => BiolinkClass(a)).toList
       predicateKeys <- ZIO.fromOption(json.hcursor.downField("slots").keys).orElseFail(throw new Exception("couldn't get slots"))
