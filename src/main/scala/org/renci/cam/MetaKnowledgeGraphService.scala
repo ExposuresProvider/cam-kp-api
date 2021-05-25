@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.csv.CSVFormat
 import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, MetaEdge, MetaKnowledgeGraph, MetaNode}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, MetaEdge, MetaKnowledgeGraph}
 import zio.ZIO.ZIOAutoCloseableOps
 import zio._
 import zio.blocking._
@@ -34,14 +34,16 @@ object MetaKnowledgeGraphService extends LazyLogging {
     metaEdges = predicateRecords.asScala.map(a => MetaEdge(BiolinkClass(a.get(0)), BiolinkPredicate(a.get(1)), BiolinkClass(a.get(2)), None)).toList
   } yield metaEdges
 
-  def getNodes: ZIO[Blocking, Throwable, List[MetaNode]] = for {
+  def getNodes: ZIO[Blocking, Throwable, Map[BiolinkClass, Map[String, List[String]]]] = for {
     mkgNodesData <- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream("/mkg-nodes.csv"), StandardCharsets.UTF_8.name()))
       .bracketAuto { source =>
         effectBlockingIO(source.getLines().mkString("\n"))
       }
+    //triples.groupBy(_.subj).view.mapValues(_.groupBy(_.obj).view.mapValues(_.map(_.pred)).toMap).toMap
     mkgNodeRecords <- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(mkgNodesData)).getRecords)
-    mkgMap = mkgNodeRecords.asScala.groupBy(_.get(0)).view.mapValues(_.map(_.get(1)).toList).toMap
-    metaNodes = mkgMap.map(a => MetaNode(BiolinkClass(a._1), a._2)).toList
+    metaNodes = mkgNodeRecords.asScala.groupBy(a => BiolinkClass(a.get(0))).view.mapValues(_.groupBy(_.get(1)).view.mapValues(_.map(_.get(2)).toList).toMap).toMap
+//    mkgMap = mkgNodeRecords.asScala.groupBy(_.get(0)).view.mapValues(_.map(_.get(1)).toList).toMap
+//    metaNodes = mkgMap.map(a => MetaNode(BiolinkClass(a._1), a._2)).toList
   } yield metaNodes
 
 }
