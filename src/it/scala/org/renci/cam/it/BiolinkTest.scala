@@ -23,8 +23,6 @@ object BiolinkTest extends DefaultRunnableSpec {
 
   val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer).mapError(TestFailure.die)
 
-  val decoder = Decoder.decodeMap(KeyDecoder.decodeKeyString, Decoder.decodeString)
-
   val testDownloadParseAndFilter = suite("BiolinkTest")(
     testM("download, parse, & filter") {
       for {
@@ -88,6 +86,15 @@ object BiolinkTest extends DefaultRunnableSpec {
     }
   )
 
-  def spec = suite("Biolink tests")(downloadBiolinkFiles, writeUberBiolinkDataToFile).provideLayerShared(testLayer) @@ TestAspect.sequential
+  val testLocalPrefixes = suite("localPrefixes")(
+    testM("test Biolink.localPrefixes") {
+      for {
+        biolinkData <- Biolink.biolinkData
+        prefixes = biolinkData.prefixes
+      } yield assert(prefixes)(isNonEmpty) && assert(prefixes.keys)(contains("sesame"))
+    }
+  )
+
+  def spec = suite("Biolink tests")(downloadBiolinkFiles, writeUberBiolinkDataToFile, testLocalPrefixes).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
