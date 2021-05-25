@@ -158,10 +158,10 @@ package object domain {
 
   final case class LogEntry(timestamp: Option[String], level: Option[String], code: Option[String], message: Option[String])
 
-  final case class MetaNode(biolinkClass: BiolinkClass, id_prefixes: List[String])
+//  final case class MetaNode(biolinkClass: BiolinkClass, id_prefixes: List[String])
 
   final case class MetaEdge(subject: BiolinkClass, predicate: BiolinkPredicate, `object`: BiolinkClass, relations: Option[List[String]])
 
-  final case class MetaKnowledgeGraph(nodes: List[MetaNode], edges: List[MetaEdge])
+  final case class MetaKnowledgeGraph(nodes: Map[BiolinkClass, Map[String, List[String]]], edges: List[MetaEdge])
 
 }
