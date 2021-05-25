@@ -116,8 +116,9 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
       for {
         biolinkData <- Biolink.biolinkData
       } yield {
-        val bc = BiolinkClass("MacromolecularMachine")
+        val bc = BiolinkClass("MacromolecularMachineMixin")
         val bcJson = bc.asJson(Implicits.biolinkClassEncoder)
+        logger.info("classes: {}", biolinkData.classes)
         val decoded = bcJson.as[BiolinkClass](Implicits.biolinkClassDecoder(biolinkData.classes)).toOption.get
         assert(bc)(equalTo(decoded))
       }
