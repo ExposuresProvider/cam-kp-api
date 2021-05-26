@@ -127,7 +127,7 @@ object Server extends App with LazyLogging {
         openAPI: String = List(queryEndpoint, predicatesEndpoint)
           .toOpenAPI("CAM-KP API", "0.1")
           .copy(info = openAPIInfo)
-          .copy(tags = List(sttp.tapir.openapi.Tag("translator")))
+          .copy(tags = List(sttp.tapir.openapi.Tag("translator"), sttp.tapir.openapi.Tag("trapi")))
           .servers(List(sttp.tapir.openapi.Server(appConfig.location)))
           .toYaml
         openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
@@ -137,7 +137,11 @@ object Server extends App with LazyLogging {
                 "info": {
                   "x-translator": {
                     "component": "KP",
-                    "team": ["Exposures Provider"]
+                    "team": ["Exposures Provider"],
+                    "biolink-version": "1.3.8"
+                  },
+                  "x-trapi": {
+                    "version": "1.0.0"
                   }
                 }
              }
