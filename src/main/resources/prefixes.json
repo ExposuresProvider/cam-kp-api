@@ -1,9 +1,13 @@
 {
   "CARO": "http://purl.obolibrary.org/obo/CARO_",
   "EMAPA": "http://purl.obolibrary.org/obo/EMAPA_",
-  "REACTO" : "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#",
+  "REACTO": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#",
   "WBbt": "http://purl.obolibrary.org/obo/WBbt_",
   "WB": "https://identifiers.org/wormbase/",
   "ZFA": "http://purl.obolibrary.org/obo/ZFA_",
-  "sesame": "http://www.openrdf.org/schema/sesame#"
+  "sesame": "http://www.openrdf.org/schema/sesame#",
+  "tair.locus": "http://identifiers.org/tair.locus/",
+  "fb": "http://identifiers.org/flybase/",
+  "dictybase.gene": "http://identifiers.org/dictybase.gene/",
+  "xenbase": "http://identifiers.org/xenbase/"
 }
