@@ -2,6 +2,7 @@
   "CARO": "http://purl.obolibrary.org/obo/CARO_",
   "EMAPA": "http://purl.obolibrary.org/obo/EMAPA_",
   "REACTO": "http://purl.obolibrary.org/obo/go/extensions/reacto.owl#",
+  "SIO": "http://purl.obolibrary.org/obo/SIO_",
   "WBbt": "http://purl.obolibrary.org/obo/WBbt_",
   "WB": "https://identifiers.org/wormbase/",
   "ZFA": "http://purl.obolibrary.org/obo/ZFA_",
