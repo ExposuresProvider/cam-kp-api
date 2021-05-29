@@ -86,7 +86,12 @@ object Biolink extends LazyLogging {
       secondPass = contextJsonObject.toIterable
         .filter(entry => entry._2.isString && !entry._1.equals("@vocab") && !entry._1.equals("id"))
         .map { entry =>
-          entry._1 -> entry._2.toString().replaceAll("\"", "")
+          // tmp fix due to bug in context regarding what is ncbigene canonical
+          if (entry._1 == "NCBIGENE") {
+            "NCBIGene" -> entry._2.toString().replaceAll("\"", "")
+          } else {
+            entry._1 -> entry._2.toString().replaceAll("\"", "")
+          }
         }
         .toMap
       map = firstPass ++ secondPass
