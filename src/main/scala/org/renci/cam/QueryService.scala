@@ -170,7 +170,7 @@ object QueryService extends LazyLogging {
           // Make sure the query sends back the ID they asked for...
           // This is good for things with redundant IDs, like genes, but
           // maybe not ideal if they asked something like 'catalytic activity'
-          case Some(termID) => sparql" BIND($termID AS $nodeTypeVar) "
+          case Some(termID) => sparql" BIND(${termID.mkString(" ")} AS $nodeTypeVar) "
           case None         => sparql" $nodeVar $SesameDirectType $nodeTypeVar .  "
         }
       }
