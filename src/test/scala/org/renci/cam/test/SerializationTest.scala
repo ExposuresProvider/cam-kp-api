@@ -132,7 +132,6 @@ object SerializationTest extends DefaultRunnableSpec {
       baos.close();
       val json = new String(baos.toByteArray)
 
-//      println("json: " + json)
       assert(json)(isNonEmptyString)
     }
   )

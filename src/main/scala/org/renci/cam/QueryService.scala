@@ -163,10 +163,16 @@ object QueryService extends LazyLogging {
 
   def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
     nodes
-      .map { node =>
-        val nodeVar = Var(node._1)
-        val nodeTypeVar = Var(s"${node._1}_type")
-        sparql""" $nodeVar $SesameDirectType $nodeTypeVar .  """
+      .map { case (varLabel, TRAPIQueryNode(id, _, _)) =>
+        val nodeVar = Var(varLabel)
+        val nodeTypeVar = Var(s"${varLabel}_type")
+        id match {
+          // Make sure the query sends back the ID they asked for...
+          // This is good for things with redundant IDs, like genes, but
+          // maybe not ideal if they asked something like 'catalytic activity'
+          case Some(termID) => sparql" BIND($termID AS $nodeTypeVar) "
+          case None         => sparql" $nodeVar $SesameDirectType $nodeTypeVar .  "
+        }
       }
       .fold(sparql"")(_ + _)
 

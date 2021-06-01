@@ -19,9 +19,9 @@ object ImplicitsTest extends DefaultRunnableSpec {
   val testIRIEncoder = suite("testIRIEncoder")(
     test("test Implicits.iriEncoder") {
       val iri = IRI("http://identifiers.org/ncbigene/558")
-      val prefixes: Map[String, String] = Map("NCBIGENE" -> "http://identifiers.org/ncbigene/")
+      val prefixes: Map[String, String] = Map("NCBIGene" -> "http://identifiers.org/ncbigene/")
       val json = iri.asJson(Implicits.iriEncoder(prefixes)).deepDropNullValues.noSpaces.replace("\"", "")
-      assert(json)(equalTo("NCBIGENE:558"))
+      assert(json)(equalTo("NCBIGene:558"))
     }
   )
 

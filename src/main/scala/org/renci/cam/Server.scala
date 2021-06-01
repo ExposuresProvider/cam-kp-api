@@ -25,7 +25,7 @@ import sttp.tapir.ztapir._
 import zio._
 import zio.blocking.Blocking
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{ZConfig, getConfig}
+import zio.config.{getConfig, ZConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 
@@ -93,7 +93,7 @@ object Server extends App with LazyLogging {
       implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] = Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
 
       val example = {
-        val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("Gene"), BiolinkClass("GeneOrGeneProduct"))), None)
+        val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
         val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
         val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n1", "n0", None)
         val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
