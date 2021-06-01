@@ -21,9 +21,9 @@ import java.nio.file.{Files, Paths}
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
-  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
+//  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
+  val testLayer = (testEnvironment /*++ camkpapiTestLayer*/ ++ camkpapiLayer).mapError(TestFailure.die)
 
   def runTest(trapiQuery: TRAPIQuery): RIO[HttpClient with Has[BiolinkData], String] =
     for {
@@ -55,7 +55,23 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-simple-query.json"), response)
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
+  val testWIKIQueryExample = suite("testWIKIQueryExample")(
+    testM("test WIKIQueryExample") {
+      val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
+      val n1Node =
+        TRAPIQueryNode(Some(List(IRI("GO:0005634"))), Some(List(BiolinkClass("AnatomicalEntity"))), None)
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("part_of"))), None, "n0", "n1", None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+      val message = TRAPIMessage(Some(queryGraph), None, None)
+      val requestBody = TRAPIQuery(message, None)
+      for {
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/it/resources/test-wiki-query-example.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -71,7 +87,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-find-genes-enabling-catalytic-activity.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-find-genes-enabling-catalytic-activity.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -91,7 +107,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-gene-to-process-to-process-to-gene.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-gene-to-process-to-process-to-gene.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -112,7 +128,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-negative-regulation-chaining.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-negative-regulation-chaining.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -127,7 +143,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-acrocyanosis.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-acrocyanosis.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -142,7 +158,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-beclomethasone.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-beclomethasone.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -157,7 +173,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-correlated-with.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-correlated-with.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -172,7 +188,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-pathway.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-pathway.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -187,7 +203,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-spmsy-chemicals.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-spmsy-chemicals.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -219,7 +235,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-ILSixDownRegulators.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-ILSixDownRegulators.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -234,7 +250,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         response <- runTest(requestBody)
-        _ = Files.writeString(Paths.get("src/test/resources/local-scala-erad.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-erad.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -242,7 +258,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
   val testSimpleQueryRawWithSinglePredicate = suite("testSimpleQueryRawWithSinglePredicate")(
     testM("simple query raw with single predicate") {
       val message =
-      """{"message":{"query_graph":{"nodes":{"n0":{"categories":["biolink:GeneOrGeneProduct"]},"n1":{"categories":["biolink:BiologicalProcess"]}},"edges":{"e0":{"predicates":"biolink:has_participant","subject":"n1","object":"n0"}}}}}"""
+        """{"message":{"query_graph":{"nodes":{"n0":{"categories":["biolink:GeneOrGeneProduct"]},"n1":{"categories":["biolink:BiologicalProcess"]}},"edges":{"e0":{"predicates":"biolink:has_participant","subject":"n1","object":"n0"}}}}}"""
       for {
         httpClient <- HttpClient.client
         uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
@@ -281,6 +297,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
     testPathway,
     testERAD,
     testSimpleQuery,
+    testWIKIQueryExample,
     testSimpleQueryRawWithSinglePredicate,
     testSimpleQueryRaw
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
