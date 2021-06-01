@@ -72,11 +72,11 @@ libraryDependencies ++= {
 }
 
 dockerBaseImage := "openjdk:15-alpine"
-daemonUser := "camkpapi"
+Docker / daemonUser := "camkpapi"
 dockerExposedPorts += 8080
-dockerApiVersion := Some(DockerApiVersion(1, 40))
+Docker / dockerApiVersion := Some(DockerApiVersion(1, 40))
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
-dockerRepository := Some("renciorg")
+Docker / dockerRepository := Some("renciorg")
 dockerCommands := dockerCommands.value.flatMap {
   case cmd @ Cmd("EXPOSE", _) => List(Cmd("RUN", "apk update && apk add bash curl"), cmd)
   case other                  => List(other)
