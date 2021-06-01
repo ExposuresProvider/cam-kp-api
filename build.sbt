@@ -18,7 +18,7 @@ javaOptions += "-Xmx8G"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
-publishArtifact in (Compile, packageDoc) := false
+Compile /  packageDoc / publishArtifact := false
 
 configs(IntegrationTest)
 Defaults.itSettings
@@ -34,7 +34,7 @@ val http4sVersion = "0.21.22"
 val circeVersion = "0.13.0"
 val logbackVersion = "1.2.3"
 
-javaOptions in reStart += "-Xmx16G"
+reStart / javaOptions += "-Xmx16G"
 
 libraryDependencies ++= {
   Seq(
@@ -72,7 +72,7 @@ libraryDependencies ++= {
 }
 
 dockerBaseImage := "openjdk:15-alpine"
-daemonUser in Docker := "camkpapi"
+daemonUser := "camkpapi"
 dockerExposedPorts += 8080
 dockerApiVersion := Some(DockerApiVersion(1, 40))
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
