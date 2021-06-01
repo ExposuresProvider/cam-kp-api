@@ -82,7 +82,9 @@ object QueryService extends LazyLogging {
           subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
             case (Some(c), _) =>
               val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a, $b")
-              sparql" VALUES $edgeSourceVar { $idList } "
+              sparql""" VALUES ${edgeSourceVar}_class { $idList }
+                      $edgeSourceVar $RDFType ${edgeSourceVar}_class .
+                      """
             case (None, Some(t)) =>
               val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a, $b")
               sparql"$edgeSourceVar $RDFType $idList . "
@@ -93,7 +95,9 @@ object QueryService extends LazyLogging {
           objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
             case (Some(c), _) =>
               val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a, $b")
-              sparql" VALUES $edgeTargetVar { $idList } "
+              sparql""" VALUES ${edgeTargetVar}_class { $idList }
+                      $edgeTargetVar $RDFType ${edgeTargetVar}_class .
+                      """
             case (None, Some(t)) =>
               val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a, $b")
               sparql"$edgeTargetVar $RDFType $idList . "
@@ -110,8 +114,8 @@ object QueryService extends LazyLogging {
         } yield (v, ret)
       }
       (edges, sparqlLines) = predicates.unzip
-      nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
       projections = getProjections(queryGraph)
+      nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
       valuesClause = sparqlLines.fold(sparql"")(_ + _)
       limitSparql = getLimit(limit)
       queryString =
@@ -122,6 +126,7 @@ object QueryService extends LazyLogging {
           }
           $limitSparql
           """
+//      _ = logger.warn("queryString.text: {}", queryString.text)
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
       solutionTriples = for {
         queryEdge <- queryGraph.edges
@@ -163,16 +168,10 @@ object QueryService extends LazyLogging {
 
   def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
     nodes
-      .map { case (varLabel, TRAPIQueryNode(id, _, _)) =>
-        val nodeVar = Var(varLabel)
-        val nodeTypeVar = Var(s"${varLabel}_type")
-        id match {
-          // Make sure the query sends back the ID they asked for...
-          // This is good for things with redundant IDs, like genes, but
-          // maybe not ideal if they asked something like 'catalytic activity'
-          case Some(termID) => sparql" BIND(${termID.mkString(" ")} AS $nodeTypeVar) "
-          case None         => sparql" $nodeVar $SesameDirectType $nodeTypeVar .  "
-        }
+      .map { node =>
+        val nodeVar = Var(node._1)
+        val nodeTypeVar = Var(s"${node._1}_type")
+        sparql""" $nodeVar $SesameDirectType $nodeTypeVar .  """
       }
       .fold(sparql"")(_ + _)
 
