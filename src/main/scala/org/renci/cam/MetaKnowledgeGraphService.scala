@@ -20,7 +20,6 @@ object MetaKnowledgeGraphService extends LazyLogging {
   def run: RIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData], MetaKnowledgeGraph] = getMetaKnowledgeGraph
 
   def getMetaKnowledgeGraph: ZIO[Blocking with HttpClient with Has[BiolinkData], Throwable, MetaKnowledgeGraph] = for {
-//    biolinkData <- Biolink.biolinkData
     metaNodes <- getNodes
     metaEdges <- getEdges
   } yield MetaKnowledgeGraph(metaNodes, metaEdges)
@@ -39,11 +38,8 @@ object MetaKnowledgeGraphService extends LazyLogging {
       .bracketAuto { source =>
         effectBlockingIO(source.getLines().mkString("\n"))
       }
-    //triples.groupBy(_.subj).view.mapValues(_.groupBy(_.obj).view.mapValues(_.map(_.pred)).toMap).toMap
     mkgNodeRecords <- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(mkgNodesData)).getRecords)
     metaNodes = mkgNodeRecords.asScala.groupBy(a => BiolinkClass(a.get(0))).view.mapValues(_.groupBy(_.get(1)).view.mapValues(_.map(_.get(2)).toList).toMap).toMap
-//    mkgMap = mkgNodeRecords.asScala.groupBy(_.get(0)).view.mapValues(_.map(_.get(1)).toList).toMap
-//    metaNodes = mkgMap.map(a => MetaNode(BiolinkClass(a._1), a._2)).toList
   } yield metaNodes
 
 }
