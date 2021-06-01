@@ -58,7 +58,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
       for {
         biolinkData <- Biolink.biolinkData
         json = iri.asJson(Implicits.iriEncoder(biolinkData.prefixes)).deepDropNullValues.noSpaces.replace("\"", "")
-      } yield assert(json)(equalTo("NCBIGENE:558"))
+      } yield assert(json)(equalTo("NCBIGene:558"))
     }
   )
 
@@ -67,7 +67,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
       for {
         biolinkData <- Biolink.biolinkData
         json = Implicits.compactIRIIfPossible(IRI("http://identifiers.org/ncbigene/558"), biolinkData.prefixes)
-      } yield assert(json)(equalTo("NCBIGENE:558"))
+      } yield assert(json)(equalTo("NCBIGene:558"))
     },
     testM("test Implicits.compactIRIIfPossible with unknown prefix") {
       for {
@@ -78,8 +78,8 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
     testM("test Implicits.compactIRIIfPossible with already compacted iri") {
       for {
         biolinkData <- Biolink.biolinkData
-        json = Implicits.compactIRIIfPossible(IRI("NCBIGENE:558"), biolinkData.prefixes)
-      } yield assert(json)(equalTo("NCBIGENE:558"))
+        json = Implicits.compactIRIIfPossible(IRI("NCBIGene:558"), biolinkData.prefixes)
+      } yield assert(json)(equalTo("NCBIGene:558"))
     }
   )
 
@@ -87,7 +87,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
     testM("test Implicits.expandCURIEString") {
       for {
         biolinkData <- Biolink.biolinkData
-        json = Implicits.expandCURIEString("NCBIGENE:558", biolinkData.prefixes).toOption.get
+        json = Implicits.expandCURIEString("NCBIGene:558", biolinkData.prefixes).toOption.get
       } yield assert(json.value)(equalTo("http://identifiers.org/ncbigene/558"))
     },
     testM("test Implicits.expandCURIEString malformed") {
@@ -162,7 +162,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
           Map(("zxcv", TRAPIEdge(Some(BiolinkPredicate("related_to")), None, IRI("zxcv-sub"), IRI("zxcv-obj"), None)))
         val knowledgeGraph = TRAPIKnowledgeGraph(nodeMap, edgeMap)
         val json = knowledgeGraph.asJson.deepDropNullValues.noSpaces
-        assert(json)(containsString("\"NCBIGENE:558\":"))
+        assert(json)(containsString("\"NCBIGene:558\":"))
       }
     }
   )
@@ -173,7 +173,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
         biolinkData <- Biolink.biolinkData
       } yield {
         val jsonString =
-          "{\"nodes\":{\"NCBIGENE:558\":{\"name\":\"asdf\",\"category\":[{\"shorthand\":\"Gene\",\"iri\":{\"value\":\"https://w3id.org/biolink/vocab/Gene\"}}]}},\"edges\":{\"zxcv\":{\"subject\":{\"value\":\"zxcv-sub\"},\"object\":{\"value\":\"zxcv-obj\"},\"predicate\":{\"shorthand\":\"related_to\",\"iri\":{\"value\":\"https://w3id.org/biolink/vocab/related_to\"}}}}}"
+          "{\"nodes\":{\"NCBIGene:558\":{\"name\":\"asdf\",\"category\":[{\"shorthand\":\"Gene\",\"iri\":{\"value\":\"https://w3id.org/biolink/vocab/Gene\"}}]}},\"edges\":{\"zxcv\":{\"subject\":{\"value\":\"zxcv-sub\"},\"object\":{\"value\":\"zxcv-obj\"},\"predicate\":{\"shorthand\":\"related_to\",\"iri\":{\"value\":\"https://w3id.org/biolink/vocab/related_to\"}}}}}"
         implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
         val kg = decode[TRAPIKnowledgeGraph](jsonString)
         assert(kg.map(a => a.nodes.keys).toOption.get)(contains(IRI("http://identifiers.org/ncbigene/558")))
