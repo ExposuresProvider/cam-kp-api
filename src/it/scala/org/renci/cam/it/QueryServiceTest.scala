@@ -47,7 +47,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   val testSimpleQuery = suite("testSimpleQuery")(
     testM("test simple query") {
-      val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("Gene"), BiolinkClass("GeneOrGeneProduct"))), None)
+      val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
       val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
       val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n1", "n0", None)
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
