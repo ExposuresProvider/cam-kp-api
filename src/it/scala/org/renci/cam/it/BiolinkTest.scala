@@ -1,5 +1,6 @@
 package org.renci.cam.it
 
+import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.parser._
@@ -19,7 +20,7 @@ import zio.test.environment.testEnvironment
 import java.nio.file.{Files, Paths}
 import scala.collection.immutable.ListMap
 
-object BiolinkTest extends DefaultRunnableSpec {
+object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
 
   val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer).mapError(TestFailure.die)
 
@@ -95,6 +96,18 @@ object BiolinkTest extends DefaultRunnableSpec {
     }
   )
 
-  def spec = suite("Biolink tests")(downloadBiolinkFiles, writeUberBiolinkDataToFile, testLocalPrefixes).provideLayerShared(testLayer) @@ TestAspect.sequential
+  val diffModelAndContext = suite("diffModelAndContext")(
+    testM("test diffModelAndContext") {
+      for {
+        model <- Biolink.parseBiolinkModelYaml
+        modelPrefixes = model._1
+        contextPrefixes <- Biolink.parseBiolinkContext
+        remaining = contextPrefixes.keySet.removedAll(modelPrefixes.keySet)
+        _ = logger.info("remaining: {}", remaining)
+      } yield assertCompletes
+    }
+  )
+
+  def spec = suite("Biolink tests")(/*downloadBiolinkFiles, diffModelAndContext, writeUberBiolinkDataToFile,*/ testLocalPrefixes ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
