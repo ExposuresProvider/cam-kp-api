@@ -164,7 +164,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   val testPathway = suite("testPathway")(
     testM("pathway") {
-      val n0Node = TRAPIQueryNode(Some(List(IRI("NCBIGENE:1017"))), Some(List(BiolinkClass("Gene"))), None)
+      val n0Node = TRAPIQueryNode(Some(List(IRI("NCBIGene:1017"))), Some(List(BiolinkClass("Gene"))), None)
       val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("Pathway"))), None)
       val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1", None)
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
