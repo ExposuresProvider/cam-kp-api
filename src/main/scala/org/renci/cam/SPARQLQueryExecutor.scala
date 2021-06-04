@@ -1,7 +1,5 @@
 package org.renci.cam
 
-import java.nio.charset.StandardCharsets
-
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{Query, QuerySolution, ResultSet, ResultSetFactory}
@@ -9,12 +7,13 @@ import org.http4s._
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._
 import org.phenoscape.sparql.FromQuerySolution
-import HttpClient.HttpClient
+import org.renci.cam.HttpClient.HttpClient
 import zio.ZIO.ZIOAutoCloseableOps
 import zio.config.ZConfig
 import zio.interop.catz._
 import zio.{RIO, Task, ZIO, config => _}
 
+import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters._
 
 object SPARQLQueryExecutor extends LazyLogging {

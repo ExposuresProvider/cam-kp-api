@@ -6,7 +6,7 @@ import io.circe.syntax._
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.QuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{biolinkData, BiolinkData}
+import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain._
 import zio.config.ZConfig
@@ -61,7 +61,6 @@ object QueryService extends LazyLogging {
     for {
       biolinkData <- biolinkData
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
-      nodeTypes = getNodeTypes(queryGraph.nodes)
       namedThingBiolinkClass <- ZIO
         .fromOption(biolinkData.classes.find(a => a.shorthand == "NamedThing"))
         .orElseFail(new Exception("Could not find BiolinkClass:NamedThing"))
@@ -77,23 +76,47 @@ object QueryService extends LazyLogging {
           edgeIDVar = Var(k)
           edgeSourceVar = Var(v.subject)
           edgeTargetVar = Var(v.`object`)
-          sparqlChunk =
-            sparql"""
-                 VALUES $edgeIDVar { $predicatesQueryText }
-                 $edgeSourceVar $edgeIDVar $edgeTargetVar .
-              """
-        } yield (v, sparqlChunk)
+          predicatesValuesClause = sparql""" VALUES $edgeIDVar { $predicatesQueryText } """
+
+          subjectNode = queryGraph.nodes(v.subject)
+          subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
+            case (Some(c), _) =>
+              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a, $b")
+              sparql""" VALUES ${edgeSourceVar}_class { $idList }
+                      $edgeSourceVar $RDFType ${edgeSourceVar}_class .
+                      """
+            case (None, Some(t)) =>
+              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a, $b")
+              sparql"$edgeSourceVar $RDFType $idList . "
+            case (None, None) => sparql""
+          }
+
+          objectNode = queryGraph.nodes(v.`object`)
+          objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
+            case (Some(c), _) =>
+              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a, $b")
+              sparql""" VALUES ${edgeTargetVar}_class { $idList }
+                      $edgeTargetVar $RDFType ${edgeTargetVar}_class .
+                      """
+            case (None, Some(t)) =>
+              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a, $b")
+              sparql"$edgeTargetVar $RDFType $idList . "
+            case (None, None) => sparql""
+          }
+
+          nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
+          ret = sparql"""
+              $predicatesValuesClause
+              $nodesValuesClauses
+              $edgeSourceVar $edgeIDVar $edgeTargetVar .
+            """
+
+        } yield (v, ret)
       }
       (edges, sparqlLines) = predicates.unzip
-      nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
       projections = getProjections(queryGraph)
-      moreLines = for {
-        id <- edges.flatMap(a => List(a.subject, a.`object`))
-        subjVar = Var(id)
-        v <- nodeTypes.get(id)
-        ret = sparql"$subjVar $RDFType $v ."
-      } yield ret
-      valuesClause = (sparqlLines ++ moreLines).fold(sparql"")(_ + _)
+      nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
+      valuesClause = sparqlLines.fold(sparql"")(_ + _)
       limitSparql = getLimit(limit)
       queryString =
         sparql"""SELECT DISTINCT $projections
@@ -103,6 +126,7 @@ object QueryService extends LazyLogging {
           }
           $limitSparql
           """
+//      _ = logger.warn("queryString.text: {}", queryString.text)
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
       solutionTriples = for {
         queryEdge <- queryGraph.edges
@@ -142,29 +166,12 @@ object QueryService extends LazyLogging {
 
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(trapiKGNodes, trapiKGEdges)), Some(finalResults.distinct))
 
-  def getNodeTypes(nodes: Map[String, TRAPIQueryNode]): Map[String, IRI] =
-    nodes
-      .map(entry =>
-        (entry._2.category, entry._2.id) match {
-          case (_, Some(c))    => List(entry._1 -> c)
-          case (Some(t), None) => List(entry._1 -> t.iri)
-          case (None, None)    => Nil
-        })
-      .flatten
-      .toMap
-
   def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
     nodes
-      .map { case (varLabel, TRAPIQueryNode(id, _, _)) =>
-        val nodeVar = Var(varLabel)
-        val nodeTypeVar = Var(s"${varLabel}_type")
-        id match {
-          // Make sure the query sends back the ID they asked for...
-          // This is good for things with redundant IDs, like genes, but
-          // maybe not ideal if they asked something like 'catalytic activity'
-          case Some(termID) => sparql" BIND($termID AS $nodeTypeVar) "
-          case None         => sparql" $nodeVar $SesameDirectType $nodeTypeVar .  "
-        }
+      .map { node =>
+        val nodeVar = Var(node._1)
+        val nodeTypeVar = Var(s"${node._1}_type")
+        sparql""" $nodeVar $SesameDirectType $nodeTypeVar .  """
       }
       .fold(sparql"")(_ + _)
 
@@ -182,12 +189,12 @@ object QueryService extends LazyLogging {
 
   def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph, biolinkPredicates: List[BiolinkPredicate]): TRAPIQueryGraph = {
     val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
-      val newPredicate = edge.predicate match {
+      val newPredicate = edge.predicates match {
         case None          => Some(List(BiolinkPredicate("related_to")))
         case somePredicate => somePredicate
       }
       val filteredPredicates = newPredicate.get.filter(pred => biolinkPredicates.contains(pred))
-      edgeID -> edge.copy(predicate = Some(filteredPredicates))
+      edgeID -> edge.copy(predicates = Some(filteredPredicates))
     }
     queryGraph.copy(edges = improvedEdgeMap)
   }
@@ -214,7 +221,7 @@ object QueryService extends LazyLogging {
               predicate = querySolution.getResource(k).getURI
               tripleString = TripleString(source, predicate, target)
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
-              attributes = List(TRAPIAttribute(Some("provenance"), provValue, IRI(source), None, None))
+              attributes = List(TRAPIAttribute(IRI(source), Some("provenance"), List(provValue), sourceType, None, None, None))
               predicatesBLMapping <- ZIO.fromOption(predicatesMap.get(k)).orElseFail(new Exception("no biolink pred mapped value"))
               blPred = predicatesBLMapping.get(IRI(predicate))
               trapiEdgeKey = getTRAPIEdgeKey(sourceType.value, blPred, targetType.value)
@@ -413,7 +420,7 @@ object QueryService extends LazyLogging {
 
   def getTRAPIQEdgePredicates(edge: TRAPIQueryEdge): RIO[ZConfig[AppConfig] with HttpClient, Map[IRI, BiolinkPredicate]] =
     for {
-      edgePredicates <- ZIO.fromOption(edge.predicate).orElseFail(new Exception("failed to get edge type"))
+      edgePredicates <- ZIO.fromOption(edge.predicates).orElseFail(new Exception("failed to get edge type"))
       queryText <- Task.effect(getTRAPIQEdgePredicatesQueryText(edgePredicates.map(a => sparql" ${a.iri} ").fold(sparql"")(_ + _)))
       predicates <- SPARQLQueryExecutor.runSelectQueryAs[Predicate](queryText.toQuery)
       ret = predicates.map(p => p.predicate -> p.biolinkPredicate).toMap

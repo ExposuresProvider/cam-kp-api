@@ -1,11 +1,10 @@
 package org.renci.cam
 
-import java.util.Properties
 import cats.effect.Blocker
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
+import io.circe._
 import io.circe.generic.auto._
-import io.circe.{Json, _}
 import io.circe.yaml.syntax._
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
@@ -14,9 +13,9 @@ import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware.{Logger, _}
-import HttpClient.HttpClient
-import org.renci.cam.domain._
 import org.renci.cam.Biolink._
+import org.renci.cam.HttpClient.HttpClient
+import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._
@@ -24,12 +23,13 @@ import sttp.tapir.openapi.{Contact, Info, License}
 import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.ztapir._
 import zio._
-import zio.blocking.{blocking, Blocking}
+import zio.blocking.Blocking
 import zio.config.typesafe.TypesafeConfig
 import zio.config.{getConfig, ZConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 
+import java.util.Properties
 import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
 
@@ -41,28 +41,37 @@ object Server extends App with LazyLogging {
 
   import LocalTapirJsonCirce._
 
-  val predicatesEndpointZ: URIO[Has[BiolinkData], ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]] =
+  val metaKnowledgeGraphEndpointZ: URIO[Has[BiolinkData], ZEndpoint[Unit, String, MetaKnowledgeGraph]] =
     for {
       biolinkData <- biolinkData
     } yield endpoint.get
-      .in("predicates")
+      .in("meta_knowledge_graph")
       .errorOut(stringBody)
       .out(
         {
-          implicit val blClassKeyDecoder: KeyDecoder[BiolinkClass] = (blClass: String) => Some(BiolinkClass(blClass))
-          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] =
-            Encoder.encodeString.contramap(predicate => s"biolink:${predicate.shorthand}")
-          implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => s"biolink:${blClass.shorthand}"
-          jsonBody[Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]]
+
+          implicit val iriKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder
+          implicit val iriKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
+
+          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+
+          implicit val blClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+          implicit val blClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+
+          implicit val blPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+
+          jsonBody[MetaKnowledgeGraph]
         }
       )
-      .summary("Get predicates used at this service")
+      .summary("Get MetaKnowledgeGraph used at this service")
 
-  def predicatesRouteR(predicatesEndpoint: ZEndpoint[Unit, String, Map[BiolinkClass, Map[BiolinkClass, List[BiolinkPredicate]]]])
+  def metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint: ZEndpoint[Unit, String, MetaKnowledgeGraph])
     : URIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
-    predicatesEndpoint.toRoutesR { case () =>
+    metaKnowledgeGraphEndpoint.toRoutesR { case () =>
       val program = for {
-        response <- PredicatesService.run
+        response <- MetaKnowledgeGraphService.run
       } yield response
       program.mapError(error => error.getMessage)
     }
@@ -83,10 +92,19 @@ object Server extends App with LazyLogging {
       implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
       implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] = Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
 
+      val example = {
+        val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
+        val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
+        val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n1", "n0", None)
+        val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+        val message = TRAPIMessage(Some(queryGraph), None, None)
+        TRAPIQuery(message, None)
+      }
+
       endpoint.post
         .in("query")
         .in(query[Option[Int]]("limit"))
-        .in(jsonBody[TRAPIQuery])
+        .in(jsonBody[TRAPIQuery].example(example))
         .errorOut(stringBody)
         .out(jsonBody[TRAPIResponse])
         .summary("Submit a TRAPI question graph and retrieve matching solutions")
@@ -119,29 +137,35 @@ object Server extends App with LazyLogging {
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- getConfig[AppConfig]
-        predicatesEndpoint <- predicatesEndpointZ
-        predicatesRoute <- predicatesRouteR(predicatesEndpoint)
+        biolinkData <- biolinkData
+        metaKnowledgeGraphEndpoint <- metaKnowledgeGraphEndpointZ
+        metaKnowledgeGraphRoute <- metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint)
         queryEndpoint <- queryEndpointZ
         queryRoute <- queryRouteR(queryEndpoint)
-        routes = queryRoute <+> predicatesRoute
-        openAPI: String = List(queryEndpoint, predicatesEndpoint)
+        routes = queryRoute <+> metaKnowledgeGraphRoute
+        openAPI: String = List(queryEndpoint, metaKnowledgeGraphEndpoint)
           .toOpenAPI("CAM-KP API", "0.1")
           .copy(info = openAPIInfo)
-          .copy(tags = List(sttp.tapir.openapi.Tag("translator")))
+          .copy(tags = List(sttp.tapir.openapi.Tag("translator"), sttp.tapir.openapi.Tag("trapi")))
           .servers(List(sttp.tapir.openapi.Server(appConfig.location)))
           .toYaml
         openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
         info: String =
-          """
+          s"""
              {
                 "info": {
                   "x-translator": {
                     "component": "KP",
-                    "team": ["Exposures Provider"]
+                    "team": ["Exposures Provider"],
+                    "biolink-version": "${biolinkData.version}"
+                  },
+                  "x-trapi": {
+                    "version": "1.1.0"
                   }
                 }
              }
           """
+
         infoJson <- ZIO.fromEither(io.circe.parser.parse(info))
         openAPIinfo = infoJson.deepMerge(openAPIJson).asYaml.spaces2
         docsRoute = swaggerRoutes(openAPIinfo)
