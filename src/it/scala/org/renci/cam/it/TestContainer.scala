@@ -15,7 +15,7 @@ object TestContainer {
         val container = FixedHostPortGenericContainer("renciorg/cam-kp-api:0.1",
                                                       exposedHostPort = 8080,
                                                       exposedContainerPort = 8080,
-                                                      waitStrategy = Wait.forHttp("/predicates"))
+                                                      waitStrategy = Wait.forHttp("/meta_knowledge_graph"))
         container.start()
         container
       }.orDie
