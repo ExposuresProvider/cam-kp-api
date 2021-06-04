@@ -10,7 +10,7 @@ version := "0.1"
 
 licenses := Seq("MIT license" -> url("https://opensource.org/licenses/MIT"))
 
-scalaVersion := "2.13.5"
+scalaVersion := "2.13.6"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
@@ -18,7 +18,7 @@ javaOptions += "-Xmx8G"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
-publishArtifact in (Compile, packageDoc) := false
+Compile /  packageDoc / publishArtifact := false
 
 configs(IntegrationTest)
 Defaults.itSettings
@@ -27,19 +27,19 @@ IntegrationTest / parallelExecution := false
 
 coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci\\.cam\\.Server.*;org\\.renci\\.cam\\.AppConfig.*;org\\.renci\\.cam\\.SPARQLQueryExecutor.*"
 
-val zioVersion = "1.0.7"
+val zioVersion = "1.0.9"
 val zioConfigVersion = "1.0.0-RC29-1"
 val tapirVersion = "0.16.16"
-val http4sVersion = "0.21.22"
-val circeVersion = "0.14.1"
+val http4sVersion = "0.21.24"
+val circeVersion = "0.13.0"
 val logbackVersion = "1.2.3"
 
-javaOptions in reStart += "-Xmx16G"
+reStart / javaOptions += "-Xmx16G"
 
 libraryDependencies ++= {
   Seq(
     "dev.zio"                     %% "zio"                            % zioVersion,
-    "dev.zio"                     %% "zio-interop-cats"               % "2.4.1.0",
+    "dev.zio"                     %% "zio-interop-cats"               % "2.5.1.0",
     "dev.zio"                     %% "zio-config"                     % zioConfigVersion,
     "dev.zio"                     %% "zio-config-magnolia"            % zioConfigVersion,
     "dev.zio"                     %% "zio-config-typesafe"            % zioConfigVersion,
@@ -71,12 +71,12 @@ libraryDependencies ++= {
   )
 }
 
-dockerBaseImage := "openjdk:14-alpine"
-daemonUser in Docker := "camkpapi"
+dockerBaseImage := "openjdk:15-alpine"
+Docker / daemonUser := "camkpapi"
 dockerExposedPorts += 8080
-dockerApiVersion := Some(DockerApiVersion(1, 40))
+Docker / dockerApiVersion := Some(DockerApiVersion(1, 40))
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
-dockerRepository := Some("renciorg")
+Docker / dockerRepository := Some("renciorg")
 dockerCommands := dockerCommands.value.flatMap {
   case cmd @ Cmd("EXPOSE", _) => List(Cmd("RUN", "apk update && apk add bash curl"), cmd)
   case other                  => List(other)
