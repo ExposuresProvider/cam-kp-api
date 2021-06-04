@@ -72,21 +72,21 @@ object Implicits {
 
   def biolinkPredicateEncoder(prefixesMap: Map[String, String]): Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { s =>
     compactIRIIfPossible(s.iri, prefixesMap)
-  //s.withBiolinkPrefix
   }
 
   def biolinkClassKeyEncoder: KeyEncoder[BiolinkClass] = KeyEncoder.encodeKeyString.contramap { bc: BiolinkClass =>
     bc.withBiolinkPrefix
   }
 
-  def predicateOrPredicateListDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[List[BiolinkPredicate]] = new Decoder[List[BiolinkPredicate]]() {
-    implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkPredicates)
+  def predicateOrPredicateListDecoder(biolinkPredicates: List[BiolinkPredicate]): Decoder[List[BiolinkPredicate]] =
+    new Decoder[List[BiolinkPredicate]]() {
+      implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkPredicates)
 
-    override def apply(c: HCursor): Result[List[BiolinkPredicate]] =
-      for {
-        ret <- c.as[List[BiolinkPredicate]].orElse(c.as[BiolinkPredicate].map(_ :: Nil))
-      } yield ret
-  }
+      override def apply(c: HCursor): Result[List[BiolinkPredicate]] =
+        for {
+          ret <- c.as[List[BiolinkPredicate]].orElse(c.as[BiolinkPredicate].map(_ :: Nil))
+        } yield ret
+    }
 
   def biolinkClassKeyDecoder(biolinkClasses: List[BiolinkClass]): KeyDecoder[BiolinkClass] = new KeyDecoder[BiolinkClass] {
 
