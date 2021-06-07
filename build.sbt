@@ -22,7 +22,6 @@ Compile /  packageDoc / publishArtifact := false
 
 configs(IntegrationTest)
 Defaults.itSettings
-coverageEnabled := false
 IntegrationTest / parallelExecution := false
 
 coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci\\.cam\\.Server.*;org\\.renci\\.cam\\.AppConfig.*;org\\.renci\\.cam\\.SPARQLQueryExecutor.*"
