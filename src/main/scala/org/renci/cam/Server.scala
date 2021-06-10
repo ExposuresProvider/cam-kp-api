@@ -76,7 +76,7 @@ object Server extends App with LazyLogging {
       program.mapError(error => error.getMessage)
     }
 
-  val queryEndpointZ: URIO[Has[BiolinkData], ZEndpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse]] = {
+  val queryEndpointZ: URIO[Has[BiolinkData], ZEndpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse]] = {
     for {
       biolinkData <- biolinkData
     } yield {
@@ -103,7 +103,7 @@ object Server extends App with LazyLogging {
 
       endpoint.post
         .in("query")
-        .in(query[Option[Int]]("limit"))
+        .in(query[Option[Int]]("limit").and(query[Option[Boolean]]("include_extra_edges")))
         .in(jsonBody[TRAPIQuery].example(example))
         .errorOut(stringBody)
         .out(jsonBody[TRAPIResponse])
@@ -111,15 +111,17 @@ object Server extends App with LazyLogging {
     }
   }
 
-  def queryRouteR(queryEndpoint: ZEndpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse])
+  def queryRouteR(queryEndpoint: ZEndpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse])
     : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
-    queryEndpoint.toRoutesR { case (limit, body) =>
+    queryEndpoint.toRoutesR { case (limit, includeExtraEdges, body) =>
       val program = for {
         queryGraph <-
           ZIO
             .fromOption(body.message.query_graph)
             .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
-        message <- QueryService.run(limit, queryGraph)
+        limitValue <- ZIO.fromOption(limit).orElse(ZIO.effect(1000))
+        includeExtraEdgesValue <- ZIO.fromOption(includeExtraEdges).orElse(ZIO.effect(false))
+        message <- QueryService.run(limitValue, includeExtraEdgesValue, queryGraph)
       } yield TRAPIResponse(message, Some("Success"), None, None)
       program.mapError(error => error.getMessage)
     }
