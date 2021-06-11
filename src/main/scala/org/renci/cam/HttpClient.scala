@@ -18,6 +18,7 @@ object HttpClient {
         .withIdleTimeout(Duration(4, MINUTES))
         .withRequestTimeout(3, MINUTES)
         .withResponseHeaderTimeout(2, MINUTES)
+        .withMaxWaitQueueLimit(512)
         .resource
         .toManaged
     }
