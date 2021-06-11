@@ -50,7 +50,7 @@ object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
         map = firstPass ++ secondPass
         _ = println(map)
       } yield assert(response)(isNonEmptyString) && assert(map.keys)(
-        contains("NCBIGENE") && contains("CHEBI") && contains("GO") && contains("biolink") && not(contains("@vocab")) && not(
+        contains("NCBIGene") && contains("CHEBI") && contains("GO") && contains("biolink") && not(contains("@vocab")) && not(
           contains("id"))) && assert(map.values)(contains("https://w3id.org/biolink/vocab/"))
     }
   )
@@ -108,6 +108,7 @@ object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
     }
   )
 
-  def spec = suite("Biolink tests")(/*downloadBiolinkFiles, diffModelAndContext, writeUberBiolinkDataToFile,*/ testLocalPrefixes ).provideLayerShared(testLayer) @@ TestAspect.sequential
+  def spec = suite("Biolink tests")(downloadBiolinkFiles, writeUberBiolinkDataToFile).provideLayerShared(testLayer) @@ TestAspect.sequential
+// def spec = suite("Biolink tests")(testLocalPrefixes).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
