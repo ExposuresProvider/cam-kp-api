@@ -3,7 +3,6 @@ package org.renci.cam
 import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
-import io.circe.syntax._
 import org.apache.commons.lang3.StringUtils
 import org.http4s.headers.Accept
 import org.http4s.implicits._
@@ -75,7 +74,9 @@ object Biolink extends LazyLogging {
         }
       biolinkContextJson <- ZIO.fromEither(io.circe.parser.parse(contextData))
       contextJson <-
-        ZIO.fromOption(biolinkContextJson.hcursor.downField("@context").focus).orElseFail(new Exception("failed to traverse down to context"))
+        ZIO
+          .fromOption(biolinkContextJson.hcursor.downField("@context").focus)
+          .orElseFail(new Exception("failed to traverse down to context"))
       contextJsonObject <- ZIO.fromOption(contextJson.asObject).orElseFail(new Exception("failed to get json object from context"))
       firstPass = contextJsonObject.toIterable
         .filter(entry => entry._2.isObject && entry._2.asObject.get.contains("@id") && entry._2.asObject.get.contains("@prefix"))
@@ -86,12 +87,7 @@ object Biolink extends LazyLogging {
       secondPass = contextJsonObject.toIterable
         .filter(entry => entry._2.isString && !entry._1.equals("@vocab") && !entry._1.equals("id"))
         .map { entry =>
-          // tmp fix due to bug in context regarding what is ncbigene canonical
-          if (entry._1 == "NCBIGENE") {
-            "NCBIGene" -> entry._2.toString().replaceAll("\"", "")
-          } else {
-            entry._1 -> entry._2.toString().replaceAll("\"", "")
-          }
+          entry._1 -> entry._2.toString().replaceAll("\"", "")
         }
         .toMap
       map = firstPass ++ secondPass
@@ -106,8 +102,7 @@ object Biolink extends LazyLogging {
       _ = Files.writeString(Paths.get("src/main/resources/biolink-model.yaml"), response)
     } yield ()
 
-  def parseBiolinkModelYaml
-    : ZIO[Blocking, Throwable, (Map[String, String], List[BiolinkClass], List[BiolinkPredicate], String)] =
+  def parseBiolinkModelYaml: ZIO[Blocking, Throwable, (Map[String, String], List[BiolinkClass], List[BiolinkPredicate], String)] =
     for {
       biolinkYamlData <- effectBlockingIO(
         Source.fromInputStream(getClass.getResourceAsStream("/biolink-model.yaml"), StandardCharsets.UTF_8.name()))
