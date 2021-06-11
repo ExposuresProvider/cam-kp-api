@@ -207,8 +207,9 @@ object QueryService extends LazyLogging {
   def getTRAPIEdges(queryGraph: TRAPIQueryGraph,
                     querySolutions: List[QuerySolution],
                     predicatesMap: Map[String, Map[IRI, BiolinkPredicate]],
-                    provs: Map[TripleString, String]): ZIO[Any, Throwable, collection.mutable.Map[String, TRAPIEdge]] =
+                    provs: Map[TripleString, String]): ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, collection.mutable.Map[String, TRAPIEdge]] =
     for {
+      biolinkData <- biolinkData
       trapiEdges <- ZIO.foreach(querySolutions) { querySolution =>
         for {
           nodeTypeMap <- Task.effect(queryGraph.nodes.map(entry => (entry._1, IRI(querySolution.getResource(s"${entry._1}_type").getURI))))
@@ -221,7 +222,36 @@ object QueryService extends LazyLogging {
               predicate = querySolution.getResource(k).getURI
               tripleString = TripleString(source, predicate, target)
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
-              attributes = List(TRAPIAttribute(IRI(source), Some("provenance"), List(provValue), Some(sourceType), None, None, None))
+
+//              final case class TRAPIAttribute(attribute_type_id: IRI,
+//              original_attribute_name: Option[String],
+//              value: List[String],
+//              value_type_id: Option[IRI],
+//              attribute_source: Option[String],
+//              value_url: Option[String],
+//              description: Option[String])
+
+// {
+//      "attribute_type_id": "biolink:original_knowledge_source",  # Assumes data creator knows this is the original source. If not, they could use 'primary_knowledge_source'.
+//      "value":  "infores:clinicaltrials",
+//      "value_type_id": "biolink:InformationResource",
+//      "value_url":  "https://www.clinicaltrials.gov",
+//      "description": "ClinicalTrials.gov is...",
+//      "attribute_source": "infores:chembl"
+//    },
+
+//              {
+//                "attribute_type_id": "http://model.geneontology.org/5667fdd400000892/5667fdd400000909",
+//                "original_attribute_name": "provenance",
+//                "value": [ "http://model.geneontology.org/5667fdd400000892" ],
+//                "value_type_id": "UniProtKB:P35222"
+//              }
+
+//              biolink:InformationResource
+              infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
+//              provAttribute = TRAPIAttribute(IRI(source), Some("provenance"), List(provValue), Some(sourceType), None, None, None)
+              provAttribute = TRAPIAttribute(IRI(source), Some("provenance"), List(provValue), Some(infoResBiolinkClass.iri), None, None, None)
+              attributes = List(provAttribute)
               predicatesBLMapping <- ZIO.fromOption(predicatesMap.get(k)).orElseFail(new Exception("no biolink pred mapped value"))
               blPred = predicatesBLMapping.get(IRI(predicate))
               trapiEdgeKey = getTRAPIEdgeKey(sourceType.value, blPred, targetType.value)
