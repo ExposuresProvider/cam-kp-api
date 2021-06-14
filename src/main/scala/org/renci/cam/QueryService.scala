@@ -6,7 +6,7 @@ import io.circe.syntax._
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.QuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{BiolinkData, biolinkData}
+import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain._
 import zio.config.ZConfig
@@ -17,7 +17,7 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import scala.jdk.CollectionConverters._
 
-object QueryService extends LazyLogging {
+object QueryService {
 
   val ProvWasDerivedFrom: IRI = IRI("http://www.w3.org/ns/prov#wasDerivedFrom")
 
@@ -81,12 +81,12 @@ object QueryService extends LazyLogging {
           subjectNode = queryGraph.nodes(v.subject)
           subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
             case (Some(c), _) =>
-              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a, $b")
+              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
               sparql""" VALUES ${edgeSourceVar}_class { $idList }
                       $edgeSourceVar $RDFType ${edgeSourceVar}_class .
                       """
             case (None, Some(t)) =>
-              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a, $b")
+              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
               sparql"$edgeSourceVar $RDFType $idList . "
             case (None, None) => sparql""
           }
@@ -94,12 +94,12 @@ object QueryService extends LazyLogging {
           objectNode = queryGraph.nodes(v.`object`)
           objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
             case (Some(c), _) =>
-              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a, $b")
+              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
               sparql""" VALUES ${edgeTargetVar}_class { $idList }
                       $edgeTargetVar $RDFType ${edgeTargetVar}_class .
                       """
             case (None, Some(t)) =>
-              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a, $b")
+              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
               sparql"$edgeTargetVar $RDFType $idList . "
             case (None, None) => sparql""
           }
@@ -126,7 +126,7 @@ object QueryService extends LazyLogging {
           }
           $limitSparql
           """
-//      _ = logger.warn("queryString.text: {}", queryString.text)
+
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
       solutionTriples = for {
         queryEdge <- queryGraph.edges
