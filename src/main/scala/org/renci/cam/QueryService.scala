@@ -11,13 +11,12 @@ import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain._
 import zio.config.ZConfig
 import zio.{Has, RIO, Task, ZIO, config => _}
-
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import scala.jdk.CollectionConverters._
 
-object QueryService {
+object QueryService extends LazyLogging {
 
   val ProvWasDerivedFrom: IRI = IRI("http://www.w3.org/ns/prov#wasDerivedFrom")
 
@@ -112,7 +111,6 @@ object QueryService {
               $nodesValuesClauses
               $edgeSourceVar $edgeIDVar $edgeTargetVar .
             """
-
         } yield (v, ret)
       }
       (edges, sparqlLines) = predicates.unzip
