@@ -190,13 +190,6 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     }
   )
 
-  val testGetLimit = suite("testGetLimit")(
-    zio.test.test("test QueryService.getLimit") {
-      val queryText = QueryService.getLimit(Some(10))
-      assert(queryText.text.trim)(equalTo("LIMIT 10"))
-    }
-  )
-
   val testGetProjections = suite("testGetProjections")(
     zio.test.test("test QueryService.getProjections") {
       val (queryGraph, _) = getSimpleData
@@ -211,7 +204,6 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     testGetTRAPINodeBindings,
     testQueryTexts,
     testGetNodesToDirectTypes,
-    testGetLimit,
     testGetProjections
   ) @@ TestAspect.sequential
 
