@@ -11,7 +11,6 @@ import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain._
 import zio.config.ZConfig
 import zio.{Has, RIO, Task, ZIO, config => _}
-
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
@@ -83,12 +82,12 @@ object QueryService extends LazyLogging {
           subjectNode = queryGraph.nodes(v.subject)
           subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
             case (Some(c), _) =>
-              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a, $b")
+              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
               sparql""" VALUES ${edgeSourceVar}_class { $idList }
                       $edgeSourceVar $RDFType ${edgeSourceVar}_class .
                       """
             case (None, Some(t)) =>
-              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a, $b")
+              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
               sparql"$edgeSourceVar $RDFType $idList . "
             case (None, None) => sparql""
           }
@@ -96,12 +95,12 @@ object QueryService extends LazyLogging {
           objectNode = queryGraph.nodes(v.`object`)
           objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
             case (Some(c), _) =>
-              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a, $b")
+              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
               sparql""" VALUES ${edgeTargetVar}_class { $idList }
                       $edgeTargetVar $RDFType ${edgeTargetVar}_class .
                       """
             case (None, Some(t)) =>
-              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a, $b")
+              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
               sparql"$edgeTargetVar $RDFType $idList . "
             case (None, None) => sparql""
           }
@@ -112,7 +111,6 @@ object QueryService extends LazyLogging {
               $nodesValuesClauses
               $edgeSourceVar $edgeIDVar $edgeTargetVar .
             """
-
         } yield (v, ret)
       }
       (edges, sparqlLines) = predicates.unzip
