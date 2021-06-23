@@ -73,6 +73,7 @@ libraryDependencies ++= {
 dockerBaseImage := "openjdk:15-alpine"
 Docker / daemonUser := "camkpapi"
 dockerExposedPorts += 8080
+dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g")
 Docker / dockerApiVersion := Some(DockerApiVersion(1, 40))
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
 Docker / dockerRepository := Some("renciorg")
