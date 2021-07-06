@@ -70,48 +70,44 @@ object QueryService extends LazyLogging {
           preds <- getTRAPIQEdgePredicates(v)
         } yield k -> preds
       }
-      predicates <- ZIO.foreachPar(queryGraph.edges) { (k, v) =>
-        for {
-          foundPredicates <- Task.effect(predicatesMap.values.flatMap(a => a.keys))
-          predicatesQueryText <- Task.effect(foundPredicates.map(a => sparql" $a ").fold(sparql"")(_ + _))
-          edgeIDVar = Var(k)
-          edgeSourceVar = Var(v.subject)
-          edgeTargetVar = Var(v.`object`)
-          predicatesValuesClause = sparql""" VALUES $edgeIDVar { $predicatesQueryText } """
-
-          subjectNode = queryGraph.nodes(v.subject)
-          subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
-            case (Some(c), _) =>
-              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
-              sparql""" VALUES ${edgeSourceVar}_class { $idList }
+      predicates = queryGraph.edges.map { case (k, v) =>
+        val foundPredicates = predicatesMap.values.flatMap(a => a.keys)
+        val predicatesQueryText = foundPredicates.map(a => sparql" $a ").fold(sparql"")(_ + _)
+        val edgeIDVar = Var(k)
+        val edgeSourceVar = Var(v.subject)
+        val edgeTargetVar = Var(v.`object`)
+        val predicatesValuesClause = sparql""" VALUES $edgeIDVar { $predicatesQueryText } """
+        val subjectNode = queryGraph.nodes(v.subject)
+        val subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
+          case (Some(c), _) =>
+            val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
+            sparql""" VALUES ${edgeSourceVar}_class { $idList }
                       $edgeSourceVar $RDFType ${edgeSourceVar}_class .
                       """
-            case (None, Some(t)) =>
-              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
-              sparql"$edgeSourceVar $RDFType $idList . "
-            case (None, None) => sparql""
-          }
-
-          objectNode = queryGraph.nodes(v.`object`)
-          objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
-            case (Some(c), _) =>
-              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
-              sparql""" VALUES ${edgeTargetVar}_class { $idList }
+          case (None, Some(t)) =>
+            val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
+            sparql"$edgeSourceVar $RDFType $idList . "
+          case (None, None) => sparql""
+        }
+        val objectNode = queryGraph.nodes(v.`object`)
+        val objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
+          case (Some(c), _) =>
+            val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
+            sparql""" VALUES ${edgeTargetVar}_class { $idList }
                       $edgeTargetVar $RDFType ${edgeTargetVar}_class .
                       """
-            case (None, Some(t)) =>
-              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
-              sparql"$edgeTargetVar $RDFType $idList . "
-            case (None, None) => sparql""
-          }
-
-          nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
-          ret = sparql"""
+          case (None, Some(t)) =>
+            val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
+            sparql"$edgeTargetVar $RDFType $idList . "
+          case (None, None) => sparql""
+        }
+        val nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
+        val ret = sparql"""
               $predicatesValuesClause
               $nodesValuesClauses
               $edgeSourceVar $edgeIDVar $edgeTargetVar .
             """
-        } yield (v, ret)
+        (v, ret)
       }
       (edges, sparqlLines) = predicates.unzip
       projections = getProjections(queryGraph)
@@ -165,9 +161,7 @@ object QueryService extends LazyLogging {
         }
       )
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
-    } yield TRAPIMessage(Some(queryGraph),
-                         Some(TRAPIKnowledgeGraph(initialKGNodes.toMap, initialKGEdges.toMap)),
-                         Some(results.distinct))
+    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes.toMap, initialKGEdges.toMap)), Some(results.distinct))
 
   def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
     nodes
