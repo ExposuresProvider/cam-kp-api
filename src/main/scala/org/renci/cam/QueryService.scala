@@ -74,26 +74,29 @@ object QueryService extends LazyLogging {
         val predicatesValuesClause = sparql""" VALUES $edgeIDVar { $predicatesQueryText } """
         val subjectNode = queryGraph.nodes(queryEdge.subject)
         val subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
-          case (Some(c), _) =>
-            val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
-            sparql""" VALUES ${edgeSourceVar}_class { $idList }
+          case (Some(idsList), _) =>
+            sparql""" VALUES ${edgeSourceVar}_class { ${idsList.asValues} }
                       $edgeSourceVar $RDFType ${edgeSourceVar}_class .
                       """
-          case (None, Some(t)) =>
-            val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
-            sparql"$edgeSourceVar $RDFType $idList . "
+          case (None, Some(biolinkTypes)) =>
+            val irisList = biolinkTypes.map(_.iri)
+            sparql""" VALUES ${edgeSourceVar}_class { ${irisList.asValues} }
+                      $edgeSourceVar $RDFType ${edgeSourceVar}_class .
+                      """
+            sparql"$edgeSourceVar $RDFType $irisList . "
           case (None, None) => sparql""
         }
         val objectNode = queryGraph.nodes(queryEdge.`object`)
         val objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
-          case (Some(c), _) =>
-            val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
-            sparql""" VALUES ${edgeTargetVar}_class { $idList }
+          case (Some(idsList), _) =>
+            sparql""" VALUES ${edgeTargetVar}_class { ${idsList.asValues} }
                       $edgeTargetVar $RDFType ${edgeTargetVar}_class .
                       """
-          case (None, Some(t)) =>
-            val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
-            sparql"$edgeTargetVar $RDFType $idList . "
+          case (None, Some(biolinkTypes)) =>
+            val irisList = biolinkTypes.map(_.iri)
+            sparql""" VALUES ${edgeTargetVar}_class { ${irisList.asValues} }
+                      $edgeTargetVar $RDFType ${edgeTargetVar}_class .
+                      """
           case (None, None) => sparql""
         }
         val nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
