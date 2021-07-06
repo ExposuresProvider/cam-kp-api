@@ -396,11 +396,10 @@ object QueryService extends LazyLogging {
          }"""
   }
 
-  def getSlotStuff(predicates: List[IRI]): RIO[ZConfig[AppConfig] with HttpClient, List[SlotStuff]] =
-    for {
-      queryText <- Task.effect(getSlotStuffQueryText(predicates))
-      results <- SPARQLQueryExecutor.runSelectQueryAs[SlotStuff](queryText.toQuery)
-    } yield results
+  def getSlotStuff(predicates: List[IRI]): RIO[ZConfig[AppConfig] with HttpClient, List[SlotStuff]] = {
+    val queryText = getSlotStuffQueryText(predicates)
+    SPARQLQueryExecutor.runSelectQueryAs[SlotStuff](queryText.toQuery)
+  }
 
   def getTRAPIQEdgePredicatesQueryText(predicates: QueryText): QueryText =
     sparql"""SELECT DISTINCT ?biolinkPredicate ?predicate WHERE {
