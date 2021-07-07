@@ -65,75 +65,13 @@ object QueryService extends LazyLogging {
       predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
       relationsToLabelAndBiolink <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
-      predicates = queryGraph.edges.map { case (queryEdgeID, queryEdge) =>
-        val relationsForEdge = queryEdge.predicates.getOrElse(Nil).flatMap(predicatesToRelations.getOrElse(_, Set.empty)).to(Set)
-        val predicatesQueryText = relationsForEdge.map(rel => sparql" $rel ").fold(sparql"")(_ + _)
-        val edgeIDVar = Var(queryEdgeID)
-        val edgeSourceVar = Var(queryEdge.subject)
-        val edgeTargetVar = Var(queryEdge.`object`)
-        val predicatesValuesClause = sparql""" VALUES $edgeIDVar { $predicatesQueryText } """
-        val subjectNode = queryGraph.nodes(queryEdge.subject)
-        val subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
-          case (Some(idsList), _) =>
-            sparql""" VALUES ${edgeSourceVar}_class { ${idsList.asValues} }
-                      $edgeSourceVar $RDFType ${edgeSourceVar}_class .
-                      """
-          case (None, Some(biolinkTypes)) =>
-            val irisList = biolinkTypes.map(_.iri)
-            sparql""" VALUES ${edgeSourceVar}_class { ${irisList.asValues} }
-                      $edgeSourceVar $RDFType ${edgeSourceVar}_class .
-                      """
-            sparql"$edgeSourceVar $RDFType $irisList . "
-          case (None, None) => sparql""
-        }
-        val objectNode = queryGraph.nodes(queryEdge.`object`)
-        val objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
-          case (Some(idsList), _) =>
-            sparql""" VALUES ${edgeTargetVar}_class { ${idsList.asValues} }
-                      $edgeTargetVar $RDFType ${edgeTargetVar}_class .
-                      """
-          case (None, Some(biolinkTypes)) =>
-            val irisList = biolinkTypes.map(_.iri)
-            sparql""" VALUES ${edgeTargetVar}_class { ${irisList.asValues} }
-                      $edgeTargetVar $RDFType ${edgeTargetVar}_class .
-                      """
-          case (None, None) => sparql""
-        }
-        val nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
-        val ret = sparql"""
-              $predicatesValuesClause
-              $nodesValuesClauses
-              $edgeSourceVar $edgeIDVar $edgeTargetVar .
-            """
-        (queryEdge, ret)
-      }
-      (edges, sparqlLines) = predicates.unzip
-      projections = getProjections(queryGraph)
-      nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
-      valuesClause = sparqlLines.fold(sparql"")(_ + _)
-      limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
-      queryString =
-        sparql"""SELECT DISTINCT $projections
-          WHERE {
-            $nodesToDirectTypes
-            $valuesClause
-          }
-          $limitSparql
-          """
-      querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
-      solutionTriples = for {
-        queryEdge <- queryGraph.edges
-        solution <- querySolutions
-      } yield Triple(
-        IRI(solution.getResource(queryEdge._2.subject).getURI),
-        IRI(solution.getResource(queryEdge._1).getURI),
-        IRI(solution.getResource(queryEdge._2.`object`).getURI)
-      )
-      provs <- getProvenance(solutionTriples.to(Set))
-      initialKGNodes <- getTRAPINodes(queryGraph, querySolutions, biolinkData.classes)
-      initialKGEdges <- getTRAPIEdges(queryGraph, querySolutions, relationsToLabelAndBiolink, provs)
-      querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, querySolutions, relationsToLabelAndBiolink)
-      trapiBindings <- ZIO.foreach(querySolutions) { querySolution =>
+      initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+      solutionTriples = extractCoreTriples(initialQuerySolutions, queryGraph)
+      provs <- getProvenance(solutionTriples)
+      initialKGNodes <- getTRAPINodes(queryGraph, initialQuerySolutions, biolinkData.classes)
+      initialKGEdges <- getTRAPIEdges(queryGraph, initialQuerySolutions, relationsToLabelAndBiolink, provs)
+      querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolink)
+      trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
         getTRAPINodeBindings(queryGraph, querySolution) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
       }
       _ <- ZIO.when(includeExtraEdges)(
@@ -161,12 +99,83 @@ object QueryService extends LazyLogging {
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes.toMap, initialKGEdges.toMap)), Some(results.distinct))
 
-  def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
-    nodes
-      .map { node =>
-        val nodeVar = Var(node._1)
-        val nodeTypeVar = Var(s"${node._1}_type")
-        sparql""" $nodeVar $SesameDirectType $nodeTypeVar .  """
+  def findInitialQuerySolutions(queryGraph: TRAPIQueryGraph,
+                                predicatesToRelations: Map[BiolinkPredicate, Set[IRI]],
+                                limit: Int): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, List[QuerySolution]] = {
+    val queryEdgeSparql = queryGraph.edges.map { case (queryEdgeID, queryEdge) =>
+      val relationsForEdge = queryEdge.predicates.getOrElse(Nil).flatMap(predicatesToRelations.getOrElse(_, Set.empty)).to(Set)
+      val predicatesQueryText = relationsForEdge.map(rel => sparql" $rel ").fold(sparql"")(_ + _)
+      val edgeIDVar = Var(queryEdgeID)
+      val edgeSourceVar = Var(queryEdge.subject)
+      val edgeTargetVar = Var(queryEdge.`object`)
+      val predicatesValuesClause = sparql""" VALUES $edgeIDVar { $predicatesQueryText } """
+      val subjectNode = queryGraph.nodes(queryEdge.subject)
+      val subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
+        case (Some(idsList), _) =>
+          sparql""" VALUES ${edgeSourceVar}_class { ${idsList.asValues} }
+                      $edgeSourceVar $RDFType ${edgeSourceVar}_class .
+                      """
+        case (None, Some(biolinkTypes)) =>
+          val irisList = biolinkTypes.map(_.iri)
+          sparql""" VALUES ${edgeSourceVar}_class { ${irisList.asValues} }
+                      $edgeSourceVar $RDFType ${edgeSourceVar}_class .
+                      """
+        case (None, None) => sparql""
+      }
+      val objectNode = queryGraph.nodes(queryEdge.`object`)
+      val objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
+        case (Some(idsList), _) =>
+          sparql""" VALUES ${edgeTargetVar}_class { ${idsList.asValues} }
+                      $edgeTargetVar $RDFType ${edgeTargetVar}_class .
+                      """
+        case (None, Some(biolinkTypes)) =>
+          val irisList = biolinkTypes.map(_.iri)
+          sparql""" VALUES ${edgeTargetVar}_class { ${irisList.asValues} }
+                      $edgeTargetVar $RDFType ${edgeTargetVar}_class .
+                      """
+        case (None, None) => sparql""
+      }
+      val nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
+      sparql"""
+              $predicatesValuesClause
+              $nodesValuesClauses
+              $edgeSourceVar $edgeIDVar $edgeTargetVar .
+            """
+    }
+    val projections = getProjections(queryGraph)
+    val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes.keySet)
+    val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
+    val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
+    val queryString =
+      sparql"""SELECT DISTINCT $projections
+          WHERE {
+            $nodesToDirectTypes
+            $edgePatterns
+          }
+          $limitSparql
+          """
+    SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
+  }
+
+  def extractCoreTriples(solutions: List[QuerySolution], queryGraph: TRAPIQueryGraph): Set[Triple] =
+    (for {
+      (queryEdgeID, queryEdge) <- queryGraph.edges
+      solution <- solutions
+    } yield Triple(
+      IRI(solution.getResource(queryEdge.subject).getURI),
+      IRI(solution.getResource(queryEdgeID).getURI),
+      IRI(solution.getResource(queryEdge.`object`).getURI)
+    )).to(Set)
+
+  def getNodesToDirectTypes(nodeIDs: Set[String]): QueryText =
+    nodeIDs
+      .map { nodeID =>
+        val nodeVar = Var(nodeID)
+        val nodeTypeVar = Var(s"${nodeID}_type")
+        val nodeClassVar = Var(s"${nodeID}_class")
+        sparql""" $nodeVar $SesameDirectType $nodeTypeVar .
+                  $nodeVar $RDFSSubClassOf $nodeClassVar .
+              """
       }
       .fold(sparql"")(_ + _)
 
@@ -179,14 +188,23 @@ object QueryService extends LazyLogging {
 
   def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph, biolinkPredicates: List[BiolinkPredicate]): TRAPIQueryGraph = {
     val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
-      val newPredicate = edge.predicates match {
-        case None          => Some(List(BiolinkPredicate("related_to")))
-        case somePredicate => somePredicate
+      val newPredicates = edge.predicates match {
+        case None       => Some(List(BiolinkPredicate("related_to")))
+        case Some(Nil)  => Some(List(BiolinkPredicate("related_to")))
+        case predicates => predicates
       }
-      val filteredPredicates = newPredicate.get.filter(pred => biolinkPredicates.contains(pred))
-      edgeID -> edge.copy(predicates = Some(filteredPredicates))
+      val filteredPredicates = newPredicates.map(_.filter(pred => biolinkPredicates.contains(pred)))
+      edgeID -> edge.copy(predicates = filteredPredicates)
     }
-    queryGraph.copy(edges = improvedEdgeMap)
+    val improvedNodeMap = queryGraph.nodes.map { case (nodeID, node) =>
+      val newCategories = node.categories match {
+        case None       => Some(List(BiolinkNamedThing))
+        case Some(Nil)  => Some(List(BiolinkNamedThing))
+        case categories => categories
+      }
+      nodeID -> node.copy(categories = newCategories)
+    }
+    queryGraph.copy(edges = improvedEdgeMap, nodes = improvedNodeMap)
   }
 
   def getTRAPIEdgeKey(sub: String, pred: Option[BiolinkPredicate], obj: String): String = {
