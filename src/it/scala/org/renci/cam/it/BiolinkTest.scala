@@ -1,24 +1,16 @@
 package org.renci.cam.it
 
 import com.typesafe.scalalogging.LazyLogging
-import io.circe._
-import io.circe.generic.auto._
 import io.circe.parser._
-import io.circe.syntax._
 import org.http4s._
 import org.http4s.headers._
 import org.http4s.implicits._
-import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam._
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio._
 import zio.interop.catz._
 import zio.test.Assertion.{contains, _}
 import zio.test._
 import zio.test.environment.testEnvironment
-
-import java.nio.file.{Files, Paths}
-import scala.collection.immutable.ListMap
 
 object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
 
@@ -55,38 +47,6 @@ object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
     }
   )
 
-  val downloadBiolinkFiles = suite("downloadBiolinkFiles")(
-    testM("test downloadBiolinkFiles") {
-      for {
-        _ <- Biolink.downloadBiolinkContextJsonLD
-        _ <- Biolink.downloadBiolinkModelYaml
-      } yield assertCompletes
-    }
-  )
-
-  val writeUberBiolinkDataToFile = suite("writeUberBiolinkDataToFile")(
-    testM("write uber BiolinkData to file") {
-      for {
-        (biolinkPrefixes, classes, predicates, version) <- Biolink.parseBiolinkModelYaml
-        prefixes <- Biolink.parseBiolinkContext
-        prefixOverrides <- Biolink.getPrefixOverrides
-        combined_prefixes = biolinkPrefixes ++ prefixes ++ prefixOverrides
-        sorted_combined_prefixes = ListMap(combined_prefixes.toSeq.sortBy(_._1): _*)
-        biolinkData = BiolinkData(version, sorted_combined_prefixes, classes.sortBy(_.shorthand), predicates.sortBy(_.shorthand))
-        biolinkDataJson = {
-          implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Encoder.encodeString.contramap { s =>
-            s.shorthand
-          }
-          implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Encoder.encodeString.contramap { s =>
-            s.shorthand
-          }
-          biolinkData.asJson.deepDropNullValues.noSpaces
-        }
-        _ = Files.writeString(Paths.get("src/main/resources/biolink-data.json"), biolinkDataJson)
-      } yield assert(biolinkDataJson)(isNonEmptyString)
-    }
-  )
-
   val testLocalPrefixes = suite("localPrefixes")(
     testM("test Biolink.localPrefixes") {
       for {
@@ -96,19 +56,6 @@ object BiolinkTest extends DefaultRunnableSpec with LazyLogging {
     }
   )
 
-  val diffModelAndContext = suite("diffModelAndContext")(
-    testM("test diffModelAndContext") {
-      for {
-        model <- Biolink.parseBiolinkModelYaml
-        modelPrefixes = model._1
-        contextPrefixes <- Biolink.parseBiolinkContext
-        remaining = contextPrefixes.keySet.removedAll(modelPrefixes.keySet)
-        _ = logger.info("remaining: {}", remaining)
-      } yield assertCompletes
-    }
-  )
-
-  def spec = suite("Biolink tests")(downloadBiolinkFiles, writeUberBiolinkDataToFile).provideLayerShared(testLayer) @@ TestAspect.sequential
-// def spec = suite("Biolink tests")(testLocalPrefixes).provideLayerShared(testLayer) @@ TestAspect.sequential
+  def spec = suite("Biolink tests")(testDownloadParseAndFilter, testLocalPrefixes).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
