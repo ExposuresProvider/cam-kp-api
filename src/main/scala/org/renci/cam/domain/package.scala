@@ -2,8 +2,6 @@ package org.renci.cam
 
 import com.google.common.base.CaseFormat
 import contextual.Case
-import io.circe.Decoder.Result
-import io.circe.{Decoder, HCursor}
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
 import org.apache.jena.sparql.core.{Var => JenaVar}
@@ -133,11 +131,11 @@ package object domain {
                              `object`: IRI,
                              attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPIAttribute(attribute_type_id: IRI,
+  final case class TRAPIAttribute(attribute_source: Option[String],
+                                  attribute_type_id: IRI,
                                   original_attribute_name: Option[String],
                                   value: List[String],
                                   value_type_id: Option[IRI],
-                                  attribute_source: Option[String],
                                   value_url: Option[String],
                                   description: Option[String])
 
