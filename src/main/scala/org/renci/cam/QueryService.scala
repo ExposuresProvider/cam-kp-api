@@ -64,13 +64,13 @@ object QueryService extends LazyLogging {
       allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
       predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-      relationsToLabelAndBiolink <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+      relationsToLabelAndBiolinkPredicate <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
       solutionTriples = extractCoreTriples(initialQuerySolutions, queryGraph)
       provs <- getProvenance(solutionTriples)
       initialKGNodes <- getTRAPINodes(queryGraph, initialQuerySolutions, biolinkData.classes)
-      initialKGEdges <- getTRAPIEdges(queryGraph, initialQuerySolutions, relationsToLabelAndBiolink, provs)
-      querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolink)
+      initialKGEdges <- getTRAPIEdges(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate, provs)
+      querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate)
       trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
         getTRAPINodeBindings(queryGraph, querySolution) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
       }
@@ -181,8 +181,9 @@ object QueryService extends LazyLogging {
 
   def getProjections(queryGraph: TRAPIQueryGraph): QueryText = {
     val projectionVariableNames =
-      queryGraph.edges.flatMap(entry => List(entry._1)) ++ queryGraph.edges.flatMap(e =>
-        List(e._2.subject, e._2.`object`)) ++ queryGraph.nodes.map(entry => s"${entry._1}_type")
+      queryGraph.edges.keys ++
+        queryGraph.edges.flatMap(e => List(e._2.subject, e._2.`object`)) ++
+        queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_type")
     projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
   }
 
@@ -257,6 +258,7 @@ object QueryService extends LazyLogging {
         }
       }
       .map(_.flatten)
+    val allQueryNodeIDs = queryGraph.nodes.keySet
     for {
       allOntClassIRIs <- allOntClassIRIsZ
       nodeDetails <- getTRAPINodeDetails(allOntClassIRIs)
@@ -266,10 +268,11 @@ object QueryService extends LazyLogging {
       }
       trapiNodes <- ZIO.foreach(querySolutions) { querySolution =>
         for {
-          nodeMap <- Task.effect(queryGraph.nodes.map(entry => (entry._1, querySolution.get(s"${entry._1}_type").toString)))
-          nodes <- ZIO.foreach(queryGraph.nodes) { (k, v) =>
+          nodes <- ZIO.foreach(allQueryNodeIDs) { queryNodeID =>
             for {
-              nodeIRI <- ZIO.fromOption(nodeMap.get(k)).orElseFail(new Exception(s"Missing node IRI: $k"))
+              nodeIRI <- ZIO
+                .effect(querySolution.getResource(s"${queryNodeID}_type").getURI)
+                .orElseFail(new Exception(s"Missing node IRI: $queryNodeID"))
               labelAndTypes = termToLabelAndTypes.getOrElse(IRI(nodeIRI), (None, List(BiolinkNamedThing)))
               (labelOpt, biolinkTypes) = labelAndTypes
               biolinkTypesSet = biolinkTypes.to(Set)
