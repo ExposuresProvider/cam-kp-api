@@ -80,30 +80,10 @@ object QueryService extends LazyLogging {
           predicatesValuesClause = sparql""" VALUES $edgeIDVar { $predicatesQueryText } """
 
           subjectNode = queryGraph.nodes(v.subject)
-          subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
-            case (Some(c), _) =>
-              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
-              sparql""" VALUES ${edgeSourceVar}_class { $idList }
-                      $edgeSourceVar $RDFType ${edgeSourceVar}_class .
-                      """
-            case (None, Some(t)) =>
-              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
-              sparql"$edgeSourceVar $RDFType $idList . "
-            case (None, None) => sparql""
-          }
+          subjectNodeValuesClauses = getNodeValuesClauses(subjectNode.ids, subjectNode.categories, edgeSourceVar)
 
           objectNode = queryGraph.nodes(v.`object`)
-          objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
-            case (Some(c), _) =>
-              val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
-              sparql""" VALUES ${edgeTargetVar}_class { $idList }
-                      $edgeTargetVar $RDFType ${edgeTargetVar}_class .
-                      """
-            case (None, Some(t)) =>
-              val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
-              sparql"$edgeTargetVar $RDFType $idList . "
-            case (None, None) => sparql""
-          }
+          objectNodeValuesClauses = getNodeValuesClauses(objectNode.ids, objectNode.categories, edgeTargetVar)
 
           nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
           ret = sparql"""
@@ -169,6 +149,18 @@ object QueryService extends LazyLogging {
                          Some(TRAPIKnowledgeGraph(initialKGNodes.toMap, initialKGEdges.toMap)),
                          Some(results.distinct))
 
+  def getNodeValuesClauses(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], edgeVar: Var): QueryText = (ids, categories) match {
+    case (Some(c), _) =>
+      val idList = c.map(a => sparql" $a ").reduce((a, b) => sparql"$a $b")
+      sparql""" VALUES ${edgeVar}_class { $idList }
+                      $edgeVar $RDFType ${edgeVar}_class .
+                      """
+    case (None, Some(t)) =>
+      val idList = t.map(a => sparql" ${a.iri} ").reduce((a, b) => sparql"$a $b")
+      sparql"$edgeVar $RDFType $idList . "
+    case (None, None) => sparql""
+  }
+
   def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
     nodes
       .map { node =>
@@ -220,35 +212,9 @@ object QueryService extends LazyLogging {
               predicate = querySolution.getResource(k).getURI
               tripleString = TripleString(source, predicate, target)
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
-
-//              final case class TRAPIAttribute(attribute_type_id: IRI,
-//              original_attribute_name: Option[String],
-//              value: List[String],
-//              value_type_id: Option[IRI],
-//              attribute_source: Option[String],
-//              value_url: Option[String],
-//              description: Option[String])
-
-// {
-//      "attribute_type_id": "biolink:original_knowledge_source",  # Assumes data creator knows this is the original source. If not, they could use 'primary_knowledge_source'.
-//      "value":  "infores:clinicaltrials",
-//      "value_type_id": "biolink:InformationResource",
-//      "value_url":  "https://www.clinicaltrials.gov",
-//      "description": "ClinicalTrials.gov is...",
-//      "attribute_source": "infores:chembl"
-//    },
-
-//              {
-//                "attribute_type_id": "http://model.geneontology.org/5667fdd400000892/5667fdd400000909",
-//                "original_attribute_name": "provenance",
-//                "value": [ "http://model.geneontology.org/5667fdd400000892" ],
-//                "value_type_id": "UniProtKB:P35222"
-//              }
-
-//              biolink:InformationResource
+              originalKnowledgeSourceBP <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source")).orElseFail(new Exception("could not get biolink:original_knowledge_source"))
               infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
-//              provAttribute = TRAPIAttribute(IRI(source), Some("provenance"), List(provValue), Some(sourceType), None, None, None)
-              provAttribute = TRAPIAttribute(IRI(source), Some("provenance"), List(provValue), Some(infoResBiolinkClass.iri), None, None, None)
+              provAttribute = TRAPIAttribute(Some("infores:cam_kp"), originalKnowledgeSourceBP.iri, None, List(provValue), Some(infoResBiolinkClass.iri), Some(source), None)
               attributes = List(provAttribute)
               predicatesBLMapping <- ZIO.fromOption(predicatesMap.get(k)).orElseFail(new Exception("no biolink pred mapped value"))
               blPred = predicatesBLMapping.get(IRI(predicate))
