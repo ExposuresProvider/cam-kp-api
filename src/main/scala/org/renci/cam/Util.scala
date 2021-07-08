@@ -6,7 +6,7 @@ object Util {
 
   implicit class IterableSPARQLOps[A: SPARQLEmbedder](val self: Iterable[A]) {
 
-    def asValues: QueryText = self.map(rel => sparql" $rel ").fold(sparql"")(_ + _)
+    def asValues: QueryText = self.map(item => sparql" $item ").fold(sparql"")(_ + _)
 
   }
 

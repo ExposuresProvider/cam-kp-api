@@ -154,9 +154,11 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   val testGetNodesToDirectTypes = suite("testGetNodesToDirectTypes")(
     zio.test.test("test QueryService.getNodesToDirectTypes") {
       val (queryGraph, _) = getSimpleData
-      val queryText = QueryService.getNodesToDirectTypes(queryGraph.nodes)
-      assert(queryText.text.trim)(equalTo(
-        "?n0 <http://www.openrdf.org/schema/sesame#directType> ?n0_type .   ?n1 <http://www.openrdf.org/schema/sesame#directType> ?n1_type ."))
+      val queryText = QueryService.getNodesToDirectTypes(queryGraph.nodes.keySet)
+      assert(queryText.text.trim)(
+        containsString("?n0 <http://www.openrdf.org/schema/sesame#directType> ?n0_type .") && containsString(
+          "?n1 <http://www.openrdf.org/schema/sesame#directType> ?n1_type .")
+      )
     }
   )
 
@@ -164,7 +166,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     zio.test.test("test QueryService.getProjections") {
       val (queryGraph, _) = getSimpleData
       val queryText = QueryService.getProjections(queryGraph)
-      assert(queryText.text.trim)(equalTo("?e0  ?n1  ?n0  ?n0_type  ?n1_type"))
+      assert(queryText.text.trim.split("\\s+", -1).to(Set))(equalTo(Set("?e0", "?n1", "?n0", "?n0_type", "?n1_type")))
     }
   )
 
