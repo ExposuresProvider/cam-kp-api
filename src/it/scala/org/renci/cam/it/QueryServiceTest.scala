@@ -382,14 +382,14 @@ object QueryServiceTest extends DefaultRunnableSpec {
     testPathway,
     testERAD,
     testRelatedToQuery,
-    testSimpleQuery,
     testWIKIQueryExample,
     testSimpleQueryRawWithSinglePredicate,
     testSimpleQueryRaw,
     testKCNMA1DiseasePhenotypicFeat,
     testChemicalToGeneOrGeneProduct,
     testChemicalSubstanceKCNMA1,
-    testDILIGeneList
+    testDILIGeneList,
+    testSimpleQuery
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
