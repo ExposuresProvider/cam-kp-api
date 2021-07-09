@@ -110,31 +110,9 @@ object QueryService extends LazyLogging {
       val edgeTargetVar = Var(queryEdge.`object`)
       val predicatesValuesClause = sparql""" VALUES $edgeIDVar { $predicatesQueryText } """
       val subjectNode = queryGraph.nodes(queryEdge.subject)
-      val subjectNodeValuesClauses = (subjectNode.ids, subjectNode.categories) match {
-        case (Some(idsList), _) =>
-          sparql""" VALUES ${edgeSourceVar}_class { ${idsList.asValues} }
-                      $edgeSourceVar $RDFType ${edgeSourceVar}_class .
-                      """
-        case (None, Some(biolinkTypes)) =>
-          val irisList = biolinkTypes.map(_.iri)
-          sparql""" VALUES ${edgeSourceVar}_class { ${irisList.asValues} }
-                      $edgeSourceVar $RDFType ${edgeSourceVar}_class .
-                      """
-        case (None, None) => sparql""
-      }
+      val subjectNodeValuesClauses = getNodeValuesClauses(subjectNode.ids, subjectNode.categories, edgeSourceVar)
       val objectNode = queryGraph.nodes(queryEdge.`object`)
-      val objectNodeValuesClauses = (objectNode.ids, objectNode.categories) match {
-        case (Some(idsList), _) =>
-          sparql""" VALUES ${edgeTargetVar}_class { ${idsList.asValues} }
-                      $edgeTargetVar $RDFType ${edgeTargetVar}_class .
-                      """
-        case (None, Some(biolinkTypes)) =>
-          val irisList = biolinkTypes.map(_.iri)
-          sparql""" VALUES ${edgeTargetVar}_class { ${irisList.asValues} }
-                      $edgeTargetVar $RDFType ${edgeTargetVar}_class .
-                      """
-        case (None, None) => sparql""
-      }
+      val objectNodeValuesClauses = getNodeValuesClauses(objectNode.ids, objectNode.categories, edgeTargetVar)
       val nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
       sparql"""
               $predicatesValuesClause
@@ -157,6 +135,19 @@ object QueryService extends LazyLogging {
     SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
   }
 
+  def getNodeValuesClauses(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], edgeVar: Var): QueryText = (ids, categories) match {
+    case (Some(idsList), _) =>
+      sparql""" VALUES ${edgeVar}_class { ${idsList.asValues} }
+                      $edgeVar $RDFType ${edgeVar}_class .
+                      """
+    case (None, Some(biolinkTypes)) =>
+      val irisList = biolinkTypes.map(_.iri)
+      sparql""" VALUES ${edgeVar}_class { ${irisList.asValues} }
+                      $edgeVar $RDFType ${edgeVar}_class .
+                      """
+    case (None, None) => sparql""
+  }
+
   def extractCoreTriples(solutions: List[QuerySolution], queryGraph: TRAPIQueryGraph): Set[Triple] =
     (for {
       (queryEdgeID, queryEdge) <- queryGraph.edges
@@ -174,10 +165,11 @@ object QueryService extends LazyLogging {
         val nodeTypeVar = Var(s"${nodeID}_type")
         val nodeClassVar = Var(s"${nodeID}_class")
         sparql""" $nodeVar $SesameDirectType $nodeTypeVar .
-                  $nodeVar $RDFSSubClassOf $nodeClassVar .
+                  $nodeTypeVar $RDFSSubClassOf $nodeClassVar .
               """
       }
       .fold(sparql"")(_ + _)
+
 
   def getProjections(queryGraph: TRAPIQueryGraph): QueryText = {
     val projectionVariableNames =
@@ -232,7 +224,13 @@ object QueryService extends LazyLogging {
               predicateIRI = IRI(predicate)
               tripleString = TripleString(source, predicate, target)
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
-              attributes = List(TRAPIAttribute(IRI(source), Some("provenance"), List(provValue), Some(sourceType), None, None, None))
+              originalKnowledgeSourceBP <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source")).orElseFail(new Exception("could not get biolink:original_knowledge_source"))
+              infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
+              provAttribute = TRAPIAttribute(Some("infores:cam_kp"), originalKnowledgeSourceBP.iri, None, List(provValue), Some(infoResBiolinkClass.iri), Some(source), None)
+              attributes = List(provAttribute)
+//              predicatesBLMapping <- ZIO.fromOption(predicatesMap.get(k)).orElseFail(new Exception("no biolink pred mapped value"))
+//              blPred = predicatesBLMapping.get(IRI(predicate))
+//              attributes = List(TRAPIAttribute(IRI(source), Some("provenance"), List(provValue), Some(sourceType), None, None, None))
               relationLabelAndBiolinkPredicate <- ZIO
                 .fromOption(relationsMap.get(predicateIRI))
                 .orElseFail(new Exception("Unexpected edge relation"))
