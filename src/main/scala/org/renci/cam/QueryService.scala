@@ -165,7 +165,7 @@ object QueryService extends LazyLogging {
         val nodeTypeVar = Var(s"${nodeID}_type")
         val nodeClassVar = Var(s"${nodeID}_class")
         sparql""" $nodeVar $SesameDirectType $nodeTypeVar .
-                  $nodeVar $RDFSSubClassOf $nodeClassVar .
+                  $nodeTypeVar $RDFSSubClassOf $nodeClassVar .
               """
       }
       .fold(sparql"")(_ + _)
