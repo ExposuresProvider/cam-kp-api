@@ -72,7 +72,7 @@ object BlazegraphTest extends DefaultRunnableSpec {
 
       for {
         httpClient <- HttpClient.client
-        uri = uri"https://stars-app.renci.org/cam/sparql"
+        uri = uri"https://stars-app.renci.org/camdev/sparql"
           .withQueryParam("query", query)
           .withQueryParam("format", "json")
         request = Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json),

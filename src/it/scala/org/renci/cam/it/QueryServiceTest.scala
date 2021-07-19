@@ -1,8 +1,8 @@
 package org.renci.cam.it
 
+import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
-import io.circe.{Encoder, KeyEncoder}
 import org.http4s._
 import org.http4s.headers._
 import org.http4s.implicits._
@@ -18,14 +18,11 @@ import zio.test.environment.testEnvironment
 import zio.{Has, RIO, Task}
 
 import java.nio.file.{Files, Paths}
+import scala.jdk.CollectionConverters._
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
-  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
-  val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
-
-  def runTest(trapiQuery: TRAPIQuery): RIO[HttpClient with Has[BiolinkData], String] =
+  def runTest(trapiQuery: TRAPIQuery, limit: Int = 1, include_extra_edges: Boolean = false): RIO[HttpClient with Has[BiolinkData], String] =
     for {
       httpClient <- HttpClient.client
       biolinkData <- Biolink.biolinkData
@@ -37,7 +34,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         trapiQuery.asJson.deepDropNullValues.noSpaces
       }
       _ = println("encoded: " + encoded)
-      uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", 1) // scala
+      uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", limit).withQueryParam("include_extra_edges", include_extra_edges)
       request = Request[Task](Method.POST, uri)
         .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
         .withEntity(encoded)
@@ -56,6 +53,23 @@ object QueryServiceTest extends DefaultRunnableSpec {
       for {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/it/resources/test-simple-query.json"), response)
+//        json <- ZIO.fromEither(parse(response))
+//        responseQuery = json.as[TRAPIQuery]
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
+  val testRelatedToQuery = suite("testRelatedToQuery")(
+    testM("test related_to query") {
+      val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
+      val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("related_to"))), None, "n0", "n1", None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+      val message = TRAPIMessage(Some(queryGraph), None, None)
+      val requestBody = TRAPIQuery(message, None)
+      for {
+        response <- runTest(requestBody, 10)
+        _ = Files.writeString(Paths.get("src/it/resources/test-related-to-query.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -72,6 +86,55 @@ object QueryServiceTest extends DefaultRunnableSpec {
       for {
         response <- runTest(requestBody)
         _ = Files.writeString(Paths.get("src/it/resources/test-wiki-query-example.json"), response)
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
+  val testChemicalSubstanceKCNMA1 = suite("testChemicalSubstanceKCNMA1")(
+    testM("test ChemicalSubstanceKCNMA1") {
+      val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("ChemicalSubstance"))), None)
+      val n1Node =
+        TRAPIQueryNode(Some(List(IRI("HGNC:6284"))), Some(List(BiolinkClass("Gene"))), None)
+      val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1", None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+      val message = TRAPIMessage(Some(queryGraph), None, None)
+      val requestBody = TRAPIQuery(message, None)
+      for {
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/it/resources/test-ChemicalSubstanceKCNMA1.json"), response)
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
+  val testChemicalToGeneOrGeneProduct = suite("testChemicalToGeneOrGeneProduct")(
+    testM("test ChemicalToGeneOrGeneProduct") {
+      val n0Node = TRAPIQueryNode(Some(List(IRI("CHEBI:17754"))), None, None)
+      val n1Node =
+        TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
+      val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1", None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+      val message = TRAPIMessage(Some(queryGraph), None, None)
+      val requestBody = TRAPIQuery(message, None)
+      for {
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/it/resources/test-ChemicalToGeneOrGeneProduct.json"), response)
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
+  val testKCNMA1DiseasePhenotypicFeat = suite("testKCNMA1DiseasePhenotypicFeat")(
+    testM("test KCNMA1 Disease Phenotypic Feat") {
+      val n0Node = TRAPIQueryNode(Some(List(IRI("HGNC:6284"))), Some(List(BiolinkClass("Gene"))), None)
+      val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("Disease"))), None)
+      val n2Node = TRAPIQueryNode(None, Some(List(BiolinkClass("PhenotypicFeature"))), None)
+      val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1", None)
+      val e1Edge = TRAPIQueryEdge(None, None, "n1", "n2", None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node, "n2" -> n2Node), Map("e0" -> e0Edge, "e1" -> e1Edge))
+      val message = TRAPIMessage(Some(queryGraph), None, None)
+      val requestBody = TRAPIQuery(message, None)
+      for {
+        response <- runTest(requestBody)
+        _ = Files.writeString(Paths.get("src/it/resources/test-KCNMA1DiseasePhenotypicFeat.json"), response)
       } yield assert(response)(isNonEmptyString)
     }
   )
@@ -195,7 +258,8 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   val testSpmsyChemicals = suite("testSpmsyChemicals")(
     testM("spmsyChemicals") {
-      val n0Node = TRAPIQueryNode(Some(List(IRI("UniProtKB:P52788"))), Some(List(BiolinkClass("Gene"))), None)
+//      val n0Node = TRAPIQueryNode(Some(List(IRI("UniProtKB:P52788"))), Some(List(BiolinkClass("Gene"))), None)
+      val n0Node = TRAPIQueryNode(Some(List(IRI("NCBIGene:6611"))), Some(List(BiolinkClass("Gene"))), None)
       val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("ChemicalSubstance"))), None)
       val e0Edge = TRAPIQueryEdge(None, None, "n0", "n1", None)
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
@@ -255,6 +319,23 @@ object QueryServiceTest extends DefaultRunnableSpec {
     }
   )
 
+  val testDILIGeneList = suite("testDILIGeneList")(
+    testM("DILIGeneList") {
+      val diliGeneList = Files.readAllLines(Paths.get("src/it/resources/dili-gene-list-alt.txt")).asScala.map(a => IRI(a.trim())).toList
+      val n0Node = TRAPIQueryNode(Some(diliGeneList), Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
+      val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("affects"))), None, "n0", "n1", None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+      val message = TRAPIMessage(Some(queryGraph), None, None)
+      val requestBody = TRAPIQuery(message, None)
+      for {
+        response <- runTest(requestBody, 100)
+//        _ = Files.writeString(Paths.get("src/it/resources/test-diligenelist.json"), response)
+        _ = Files.writeString(Paths.get("src/it/resources/test-diligenelist-alt.json"), response)
+      } yield assert(response)(isNonEmptyString)
+    }
+  )
+
   val testSimpleQueryRawWithSinglePredicate = suite("testSimpleQueryRawWithSinglePredicate")(
     testM("simple query raw with single predicate") {
       val message =
@@ -285,6 +366,10 @@ object QueryServiceTest extends DefaultRunnableSpec {
     }
   )
 
+  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
+  val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
+  val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
+
   def spec = suite("QueryService tests")(
     testFindGenesEnablingAnyKindOfCatalyticActivity,
     testNegativeRegulationChaining,
@@ -296,10 +381,15 @@ object QueryServiceTest extends DefaultRunnableSpec {
     testAcrocyanosis,
     testPathway,
     testERAD,
-    testSimpleQuery,
+    testRelatedToQuery,
     testWIKIQueryExample,
     testSimpleQueryRawWithSinglePredicate,
-    testSimpleQueryRaw
+    testSimpleQueryRaw,
+    testKCNMA1DiseasePhenotypicFeat,
+    testChemicalToGeneOrGeneProduct,
+    testChemicalSubstanceKCNMA1,
+    testDILIGeneList,
+    testSimpleQuery
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
