@@ -28,8 +28,8 @@ coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci
 
 val zioVersion = "1.0.9"
 val zioConfigVersion = "1.0.0-RC29-1"
-val tapirVersion = "0.18.0"
-val http4sVersion = "0.21.24"
+val tapirVersion = "0.16.16"
+val http4sVersion = "0.21.25"
 val circeVersion = "0.13.0"
 val logbackVersion = "1.2.3"
 
@@ -53,7 +53,7 @@ libraryDependencies ++= {
     "org.http4s"                  %% "http4s-dsl"                     % http4sVersion,
     "org.http4s"                  %% "http4s-blaze-client"            % http4sVersion,
     "org.http4s"                  %% "http4s-circe"                   % http4sVersion,
-    "org.apache.jena"              % "apache-jena-libs"               % "3.17.0",
+    "org.apache.jena"              % "apache-jena-libs"               % "4.1.0",
     "org.phenoscape"              %% "sparql-utils"                   % "1.3.1",
     "org.apache.commons"           % "commons-text"                   % "1.9",
     "org.apache.commons"           % "commons-csv"                    % "1.8",
@@ -66,7 +66,7 @@ libraryDependencies ++= {
     "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.39.5"   % "it,test",
     "com.google.guava"             % "guava"                          % "30.1.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
-    "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.3"
+    "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.4"
   )
 }
 
