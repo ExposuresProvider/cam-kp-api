@@ -22,7 +22,6 @@ Compile /  packageDoc / publishArtifact := false
 
 configs(IntegrationTest)
 Defaults.itSettings
-coverageEnabled := false
 IntegrationTest / parallelExecution := false
 
 coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci\\.cam\\.Server.*;org\\.renci\\.cam\\.AppConfig.*;org\\.renci\\.cam\\.SPARQLQueryExecutor.*"
@@ -30,8 +29,8 @@ coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci
 val zioVersion = "1.0.9"
 val zioConfigVersion = "1.0.0-RC29-1"
 val tapirVersion = "0.16.16"
-val http4sVersion = "0.21.24"
-val circeVersion = "0.13.1"
+val http4sVersion = "0.21.25"
+val circeVersion = "0.13.0"
 val logbackVersion = "1.2.3"
 
 reStart / javaOptions += "-Xmx16G"
@@ -54,7 +53,7 @@ libraryDependencies ++= {
     "org.http4s"                  %% "http4s-dsl"                     % http4sVersion,
     "org.http4s"                  %% "http4s-blaze-client"            % http4sVersion,
     "org.http4s"                  %% "http4s-circe"                   % http4sVersion,
-    "org.apache.jena"              % "apache-jena-libs"               % "3.17.0",
+    "org.apache.jena"              % "apache-jena-libs"               % "4.1.0",
     "org.phenoscape"              %% "sparql-utils"                   % "1.3.1",
     "org.apache.commons"           % "commons-text"                   % "1.9",
     "org.apache.commons"           % "commons-csv"                    % "1.8",
@@ -64,16 +63,18 @@ libraryDependencies ++= {
     "io.circe"                    %% "circe-yaml"                     % circeVersion,
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
     "dev.zio"                     %% "zio-test-sbt"                   % zioVersion % "it,test",
-    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.39.3"   % "it,test",
-    "com.google.guava"             % "guava"                          % "30.0-jre",
+    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.39.5"   % "it,test",
+    "com.google.guava"             % "guava"                          % "30.1.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
-    "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.3"
+    "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.4"
   )
 }
 
 dockerBaseImage := "openjdk:15-alpine"
 Docker / daemonUser := "camkpapi"
 dockerExposedPorts += 8080
+dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g")
+dockerEntrypoint := Seq("/opt/docker/bin/server")
 Docker / dockerApiVersion := Some(DockerApiVersion(1, 40))
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
 Docker / dockerRepository := Some("renciorg")

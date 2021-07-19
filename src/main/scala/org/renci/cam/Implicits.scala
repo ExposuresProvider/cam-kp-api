@@ -12,18 +12,12 @@ object Implicits {
   private val protocols = Set("http", "https", "ftp", "file", "mailto")
   private val BiolinkNamespace = "https://w3id.org/biolink/vocab/"
 
-  def iriDecoder(prefixesMap: Map[String, String]): Decoder[IRI] = new Decoder[IRI] {
+  def iriDecoder(prefixesMap: Map[String, String]): Decoder[IRI] = (c: HCursor) => for {
+    value <- c.value.as[String]
+    iri <- expandCURIEString(value, prefixesMap)
+  } yield iri
 
-    override def apply(c: HCursor): Result[IRI] = for {
-      value <- c.value.as[String]
-      iri <- expandCURIEString(value, prefixesMap)
-    } yield iri
-
-  }
-
-  def iriKeyDecoder(prefixesMap: Map[String, String]): KeyDecoder[IRI] = new KeyDecoder[IRI] {
-    override def apply(key: String): Option[IRI] = expandCURIEString(key, prefixesMap).toOption
-  }
+  def iriKeyDecoder(prefixesMap: Map[String, String]): KeyDecoder[IRI] = (key: String) => expandCURIEString(key, prefixesMap).toOption
 
   def expandCURIEString(curieString: String, prefixesMap: Map[String, String]): Either[DecodingFailure, IRI] =
     for {
@@ -88,14 +82,10 @@ object Implicits {
         } yield ret
     }
 
-  def biolinkClassKeyDecoder(biolinkClasses: List[BiolinkClass]): KeyDecoder[BiolinkClass] = new KeyDecoder[BiolinkClass] {
-
-    override def apply(key: String): Option[BiolinkClass] = {
-      val localName = key.replace("biolink:", "")
-      biolinkClasses.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName).toRight(s"BiolinkClass does not exist: $key")
-    }.toOption
-
-  }
+  def biolinkClassKeyDecoder(biolinkClasses: List[BiolinkClass]): KeyDecoder[BiolinkClass] = (key: String) => {
+    val localName = key.replace("biolink:", "")
+    biolinkClasses.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName).toRight(s"BiolinkClass does not exist: $key")
+  }.toOption
 
   def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = Decoder.decodeString.emap { s =>
     val localName = s.replace("biolink:", "")

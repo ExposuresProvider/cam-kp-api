@@ -2,7 +2,7 @@ package org.renci.cam.it
 
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
-import io.circe.{Decoder, KeyDecoder, KeyEncoder, parser}
+import io.circe.{parser, Decoder, KeyDecoder, KeyEncoder}
 import org.http4s._
 import org.http4s.headers.`Content-Type`
 import org.http4s.implicits._

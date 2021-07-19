@@ -2,8 +2,6 @@ package org.renci.cam
 
 import com.google.common.base.CaseFormat
 import contextual.Case
-import io.circe.Decoder.Result
-import io.circe.{Decoder, HCursor}
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
 import org.apache.jena.sparql.core.{Var => JenaVar}
@@ -133,12 +131,11 @@ package object domain {
                              `object`: IRI,
                              attributes: Option[List[TRAPIAttribute]])
 
-//  final case class TRAPIAttribute(name: Option[String], value: String, `type`: IRI, url: Option[String], source: Option[String])
-  final case class TRAPIAttribute(attribute_type_id: IRI,
+  final case class TRAPIAttribute(attribute_source: Option[String],
+                                  attribute_type_id: IRI,
                                   original_attribute_name: Option[String],
                                   value: List[String],
-                                  value_type_id: IRI,
-                                  attribute_source: Option[String],
+                                  value_type_id: Option[IRI],
                                   value_url: Option[String],
                                   description: Option[String])
 
@@ -159,8 +156,6 @@ package object domain {
   final case class TRAPIResponse(message: TRAPIMessage, status: Option[String], description: Option[String], logs: Option[List[LogEntry]])
 
   final case class LogEntry(timestamp: Option[String], level: Option[String], code: Option[String], message: Option[String])
-
-//  final case class MetaNode(biolinkClass: BiolinkClass, id_prefixes: List[String])
 
   final case class MetaEdge(subject: BiolinkClass, predicate: BiolinkPredicate, `object`: BiolinkClass, relations: Option[List[String]])
 
