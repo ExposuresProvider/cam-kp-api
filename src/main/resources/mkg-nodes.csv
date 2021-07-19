@@ -25,7 +25,6 @@ Annotation,id_prefixes,OMIM
 Annotation,id_prefixes,ORPHA
 Annotation,id_prefixes,PATO
 Annotation,id_prefixes,SIO
-Annotation,id_prefixes,UMLS
 Annotation,id_prefixes,UPHENO
 Annotation,id_prefixes,WBPhenotype
 Association,id_prefixes,owl
@@ -44,7 +43,6 @@ Attribute,id_prefixes,OMIM
 Attribute,id_prefixes,ORPHA
 Attribute,id_prefixes,PATO
 Attribute,id_prefixes,SIO
-Attribute,id_prefixes,UMLS
 Attribute,id_prefixes,UPHENO
 Attribute,id_prefixes,WBPhenotype
 BehavioralFeature,id_prefixes,NBO
@@ -79,7 +77,6 @@ BiologicalEntity,id_prefixes,REACTO
 BiologicalEntity,id_prefixes,SIO
 BiologicalEntity,id_prefixes,SO
 BiologicalEntity,id_prefixes,UBERON
-BiologicalEntity,id_prefixes,UMLS
 BiologicalEntity,id_prefixes,UPHENO
 BiologicalEntity,id_prefixes,WBbt
 BiologicalEntity,id_prefixes,WBPhenotype
@@ -119,7 +116,7 @@ ChemicalEntity,id_prefixes,FOODON
 ChemicalEntity,id_prefixes,GENO
 ChemicalEntity,id_prefixes,HGNC
 ChemicalEntity,id_prefixes,MGI
-ChemicalEntity,id_prefixes,NCBIGENE
+ChemicalEntity,id_prefixes,NCBIGene
 ChemicalEntity,id_prefixes,OBI
 ChemicalEntity,id_prefixes,OBO
 ChemicalEntity,id_prefixes,POMBASE
@@ -131,7 +128,6 @@ ChemicalEntity,id_prefixes,SIO
 ChemicalEntity,id_prefixes,SO
 ChemicalEntity,id_prefixes,tair.locus
 ChemicalEntity,id_prefixes,UniProtKB
-ChemicalEntity,id_prefixes,WB
 ChemicalEntity,id_prefixes,xenbase
 ChemicalEntity,id_prefixes,ZFIN
 ChemicalEntityToEntityAssociationMixin,id_prefixes,SIO
@@ -148,7 +144,7 @@ ChemicalOrDrugOrTreatment,id_prefixes,FOODON
 ChemicalOrDrugOrTreatment,id_prefixes,GENO
 ChemicalOrDrugOrTreatment,id_prefixes,HGNC
 ChemicalOrDrugOrTreatment,id_prefixes,MGI
-ChemicalOrDrugOrTreatment,id_prefixes,NCBIGENE
+ChemicalOrDrugOrTreatment,id_prefixes,NCBIGene
 ChemicalOrDrugOrTreatment,id_prefixes,OBI
 ChemicalOrDrugOrTreatment,id_prefixes,OBO
 ChemicalOrDrugOrTreatment,id_prefixes,OGMS
@@ -161,7 +157,6 @@ ChemicalOrDrugOrTreatment,id_prefixes,SIO
 ChemicalOrDrugOrTreatment,id_prefixes,SO
 ChemicalOrDrugOrTreatment,id_prefixes,tair.locus
 ChemicalOrDrugOrTreatment,id_prefixes,UniProtKB
-ChemicalOrDrugOrTreatment,id_prefixes,WB
 ChemicalOrDrugOrTreatment,id_prefixes,xenbase
 ChemicalOrDrugOrTreatment,id_prefixes,ZFIN
 ChemicalSubstance,id_prefixes,CHEBI
@@ -178,7 +173,6 @@ ChemicalSubstance,id_prefixes,SGD
 ChemicalSubstance,id_prefixes,SO
 ChemicalSubstance,id_prefixes,tair.locus
 ChemicalSubstance,id_prefixes,UniProtKB
-ChemicalSubstance,id_prefixes,WB
 ChemicalSubstance,id_prefixes,xenbase
 ChemicalSubstance,id_prefixes,ZFIN
 ChemicalToDiseaseOrPhenotypicFeatureAssociation,id_prefixes,SIO
@@ -210,7 +204,6 @@ Disease,id_prefixes,OGMS
 Disease,id_prefixes,OMIM
 Disease,id_prefixes,ORPHA
 Disease,id_prefixes,SIO
-Disease,id_prefixes,UMLS
 DiseaseOrPhenotypicFeature,id_prefixes,DOID
 DiseaseOrPhenotypicFeature,id_prefixes,EFO
 DiseaseOrPhenotypicFeature,id_prefixes,HP
@@ -223,7 +216,6 @@ DiseaseOrPhenotypicFeature,id_prefixes,OGMS
 DiseaseOrPhenotypicFeature,id_prefixes,OMIM
 DiseaseOrPhenotypicFeature,id_prefixes,ORPHA
 DiseaseOrPhenotypicFeature,id_prefixes,SIO
-DiseaseOrPhenotypicFeature,id_prefixes,UMLS
 DiseaseOrPhenotypicFeature,id_prefixes,UPHENO
 DiseaseOrPhenotypicFeature,id_prefixes,WBPhenotype
 DrugExposure,id_prefixes,ECTO
@@ -255,7 +247,7 @@ Entity,id_prefixes,IAO
 Entity,id_prefixes,MGI
 Entity,id_prefixes,MONDO
 Entity,id_prefixes,NBO
-Entity,id_prefixes,NCBIGENE
+Entity,id_prefixes,NCBIGene
 Entity,id_prefixes,NCBITaxon
 Entity,id_prefixes,NCIT
 Entity,id_prefixes,OBI
@@ -282,10 +274,8 @@ Entity,id_prefixes,SIO
 Entity,id_prefixes,SO
 Entity,id_prefixes,tair.locus
 Entity,id_prefixes,UBERON
-Entity,id_prefixes,UMLS
 Entity,id_prefixes,UniProtKB
 Entity,id_prefixes,UPHENO
-Entity,id_prefixes,WB
 Entity,id_prefixes,WBbt
 Entity,id_prefixes,WBPhenotype
 Entity,id_prefixes,xenbase
@@ -310,7 +300,7 @@ FrequencyQualifierMixin,id_prefixes,SIO
 GeneFamily,id_prefixes,SIO
 GeneGroupingMixin,id_prefixes,SIO
 Gene,id_prefixes,HGNC
-Gene,id_prefixes,NCBIGENE
+Gene,id_prefixes,NCBIGene
 Gene,id_prefixes,SIO
 Gene,id_prefixes,SO
 GeneOrGeneProduct,id_prefixes,CHEBI
@@ -319,7 +309,7 @@ GeneOrGeneProduct,id_prefixes,fb
 GeneOrGeneProduct,id_prefixes,GENO
 GeneOrGeneProduct,id_prefixes,HGNC
 GeneOrGeneProduct,id_prefixes,MGI
-GeneOrGeneProduct,id_prefixes,NCBIGENE
+GeneOrGeneProduct,id_prefixes,NCBIGene
 GeneOrGeneProduct,id_prefixes,OBO
 GeneOrGeneProduct,id_prefixes,POMBASE
 GeneOrGeneProduct,id_prefixes,PR
@@ -330,7 +320,6 @@ GeneOrGeneProduct,id_prefixes,SIO
 GeneOrGeneProduct,id_prefixes,SO
 GeneOrGeneProduct,id_prefixes,tair.locus
 GeneOrGeneProduct,id_prefixes,UniProtKB
-GeneOrGeneProduct,id_prefixes,WB
 GeneOrGeneProduct,id_prefixes,xenbase
 GeneOrGeneProduct,id_prefixes,ZFIN
 GeneProductMixin,id_prefixes,CHEBI
@@ -342,7 +331,6 @@ GeneProductMixin,id_prefixes,REACTO
 GeneProductMixin,id_prefixes,SIO
 GeneProductMixin,id_prefixes,SO
 GeneProductMixin,id_prefixes,UniProtKB
-GeneProductMixin,id_prefixes,WB
 GeneToDiseaseAssociation,id_prefixes,SIO
 GeneToEntityAssociationMixin,id_prefixes,SIO
 Genome,id_prefixes,SIO
@@ -350,12 +338,11 @@ Genome,id_prefixes,SO
 GenomicEntity,id_prefixes,CHEBI
 GenomicEntity,id_prefixes,GENO
 GenomicEntity,id_prefixes,HGNC
-GenomicEntity,id_prefixes,NCBIGENE
+GenomicEntity,id_prefixes,NCBIGene
 GenomicEntity,id_prefixes,OBO
 GenomicEntity,id_prefixes,REACTO
 GenomicEntity,id_prefixes,SIO
 GenomicEntity,id_prefixes,SO
-GenomicEntity,id_prefixes,WB
 Genotype,id_prefixes,GENO
 Genotype,id_prefixes,SIO
 GenotypicSex,id_prefixes,PATO
@@ -390,7 +377,7 @@ MacromolecularMachineMixin,id_prefixes,GENO
 MacromolecularMachineMixin,id_prefixes,GO
 MacromolecularMachineMixin,id_prefixes,HGNC
 MacromolecularMachineMixin,id_prefixes,MGI
-MacromolecularMachineMixin,id_prefixes,NCBIGENE
+MacromolecularMachineMixin,id_prefixes,NCBIGene
 MacromolecularMachineMixin,id_prefixes,OBO
 MacromolecularMachineMixin,id_prefixes,POMBASE
 MacromolecularMachineMixin,id_prefixes,PR
@@ -401,7 +388,6 @@ MacromolecularMachineMixin,id_prefixes,SIO
 MacromolecularMachineMixin,id_prefixes,SO
 MacromolecularMachineMixin,id_prefixes,tair.locus
 MacromolecularMachineMixin,id_prefixes,UniProtKB
-MacromolecularMachineMixin,id_prefixes,WB
 MacromolecularMachineMixin,id_prefixes,xenbase
 MacromolecularMachineMixin,id_prefixes,ZFIN
 MaterialSample,id_prefixes,OBI
@@ -413,14 +399,13 @@ MolecularEntity,id_prefixes,CHEBI
 MolecularEntity,id_prefixes,dictybase.gene
 MolecularEntity,id_prefixes,GENO
 MolecularEntity,id_prefixes,HGNC
-MolecularEntity,id_prefixes,NCBIGENE
+MolecularEntity,id_prefixes,NCBIGene
 MolecularEntity,id_prefixes,OBO
 MolecularEntity,id_prefixes,PR
 MolecularEntity,id_prefixes,REACTO
 MolecularEntity,id_prefixes,SIO
 MolecularEntity,id_prefixes,SO
 MolecularEntity,id_prefixes,UniProtKB
-MolecularEntity,id_prefixes,WB
 MolecularMixture,id_prefixes,CHEBI
 MolecularMixture,id_prefixes,ECTO
 NamedThing,id_prefixes,BFO
@@ -449,7 +434,7 @@ NamedThing,id_prefixes,IAO
 NamedThing,id_prefixes,MGI
 NamedThing,id_prefixes,MONDO
 NamedThing,id_prefixes,NBO
-NamedThing,id_prefixes,NCBIGENE
+NamedThing,id_prefixes,NCBIGene
 NamedThing,id_prefixes,NCBITaxon
 NamedThing,id_prefixes,NCIT
 NamedThing,id_prefixes,OBI
@@ -474,10 +459,8 @@ NamedThing,id_prefixes,SIO
 NamedThing,id_prefixes,SO
 NamedThing,id_prefixes,tair.locus
 NamedThing,id_prefixes,UBERON
-NamedThing,id_prefixes,UMLS
 NamedThing,id_prefixes,UniProtKB
 NamedThing,id_prefixes,UPHENO
-NamedThing,id_prefixes,WB
 NamedThing,id_prefixes,WBbt
 NamedThing,id_prefixes,WBPhenotype
 NamedThing,id_prefixes,xenbase
@@ -490,12 +473,11 @@ NoncodingRNAProduct,id_prefixes,SO
 NucleicAcidEntity,id_prefixes,CHEBI
 NucleicAcidEntity,id_prefixes,GENO
 NucleicAcidEntity,id_prefixes,HGNC
-NucleicAcidEntity,id_prefixes,NCBIGENE
+NucleicAcidEntity,id_prefixes,NCBIGene
 NucleicAcidEntity,id_prefixes,OBO
 NucleicAcidEntity,id_prefixes,REACTO
 NucleicAcidEntity,id_prefixes,SIO
 NucleicAcidEntity,id_prefixes,SO
-NucleicAcidEntity,id_prefixes,WB
 Occurrent,id_prefixes,BFO
 Occurrent,id_prefixes,ECTO
 Occurrent,id_prefixes,ENVO
@@ -531,7 +513,6 @@ OntologyClass,id_prefixes,PATO
 OntologyClass,id_prefixes,PW
 OntologyClass,id_prefixes,schema
 OntologyClass,id_prefixes,SIO
-OntologyClass,id_prefixes,UMLS
 OntologyClass,id_prefixes,UPHENO
 OntologyClass,id_prefixes,WBPhenotype
 OrganismalEntity,id_prefixes,BSPO
@@ -565,7 +546,6 @@ OrganismAttribute,id_prefixes,OBO
 OrganismAttribute,id_prefixes,OMIM
 OrganismAttribute,id_prefixes,ORPHA
 OrganismAttribute,id_prefixes,PATO
-OrganismAttribute,id_prefixes,UMLS
 OrganismAttribute,id_prefixes,UPHENO
 OrganismAttribute,id_prefixes,WBPhenotype
 PathologicalEntityMixin,id_prefixes,DOID
@@ -578,7 +558,6 @@ PathologicalEntityMixin,id_prefixes,OBI
 PathologicalEntityMixin,id_prefixes,OBO
 PathologicalEntityMixin,id_prefixes,OMIM
 PathologicalEntityMixin,id_prefixes,ORPHA
-PathologicalEntityMixin,id_prefixes,UMLS
 PathologicalEntityMixin,id_prefixes,WBPhenotype
 PathologicalProcess,id_prefixes,OBI
 PathologicalProcess,id_prefixes,OBO
@@ -595,7 +574,6 @@ PhenotypicFeature,id_prefixes,OBO
 PhenotypicFeature,id_prefixes,OMIM
 PhenotypicFeature,id_prefixes,ORPHA
 PhenotypicFeature,id_prefixes,SIO
-PhenotypicFeature,id_prefixes,UMLS
 PhenotypicFeature,id_prefixes,UPHENO
 PhenotypicFeature,id_prefixes,WBPhenotype
 PhenotypicQuality,id_prefixes,DOID
@@ -609,7 +587,6 @@ PhenotypicQuality,id_prefixes,OBO
 PhenotypicQuality,id_prefixes,OMIM
 PhenotypicQuality,id_prefixes,ORPHA
 PhenotypicQuality,id_prefixes,PATO
-PhenotypicQuality,id_prefixes,UMLS
 PhenotypicQuality,id_prefixes,UPHENO
 PhenotypicQuality,id_prefixes,WBPhenotype
 PhenotypicSex,id_prefixes,PATO
@@ -629,7 +606,7 @@ PhysicalEssence,id_prefixes,GENO
 PhysicalEssence,id_prefixes,GO
 PhysicalEssence,id_prefixes,HGNC
 PhysicalEssence,id_prefixes,MGI
-PhysicalEssence,id_prefixes,NCBIGENE
+PhysicalEssence,id_prefixes,NCBIGene
 PhysicalEssence,id_prefixes,OBI
 PhysicalEssence,id_prefixes,OBO
 PhysicalEssence,id_prefixes,PO
@@ -643,7 +620,6 @@ PhysicalEssence,id_prefixes,SO
 PhysicalEssence,id_prefixes,tair.locus
 PhysicalEssence,id_prefixes,UBERON
 PhysicalEssence,id_prefixes,UniProtKB
-PhysicalEssence,id_prefixes,WB
 PhysicalEssence,id_prefixes,WBbt
 PhysicalEssence,id_prefixes,xenbase
 PhysicalEssence,id_prefixes,ZFA
@@ -664,7 +640,7 @@ PhysicalEssenceOrOccurrent,id_prefixes,GENO
 PhysicalEssenceOrOccurrent,id_prefixes,GO
 PhysicalEssenceOrOccurrent,id_prefixes,HGNC
 PhysicalEssenceOrOccurrent,id_prefixes,MGI
-PhysicalEssenceOrOccurrent,id_prefixes,NCBIGENE
+PhysicalEssenceOrOccurrent,id_prefixes,NCBIGene
 PhysicalEssenceOrOccurrent,id_prefixes,OBI
 PhysicalEssenceOrOccurrent,id_prefixes,OBO
 PhysicalEssenceOrOccurrent,id_prefixes,OGMS
@@ -681,7 +657,6 @@ PhysicalEssenceOrOccurrent,id_prefixes,SO
 PhysicalEssenceOrOccurrent,id_prefixes,tair.locus
 PhysicalEssenceOrOccurrent,id_prefixes,UBERON
 PhysicalEssenceOrOccurrent,id_prefixes,UniProtKB
-PhysicalEssenceOrOccurrent,id_prefixes,WB
 PhysicalEssenceOrOccurrent,id_prefixes,WBbt
 PhysicalEssenceOrOccurrent,id_prefixes,xenbase
 PhysicalEssenceOrOccurrent,id_prefixes,ZFA
@@ -696,7 +671,6 @@ Polypeptide,id_prefixes,REACTO
 Polypeptide,id_prefixes,SIO
 Polypeptide,id_prefixes,SO
 Polypeptide,id_prefixes,UniProtKB
-Polypeptide,id_prefixes,WB
 PopulationOfIndividualOrganisms,id_prefixes,OBI
 PopulationOfIndividualOrganisms,id_prefixes,PCO
 PopulationOfIndividualOrganisms,id_prefixes,SIO
@@ -707,7 +681,6 @@ Protein,id_prefixes,PR
 Protein,id_prefixes,REACTO
 Protein,id_prefixes,SIO
 Protein,id_prefixes,UniProtKB
-Protein,id_prefixes,WB
 Publication,id_prefixes,IAO
 ReagentTargetedGene,id_prefixes,GENO
 RNAProduct,id_prefixes,CHEBI
@@ -715,7 +688,6 @@ RNAProduct,id_prefixes,OBO
 RNAProduct,id_prefixes,REACTO
 RNAProduct,id_prefixes,SIO
 RNAProduct,id_prefixes,SO
-RNAProduct,id_prefixes,WB
 SequenceVariant,id_prefixes,GENO
 SequenceVariant,id_prefixes,SIO
 SequenceVariant,id_prefixes,SO
@@ -739,7 +711,7 @@ ThingWithTaxon,id_prefixes,HP
 ThingWithTaxon,id_prefixes,HsapDv
 ThingWithTaxon,id_prefixes,MONDO
 ThingWithTaxon,id_prefixes,NBO
-ThingWithTaxon,id_prefixes,NCBIGENE
+ThingWithTaxon,id_prefixes,NCBIGene
 ThingWithTaxon,id_prefixes,NCBITaxon
 ThingWithTaxon,id_prefixes,NCIT
 ThingWithTaxon,id_prefixes,OBI
@@ -753,9 +725,7 @@ ThingWithTaxon,id_prefixes,REACTO
 ThingWithTaxon,id_prefixes,SIO
 ThingWithTaxon,id_prefixes,SO
 ThingWithTaxon,id_prefixes,UBERON
-ThingWithTaxon,id_prefixes,UMLS
 ThingWithTaxon,id_prefixes,UPHENO
-ThingWithTaxon,id_prefixes,WB
 ThingWithTaxon,id_prefixes,WBbt
 ThingWithTaxon,id_prefixes,WBPhenotype
 ThingWithTaxon,id_prefixes,ZFA
@@ -764,7 +734,6 @@ Transcript,id_prefixes,OBO
 Transcript,id_prefixes,REACTO
 Transcript,id_prefixes,SIO
 Transcript,id_prefixes,SO
-Transcript,id_prefixes,WB
 Treatment,id_prefixes,OGMS
 Treatment,id_prefixes,SIO
 Zygosity,id_prefixes,GENO
