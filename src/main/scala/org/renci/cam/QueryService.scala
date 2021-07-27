@@ -226,11 +226,8 @@ object QueryService extends LazyLogging {
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
               originalKnowledgeSourceBP <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source")).orElseFail(new Exception("could not get biolink:original_knowledge_source"))
               infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
-              provAttribute = TRAPIAttribute(Some("infores:cam_kp"), originalKnowledgeSourceBP.iri, None, List(provValue), Some(infoResBiolinkClass.iri), Some(source), None)
+              provAttribute = TRAPIAttribute(Some("infores:gocam-kp"), originalKnowledgeSourceBP.iri, None, List(provValue), Some(infoResBiolinkClass.iri), Some(source), None)
               attributes = List(provAttribute)
-//              predicatesBLMapping <- ZIO.fromOption(predicatesMap.get(k)).orElseFail(new Exception("no biolink pred mapped value"))
-//              blPred = predicatesBLMapping.get(IRI(predicate))
-//              attributes = List(TRAPIAttribute(IRI(source), Some("provenance"), List(provValue), Some(sourceType), None, None, None))
               relationLabelAndBiolinkPredicate <- ZIO
                 .fromOption(relationsMap.get(predicateIRI))
                 .orElseFail(new Exception("Unexpected edge relation"))
