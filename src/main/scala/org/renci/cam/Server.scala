@@ -162,7 +162,8 @@ object Server extends App with LazyLogging {
                     "biolink-version": "${biolinkData.version}"
                   },
                   "x-trapi": {
-                    "version": "1.1.0"
+                    "version": "1.1.0",
+                    "operations": [ "lookup" ]
                   }
                 }
              }
