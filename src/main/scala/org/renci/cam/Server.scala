@@ -50,17 +50,20 @@ object Server extends App with LazyLogging {
       .out(
         {
 
-          implicit val iriKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder
-          implicit val iriKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
+//          implicit val bcKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
+//          implicit val bcKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder
 
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+//          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+//          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+//
+//          implicit val blClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+//          implicit val blClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+//
+//          implicit val blPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+//          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
 
-          implicit val blClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-          implicit val blClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-
-          implicit val blPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+//          implicit val metaNodeKeyEncoder: KeyEncoder[MetaNode] = Implicits.metaNodeKeyEncoder
+          implicit val metaNodeEncoder: Encoder[MetaNode] = Implicits.metaNodeEncoder
 
           jsonBody[MetaKnowledgeGraph]
         }
@@ -95,7 +98,7 @@ object Server extends App with LazyLogging {
       val example = {
         val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
         val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
-        val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n1", "n0", None)
+        val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), "n1", "n0", None)
         val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         TRAPIQuery(message, None)
@@ -162,7 +165,7 @@ object Server extends App with LazyLogging {
                     "biolink-version": "${biolinkData.version}"
                   },
                   "x-trapi": {
-                    "version": "1.1.0",
+                    "version": "1.2.0",
                     "operations": [ "lookup" ]
                   }
                 }

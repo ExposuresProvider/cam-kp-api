@@ -4,7 +4,7 @@ import com.google.common.base.CaseFormat
 import io.circe.Decoder.Result
 import io.circe._
 import org.apache.commons.lang3.StringUtils
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, MetaNode}
 
 object Implicits {
 
@@ -30,6 +30,15 @@ object Implicits {
         if (protocols(prefix)) Right(s"$prefix:")
         else prefixesMap.get(prefix).toRight(DecodingFailure(s"No prefix expansion found for $prefix:$local", Nil))
     } yield IRI(s"$namespace$local")
+
+  def metaNodeEncoder: Encoder[MetaNode] = Encoder.encodeString.contramap { node =>
+    Json.obj((node.key.withBiolinkPrefix, Json.obj(("id_prefixes", Json.fromValues(node.id_prefixes.map(a => Json.fromString(a))))))).deepDropNullValues.noSpaces
+  }
+
+  def metaNodeKeyEncoder: KeyEncoder[MetaNode] = KeyEncoder.encodeKeyString.contramap { node: MetaNode => {
+      node.key.withBiolinkPrefix
+    }
+  }
 
   def iriEncoder(prefixesMap: Map[String, String]): Encoder[IRI] = Encoder.encodeString.contramap { iri =>
     compactIRIIfPossible(iri, prefixesMap)

@@ -88,7 +88,7 @@ object QueryService extends LazyLogging {
               (relationLabelOpt, relationBiolinkPredicate) <- relationsToInfo.get(triple.pred)
               predBLTermOpt = biolinkData.predicates.find(a => a.iri == relationBiolinkPredicate)
               key = getTRAPIEdgeKey(triple.subj.value, predBLTermOpt, triple.obj.value)
-              edge = TRAPIEdge(predBLTermOpt, None, triple.subj, triple.obj, None)
+              edge = TRAPIEdge(predBLTermOpt, triple.subj, triple.obj, None)
             } yield key -> edge
           }.toMap
         } yield {
@@ -226,7 +226,7 @@ object QueryService extends LazyLogging {
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
               originalKnowledgeSourceBP <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source")).orElseFail(new Exception("could not get biolink:original_knowledge_source"))
               infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
-              provAttribute = TRAPIAttribute(Some("infores:cam-kp"), originalKnowledgeSourceBP.iri, None, List(provValue), Some(infoResBiolinkClass.iri), Some(source), None)
+              provAttribute = TRAPIAttribute(Some("infores:cam-kp"), originalKnowledgeSourceBP.iri, None, List(provValue), Some(infoResBiolinkClass.iri), Some(source), None, None)
               attributes = List(provAttribute)
               relationLabelAndBiolinkPredicate <- ZIO
                 .fromOption(relationsMap.get(predicateIRI))
@@ -235,7 +235,7 @@ object QueryService extends LazyLogging {
               blPred = biolinkData.predicates.find(a => a.iri == biolinkPredicateIRI)
               trapiEdgeKey = getTRAPIEdgeKey(sourceType.value, blPred, targetType.value)
               //FIXME add relation CURIE here?
-              trapiEdge = TRAPIEdge(blPred, None, sourceType, targetType, Some(attributes))
+              trapiEdge = TRAPIEdge(blPred, sourceType, targetType, Some(attributes))
             } yield trapiEdgeKey -> trapiEdge
           }
         } yield edges.toList

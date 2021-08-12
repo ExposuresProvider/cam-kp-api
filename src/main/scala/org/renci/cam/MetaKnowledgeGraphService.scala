@@ -1,10 +1,11 @@
 package org.renci.cam
 
 import com.typesafe.scalalogging.LazyLogging
+import io.circe.KeyEncoder
 import org.apache.commons.csv.CSVFormat
 import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, MetaEdge, MetaKnowledgeGraph}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, MetaEdge, MetaKnowledgeGraph, MetaNode}
 import zio.ZIO.ZIOAutoCloseableOps
 import zio._
 import zio.blocking._
@@ -33,13 +34,23 @@ object MetaKnowledgeGraphService extends LazyLogging {
     metaEdges = predicateRecords.asScala.map(a => MetaEdge(BiolinkClass(a.get(0)), BiolinkPredicate(a.get(1)), BiolinkClass(a.get(2)), None)).toList
   } yield metaEdges
 
-  def getNodes: ZIO[Blocking, Throwable, Map[BiolinkClass, Map[String, List[String]]]] = for {
+//  def getNodes: ZIO[Blocking, Throwable, Map[BiolinkClass, Map[String, List[String]]]] = for {
+//    mkgNodesData <- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream("/mkg-nodes.csv"), StandardCharsets.UTF_8.name()))
+//      .bracketAuto { source =>
+//        effectBlockingIO(source.getLines().mkString("\n"))
+//      }
+//    mkgNodeRecords <- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(mkgNodesData)).getRecords)
+//    metaNodes = mkgNodeRecords.asScala.groupBy(a => BiolinkClass(a.get(0))).view.mapValues(_.groupBy(_.get(1)).view.mapValues(_.map(_.get(2)).toList).toMap).toMap
+//  } yield metaNodes
+
+  def getNodes: ZIO[Blocking, Throwable, List[MetaNode]] = for {
     mkgNodesData <- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream("/mkg-nodes.csv"), StandardCharsets.UTF_8.name()))
       .bracketAuto { source =>
         effectBlockingIO(source.getLines().mkString("\n"))
       }
     mkgNodeRecords <- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(mkgNodesData)).getRecords)
     metaNodes = mkgNodeRecords.asScala.groupBy(a => BiolinkClass(a.get(0))).view.mapValues(_.groupBy(_.get(1)).view.mapValues(_.map(_.get(2)).toList).toMap).toMap
-  } yield metaNodes
+    ret = metaNodes.map(a => MetaNode(a._1, a._2.values.flatten.toList, None)).toList
+  } yield ret
 
 }
