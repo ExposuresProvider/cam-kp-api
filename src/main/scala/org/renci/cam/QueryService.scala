@@ -59,21 +59,35 @@ object QueryService extends LazyLogging {
           submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], TRAPIMessage] =
     for {
       biolinkData <- biolinkData
-      _ = logger.debug("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
+      _ = logger.debug("\n print 1 limit: {}, includeExtraEdges: {} \n", limit, includeExtraEdges)
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+      _ = logger.debug("\n print 2 queryGraph*** nodes: {} \n", queryGraph.nodes)
       allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
+      _ = logger.debug("\n print 3 allPredicatesInQuery *** : {} \n", allPredicatesInQuery)
+      allPredicatesInQueryII = queryGraph.edges.values.flatMap(p => p.relation.toList) //.relation.getOrElse(Nil)).to(Set)
+      _ = logger.debug("\n print 3.1 allPredicatesInQuery - relations *** : {} \n", allPredicatesInQueryII)
       predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
+      _ = logger.debug("\n print 4 predicatesToRelations *** : {} \n", predicatesToRelations)
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
+      _ = logger.debug("\n print 5 allRelationsInQuery *** : {} \n", allRelationsInQuery)
       relationsToLabelAndBiolinkPredicate <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+      _ = logger.debug("\n print 6 relationsToLabelAndBiolinkPredicate *** : {} \n", relationsToLabelAndBiolinkPredicate)
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+      _ = logger.debug("\n print 7 initialQuerySolutions *** : {} \n", initialQuerySolutions)
       solutionTriples = extractCoreTriples(initialQuerySolutions, queryGraph)
+      _ = logger.debug("\n print 8 solutionTriples *** : {} \n", solutionTriples)
       provs <- getProvenance(solutionTriples)
+      _ = logger.debug("\n print 9 provs *** : {} \n", provs)
       initialKGNodes <- getTRAPINodes(queryGraph, initialQuerySolutions, biolinkData.classes)
+      _ = logger.debug("\n print 10 initialKGNodes *** : {} \n", initialKGNodes)
       initialKGEdges <- getTRAPIEdges(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate, provs)
+      _ = logger.debug("\n print 11 initialKGEdges *** : {} \n", initialKGEdges)
       querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate)
+      _ = logger.debug("\n print 12 querySolutionsToEdgeBindings *** : {} \n", querySolutionsToEdgeBindings)
       trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
         getTRAPINodeBindings(queryGraph, querySolution) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
       }
+      _ = logger.debug("\n print 13 trapiBindings *** : {} \n", trapiBindings)
       _ <- ZIO.when(includeExtraEdges)(
         for {
           prov2CAMStuffTripleMap <- ZIO.foreachPar(provs.values)(prov => getCAMStuff(IRI(prov)).map(prov -> _)).map(_.toMap)
@@ -97,6 +111,7 @@ object QueryService extends LazyLogging {
         }
       )
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
+      _ = logger.debug("\n print 14 results *** : {} \n", results)
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes.toMap, initialKGEdges.toMap)), Some(results.distinct))
 
   def findInitialQuerySolutions(queryGraph: TRAPIQueryGraph,
@@ -132,21 +147,24 @@ object QueryService extends LazyLogging {
           }
           $limitSparql
           """
+
+    print("\n print 7.1 *** \n {} \n", queryString.toString)
     SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
   }
 
-  def getNodeValuesClauses(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], edgeVar: Var): QueryText = (ids, categories) match {
-    case (Some(idsList), _) =>
-      sparql""" VALUES ${edgeVar}_class { ${idsList.asValues} }
+  def getNodeValuesClauses(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], edgeVar: Var): QueryText =
+    (ids, categories) match {
+      case (Some(idsList), _) =>
+        sparql""" VALUES ${edgeVar}_class { ${idsList.asValues} }
                       $edgeVar $RDFType ${edgeVar}_class .
                       """
-    case (None, Some(biolinkTypes)) =>
-      val irisList = biolinkTypes.map(_.iri)
-      sparql""" VALUES ${edgeVar}_class { ${irisList.asValues} }
+      case (None, Some(biolinkTypes)) =>
+        val irisList = biolinkTypes.map(_.iri)
+        sparql""" VALUES ${edgeVar}_class { ${irisList.asValues} }
                       $edgeVar $RDFType ${edgeVar}_class .
                       """
-    case (None, None) => sparql""
-  }
+      case (None, None) => sparql""
+    }
 
   def extractCoreTriples(solutions: List[QuerySolution], queryGraph: TRAPIQueryGraph): Set[Triple] =
     (for {
@@ -169,7 +187,6 @@ object QueryService extends LazyLogging {
               """
       }
       .fold(sparql"")(_ + _)
-
 
   def getProjections(queryGraph: TRAPIQueryGraph): QueryText = {
     val projectionVariableNames =
@@ -224,9 +241,19 @@ object QueryService extends LazyLogging {
               predicateIRI = IRI(predicate)
               tripleString = TripleString(source, predicate, target)
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
-              originalKnowledgeSourceBP <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source")).orElseFail(new Exception("could not get biolink:original_knowledge_source"))
-              infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
-              provAttribute = TRAPIAttribute(Some("infores:cam-kp"), originalKnowledgeSourceBP.iri, None, List(provValue), Some(infoResBiolinkClass.iri), Some(source), None)
+              originalKnowledgeSourceBP <- ZIO
+                .fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source"))
+                .orElseFail(new Exception("could not get biolink:original_knowledge_source"))
+              infoResBiolinkClass <- ZIO
+                .fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource"))
+                .orElseFail(new Exception("could not get biolink:InformationResource"))
+              provAttribute = TRAPIAttribute(Some("infores:cam-kp"),
+                                             originalKnowledgeSourceBP.iri,
+                                             None,
+                                             List(provValue),
+                                             Some(infoResBiolinkClass.iri),
+                                             Some(source),
+                                             None)
               attributes = List(provAttribute)
               relationLabelAndBiolinkPredicate <- ZIO
                 .fromOption(relationsMap.get(predicateIRI))
@@ -254,8 +281,12 @@ object QueryService extends LazyLogging {
       }
       .map(_.flatten)
     val allQueryNodeIDs = queryGraph.nodes.keySet
+    val allQueryNodes = queryGraph.nodes
+    logger.debug("\n print 10.1 allQueryNodes *** : {} \n", allQueryNodes)
+
     for {
       allOntClassIRIs <- allOntClassIRIsZ
+      _ = logger.debug("\n print 10.2 allOntClassIRIs *** : {} \n", allOntClassIRIs)
       nodeDetails <- getTRAPINodeDetails(allOntClassIRIs)
       termToLabelAndTypes = nodeDetails.groupBy(_.term).map { case (term, termsAndTypes) =>
         val (labels, biolinkTypes) = termsAndTypes.map(t => t.label -> t.biolinkType).unzip
