@@ -3,6 +3,7 @@ package org.renci.cam
 import com.google.common.base.CaseFormat
 import io.circe.Decoder.Result
 import io.circe._
+import io.circe.syntax.EncoderOps
 import org.apache.commons.lang3.StringUtils
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, MetaNode}
 
@@ -12,10 +13,11 @@ object Implicits {
   private val protocols = Set("http", "https", "ftp", "file", "mailto")
   private val BiolinkNamespace = "https://w3id.org/biolink/vocab/"
 
-  def iriDecoder(prefixesMap: Map[String, String]): Decoder[IRI] = (c: HCursor) => for {
-    value <- c.value.as[String]
-    iri <- expandCURIEString(value, prefixesMap)
-  } yield iri
+  def iriDecoder(prefixesMap: Map[String, String]): Decoder[IRI] = (c: HCursor) =>
+    for {
+      value <- c.value.as[String]
+      iri <- expandCURIEString(value, prefixesMap)
+    } yield iri
 
   def iriKeyDecoder(prefixesMap: Map[String, String]): KeyDecoder[IRI] = (key: String) => expandCURIEString(key, prefixesMap).toOption
 
@@ -30,15 +32,6 @@ object Implicits {
         if (protocols(prefix)) Right(s"$prefix:")
         else prefixesMap.get(prefix).toRight(DecodingFailure(s"No prefix expansion found for $prefix:$local", Nil))
     } yield IRI(s"$namespace$local")
-
-  def metaNodeEncoder: Encoder[MetaNode] = Encoder.encodeString.contramap { node =>
-    Json.obj((node.key.withBiolinkPrefix, Json.obj(("id_prefixes", Json.fromValues(node.id_prefixes.map(a => Json.fromString(a))))))).deepDropNullValues.noSpaces
-  }
-
-  def metaNodeKeyEncoder: KeyEncoder[MetaNode] = KeyEncoder.encodeKeyString.contramap { node: MetaNode => {
-      node.key.withBiolinkPrefix
-    }
-  }
 
   def iriEncoder(prefixesMap: Map[String, String]): Encoder[IRI] = Encoder.encodeString.contramap { iri =>
     compactIRIIfPossible(iri, prefixesMap)
@@ -89,12 +82,14 @@ object Implicits {
         for {
           ret <- c.as[List[BiolinkPredicate]].orElse(c.as[BiolinkPredicate].map(_ :: Nil))
         } yield ret
+
     }
 
-  def biolinkClassKeyDecoder(biolinkClasses: List[BiolinkClass]): KeyDecoder[BiolinkClass] = (key: String) => {
-    val localName = key.replace("biolink:", "")
-    biolinkClasses.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName).toRight(s"BiolinkClass does not exist: $key")
-  }.toOption
+  def biolinkClassKeyDecoder(biolinkClasses: List[BiolinkClass]): KeyDecoder[BiolinkClass] = (key: String) =>
+    {
+      val localName = key.replace("biolink:", "")
+      biolinkClasses.find(a => a.iri.value.replace(BiolinkNamespace, "") == localName).toRight(s"BiolinkClass does not exist: $key")
+    }.toOption
 
   def biolinkClassDecoder(biolinkClasses: List[BiolinkClass]): Decoder[BiolinkClass] = Decoder.decodeString.emap { s =>
     val localName = s.replace("biolink:", "")
