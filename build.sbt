@@ -30,8 +30,8 @@ val zioVersion = "1.0.9"
 val zioConfigVersion = "1.0.0-RC29-1"
 val tapirVersion = "0.16.16"
 val http4sVersion = "0.21.25"
-val circeVersion = "0.13.0"
-val logbackVersion = "1.2.3"
+val circeVersion = "0.14.1"
+val logbackVersion = "1.2.5"
 
 reStart / javaOptions += "-Xmx16G"
 
@@ -56,14 +56,14 @@ libraryDependencies ++= {
     "org.apache.jena"              % "apache-jena-libs"               % "4.1.0",
     "org.phenoscape"              %% "sparql-utils"                   % "1.3.1",
     "org.apache.commons"           % "commons-text"                   % "1.9",
-    "org.apache.commons"           % "commons-csv"                    % "1.8",
+    "org.apache.commons"           % "commons-csv"                    % "1.9.0",
     "io.circe"                    %% "circe-core"                     % circeVersion,
     "io.circe"                    %% "circe-generic"                  % circeVersion,
     "io.circe"                    %% "circe-parser"                   % circeVersion,
     "io.circe"                    %% "circe-yaml"                     % circeVersion,
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
     "dev.zio"                     %% "zio-test-sbt"                   % zioVersion % "it,test",
-    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.39.5"   % "it,test",
+    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.39.6"   % "it,test",
     "com.google.guava"             % "guava"                          % "30.1.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
     "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.4"
