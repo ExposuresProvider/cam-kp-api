@@ -2,6 +2,7 @@ package org.renci.cam
 
 import com.google.common.base.CaseFormat
 import contextual.Case
+import io.circe.generic.extras.{ConfiguredJsonCodec, JsonKey}
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
 import org.apache.jena.sparql.core.{Var => JenaVar}
@@ -161,7 +162,7 @@ package object domain {
 
   final case class LogEntry(timestamp: Option[String], level: Option[String], code: Option[String], message: Option[String])
 
-  final case class MetaNode(key: BiolinkClass, id_prefixes: List[String], attributes: Option[List[MetaAttribute]])
+  final case class MetaNode(id_prefixes: List[String], attributes: Option[List[MetaAttribute]])
 
   final case class MetaEdge(subject: BiolinkClass,
                             predicate: BiolinkPredicate,
@@ -175,6 +176,6 @@ package object domain {
                                  constraint_name: Option[String])
 
 //  final case class MetaKnowledgeGraph(nodes: Map[BiolinkClass, Map[String, List[String]]], edges: List[MetaEdge])
-  final case class MetaKnowledgeGraph(nodes: List[MetaNode], edges: List[MetaEdge])
+  final case class MetaKnowledgeGraph(nodes: Map[BiolinkClass, MetaNode], edges: List[MetaEdge])
 
 }
