@@ -1,11 +1,12 @@
 package org.renci.cam.test
 
-import io.circe.Encoder
+import io.circe.{Encoder, KeyEncoder}
 import io.circe.syntax._
 import org.renci.cam.Implicits
 import org.renci.cam.domain._
 import zio.test.Assertion._
 import zio.test._
+import io.circe.generic.extras._
 
 object ImplicitsTest extends DefaultRunnableSpec {
 
@@ -26,15 +27,6 @@ object ImplicitsTest extends DefaultRunnableSpec {
     }
   )
 
-  val testMetaNodeEncoder = suite("testMetaNodeEncoder")(
-    test("test Implicits.metaNodeEncoder") {
-      val metaNode = MetaNode(BiolinkClass("MacromolecularMachine"), List("NCBI", "CHEBI"), None)
-      implicit val metaNodeEncoder: Encoder[MetaNode] = Implicits.metaNodeEncoder
-      val json = metaNode.asJson(metaNodeEncoder).deepDropNullValues.noSpaces.replace("\"", "")
-      assert(json)(equalTo("NCBIGene:558"))
-    }
-  )
-
-  def spec = suite("Implicits tests")(testBiolinkClassEncoder, testIRIEncoder, testMetaNodeEncoder) @@ TestAspect.sequential
+  def spec = suite("Implicits tests")(testBiolinkClassEncoder, testIRIEncoder) @@ TestAspect.sequential
 
 }
