@@ -6,7 +6,6 @@ import org.renci.cam.Implicits
 import org.renci.cam.domain._
 import zio.test.Assertion._
 import zio.test._
-import io.circe.generic.extras._
 
 object ImplicitsTest extends DefaultRunnableSpec {
 
