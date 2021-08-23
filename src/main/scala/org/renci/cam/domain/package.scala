@@ -2,7 +2,6 @@ package org.renci.cam
 
 import com.google.common.base.CaseFormat
 import contextual.Case
-import io.circe.generic.extras.{ConfiguredJsonCodec, JsonKey}
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
 import org.apache.jena.sparql.core.{Var => JenaVar}
