@@ -12,7 +12,7 @@ import org.http4s.headers.Location
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.server.middleware.{Logger, _}
+import org.http4s.server.middleware._
 import org.renci.cam.Biolink._
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain._
@@ -25,7 +25,7 @@ import sttp.tapir.ztapir._
 import zio._
 import zio.blocking.Blocking
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{getConfig, ZConfig}
+import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 
@@ -149,7 +149,7 @@ object Server extends App with LazyLogging {
           .toOpenAPI("CAM-KP API", "0.1")
           .copy(info = openAPIInfo)
           .copy(tags = List(sttp.tapir.openapi.Tag("translator"), sttp.tapir.openapi.Tag("trapi")))
-          .servers(List(sttp.tapir.openapi.Server(appConfig.location)))
+          .servers(List(sttp.tapir.openapi.Server(s"${appConfig.location}/${appConfig.trapiVersion}")))
           .toYaml
         openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
         info: String =
@@ -162,7 +162,7 @@ object Server extends App with LazyLogging {
                     "biolink-version": "${biolinkData.version}"
                   },
                   "x-trapi": {
-                    "version": "1.2.0",
+                    "version": "${appConfig.trapiVersion}",
                     "operations": [ "lookup" ]
                   }
                 }
