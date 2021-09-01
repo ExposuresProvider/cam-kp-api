@@ -149,7 +149,7 @@ object Server extends App with LazyLogging {
           .toOpenAPI("CAM-KP API", "0.1")
           .copy(info = openAPIInfo)
           .copy(tags = List(sttp.tapir.openapi.Tag("translator"), sttp.tapir.openapi.Tag("trapi")))
-          .servers(List(sttp.tapir.openapi.Server(appConfig.location)))
+          .servers(List(sttp.tapir.openapi.Server(s"${appConfig.location}/${appConfig.trapiVersion}")))
           .toYaml
         openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
         info: String =
@@ -162,7 +162,7 @@ object Server extends App with LazyLogging {
                     "biolink-version": "${biolinkData.version}"
                   },
                   "x-trapi": {
-                    "version": "1.1.0",
+                    "version": "${appConfig.trapiVersion}",
                     "operations": [ "lookup" ]
                   }
                 }
