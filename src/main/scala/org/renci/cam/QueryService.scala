@@ -92,8 +92,8 @@ object QueryService extends LazyLogging {
             } yield key -> edge
           }.toMap
         } yield {
-          initialKGNodes ++= extraKGNodes
-          initialKGEdges ++= extraKGEdges
+          initialKGNodes ++ extraKGNodes
+          initialKGEdges ++ extraKGEdges
         }
       )
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
@@ -208,7 +208,7 @@ object QueryService extends LazyLogging {
   def getTRAPIEdges(queryGraph: TRAPIQueryGraph,
                     querySolutions: List[QuerySolution],
                     relationsMap: Map[IRI, (Option[String], IRI)],
-                    provs: Map[TripleString, String]): ZIO[ZConfig[AppConfig] with Has[BiolinkData], Throwable, collection.mutable.Map[String, TRAPIEdge]] =
+                    provs: Map[TripleString, String]): ZIO[ZConfig[AppConfig] with Has[BiolinkData], Throwable, Map[String, TRAPIEdge]] =
 
     for {
       biolinkData <- biolinkData
@@ -244,10 +244,10 @@ object QueryService extends LazyLogging {
           }
         } yield edges.toList
       }
-    } yield trapiEdges.flatten.to(collection.mutable.Map)
+    } yield trapiEdges.flatten.toMap
 
   def getTRAPINodes(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution], bionlinkClasses: List[BiolinkClass])
-    : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], collection.mutable.Map[IRI, TRAPINode]] = {
+    : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Map[IRI, TRAPINode]] = {
     val allOntClassIRIsZ = ZIO
       .foreach(querySolutions) { qs =>
         ZIO.foreach(qs.varNames.asScala.filter(_.endsWith("_type")).to(Iterable)) { typeVar =>
@@ -280,7 +280,7 @@ object QueryService extends LazyLogging {
           }
         } yield nodes.toList
       }
-    } yield trapiNodes.flatten.to(collection.mutable.Map)
+    } yield trapiNodes.flatten.toMap
   }
 
   def getTRAPINodeDetailsQueryText(nodeIdList: List[IRI]): QueryText = {
