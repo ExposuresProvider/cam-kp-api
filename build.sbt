@@ -27,7 +27,7 @@ IntegrationTest / parallelExecution := false
 coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci\\.cam\\.Server.*;org\\.renci\\.cam\\.AppConfig.*;org\\.renci\\.cam\\.SPARQLQueryExecutor.*"
 
 val zioVersion = "1.0.9"
-val zioConfigVersion = "1.0.0-RC29-1"
+val zioConfigVersion = "1.0.10"
 val tapirVersion = "0.16.16"
 val http4sVersion = "0.21.25"
 val circeVersion = "0.13.0"
