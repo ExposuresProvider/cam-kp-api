@@ -103,7 +103,7 @@ object Server extends App with LazyLogging {
 
       endpoint.post
         .in("query")
-        .in(query[Option[Int]]("limit").and(query[Option[Boolean]]("include_extra_edges")))
+        .in(query[Option[Int]]("limit").example(Some(10)).and(query[Option[Boolean]]("include_extra_edges").example(Some(false))))
         .in(jsonBody[TRAPIQuery].example(example))
         .errorOut(stringBody)
         .out(jsonBody[TRAPIResponse])
