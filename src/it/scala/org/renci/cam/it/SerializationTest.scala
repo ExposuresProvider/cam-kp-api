@@ -23,7 +23,7 @@ object SerializationTest extends DefaultRunnableSpec with LazyLogging {
 
       val n0Node = TRAPIQueryNode(Some(List(IRI("http://identifiers.org/ncbigene/558"))), Some(List(BiolinkClass("Gene"))), None)
       val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
-      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n0", "n1", None)
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), "n0", "n1", None)
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -61,7 +61,7 @@ object SerializationTest extends DefaultRunnableSpec with LazyLogging {
 
       val n0Node = TRAPIQueryNode(Some(List(IRI("http://identifiers.org/ncbigene/558"))), Some(List(BiolinkClass("Gene"))), None)
       val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
-      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n0", "n1", None)
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), "n0", "n1", None)
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
@@ -84,7 +84,7 @@ object SerializationTest extends DefaultRunnableSpec with LazyLogging {
     testM("decoding") {
       val n0Node = TRAPIQueryNode(Some(List(IRI("http://identifiers.org/ncbigene/558"))), Some(List(BiolinkClass("Gene"))), None)
       val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
-      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n0", "n1", None)
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), "n0", "n1", None)
 
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
