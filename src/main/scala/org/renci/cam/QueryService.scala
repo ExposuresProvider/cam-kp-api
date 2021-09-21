@@ -88,16 +88,15 @@ object QueryService extends LazyLogging {
               (relationLabelOpt, relationBiolinkPredicate) <- relationsToInfo.get(triple.pred)
               predBLTermOpt = biolinkData.predicates.find(a => a.iri == relationBiolinkPredicate)
               key = getTRAPIEdgeKey(triple.subj.value, predBLTermOpt, triple.obj.value)
-              edge = TRAPIEdge(predBLTermOpt, None, triple.subj, triple.obj, None)
+              edge = TRAPIEdge(predBLTermOpt, triple.subj, triple.obj, None)
             } yield key -> edge
           }.toMap
-        } yield {
-          initialKGNodes ++ extraKGNodes
-          initialKGEdges ++ extraKGEdges
-        }
+          _ = initialKGNodes ++ extraKGNodes
+          _ = initialKGEdges ++ extraKGEdges
+        } yield ()
       )
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
-    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes.toMap, initialKGEdges.toMap)), Some(results.distinct))
+    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes, initialKGEdges)), Some(results.distinct))
 
   def findInitialQuerySolutions(queryGraph: TRAPIQueryGraph,
                                 predicatesToRelations: Map[BiolinkPredicate, Set[IRI]],
@@ -229,8 +228,8 @@ object QueryService extends LazyLogging {
               aggregatorKS <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source")).orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
               infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
-              aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), aggregatorKS.iri, None, List("infores:cam-kp"), Some(infoResBiolinkClass.iri), Some(appConfig.location), None)
-              originalKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), originalKS.iri, None, List("infores:go-cam"), Some(infoResBiolinkClass.iri), Some(provValue), None)
+              aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), aggregatorKS.iri, None, List("infores:cam-kp"), Some(infoResBiolinkClass.iri), Some(appConfig.location), None, None)
+              originalKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), originalKS.iri, None, List("infores:go-cam"), Some(infoResBiolinkClass.iri), Some(provValue), None, None)
               attributes = List(aggregatorKSAttribute, originalKSAttribute)
               relationLabelAndBiolinkPredicate <- ZIO
                 .fromOption(relationsMap.get(predicateIRI))
@@ -239,7 +238,7 @@ object QueryService extends LazyLogging {
               blPred = biolinkData.predicates.find(a => a.iri == biolinkPredicateIRI)
               trapiEdgeKey = getTRAPIEdgeKey(sourceType.value, blPred, targetType.value)
               //FIXME add relation CURIE here?
-              trapiEdge = TRAPIEdge(blPred, None, sourceType, targetType, Some(attributes))
+              trapiEdge = TRAPIEdge(blPred, sourceType, targetType, Some(attributes))
             } yield trapiEdgeKey -> trapiEdge
           }
         } yield edges.toList

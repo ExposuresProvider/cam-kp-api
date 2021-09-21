@@ -45,7 +45,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     testM("test QueryService.enforceQueryEdgeTypes") {
       val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("Gene"))), None)
       val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
-      val e0Edge = TRAPIQueryEdge(None, None, "n1", "n0", None)
+      val e0Edge = TRAPIQueryEdge(None, "n1", "n0", None)
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       for {
         nodeTypes <- ZIO.effect(QueryService.enforceQueryEdgeTypes(queryGraph, List(BiolinkPredicate("related_to"))))
@@ -69,7 +69,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   def getSimpleData: (TRAPIQueryGraph, ResultSet) = {
     val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("Gene"))), None)
     val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
-    val e0Edge = TRAPIQueryEdge(None, None, "n1", "n0", None)
+    val e0Edge = TRAPIQueryEdge(None, "n1", "n0", None)
     val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
 
     val response = """{
