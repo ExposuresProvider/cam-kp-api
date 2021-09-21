@@ -91,13 +91,12 @@ object QueryService extends LazyLogging {
               edge = TRAPIEdge(predBLTermOpt, triple.subj, triple.obj, None)
             } yield key -> edge
           }.toMap
-        } yield {
-          initialKGNodes ++ extraKGNodes
-          initialKGEdges ++ extraKGEdges
-        }
+          _ = initialKGNodes ++ extraKGNodes
+          _ = initialKGEdges ++ extraKGEdges
+        } yield ()
       )
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
-    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes.toMap, initialKGEdges.toMap)), Some(results.distinct))
+    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes, initialKGEdges)), Some(results.distinct))
 
   def findInitialQuerySolutions(queryGraph: TRAPIQueryGraph,
                                 predicatesToRelations: Map[BiolinkPredicate, Set[IRI]],
