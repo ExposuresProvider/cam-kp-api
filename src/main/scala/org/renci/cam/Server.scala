@@ -12,7 +12,7 @@ import org.http4s.headers.Location
 import org.http4s.implicits._
 import org.http4s.server.Router
 import org.http4s.server.blaze.BlazeServerBuilder
-import org.http4s.server.middleware.{Logger, _}
+import org.http4s.server.middleware._
 import org.renci.cam.Biolink._
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain._
@@ -25,7 +25,7 @@ import sttp.tapir.ztapir._
 import zio._
 import zio.blocking.Blocking
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{getConfig, ZConfig}
+import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 
@@ -50,8 +50,8 @@ object Server extends App with LazyLogging {
       .out(
         {
 
-          implicit val iriKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder
-          implicit val iriKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
+          implicit val bcKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
+          implicit val bcKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder
 
           implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
           implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
@@ -95,7 +95,7 @@ object Server extends App with LazyLogging {
       val example = {
         val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
         val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
-        val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), None, "n1", "n0", None)
+        val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), "n1", "n0", None)
         val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         TRAPIQuery(message, None)
@@ -103,7 +103,7 @@ object Server extends App with LazyLogging {
 
       endpoint.post
         .in("query")
-        .in(query[Option[Int]]("limit").and(query[Option[Boolean]]("include_extra_edges")))
+        .in(query[Option[Int]]("limit").example(Some(10)).and(query[Option[Boolean]]("include_extra_edges").example(Some(false))))
         .in(jsonBody[TRAPIQuery].example(example))
         .errorOut(stringBody)
         .out(jsonBody[TRAPIResponse])
