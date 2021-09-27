@@ -6,6 +6,7 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.yaml.syntax._
+import org.apache.jena.query.QuerySolution
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.Location
@@ -15,6 +16,7 @@ import org.http4s.server.blaze.BlazeServerBuilder
 import org.http4s.server.middleware._
 import org.renci.cam.Biolink._
 import org.renci.cam.HttpClient.HttpClient
+import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
 import sttp.tapir.json.circe._
@@ -24,6 +26,7 @@ import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.ztapir._
 import zio._
 import zio.blocking.Blocking
+import zio.cache.Cache
 import zio.config.typesafe.TypesafeConfig
 import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
@@ -112,7 +115,7 @@ object Server extends App with LazyLogging {
   }
 
   def queryRouteR(queryEndpoint: ZEndpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse])
-    : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
+    : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], HttpRoutes[Task]] =
     queryEndpoint.toRoutesR { case (limit, includeExtraEdges, body) =>
       val program = for {
         queryGraph <-
@@ -135,7 +138,7 @@ object Server extends App with LazyLogging {
     Some(License("MIT License", Some("https://opensource.org/licenses/MIT")))
   )
 
-  val server: RIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData], Unit] =
+  val server: RIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData] with Has[SPARQLCache], Unit] =
     ZIO.runtime[Any].flatMap { implicit runtime =>
       for {
         appConfig <- getConfig[AppConfig]
@@ -149,7 +152,7 @@ object Server extends App with LazyLogging {
           .toOpenAPI("CAM-KP API", "0.1")
           .copy(info = openAPIInfo)
           .copy(tags = List(sttp.tapir.openapi.Tag("translator"), sttp.tapir.openapi.Tag("trapi")))
-          .servers(List(sttp.tapir.openapi.Server(s"${appConfig.location}/${appConfig.trapiVersion}")))
+          //.servers(List(sttp.tapir.openapi.Server(s"${appConfig.location}/${appConfig.trapiVersion}")))
           .toYaml
         openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
         info: String =
@@ -189,8 +192,8 @@ object Server extends App with LazyLogging {
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
   override def run(args: List[String]): ZIO[ZEnv, Nothing, ExitCode] = {
-    val appLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer ++ configLayer ++ Blocking.live
-    server.provideLayer(appLayer).exitCode
+    val appLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
+    server.provideCustomLayer(appLayer).exitCode
   }
 
   // hack using SwaggerHttp4s code to handle running in subdirectory
