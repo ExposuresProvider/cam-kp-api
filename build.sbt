@@ -28,6 +28,7 @@ coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci
 
 val zioVersion = "1.0.9"
 val zioConfigVersion = "1.0.0-RC29-1"
+val zioCacheVersion = "0.1.0"
 val tapirVersion = "0.16.16"
 val http4sVersion = "0.21.25"
 val circeVersion = "0.14.1"
@@ -42,6 +43,7 @@ libraryDependencies ++= {
     "dev.zio"                     %% "zio-config"                     % zioConfigVersion,
     "dev.zio"                     %% "zio-config-magnolia"            % zioConfigVersion,
     "dev.zio"                     %% "zio-config-typesafe"            % zioConfigVersion,
+    "dev.zio"                     %% "zio-cache"                      % zioCacheVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-core"                     % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio"                      % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server"        % tapirVersion,

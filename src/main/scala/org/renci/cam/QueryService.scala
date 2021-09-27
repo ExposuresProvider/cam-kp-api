@@ -7,6 +7,7 @@ import org.apache.jena.query.QuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation._
 import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
+import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain._
 import zio.config.{ZConfig, getConfig}
@@ -56,7 +57,7 @@ object QueryService extends LazyLogging {
 
   def run(limit: Int,
           includeExtraEdges: Boolean,
-          submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], TRAPIMessage] =
+          submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
     for {
       biolinkData <- biolinkData
       _ = logger.debug("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
@@ -103,11 +104,11 @@ object QueryService extends LazyLogging {
                                 limit: Int): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, List[QuerySolution]] = {
     val queryEdgeSparql = queryGraph.edges.map { case (queryEdgeID, queryEdge) =>
       val relationsForEdge = queryEdge.predicates.getOrElse(Nil).flatMap(predicatesToRelations.getOrElse(_, Set.empty)).to(Set)
-      val predicatesQueryText = relationsForEdge.map(rel => sparql" $rel ").fold(sparql"")(_ + _)
+      val predicatesQueryText = relationsForEdge.asSPARQLList
       val edgeIDVar = Var(queryEdgeID)
       val edgeSourceVar = Var(queryEdge.subject)
       val edgeTargetVar = Var(queryEdge.`object`)
-      val predicatesValuesClause = sparql""" VALUES $edgeIDVar { $predicatesQueryText } """
+      val predicatesValuesClause = sparql""" FILTER( $edgeIDVar IN ( $predicatesQueryText ) )"""
       val subjectNode = queryGraph.nodes(queryEdge.subject)
       val subjectNodeValuesClauses = getNodeValuesClauses(subjectNode.ids, subjectNode.categories, edgeSourceVar)
       val objectNode = queryGraph.nodes(queryEdge.`object`)
@@ -417,7 +418,7 @@ object QueryService extends LazyLogging {
   }
 
   def mapQueryBiolinkPredicatesToRelations(
-    predicates: Set[BiolinkPredicate]): RIO[ZConfig[AppConfig] with HttpClient, Map[BiolinkPredicate, Set[IRI]]] = {
+    predicates: Set[BiolinkPredicate]): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], Map[BiolinkPredicate, Set[IRI]]] = {
     final case class Predicate(biolinkPredicate: BiolinkPredicate, predicate: IRI)
     val queryText = sparql"""
         SELECT DISTINCT ?biolinkPredicate ?predicate WHERE {
@@ -427,7 +428,7 @@ object QueryService extends LazyLogging {
           <http://www.bigdata.com/queryHints#Query> <http://www.bigdata.com/queryHints#filterExists> "SubQueryLimitOne"
         }"""
     for {
-      predicates <- SPARQLQueryExecutor.runSelectQueryAs[Predicate](queryText.toQuery)
+      predicates <- SPARQLQueryExecutor.runSelectQueryWithCacheAs[Predicate](queryText.toQuery)
     } yield predicates.to(Set).groupMap(_.biolinkPredicate)(_.predicate)
   }
 
