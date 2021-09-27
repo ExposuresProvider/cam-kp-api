@@ -108,7 +108,6 @@ package object domain {
   final case class TRAPIQueryNode(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], is_set: Option[Boolean])
 
   final case class TRAPIQueryEdge(predicates: Option[List[BiolinkPredicate]],
-                                  relation: Option[String],
                                   subject: String,
                                   `object`: String,
                                   constraints: Option[List[TRAPIQueryConstraint]])
@@ -125,11 +124,7 @@ package object domain {
 
   final case class TRAPINode(name: Option[String], categories: Option[List[BiolinkClass]], attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPIEdge(predicate: Option[BiolinkPredicate],
-                             relation: Option[String],
-                             subject: IRI,
-                             `object`: IRI,
-                             attributes: Option[List[TRAPIAttribute]])
+  final case class TRAPIEdge(predicate: Option[BiolinkPredicate], subject: IRI, `object`: IRI, attributes: Option[List[TRAPIAttribute]])
 
   final case class TRAPIAttribute(attribute_source: Option[String],
                                   attribute_type_id: IRI,
@@ -137,7 +132,16 @@ package object domain {
                                   value: List[String],
                                   value_type_id: Option[IRI],
                                   value_url: Option[String],
-                                  description: Option[String])
+                                  description: Option[String],
+                                  attributes: Option[List[TRAPISubAttribute]])
+
+  final case class TRAPISubAttribute(attribute_source: Option[String],
+                                     attribute_type_id: IRI,
+                                     original_attribute_name: Option[String],
+                                     value: List[String],
+                                     value_type_id: Option[IRI],
+                                     value_url: Option[String],
+                                     description: Option[String])
 
   final case class TRAPIKnowledgeGraph(nodes: Map[IRI, TRAPINode], edges: Map[String, TRAPIEdge])
 
@@ -157,8 +161,20 @@ package object domain {
 
   final case class LogEntry(timestamp: Option[String], level: Option[String], code: Option[String], message: Option[String])
 
-  final case class MetaEdge(subject: BiolinkClass, predicate: BiolinkPredicate, `object`: BiolinkClass, relations: Option[List[String]])
+  final case class MetaNode(id_prefixes: List[String], attributes: Option[List[MetaAttribute]])
 
-  final case class MetaKnowledgeGraph(nodes: Map[BiolinkClass, Map[String, List[String]]], edges: List[MetaEdge])
+  final case class MetaEdge(subject: BiolinkClass,
+                            predicate: BiolinkPredicate,
+                            `object`: BiolinkClass,
+                            attributes: Option[List[MetaAttribute]])
+
+  final case class MetaAttribute(attribute_type_id: IRI,
+                                 attribute_source: Option[String],
+                                 original_attribute_names: Option[List[String]],
+                                 constraint_use: Option[Boolean],
+                                 constraint_name: Option[String])
+
+//  final case class MetaKnowledgeGraph(nodes: Map[BiolinkClass, Map[String, List[String]]], edges: List[MetaEdge])
+  final case class MetaKnowledgeGraph(nodes: Map[BiolinkClass, MetaNode], edges: List[MetaEdge])
 
 }

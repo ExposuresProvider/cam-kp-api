@@ -1,5 +1,6 @@
 package org.renci.cam.test
 
+import io.circe.{Encoder, KeyEncoder}
 import io.circe.syntax._
 import org.renci.cam.Implicits
 import org.renci.cam.domain._
