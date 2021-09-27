@@ -9,14 +9,18 @@ import org.http4s.implicits._
 import org.phenoscape.sparql.FromQuerySolution
 import org.renci.cam.HttpClient.HttpClient
 import zio.ZIO.ZIOAutoCloseableOps
+import zio.cache.{Cache, Lookup}
 import zio.config.ZConfig
+import zio.duration.durationInt
 import zio.interop.catz._
-import zio.{RIO, Task, ZIO, config => _}
+import zio.{Has, RIO, Task, URIO, ZIO, config => _}
 
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters._
 
 object SPARQLQueryExecutor extends LazyLogging {
+
+  type SPARQLCache = Cache[Query, Throwable, List[QuerySolution]]
 
   implicit val jsonDecoder: EntityDecoder[Task, ResultSet] =
     EntityDecoder.decodeBy(mediaType"application/sparql-results+json") { media =>
@@ -50,5 +54,21 @@ object SPARQLQueryExecutor extends LazyLogging {
       request = Request[Task](Method.POST, uri).withEntity(query)
       response <- client.expect[ResultSet](request)
     } yield response.asScala.toList
+
+  def runSelectQueryWithCacheAs[T: FromQuerySolution](query: Query): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], List[T]] =
+    for {
+      cache <- ZIO.service[SPARQLCache]
+      resultSet <- cache.get(query)
+      results = resultSet.map(FromQuerySolution.mapSolution[T])
+      validResults <- ZIO.foreach(results)(ZIO.fromTry(_))
+    } yield validResults
+
+  def runSelectQueryWithCache(query: Query): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], List[QuerySolution]] =
+    for {
+    cache <- ZIO.service[SPARQLCache]
+    result <- cache.get(query)
+    } yield result
+
+  def makeCache: URIO[ZConfig[AppConfig] with HttpClient, Cache[Query, Throwable, List[QuerySolution]]] = Cache.make(50, 20.days, Lookup(runSelectQuery))
 
 }
