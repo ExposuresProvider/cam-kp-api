@@ -1,0 +1,1100 @@
+<html>
+      <head>
+        <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
+        <title id="title">
+          org/renci/cam/MetaKnowledgeGraphService.scala.html
+        </title>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.2/jquery.min.js"></script><link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/css/theme.default.min.css" type="text/css"/><script src="https://cdnjs.cloudflare.com/ajax/libs/jquery.tablesorter/2.20.1/js/jquery.tablesorter.min.js"></script><link rel="stylesheet" href="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/css/bootstrap.min.css" type="text/css"/><script src="https://netdna.bootstrapcdn.com/bootstrap/3.0.3/js/bootstrap.min.js"></script><script type="text/javascript">
+        $(document).ready(function() {$(".tablesorter").tablesorter();});
+      </script>
+        <style>
+          table.codegrid { font-family: monospace; font-size: 12px; width: auto!important; }table.statementlist { width: auto!important; font-size: 13px; } table.codegrid td { padding: 0!important; border: 0!important } table td.linenumber { width: 40px!important; } 
+        </style>
+      </head>
+      <body style="font-family: monospace;">
+        <ul class="nav nav-tabs">
+          <li>
+            <a href="#codegrid" data-toggle="tab">Codegrid</a>
+          </li>
+          <li>
+            <a href="#statementlist" data-toggle="tab">Statement List</a>
+          </li>
+        </ul>
+        <div class="tab-content">
+          <div class="tab-pane active" id="codegrid">
+            <pre style='font-size: 12pt; font-family: courier, monospace;'>1 <span style=''>package org.renci.cam
+</span>2 <span style=''>
+</span>3 <span style=''>import com.typesafe.scalalogging.LazyLogging
+</span>4 <span style=''>import org.apache.commons.csv.CSVFormat
+</span>5 <span style=''>import org.renci.cam.Biolink.BiolinkData
+</span>6 <span style=''>import org.renci.cam.HttpClient.HttpClient
+</span>7 <span style=''>import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, MetaEdge, MetaKnowledgeGraph, MetaNode}
+</span>8 <span style=''>import zio.ZIO.ZIOAutoCloseableOps
+</span>9 <span style=''>import zio._
+</span>10 <span style=''>import zio.blocking._
+</span>11 <span style=''>import zio.config.ZConfig
+</span>12 <span style=''>
+</span>13 <span style=''>import java.io.StringReader
+</span>14 <span style=''>import java.nio.charset.StandardCharsets
+</span>15 <span style=''>import scala.io.Source
+</span>16 <span style=''>import scala.jdk.CollectionConverters._
+</span>17 <span style=''>
+</span>18 <span style=''>object MetaKnowledgeGraphService extends LazyLogging {
+</span>19 <span style=''>
+</span>20 <span style=''>  def run: RIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData], MetaKnowledgeGraph] = </span><span style='background: #F0ADAD'>getMetaKnowledgeGraph</span><span style=''>
+</span>21 <span style=''>
+</span>22 <span style=''>  def getMetaKnowledgeGraph: ZIO[Blocking with HttpClient with Has[BiolinkData], Throwable, MetaKnowledgeGraph] = </span><span style='background: #F0ADAD'>for {
+</span>23 <span style=''></span><span style='background: #F0ADAD'>    metaNodes &lt;- getNodes
+</span>24 <span style=''></span><span style='background: #F0ADAD'>    metaEdges &lt;- getEdges
+</span>25 <span style=''></span><span style='background: #F0ADAD'>  } yield MetaKnowledgeGraph(metaNodes, metaEdges)</span><span style=''>
+</span>26 <span style=''>
+</span>27 <span style=''>  def getEdges: ZIO[Blocking, Throwable, List[MetaEdge]] = </span><span style='background: #AEF1AE'>for {
+</span>28 <span style=''></span><span style='background: #AEF1AE'>    predicates &lt;- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream(&quot;/predicates.csv&quot;), StandardCharsets.UTF_8.name()))
+</span>29 <span style=''></span><span style='background: #AEF1AE'>      .bracketAuto { source =&gt;
+</span>30 <span style=''></span><span style='background: #AEF1AE'>        effectBlockingIO(source.getLines().mkString(&quot;\n&quot;))
+</span>31 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>32 <span style=''></span><span style='background: #AEF1AE'>    predicateRecords &lt;- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(predicates)).getRecords)
+</span>33 <span style=''></span><span style='background: #AEF1AE'>    metaEdges = predicateRecords.asScala
+</span>34 <span style=''></span><span style='background: #AEF1AE'>      .map(a =&gt; MetaEdge(BiolinkClass(a.get(0)), BiolinkPredicate(a.get(1)), BiolinkClass(a.get(2)), None))
+</span>35 <span style=''></span><span style='background: #AEF1AE'>      .toList
+</span>36 <span style=''></span><span style='background: #AEF1AE'>  } yield metaEdges</span><span style=''>
+</span>37 <span style=''>
+</span>38 <span style=''>  def getNodes: ZIO[Blocking, Throwable, Map[BiolinkClass, MetaNode]] = </span><span style='background: #AEF1AE'>for {
+</span>39 <span style=''></span><span style='background: #AEF1AE'>    mkgNodesData &lt;- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream(&quot;/mkg-nodes.csv&quot;), StandardCharsets.UTF_8.name()))
+</span>40 <span style=''></span><span style='background: #AEF1AE'>      .bracketAuto { source =&gt;
+</span>41 <span style=''></span><span style='background: #AEF1AE'>        effectBlockingIO(source.getLines().mkString(&quot;\n&quot;))
+</span>42 <span style=''></span><span style='background: #AEF1AE'>      }
+</span>43 <span style=''></span><span style='background: #AEF1AE'>    mkgNodeRecords &lt;- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(mkgNodesData)).getRecords)
+</span>44 <span style=''></span><span style='background: #AEF1AE'>    attributes = None //attributes: Option[List[MetaAttribute]]
+</span>45 <span style=''></span><span style='background: #AEF1AE'>    metaNodes = mkgNodeRecords.asScala
+</span>46 <span style=''></span><span style='background: #AEF1AE'>      .groupBy(a =&gt; BiolinkClass(a.get(0)))
+</span>47 <span style=''></span><span style='background: #AEF1AE'>      .view
+</span>48 <span style=''></span><span style='background: #AEF1AE'>      .mapValues(a =&gt; MetaNode(a.groupBy(b =&gt; b.get(2)).keys.toList, attributes))
+</span>49 <span style=''></span><span style='background: #AEF1AE'>      .toMap
+</span>50 <span style=''></span><span style='background: #AEF1AE'>  } yield metaNodes</span><span style=''>
+</span>51 <span style=''>
+</span>52 <span style=''>}
+</span></pre>
+          </div>
+          <div class="tab-pane" id="statementlist">
+            <table cellspacing="0" cellpadding="0" class="table statementlist">
+      <tr>
+        <th>Line</th>
+        <th>Stmt Id</th>
+        <th>Pos</th>
+        <th>Tree</th>
+        <th>Symbol</th>
+        <th>Tests</th>
+        <th>Code</th>
+      </tr><tr>
+        <td>
+          20
+        </td>
+        <td>
+          87
+        </td>
+        <td>
+          688
+          -
+          709
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          org.renci.cam.MetaKnowledgeGraphService.getMetaKnowledgeGraph
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          MetaKnowledgeGraphService.this.getMetaKnowledgeGraph
+        </td>
+      </tr><tr>
+        <td>
+          23
+        </td>
+        <td>
+          90
+        </td>
+        <td>
+          825
+          -
+          933
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.flatMap
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          MetaKnowledgeGraphService.this.getNodes.flatMap[zio.blocking.Blocking, Throwable, org.renci.cam.domain.MetaKnowledgeGraph](((metaNodes: Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]) =&gt; MetaKnowledgeGraphService.this.getEdges.map[org.renci.cam.domain.MetaKnowledgeGraph](((metaEdges: List[org.renci.cam.domain.MetaEdge]) =&gt; org.renci.cam.domain.`package`.MetaKnowledgeGraph.apply(metaNodes, metaEdges)))))
+        </td>
+      </tr><tr>
+        <td>
+          24
+        </td>
+        <td>
+          89
+        </td>
+        <td>
+          861
+          -
+          933
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.map
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          MetaKnowledgeGraphService.this.getEdges.map[org.renci.cam.domain.MetaKnowledgeGraph](((metaEdges: List[org.renci.cam.domain.MetaEdge]) =&gt; org.renci.cam.domain.`package`.MetaKnowledgeGraph.apply(metaNodes, metaEdges)))
+        </td>
+      </tr><tr>
+        <td>
+          25
+        </td>
+        <td>
+          88
+        </td>
+        <td>
+          893
+          -
+          933
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.MetaKnowledgeGraph.apply
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #F0ADAD">
+          org.renci.cam.domain.`package`.MetaKnowledgeGraph.apply(metaNodes, metaEdges)
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          92
+        </td>
+        <td>
+          1107
+          -
+          1136
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.nio.charset.Charset.name
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          java.nio.charset.StandardCharsets.UTF_8.name()
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          109
+        </td>
+        <td>
+          994
+          -
+          1521
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.flatMap
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          zio.ZIO.ZIOAutoCloseableOps[zio.blocking.Blocking, java.io.IOException, scala.io.BufferedSource](zio.blocking.`package`.effectBlockingIO[scala.io.BufferedSource](scala.io.Source.fromInputStream(MetaKnowledgeGraphService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name()))).bracketAuto[zio.blocking.Blocking, java.io.IOException, String](((source: scala.io.BufferedSource) =&gt; zio.blocking.`package`.effectBlockingIO[String](source.getLines().mkString(&quot;\n&quot;)))).flatMap[zio.blocking.Blocking, Throwable, List[org.renci.cam.domain.MetaEdge]](((predicates: String) =&gt; zio.Task.effect[java.util.List[org.apache.commons.csv.CSVRecord]](org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(predicates)).getRecords()).map[(java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge])](((predicateRecords: java.util.List[org.apache.commons.csv.CSVRecord]) =&gt; {
+  val metaEdges: List[org.renci.cam.domain.MetaEdge] = scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](predicateRecords).asScala.map[org.renci.cam.domain.MetaEdge](((a: org.apache.commons.csv.CSVRecord) =&gt; org.renci.cam.domain.`package`.MetaEdge.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2)), scala.None))).toList;
+  scala.Tuple2.apply[java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge]](predicateRecords, metaEdges)
+})).map[List[org.renci.cam.domain.MetaEdge]](((x$1: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge])) =&gt; (x$1: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge]) @unchecked) match {
+  case (_1: java.util.List[org.apache.commons.csv.CSVRecord], _2: List[org.renci.cam.domain.MetaEdge]): (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge])((predicateRecords @ _), (metaEdges @ _)) =&gt; metaEdges
+}))))
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          91
+        </td>
+        <td>
+          1058
+          -
+          1105
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Class.getResourceAsStream
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          MetaKnowledgeGraphService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          94
+        </td>
+        <td>
+          1018
+          -
+          1138
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.blocking.effectBlockingIO
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          zio.blocking.`package`.effectBlockingIO[scala.io.BufferedSource](scala.io.Source.fromInputStream(MetaKnowledgeGraphService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name()))
+        </td>
+      </tr><tr>
+        <td>
+          28
+        </td>
+        <td>
+          93
+        </td>
+        <td>
+          1035
+          -
+          1137
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.io.Source.fromInputStream
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          scala.io.Source.fromInputStream(MetaKnowledgeGraphService.this.getClass().getResourceAsStream(&quot;/predicates.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name())
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          95
+        </td>
+        <td>
+          1195
+          -
+          1227
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.mkString
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          source.getLines().mkString(&quot;\n&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          30
+        </td>
+        <td>
+          96
+        </td>
+        <td>
+          1178
+          -
+          1228
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.blocking.effectBlockingIO
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          zio.blocking.`package`.effectBlockingIO[String](source.getLines().mkString(&quot;\n&quot;))
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          107
+        </td>
+        <td>
+          1241
+          -
+          1241
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple2.apply
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple2.apply[java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge]](predicateRecords, metaEdges)
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          97
+        </td>
+        <td>
+          1273
+          -
+          1337
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVParser.getRecords
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(predicates)).getRecords()
+        </td>
+      </tr><tr>
+        <td>
+          32
+        </td>
+        <td>
+          108
+        </td>
+        <td>
+          1241
+          -
+          1521
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.map
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          zio.Task.effect[java.util.List[org.apache.commons.csv.CSVRecord]](org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(predicates)).getRecords()).map[(java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge])](((predicateRecords: java.util.List[org.apache.commons.csv.CSVRecord]) =&gt; {
+  val metaEdges: List[org.renci.cam.domain.MetaEdge] = scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](predicateRecords).asScala.map[org.renci.cam.domain.MetaEdge](((a: org.apache.commons.csv.CSVRecord) =&gt; org.renci.cam.domain.`package`.MetaEdge.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2)), scala.None))).toList;
+  scala.Tuple2.apply[java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge]](predicateRecords, metaEdges)
+})).map[List[org.renci.cam.domain.MetaEdge]](((x$1: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge])) =&gt; (x$1: (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge]) @unchecked) match {
+  case (_1: java.util.List[org.apache.commons.csv.CSVRecord], _2: List[org.renci.cam.domain.MetaEdge]): (java.util.List[org.apache.commons.csv.CSVRecord], List[org.renci.cam.domain.MetaEdge])((predicateRecords @ _), (metaEdges @ _)) =&gt; metaEdges
+}))
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          101
+        </td>
+        <td>
+          1429
+          -
+          1455
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.BiolinkPredicate.apply
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1))
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          104
+        </td>
+        <td>
+          1481
+          -
+          1485
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          98
+        </td>
+        <td>
+          1418
+          -
+          1426
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVRecord.get
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          a.get(0)
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          100
+        </td>
+        <td>
+          1446
+          -
+          1454
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVRecord.get
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          a.get(1)
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          103
+        </td>
+        <td>
+          1457
+          -
+          1479
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.BiolinkClass.apply
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2))
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          105
+        </td>
+        <td>
+          1396
+          -
+          1486
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.MetaEdge.apply
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          org.renci.cam.domain.`package`.MetaEdge.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2)), scala.None)
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          99
+        </td>
+        <td>
+          1405
+          -
+          1427
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.BiolinkClass.apply
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0))
+        </td>
+      </tr><tr>
+        <td>
+          34
+        </td>
+        <td>
+          102
+        </td>
+        <td>
+          1470
+          -
+          1478
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVRecord.get
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          a.get(2)
+        </td>
+      </tr><tr>
+        <td>
+          35
+        </td>
+        <td>
+          106
+        </td>
+        <td>
+          1355
+          -
+          1501
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.toList
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](predicateRecords).asScala.map[org.renci.cam.domain.MetaEdge](((a: org.apache.commons.csv.CSVRecord) =&gt; org.renci.cam.domain.`package`.MetaEdge.apply(org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)), org.renci.cam.domain.`package`.BiolinkPredicate.apply(a.get(1)), org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(2)), scala.None))).toList
+        </td>
+      </tr><tr>
+        <td>
+          39
+        </td>
+        <td>
+          110
+        </td>
+        <td>
+          1661
+          -
+          1707
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.lang.Class.getResourceAsStream
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          MetaKnowledgeGraphService.this.getClass().getResourceAsStream(&quot;/mkg-nodes.csv&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          39
+        </td>
+        <td>
+          113
+        </td>
+        <td>
+          1621
+          -
+          1740
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.blocking.effectBlockingIO
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          zio.blocking.`package`.effectBlockingIO[scala.io.BufferedSource](scala.io.Source.fromInputStream(MetaKnowledgeGraphService.this.getClass().getResourceAsStream(&quot;/mkg-nodes.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name()))
+        </td>
+      </tr><tr>
+        <td>
+          39
+        </td>
+        <td>
+          127
+        </td>
+        <td>
+          1595
+          -
+          2214
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.flatMap
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          zio.ZIO.ZIOAutoCloseableOps[zio.blocking.Blocking, java.io.IOException, scala.io.BufferedSource](zio.blocking.`package`.effectBlockingIO[scala.io.BufferedSource](scala.io.Source.fromInputStream(MetaKnowledgeGraphService.this.getClass().getResourceAsStream(&quot;/mkg-nodes.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name()))).bracketAuto[zio.blocking.Blocking, java.io.IOException, String](((source: scala.io.BufferedSource) =&gt; zio.blocking.`package`.effectBlockingIO[String](source.getLines().mkString(&quot;\n&quot;)))).flatMap[zio.blocking.Blocking, Throwable, Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]](((mkgNodesData: String) =&gt; zio.Task.effect[java.util.List[org.apache.commons.csv.CSVRecord]](org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(mkgNodesData)).getRecords()).map[(java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode])](((mkgNodeRecords: java.util.List[org.apache.commons.csv.CSVRecord]) =&gt; {
+  val attributes: None.type = scala.None;
+  val metaNodes: scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode] = scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](mkgNodeRecords).asScala.groupBy[org.renci.cam.domain.BiolinkClass](((a: org.apache.commons.csv.CSVRecord) =&gt; org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)))).view.mapValues[org.renci.cam.domain.MetaNode](((a: scala.collection.mutable.Buffer[org.apache.commons.csv.CSVRecord]) =&gt; org.renci.cam.domain.`package`.MetaNode.apply(a.groupBy[String](((b: org.apache.commons.csv.CSVRecord) =&gt; b.get(2))).keys.toList, attributes))).toMap[org.renci.cam.domain.BiolinkClass, org.renci.cam.domain.MetaNode](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, org.renci.cam.domain.MetaNode)]);
+  scala.Tuple3.apply[java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]](mkgNodeRecords, attributes, metaNodes)
+})).map[Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]](((x$2: (java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode])) =&gt; (x$2: (java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]) @unchecked) match {
+  case (_1: java.util.List[org.apache.commons.csv.CSVRecord], _2: None.type, _3: scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]): (java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode])((mkgNodeRecords @ _), (attributes @ _), (metaNodes @ _)) =&gt; metaNodes
+}))))
+        </td>
+      </tr><tr>
+        <td>
+          39
+        </td>
+        <td>
+          112
+        </td>
+        <td>
+          1638
+          -
+          1739
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.io.Source.fromInputStream
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          scala.io.Source.fromInputStream(MetaKnowledgeGraphService.this.getClass().getResourceAsStream(&quot;/mkg-nodes.csv&quot;), java.nio.charset.StandardCharsets.UTF_8.name())
+        </td>
+      </tr><tr>
+        <td>
+          39
+        </td>
+        <td>
+          111
+        </td>
+        <td>
+          1709
+          -
+          1738
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          java.nio.charset.Charset.name
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          java.nio.charset.StandardCharsets.UTF_8.name()
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          115
+        </td>
+        <td>
+          1780
+          -
+          1830
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.blocking.effectBlockingIO
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          zio.blocking.`package`.effectBlockingIO[String](source.getLines().mkString(&quot;\n&quot;))
+        </td>
+      </tr><tr>
+        <td>
+          41
+        </td>
+        <td>
+          114
+        </td>
+        <td>
+          1797
+          -
+          1829
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.mkString
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          source.getLines().mkString(&quot;\n&quot;)
+        </td>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          125
+        </td>
+        <td>
+          1843
+          -
+          1843
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          scala.Tuple3.apply
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          scala.Tuple3.apply[java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]](mkgNodeRecords, attributes, metaNodes)
+        </td>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          116
+        </td>
+        <td>
+          1873
+          -
+          1939
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVParser.getRecords
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(mkgNodesData)).getRecords()
+        </td>
+      </tr><tr>
+        <td>
+          43
+        </td>
+        <td>
+          126
+        </td>
+        <td>
+          1843
+          -
+          2214
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          zio.ZIO.map
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          zio.Task.effect[java.util.List[org.apache.commons.csv.CSVRecord]](org.apache.commons.csv.CSVFormat.DEFAULT.parse(new java.io.StringReader(mkgNodesData)).getRecords()).map[(java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode])](((mkgNodeRecords: java.util.List[org.apache.commons.csv.CSVRecord]) =&gt; {
+  val attributes: None.type = scala.None;
+  val metaNodes: scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode] = scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](mkgNodeRecords).asScala.groupBy[org.renci.cam.domain.BiolinkClass](((a: org.apache.commons.csv.CSVRecord) =&gt; org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)))).view.mapValues[org.renci.cam.domain.MetaNode](((a: scala.collection.mutable.Buffer[org.apache.commons.csv.CSVRecord]) =&gt; org.renci.cam.domain.`package`.MetaNode.apply(a.groupBy[String](((b: org.apache.commons.csv.CSVRecord) =&gt; b.get(2))).keys.toList, attributes))).toMap[org.renci.cam.domain.BiolinkClass, org.renci.cam.domain.MetaNode](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, org.renci.cam.domain.MetaNode)]);
+  scala.Tuple3.apply[java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]](mkgNodeRecords, attributes, metaNodes)
+})).map[Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]](((x$2: (java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode])) =&gt; (x$2: (java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]) @unchecked) match {
+  case (_1: java.util.List[org.apache.commons.csv.CSVRecord], _2: None.type, _3: scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode]): (java.util.List[org.apache.commons.csv.CSVRecord], None.type, scala.collection.immutable.Map[org.renci.cam.domain.BiolinkClass,org.renci.cam.domain.MetaNode])((mkgNodeRecords @ _), (attributes @ _), (metaNodes @ _)) =&gt; metaNodes
+}))
+        </td>
+      </tr><tr>
+        <td>
+          44
+        </td>
+        <td>
+          117
+        </td>
+        <td>
+          1958
+          -
+          1962
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.None
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          scala.None
+        </td>
+      </tr><tr>
+        <td>
+          46
+        </td>
+        <td>
+          119
+        </td>
+        <td>
+          2064
+          -
+          2086
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.BiolinkClass.apply
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0))
+        </td>
+      </tr><tr>
+        <td>
+          46
+        </td>
+        <td>
+          118
+        </td>
+        <td>
+          2077
+          -
+          2085
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVRecord.get
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          a.get(0)
+        </td>
+      </tr><tr>
+        <td>
+          48
+        </td>
+        <td>
+          122
+        </td>
+        <td>
+          2122
+          -
+          2180
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.renci.cam.domain.MetaNode.apply
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          org.renci.cam.domain.`package`.MetaNode.apply(a.groupBy[String](((b: org.apache.commons.csv.CSVRecord) =&gt; b.get(2))).keys.toList, attributes)
+        </td>
+      </tr><tr>
+        <td>
+          48
+        </td>
+        <td>
+          121
+        </td>
+        <td>
+          2131
+          -
+          2167
+        </td>
+        <td>
+          Select
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.toList
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          a.groupBy[String](((b: org.apache.commons.csv.CSVRecord) =&gt; b.get(2))).keys.toList
+        </td>
+      </tr><tr>
+        <td>
+          48
+        </td>
+        <td>
+          120
+        </td>
+        <td>
+          2146
+          -
+          2154
+        </td>
+        <td>
+          Apply
+        </td>
+        <td>
+          org.apache.commons.csv.CSVRecord.get
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          b.get(2)
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          124
+        </td>
+        <td>
+          2021
+          -
+          2194
+        </td>
+        <td>
+          ApplyToImplicitArgs
+        </td>
+        <td>
+          scala.collection.IterableOnceOps.toMap
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          scala.jdk.CollectionConverters.ListHasAsScala[org.apache.commons.csv.CSVRecord](mkgNodeRecords).asScala.groupBy[org.renci.cam.domain.BiolinkClass](((a: org.apache.commons.csv.CSVRecord) =&gt; org.renci.cam.domain.`package`.BiolinkClass.apply(a.get(0)))).view.mapValues[org.renci.cam.domain.MetaNode](((a: scala.collection.mutable.Buffer[org.apache.commons.csv.CSVRecord]) =&gt; org.renci.cam.domain.`package`.MetaNode.apply(a.groupBy[String](((b: org.apache.commons.csv.CSVRecord) =&gt; b.get(2))).keys.toList, attributes))).toMap[org.renci.cam.domain.BiolinkClass, org.renci.cam.domain.MetaNode](scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, org.renci.cam.domain.MetaNode)])
+        </td>
+      </tr><tr>
+        <td>
+          49
+        </td>
+        <td>
+          123
+        </td>
+        <td>
+          2189
+          -
+          2189
+        </td>
+        <td>
+          TypeApply
+        </td>
+        <td>
+          scala.&lt;:&lt;.refl
+        </td>
+        <td>
+          
+        </td>
+        <td style="background: #AEF1AE">
+          scala.this.&lt;:&lt;.refl[(org.renci.cam.domain.BiolinkClass, org.renci.cam.domain.MetaNode)]
+        </td>
+      </tr>
+    </table>
+          </div>
+        </div>
+      </body>
+    </html>
