@@ -1,6 +1,7 @@
 name: Scala Integration Test CI
 
 on:
+  workflow_dispatch:
   schedule:
     - cron: "5 4 * * 3,6"
 
