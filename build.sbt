@@ -24,7 +24,7 @@ configs(IntegrationTest)
 Defaults.itSettings
 IntegrationTest / parallelExecution := false
 
-coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci\\.cam\\.Server.*;org\\.renci\\.cam\\.AppConfig.*;org\\.renci\\.cam\\.SPARQLQueryExecutor.*"
+coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci\\.cam\\.Server.*;org\\.renci\\.cam\\.Biolink.*;org\\.renci\\.cam\\.HttpClient.*;org\\.renci\\.cam\\.AppConfig.*;org\\.renci\\.cam\\.Util.*;org\\.renci\\.cam\\.util\\.UpdateBiolinkResources.*;org\\.renci\\.cam\\.SPARQLQueryExecutor.*"
 
 val zioVersion = "1.0.9"
 val zioConfigVersion = "1.0.0-RC29-1"
