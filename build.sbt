@@ -29,8 +29,8 @@ coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci
 val zioVersion = "1.0.9"
 val zioConfigVersion = "1.0.0-RC29-1"
 val zioCacheVersion = "0.1.0"
-val tapirVersion = "0.16.16"
-val http4sVersion = "0.21.25"
+val tapirVersion = "0.17.20"
+val http4sVersion = "0.21.31"
 val circeVersion = "0.14.1"
 val logbackVersion = "1.2.5"
 
