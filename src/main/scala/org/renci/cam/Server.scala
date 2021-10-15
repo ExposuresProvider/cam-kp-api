@@ -19,6 +19,7 @@ import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.domain._
 import sttp.tapir.docs.openapi._
+import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.openapi.{Contact, Info, License}
@@ -148,10 +149,9 @@ object Server extends App with LazyLogging {
         queryEndpoint <- queryEndpointZ
         queryRoute <- queryRouteR(queryEndpoint)
         routes = queryRoute <+> metaKnowledgeGraphRoute
-        openAPI: String = List(queryEndpoint, metaKnowledgeGraphEndpoint)
-          .toOpenAPI("CAM-KP API", "0.1")
+        openAPI: String = OpenAPIDocsInterpreter.toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", "0.1")
           .copy(info = openAPIInfo)
-          .copy(tags = List(sttp.tapir.openapi.Tag("translator"), sttp.tapir.openapi.Tag("trapi")))
+          .copy(tags = List(sttp.tapir.apispec.Tag("translator"), sttp.tapir.apispec.Tag("trapi")))
           .servers(List(sttp.tapir.openapi.Server(s"${appConfig.location}/${appConfig.trapiVersion}")))
           .toYaml
         openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
