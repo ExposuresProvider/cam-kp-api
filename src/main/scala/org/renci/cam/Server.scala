@@ -6,11 +6,9 @@ import io.circe._
 import io.circe.generic.auto._
 import io.circe.yaml.syntax._
 import org.http4s._
-import org.http4s.dsl.Http4sDsl
-import org.http4s.headers.Location
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.implicits._
 import org.http4s.server.Router
-import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.middleware._
 import org.renci.cam.Biolink._
 import org.renci.cam.HttpClient.HttpClient
@@ -20,28 +18,24 @@ import sttp.tapir.Endpoint
 import sttp.tapir.docs.openapi._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
-import sttp.tapir.json.circe.circeCodec
 import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.openapi.{Contact, Info, License}
-import sttp.tapir.server.http4s.ztapir._
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
+import sttp.tapir.swagger.SwaggerUI
 import sttp.tapir.ztapir._
-import sttp.tapir.generic.auto._
 import zio._
 import zio.blocking.Blocking
-import zio.config.typesafe.TypesafeConfig
-import zio.config.{ZConfig, getConfig}
-import zio.interop.catz._
-import zio.interop.catz.implicits._
 import zio.clock.Clock
+import zio.config.typesafe.TypesafeConfig
+import zio.config.{getConfig, ZConfig}
+import zio.interop.catz._
 
 import java.util.Properties
 import scala.concurrent.duration._
-import sttp.tapir.swagger.SwaggerUI
 
 object Server extends App with LazyLogging {
 
-  type EndpointEnv = ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData] with Has[SPARQLCache] with Clock
+  type EndpointEnv = ZConfig[AppConfig] with Clock with Blocking with HttpClient with Has[BiolinkData] with Has[SPARQLCache]
 
   object LocalTapirJsonCirce extends TapirJsonCirce {
     override def jsonPrinter: Printer = Printer.noSpaces.copy(dropNullValues = true)
@@ -75,13 +69,16 @@ object Server extends App with LazyLogging {
       )
       .summary("Get MetaKnowledgeGraph used at this service")
 
-  def metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint: Endpoint[Unit, String, MetaKnowledgeGraph, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
-    ZHttp4sServerInterpreter[EndpointEnv]().from(metaKnowledgeGraphEndpoint) { case () =>
-      val program = for {
-        response <- MetaKnowledgeGraphService.run
-      } yield response
-      program.mapError(error => error.getMessage)
-    }.toRoutes
+  def metaKnowledgeGraphRouteR(
+    metaKnowledgeGraphEndpoint: Endpoint[Unit, String, MetaKnowledgeGraph, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
+    ZHttp4sServerInterpreter[EndpointEnv]()
+      .from(metaKnowledgeGraphEndpoint) { case () =>
+        val program = for {
+          response <- MetaKnowledgeGraphService.run
+        } yield response
+        program.mapError(error => error.getMessage)
+      }
+      .toRoutes
 
   val queryEndpointZ: URIO[Has[BiolinkData], Endpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse, Any]] = {
     for {
@@ -97,7 +94,8 @@ object Server extends App with LazyLogging {
       implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
 
       implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
-      implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] = Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
+      implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
+        Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
 
       val example = {
         val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
@@ -107,9 +105,20 @@ object Server extends App with LazyLogging {
         val message = TRAPIMessage(Some(queryGraph), None, None)
         TRAPIQuery(message, None)
       }
+
+      val defaultAndExampleLimit = Some(10)
+      val defaultAndExampleIncludeExtraEdges = Some(false)
+
       endpoint.post
         .in("query")
-        .in(query[Option[Int]]("limit").example(Some(10)).and(query[Option[Boolean]]("include_extra_edges").example(Some(false))))
+        .in(
+          query[Option[Int]]("limit")
+            .default(defaultAndExampleLimit)
+            .example(defaultAndExampleLimit)
+            .and(query[Option[Boolean]]("include_extra_edges")
+              .default(defaultAndExampleIncludeExtraEdges)
+              .example(defaultAndExampleIncludeExtraEdges))
+        )
         .in(jsonBody[TRAPIQuery].example(example))
         .errorOut(stringBody)
         .out(jsonBody[TRAPIResponse])
@@ -117,19 +126,22 @@ object Server extends App with LazyLogging {
     }
   }
 
-  def queryRouteR(queryEndpoint: Endpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
-    ZHttp4sServerInterpreter[EndpointEnv]().from(queryEndpoint) { case (limit, includeExtraEdges, body) =>
-      val program: ZIO[EndpointEnv, Throwable, TRAPIResponse] = for {
-        queryGraph <-
-          ZIO
-            .fromOption(body.message.query_graph)
-            .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
-        limitValue <- ZIO.fromOption(limit).orElse(ZIO.effect(1000))
-        includeExtraEdgesValue <- ZIO.fromOption(includeExtraEdges).orElse(ZIO.effect(false))
-        message <- QueryService.run(limitValue, includeExtraEdgesValue, queryGraph)
-      } yield TRAPIResponse(message, Some("Success"), None, None)
-      program.mapError(error => error.getMessage)
-    }.toRoutes
+  def queryRouteR(
+    queryEndpoint: Endpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
+    ZHttp4sServerInterpreter[EndpointEnv]()
+      .from(queryEndpoint) { case (limit, includeExtraEdges, body) =>
+        val program: ZIO[EndpointEnv, Throwable, TRAPIResponse] = for {
+          queryGraph <-
+            ZIO
+              .fromOption(body.message.query_graph)
+              .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
+          limitValue <- ZIO.fromOption(limit).orElse(ZIO.effect(1000))
+          includeExtraEdgesValue <- ZIO.fromOption(includeExtraEdges).orElse(ZIO.effect(false))
+          message <- QueryService.run(limitValue, includeExtraEdgesValue, queryGraph)
+        } yield TRAPIResponse(message, Some("Success"), None, None)
+        program.mapError(error => error.getMessage)
+      }
+      .toRoutes
 
   val openAPIInfo: Info = Info(
     "CAM-KP API",
@@ -150,7 +162,8 @@ object Server extends App with LazyLogging {
         queryEndpoint <- queryEndpointZ
         queryRoute = queryRouteR(queryEndpoint)
         routes = queryRoute <+> metaKnowledgeGraphRoute
-        openAPI: String = OpenAPIDocsInterpreter().toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", "0.1")
+        openAPI: String = OpenAPIDocsInterpreter()
+          .toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", "0.1")
           .copy(info = openAPIInfo)
           .copy(tags = List(sttp.tapir.apispec.Tag("translator"), sttp.tapir.apispec.Tag("trapi")))
           .servers(List(sttp.tapir.openapi.Server(s"${appConfig.location}/${appConfig.trapiVersion}")))
@@ -180,7 +193,9 @@ object Server extends App with LazyLogging {
         result <-
           BlazeServerBuilder[RIO[EndpointEnv, *]](runtime.platform.executor.asEC)
             .bindHttp(appConfig.port, appConfig.host)
-            .withHttpApp(CORS(httpAppWithLogging))
+            .withHttpApp(CORS.policy.withAllowOriginAll
+              .withAllowCredentials(false)
+              .apply(httpAppWithLogging))
             .withResponseHeaderTimeout(120.seconds)
             .withIdleTimeout(180.seconds)
             .serve
