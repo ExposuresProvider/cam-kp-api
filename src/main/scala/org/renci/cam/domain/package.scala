@@ -8,6 +8,8 @@ import org.apache.jena.sparql.core.{Var => JenaVar}
 import org.phenoscape.sparql.FromQuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator.SPARQLContext
+import sttp.tapir.Schema
+import sttp.tapir.generic.auto._
 
 import scala.util.Try
 
@@ -29,6 +31,8 @@ package object domain {
         getResource(qs, variablePath).map(r => IRI(r.getURI))
 
     }
+
+    implicit val schema: Schema[IRI] = Schema.string
 
   }
 
@@ -62,6 +66,8 @@ package object domain {
       } else {
         BiolinkClass(label, IRI(s"${BiolinkTerm.namespace}${StringUtils.capitalize(label)}"))
       }
+
+    implicit lazy val schema: Typeclass[BiolinkClass] = Schema.string
 
   }
 
@@ -145,6 +151,15 @@ package object domain {
 
   final case class TRAPIKnowledgeGraph(nodes: Map[IRI, TRAPINode], edges: Map[String, TRAPIEdge])
 
+  object TRAPIKnowledgeGraph {
+
+    //FIXME IRI needs to be shortened
+    implicit lazy val nodesSchema: Schema[Map[IRI, TRAPINode]] = Schema.schemaForMap(_.value)
+
+    implicit lazy val schema: Schema[TRAPIKnowledgeGraph] = Schema.derived
+
+  }
+
   final case class TRAPINodeBinding(id: IRI)
 
   final case class TRAPIEdgeBinding(id: String)
@@ -176,5 +191,13 @@ package object domain {
 
 //  final case class MetaKnowledgeGraph(nodes: Map[BiolinkClass, Map[String, List[String]]], edges: List[MetaEdge])
   final case class MetaKnowledgeGraph(nodes: Map[BiolinkClass, MetaNode], edges: List[MetaEdge])
+
+  object MetaKnowledgeGraph {
+
+     implicit lazy val nodesSchema: Schema[Map[BiolinkClass, MetaNode]] = Schema.schemaForMap(_.withBiolinkPrefix)
+
+     implicit lazy val schema: Schema[MetaKnowledgeGraph] = Schema.derived
+
+  }
 
 }

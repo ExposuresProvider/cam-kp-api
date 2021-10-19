@@ -2,6 +2,8 @@ import com.typesafe.sbt.packager.docker._
 
 enablePlugins(JavaAppPackaging, DockerPlugin, ScoverageSbtPlugin)
 
+addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
+
 organization := "org.renci"
 
 name := "cam-kp-api"
@@ -29,8 +31,8 @@ coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci
 val zioVersion = "1.0.9"
 val zioConfigVersion = "1.0.0-RC29-1"
 val zioCacheVersion = "0.1.0"
-val tapirVersion = "0.17.20"
-val http4sVersion = "0.21.31"
+val tapirVersion = "0.19.0-M12"
+val http4sVersion = "0.23.4"
 val circeVersion = "0.14.1"
 val logbackVersion = "1.2.5"
 
@@ -39,7 +41,7 @@ reStart / javaOptions += "-Xmx16G"
 libraryDependencies ++= {
   Seq(
     "dev.zio"                     %% "zio"                            % zioVersion,
-    "dev.zio"                     %% "zio-interop-cats"               % "2.5.1.0",
+    "dev.zio"                     %% "zio-interop-cats"               % "3.1.1.0",
     "dev.zio"                     %% "zio-config"                     % zioConfigVersion,
     "dev.zio"                     %% "zio-config-magnolia"            % zioConfigVersion,
     "dev.zio"                     %% "zio-config-typesafe"            % zioConfigVersion,
@@ -47,10 +49,11 @@ libraryDependencies ++= {
     "com.softwaremill.sttp.tapir" %% "tapir-core"                     % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio"                      % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-zio-http4s-server"        % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-cats"                     % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-json-circe"               % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-openapi-docs"             % tapirVersion,
     "com.softwaremill.sttp.tapir" %% "tapir-openapi-circe-yaml"       % tapirVersion,
-    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui-http4s"        % tapirVersion,
+    "com.softwaremill.sttp.tapir" %% "tapir-swagger-ui"               % tapirVersion,
     "org.http4s"                  %% "http4s-blaze-server"            % http4sVersion,
     "org.http4s"                  %% "http4s-dsl"                     % http4sVersion,
     "org.http4s"                  %% "http4s-blaze-client"            % http4sVersion,

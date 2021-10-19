@@ -1,43 +1,47 @@
 package org.renci.cam
 
-import cats.effect.Blocker
 import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.yaml.syntax._
-import org.apache.jena.query.QuerySolution
 import org.http4s._
 import org.http4s.dsl.Http4sDsl
 import org.http4s.headers.Location
 import org.http4s.implicits._
 import org.http4s.server.Router
-import org.http4s.server.blaze.BlazeServerBuilder
+import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.server.middleware._
 import org.renci.cam.Biolink._
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.domain._
+import sttp.tapir.Endpoint
 import sttp.tapir.docs.openapi._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
+import sttp.tapir.json.circe.circeCodec
 import sttp.tapir.openapi.circe.yaml._
 import sttp.tapir.openapi.{Contact, Info, License}
 import sttp.tapir.server.http4s.ztapir._
+import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.ztapir._
+import sttp.tapir.generic.auto._
 import zio._
 import zio.blocking.Blocking
-import zio.cache.Cache
 import zio.config.typesafe.TypesafeConfig
 import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
+import zio.clock.Clock
 
 import java.util.Properties
-import scala.concurrent.ExecutionContext
 import scala.concurrent.duration._
+import sttp.tapir.swagger.SwaggerUI
 
 object Server extends App with LazyLogging {
+
+  type EndpointEnv = ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData] with Has[SPARQLCache] with Clock
 
   object LocalTapirJsonCirce extends TapirJsonCirce {
     override def jsonPrinter: Printer = Printer.noSpaces.copy(dropNullValues = true)
@@ -45,7 +49,7 @@ object Server extends App with LazyLogging {
 
   import LocalTapirJsonCirce._
 
-  val metaKnowledgeGraphEndpointZ: URIO[Has[BiolinkData], ZEndpoint[Unit, String, MetaKnowledgeGraph]] =
+  val metaKnowledgeGraphEndpointZ: URIO[Has[BiolinkData], Endpoint[Unit, String, MetaKnowledgeGraph, Any]] =
     for {
       biolinkData <- biolinkData
     } yield endpoint.get
@@ -71,16 +75,15 @@ object Server extends App with LazyLogging {
       )
       .summary("Get MetaKnowledgeGraph used at this service")
 
-  def metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint: ZEndpoint[Unit, String, MetaKnowledgeGraph])
-    : URIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData], HttpRoutes[Task]] =
-    metaKnowledgeGraphEndpoint.toRoutesR { case () =>
+  def metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint: Endpoint[Unit, String, MetaKnowledgeGraph, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
+    ZHttp4sServerInterpreter[EndpointEnv]().from(metaKnowledgeGraphEndpoint) { case () =>
       val program = for {
         response <- MetaKnowledgeGraphService.run
       } yield response
       program.mapError(error => error.getMessage)
-    }
+    }.toRoutes
 
-  val queryEndpointZ: URIO[Has[BiolinkData], ZEndpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse]] = {
+  val queryEndpointZ: URIO[Has[BiolinkData], Endpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse, Any]] = {
     for {
       biolinkData <- biolinkData
     } yield {
@@ -104,7 +107,6 @@ object Server extends App with LazyLogging {
         val message = TRAPIMessage(Some(queryGraph), None, None)
         TRAPIQuery(message, None)
       }
-
       endpoint.post
         .in("query")
         .in(query[Option[Int]]("limit").example(Some(10)).and(query[Option[Boolean]]("include_extra_edges").example(Some(false))))
@@ -115,10 +117,9 @@ object Server extends App with LazyLogging {
     }
   }
 
-  def queryRouteR(queryEndpoint: ZEndpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse])
-    : URIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], HttpRoutes[Task]] =
-    queryEndpoint.toRoutesR { case (limit, includeExtraEdges, body) =>
-      val program = for {
+  def queryRouteR(queryEndpoint: Endpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
+    ZHttp4sServerInterpreter[EndpointEnv]().from(queryEndpoint) { case (limit, includeExtraEdges, body) =>
+      val program: ZIO[EndpointEnv, Throwable, TRAPIResponse] = for {
         queryGraph <-
           ZIO
             .fromOption(body.message.query_graph)
@@ -128,7 +129,7 @@ object Server extends App with LazyLogging {
         message <- QueryService.run(limitValue, includeExtraEdgesValue, queryGraph)
       } yield TRAPIResponse(message, Some("Success"), None, None)
       program.mapError(error => error.getMessage)
-    }
+    }.toRoutes
 
   val openAPIInfo: Info = Info(
     "CAM-KP API",
@@ -139,17 +140,17 @@ object Server extends App with LazyLogging {
     Some(License("MIT License", Some("https://opensource.org/licenses/MIT")))
   )
 
-  val server: RIO[ZConfig[AppConfig] with Blocking with HttpClient with Has[BiolinkData] with Has[SPARQLCache], Unit] =
-    ZIO.runtime[Any].flatMap { implicit runtime =>
+  val server: RIO[ZEnv with EndpointEnv, Unit] =
+    ZIO.runtime[ZEnv with EndpointEnv].flatMap { implicit runtime =>
       for {
         appConfig <- getConfig[AppConfig]
         biolinkData <- biolinkData
         metaKnowledgeGraphEndpoint <- metaKnowledgeGraphEndpointZ
-        metaKnowledgeGraphRoute <- metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint)
+        metaKnowledgeGraphRoute = metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint)
         queryEndpoint <- queryEndpointZ
-        queryRoute <- queryRouteR(queryEndpoint)
+        queryRoute = queryRouteR(queryEndpoint)
         routes = queryRoute <+> metaKnowledgeGraphRoute
-        openAPI: String = OpenAPIDocsInterpreter.toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", "0.1")
+        openAPI: String = OpenAPIDocsInterpreter().toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", "0.1")
           .copy(info = openAPIInfo)
           .copy(tags = List(sttp.tapir.apispec.Tag("translator"), sttp.tapir.apispec.Tag("trapi")))
           .servers(List(sttp.tapir.openapi.Server(s"${appConfig.location}/${appConfig.trapiVersion}")))
@@ -171,14 +172,13 @@ object Server extends App with LazyLogging {
                 }
              }
           """
-
         infoJson <- ZIO.fromEither(io.circe.parser.parse(info))
         openAPIinfo = infoJson.deepMerge(openAPIJson).asYaml.spaces2
-        docsRoute = swaggerRoutes(openAPIinfo)
+        docsRoute = ZHttp4sServerInterpreter().from(SwaggerUI[RIO[EndpointEnv, *]](openAPIinfo)).toRoutes
         httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
         httpAppWithLogging = Logger.httpApp(true, false)(httpApp)
         result <-
-          BlazeServerBuilder[Task](runtime.platform.executor.asEC)
+          BlazeServerBuilder[RIO[EndpointEnv, *]](runtime.platform.executor.asEC)
             .bindHttp(appConfig.port, appConfig.host)
             .withHttpApp(CORS(httpAppWithLogging))
             .withResponseHeaderTimeout(120.seconds)
@@ -197,30 +197,30 @@ object Server extends App with LazyLogging {
   }
 
   // hack using SwaggerHttp4s code to handle running in subdirectory
-  private def swaggerRoutes(yaml: String): HttpRoutes[Task] = {
-    val dsl = Http4sDsl[Task]
-    import dsl._
-    val contextPath = "docs"
-    val yamlName = "docs.yaml"
-    HttpRoutes.of[Task] {
-      case path @ GET -> Root / `contextPath` =>
-        val queryParameters = Map("url" -> Seq(s"$yamlName"))
-        Uri
-          .fromString(s"$contextPath/index.html")
-          .map(uri => uri.setQueryParams(queryParameters))
-          .map(uri => PermanentRedirect(Location(uri)))
-          .getOrElse(NotFound())
-      case GET -> Root / `contextPath` / `yamlName` =>
-        Ok(yaml)
-      case GET -> Root / `contextPath` / swaggerResource =>
-        StaticFile
-          .fromResource[Task](
-            s"/META-INF/resources/webjars/swagger-ui/$swaggerVersion/$swaggerResource",
-            Blocker.liftExecutionContext(ExecutionContext.global)
-          )
-          .getOrElseF(NotFound())
-    }
-  }
+//  private def swaggerRoutes(yaml: String): HttpRoutes[Task] = {
+//    val dsl = Http4sDsl[Task]
+//    import dsl._
+//    val contextPath = "docs"
+//    val yamlName = "docs.yaml"
+//    HttpRoutes.of[Task] {
+//      case path @ GET -> Root / `contextPath` =>
+//        val queryParameters = Map("url" -> Seq(s"$yamlName"))
+//        Uri
+//          .fromString(s"$contextPath/index.html")
+//          .map(uri => uri.setQueryParams(queryParameters))
+//          .map(uri => PermanentRedirect(Location(uri)))
+//          .getOrElse(NotFound())
+//      case GET -> Root / `contextPath` / `yamlName` =>
+//        Ok(yaml)
+//      case GET -> Root / `contextPath` / swaggerResource =>
+//        StaticFile
+//          .fromResource[Task](
+//            s"/META-INF/resources/webjars/swagger-ui/$swaggerVersion/$swaggerResource",
+//            Blocker.liftExecutionContext(ExecutionContext.global)
+//          )
+//          .getOrElseF(NotFound())
+//    }
+//  }
 
   private val swaggerVersion = {
     val p = new Properties()
