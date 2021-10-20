@@ -119,7 +119,7 @@ object Server extends App with LazyLogging {
               .default(defaultAndExampleIncludeExtraEdges)
               .example(defaultAndExampleIncludeExtraEdges))
         )
-        .in(jsonBody[TRAPIQuery].example(example))
+        .in(jsonBody[TRAPIQuery].default(example).example(example))
         .errorOut(stringBody)
         .out(jsonBody[TRAPIResponse])
         .summary("Submit a TRAPI question graph and retrieve matching solutions")
