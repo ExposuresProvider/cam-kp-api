@@ -14,7 +14,8 @@ import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio.blocking.Blocking
 import zio.interop.catz._
-import zio.{ExitCode, Task, URIO, ZIO, ZLayer}
+import zio.interop.catz.implicits._
+import zio._
 
 import java.nio.file.{Files, Paths}
 import scala.collection.immutable.ListMap
@@ -22,8 +23,6 @@ import scala.collection.immutable.ListMap
 object UpdateBiolinkResources extends zio.App with LazyLogging {
 
   override lazy val logger = Logger(UpdateBiolinkResources.getClass.getSimpleName);
-
-  val layer: ZLayer[Any, Throwable, Blocking with HttpClient] = Blocking.live ++ HttpClient.makeHttpClientLayer
 
   def downloadBiolinkContextJsonLD: ZIO[HttpClient, Throwable, Unit] =
     for {
@@ -116,7 +115,7 @@ object UpdateBiolinkResources extends zio.App with LazyLogging {
       _ = logger.info("wrote biolink-data.json")
     } yield ()
 
-    program.provideSomeLayer(layer).exitCode
+    program.provideCustomLayer(HttpClient.makeHttpClientLayer).exitCode
 
   }
 
