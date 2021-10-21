@@ -29,7 +29,7 @@ IntegrationTest / parallelExecution := false
 coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci\\.cam\\.Server.*;org\\.renci\\.cam\\.Biolink.*;org\\.renci\\.cam\\.HttpClient.*;org\\.renci\\.cam\\.AppConfig.*;org\\.renci\\.cam\\.Util.*;org\\.renci\\.cam\\.util\\.UpdateBiolinkResources.*;org\\.renci\\.cam\\.SPARQLQueryExecutor.*"
 
 val zioVersion = "1.0.12"
-val zioConfigVersion = "1.0.0-RC29-1"
+val zioConfigVersion = "1.0.10"
 val zioCacheVersion = "0.1.0"
 val tapirVersion = "0.19.0-M12"
 val http4sVersion = "0.23.4"
