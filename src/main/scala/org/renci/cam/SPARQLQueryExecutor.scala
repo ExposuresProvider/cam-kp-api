@@ -13,6 +13,7 @@ import zio.cache.{Cache, Lookup}
 import zio.config.ZConfig
 import zio.duration.durationInt
 import zio.interop.catz._
+import zio.interop.catz.implicits._
 import zio.{Has, RIO, Task, URIO, ZIO, config => _}
 
 import java.nio.charset.StandardCharsets

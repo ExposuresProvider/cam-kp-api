@@ -7,7 +7,6 @@ import org.apache.commons.lang3.StringUtils
 import org.http4s.headers.Accept
 import org.http4s.implicits._
 import org.http4s.{MediaType, Method, Request}
-import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
 import zio._
 import zio.blocking.{effectBlockingIO, Blocking}
@@ -24,11 +23,11 @@ object Biolink extends LazyLogging {
                                classes: List[BiolinkClass],
                                predicates: List[BiolinkPredicate])
 
-  def makeUtilitiesLayer: ZLayer[HttpClient, Throwable, Has[BiolinkData]] = getBiolinkData.toLayer
+  def makeUtilitiesLayer: ZLayer[Any, Throwable, Has[BiolinkData]] = getBiolinkData.toLayer
 
   val biolinkData: URIO[Has[BiolinkData], BiolinkData] = ZIO.service
 
-  def getBiolinkData: ZIO[HttpClient, Throwable, BiolinkData] = {
+  def getBiolinkData: ZIO[Any, Throwable, BiolinkData] = {
     val sourceManaged = for {
       fileStream <- Managed.fromAutoCloseable(Task.effect(getClass.getClassLoader.getResourceAsStream("biolink-data.json")))
       source <- Managed.fromAutoCloseable(Task.effect(Source.fromInputStream(fileStream)))
