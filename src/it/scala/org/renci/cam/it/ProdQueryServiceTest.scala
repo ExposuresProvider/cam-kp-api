@@ -106,8 +106,8 @@ object ProdQueryServiceTest extends DefaultRunnableSpec {
       val query = TRAPIQuery(message, None)
       for {
         (kgNodeMap, kgEdgeMap) <- runQuery(query)
-      } yield assert(kgNodeMap)(isNonEmpty) && assert(kgEdgeMap)(isNonEmpty) && assert(
-        kgNodeMap.contains(IRI("http://purl.obolibrary.org/obo/GO_0003713")))
+      } yield assert(kgNodeMap)(isNonEmpty) && assert(kgEdgeMap)(isNonEmpty) && assert(kgNodeMap)(
+        contains(IRI("http://purl.obolibrary.org/obo/GO_0003713")))
     },
     testM("test GO:0017075 regulates GO:0000149") {
       val n0Node = TRAPIQueryNode(Some(List(IRI("http://purl.obolibrary.org/obo/GO_0017075"))),
