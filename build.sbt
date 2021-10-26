@@ -34,7 +34,7 @@ val zioCacheVersion = "0.1.0"
 val tapirVersion = "0.19.0-M13"
 val http4sVersion = "0.23.6"
 val circeVersion = "0.14.1"
-val logbackVersion = "1.2.5"
+val logbackVersion = "1.2.6"
 
 reStart / javaOptions += "-Xmx16G"
 
