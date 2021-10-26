@@ -31,10 +31,10 @@ coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci
 val zioVersion = "1.0.12"
 val zioConfigVersion = "1.0.0-RC29-1"
 val zioCacheVersion = "0.1.0"
-val tapirVersion = "0.19.0-M12"
+val tapirVersion = "0.19.0-M13"
 val http4sVersion = "0.23.6"
 val circeVersion = "0.14.1"
-val logbackVersion = "1.2.5"
+val logbackVersion = "1.2.6"
 
 reStart / javaOptions += "-Xmx16G"
 
@@ -68,8 +68,8 @@ libraryDependencies ++= {
     "io.circe"                    %% "circe-yaml"                     % circeVersion,
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
     "dev.zio"                     %% "zio-test-sbt"                   % zioVersion % "it,test",
-    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.39.9"   % "it,test",
-    "com.google.guava"             % "guava"                          % "30.1.1-jre",
+    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.39.6"   % "it,test",
+    "com.google.guava"             % "guava"                          % "31.0.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
     "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.4"
   )
