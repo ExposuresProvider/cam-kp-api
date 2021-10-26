@@ -12,7 +12,7 @@ import org.renci.cam._
 import org.renci.cam.domain._
 import zio.blocking.Blocking
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{ZConfig, getConfig}
+import zio.config.{getConfig, ZConfig}
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
@@ -21,7 +21,8 @@ import zio.{Has, Layer, RIO, Task, ZIO}
 
 object ProdQueryServiceTest extends DefaultRunnableSpec {
 
-  def runQuery(trapiQuery: TRAPIQuery, limit: Int = 1, include_extra_edges: Boolean = false): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], (Map[IRI, TRAPINode], Map[String, TRAPIEdge])] =
+  def runQuery(trapiQuery: TRAPIQuery, limit: Int = 1, include_extra_edges: Boolean = false)
+    : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], (Map[IRI, TRAPINode], Map[String, TRAPIEdge])] =
     for {
       appConfig <- getConfig[AppConfig]
       httpClient <- HttpClient.client
@@ -82,10 +83,40 @@ object ProdQueryServiceTest extends DefaultRunnableSpec {
     } yield (nodesMap, edgesMap)
 
   val testSimpleQuery = suite("testSimpleQuery")(
-    testM("test simple query") {
-      val n0Node = TRAPIQueryNode(Some(List(IRI("ZFIN:ZDB-LINCRNAG-050208-254"))), Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
+    testM("test BP has_participant ZFIN gene") {
+      val n0Node = TRAPIQueryNode(Some(List(IRI("http://identifiers.org/zfin/ZDB-LINCRNAG-050208-254"))),
+                                  Some(List(BiolinkClass("GeneOrGeneProduct"))),
+                                  None)
       val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
       val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), "n1", "n0", None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+      val message = TRAPIMessage(Some(queryGraph), None, None)
+      val query = TRAPIQuery(message, None)
+      for {
+        (kgNodeMap, kgEdgeMap) <- runQuery(query)
+      } yield assert(kgNodeMap)(isNonEmpty) && assert(kgEdgeMap)(isNonEmpty)
+    },
+    testM("test UniProtKB gene enables MF") {
+      val n0Node =
+        TRAPIQueryNode(Some(List(IRI("http://identifiers.org/uniprot/P51532"))), Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
+      val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("MolecularActivity"))), None)
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("enables"))), "n0", "n1", None)
+      val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+      val message = TRAPIMessage(Some(queryGraph), None, None)
+      val query = TRAPIQuery(message, None)
+      for {
+        (kgNodeMap, kgEdgeMap) <- runQuery(query)
+      } yield assert(kgNodeMap)(isNonEmpty) && assert(kgEdgeMap)(isNonEmpty) && assert(
+        kgNodeMap.contains(IRI("http://purl.obolibrary.org/obo/GO_0003713")))
+    },
+    testM("test GO:0017075 regulates GO:0000149") {
+      val n0Node = TRAPIQueryNode(Some(List(IRI("http://purl.obolibrary.org/obo/GO_0017075"))),
+                                  Some(List(BiolinkClass("BiologicalProcessOrActivity"))),
+                                  None)
+      val n1Node = TRAPIQueryNode(Some(List(IRI("http://purl.obolibrary.org/obo/GO_0000149"))),
+                                  Some(List(BiolinkClass("BiologicalProcessOrActivity"))),
+                                  None)
+      val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("regulates"))), "n0", "n1", None)
       val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
       val message = TRAPIMessage(Some(queryGraph), None, None)
       val query = TRAPIQuery(message, None)
