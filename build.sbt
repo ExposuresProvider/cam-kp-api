@@ -12,7 +12,7 @@ version := "0.1"
 
 licenses := Seq("MIT license" -> url("https://opensource.org/licenses/MIT"))
 
-scalaVersion := "2.13.6"
+scalaVersion := "2.13.7"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
@@ -20,7 +20,7 @@ javaOptions += "-Xmx8G"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
-Compile /  packageDoc / publishArtifact := false
+Compile / packageDoc / publishArtifact := false
 
 configs(IntegrationTest)
 Defaults.itSettings
