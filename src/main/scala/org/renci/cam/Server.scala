@@ -15,11 +15,12 @@ import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.domain._
 import sttp.tapir.Endpoint
+import sttp.tapir.apispec.ExtensionValue
 import sttp.tapir.docs.openapi._
 import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
+import sttp.tapir.openapi._
 import sttp.tapir.openapi.circe.yaml._
-import sttp.tapir.openapi.{Contact, Info, License}
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.swagger.SwaggerUI
 import sttp.tapir.ztapir._
@@ -31,6 +32,7 @@ import zio.config.{getConfig, ZConfig}
 import zio.interop.catz._
 
 import java.util.Properties
+import scala.collection.immutable.ListMap
 import scala.concurrent.duration._
 
 object Server extends App with LazyLogging {
@@ -166,14 +168,20 @@ object Server extends App with LazyLogging {
           .toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", "0.1")
           .copy(info = openAPIInfo)
           .copy(tags = List(sttp.tapir.apispec.Tag("maturity"), sttp.tapir.apispec.Tag("translator"), sttp.tapir.apispec.Tag("trapi")))
-          .servers(List(sttp.tapir.openapi.Server(s"${appConfig.location}/${appConfig.trapiVersion}")))
+          .servers(
+            List(
+              sttp.tapir.openapi
+                .Server(s"${appConfig.location}/${appConfig.trapiVersion}")
+                .description("Default server")
+                .extensions(ListMap("x-maturity" -> ExtensionValue(s"${appConfig.maturity}"), "x-location" -> ExtensionValue("RENCI")))
+            )
+          )
           .toYaml
         openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
         info: String =
           s"""
              {
                 "info": {
-                  "x-maturity": "${appConfig.maturity}",
                   "x-translator": {
                     "infores": "infores:cam-kp",
                     "component": "KP",
