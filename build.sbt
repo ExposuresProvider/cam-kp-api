@@ -20,7 +20,7 @@ javaOptions += "-Xmx8G"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
-Compile /  packageDoc / publishArtifact := false
+Compile / packageDoc / publishArtifact := false
 
 configs(IntegrationTest)
 Defaults.itSettings
@@ -41,7 +41,7 @@ reStart / javaOptions += "-Xmx16G"
 libraryDependencies ++= {
   Seq(
     "dev.zio"                     %% "zio"                            % zioVersion,
-    "dev.zio"                     %% "zio-interop-cats"               % "3.1.1.0",
+    "dev.zio"                     %% "zio-interop-cats"               % "3.2.9.0",
     "dev.zio"                     %% "zio-config"                     % zioConfigVersion,
     "dev.zio"                     %% "zio-config-magnolia"            % zioConfigVersion,
     "dev.zio"                     %% "zio-config-typesafe"            % zioConfigVersion,
