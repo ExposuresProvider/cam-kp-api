@@ -232,10 +232,11 @@ object QueryService extends LazyLogging {
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
               infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
               aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), aggregatorKS.iri, None, List("infores:cam-kp"), Some(infoResBiolinkClass.iri), Some(appConfig.location), None, None)
-              originalKSAttribute = provValue match {
-                case ctd if provValue.contains("ctdbase.org") => TRAPIAttribute(Some("infores:cam-kp"), originalKS.iri, None, List("infores:ctd"), Some(infoResBiolinkClass.iri), Some(provValue), None, None)
-                case _ => TRAPIAttribute(Some("infores:cam-kp"), originalKS.iri, None, List("infores:go-cam"), Some(infoResBiolinkClass.iri), Some(provValue), None, None)
+              originalKSstr = provValue match {
+                case ctd if provValue.contains("ctdbase.org") => "infores:ctd"
+                case _ => "infores:go-cam"
               }
+              originalKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), originalKS.iri, None, List(originalKSstr), Some(infoResBiolinkClass.iri), Some(provValue), None, None)
               attributes = List(aggregatorKSAttribute, originalKSAttribute)
               relationLabelAndBiolinkPredicate <- ZIO
                 .fromOption(relationsMap.get(predicateIRI))
@@ -357,7 +358,6 @@ object QueryService extends LazyLogging {
 
   def getProvenance(edges: Set[Triple]): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, Map[TripleString, String]] =
     for {
-
       queryText <- Task.effect(getProvenanceQueryText(edges))
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
       triplesToGraphs <- ZIO.foreach(querySolutions) { solution =>
