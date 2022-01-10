@@ -356,9 +356,9 @@ object QueryService extends LazyLogging {
         }"""
   }
 
-  def getProvenance(edges: Set[Triple]): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, Map[TripleString, String]] =
+  def getProvenance(triples: Set[Triple]): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, Map[TripleString, String]] =
     for {
-      queryText <- Task.effect(getProvenanceQueryText(edges))
+      queryText <- Task.effect(getProvenanceQueryText(triples))
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
       triplesToGraphs <- ZIO.foreach(querySolutions) { solution =>
         Task.effect {
