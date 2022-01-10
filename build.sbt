@@ -75,18 +75,16 @@ libraryDependencies ++= {
   )
 }
 
-dockerBaseImage := "openjdk:15-alpine"
+dockerBaseImage := "openjdk:17-alpine"
 Docker / daemonUser := "camkpapi"
 dockerExposedPorts += 8080
 // test
 dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g")
 //dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0")
 // dev
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.1.0 -DLOCATION=https://cam-kp-api-dev.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/camdev/sparql")
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api-dev.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/camdev/sparql")
+//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api-dev.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/camdev/sparql -DMATURITY=development")
 // prod
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.1.0 -DLOCATION=https://cam-kp-api.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/cam/sparql")
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/cam/sparql")
+//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/cam/sparql -DMATURITY=production")
 dockerEntrypoint := Seq("/opt/docker/bin/server")
 Docker / dockerApiVersion := Some(DockerApiVersion(1, 40))
 dockerChmodType := DockerChmodType.UserGroupWriteExecute

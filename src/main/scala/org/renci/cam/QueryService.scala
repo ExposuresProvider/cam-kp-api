@@ -9,9 +9,9 @@ import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
-import org.renci.cam.domain._
-import zio.config.{getConfig, ZConfig}
-import zio.{config => _, Has, RIO, Task, ZIO}
+import org.renci.cam.domain.{TRAPIAttribute, _}
+import zio.config.{ZConfig, getConfig}
+import zio.{Has, RIO, Task, ZIO, config => _}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -210,6 +210,7 @@ object QueryService extends LazyLogging {
                     provs: Map[TripleString, String]): ZIO[ZConfig[AppConfig] with Has[BiolinkData], Throwable, Map[String, TRAPIEdge]] =
     for {
       biolinkData <- biolinkData
+
       appConfig <- getConfig[AppConfig]
       trapiEdges <- ZIO.foreach(querySolutions) { querySolution =>
         for {
@@ -223,32 +224,17 @@ object QueryService extends LazyLogging {
               predicate = querySolution.getResource(queryEdgeID).getURI
               predicateIRI = IRI(predicate)
               tripleString = TripleString(source, predicate, target)
-              originalKS <- ZIO
-                .fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source"))
-                .orElseFail(new Exception("could not get biolink:original_knowledge_source"))
-              aggregatorKS <- ZIO
-                .fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source"))
-                .orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
+              originalKS <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source")).orElseFail(new Exception("could not get biolink:original_knowledge_source"))
+              aggregatorKS <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source")).orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
+
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
-              infoResBiolinkClass <- ZIO
-                .fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource"))
-                .orElseFail(new Exception("could not get biolink:InformationResource"))
-              aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
-                                                     aggregatorKS.iri,
-                                                     None,
-                                                     List("infores:cam-kp"),
-                                                     Some(infoResBiolinkClass.iri),
-                                                     Some(appConfig.location),
-                                                     None,
-                                                     None)
-              originalKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
-                                                   originalKS.iri,
-                                                   None,
-                                                   List("infores:go-cam"),
-                                                   Some(infoResBiolinkClass.iri),
-                                                   Some(provValue),
-                                                   None,
-                                                   None)
+              infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
+              aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), aggregatorKS.iri, None, List("infores:cam-kp"), Some(infoResBiolinkClass.iri), Some(appConfig.location), None, None)
+              originalKSstr = provValue match {
+                case ctd if provValue.contains("ctdbase.org") => "infores:ctd"
+                case _ => "infores:go-cam"
+              }
+              originalKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), originalKS.iri, None, List(originalKSstr), Some(infoResBiolinkClass.iri), Some(provValue), None, None)
               attributes = List(aggregatorKSAttribute, originalKSAttribute)
               relationLabelAndBiolinkPredicate <- ZIO
                 .fromOption(relationsMap.get(predicateIRI))
@@ -370,9 +356,9 @@ object QueryService extends LazyLogging {
         }"""
   }
 
-  def getProvenance(edges: Set[Triple]): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, Map[TripleString, String]] =
+  def getProvenance(triples: Set[Triple]): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, Map[TripleString, String]] =
     for {
-      queryText <- Task.effect(getProvenanceQueryText(edges))
+      queryText <- Task.effect(getProvenanceQueryText(triples))
       querySolutions <- SPARQLQueryExecutor.runSelectQuery(queryText.toQuery)
       triplesToGraphs <- ZIO.foreach(querySolutions) { solution =>
         Task.effect {
