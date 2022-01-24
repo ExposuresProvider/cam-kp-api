@@ -171,7 +171,7 @@ object Server extends App with LazyLogging {
           .servers(
             List(
               sttp.tapir.openapi
-                .Server(s"${appConfig.location}/${appConfig.trapiVersion}")
+                .Server(s"${appConfig.location}/")
                 .description("Default server")
                 .extensions(ListMap("x-maturity" -> ExtensionValue(s"${appConfig.maturity}"), "x-location" -> ExtensionValue("RENCI")))
             )
