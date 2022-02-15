@@ -69,18 +69,18 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         // TODO: setting limit to >28 leads to a 400 Bad Request error.
-        response <- runTest(requestBody, limit=28)
-        _ = Files.writeString(Paths.get("src/it/resources/test-positively-regulated-by-MAP3K.json"), response)
-        json = JSON.parse(response)
-        // Jim: I spent way too long trying to figure out how to do this with Circe and failed.
-        // If you know a better way of doing this in that system, please let me know!
+        content <- runTest(requestBody, limit=28)
+        _ = Files.writeString(Paths.get("src/it/resources/test-positively-regulated-by-MAP3K.json"), content)
+        // json <- ZIO.fromEither(parse(content))
+        // response <- ZIO.fromEither(json.as[TRAPIResponse])
+        json = JSON.parse(content)
         message = json.get("message").getAsObject
         results = message.get("results").getAsArray
       } yield {
         // Make sure we have a non-empty response
-        assert(response)(Assertion.isNonEmptyString) &&
+        assert(content)(Assertion.isNonEmptyString) &&
         // We expect Success.
-        assert(message.get("status").getAsString.value)(Assertion.equalsIgnoreCase("Success")) &&
+        assert(json.get("status").getAsString.value)(Assertion.equalsIgnoreCase("Success")) &&
         // We got 11 results as of 2022-02-14; we don't expect to get fewer than that.
         assert(results.size)(Assertion.isGreaterThanEqualTo(11))
       }
