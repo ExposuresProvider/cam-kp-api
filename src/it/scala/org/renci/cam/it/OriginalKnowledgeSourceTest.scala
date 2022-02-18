@@ -111,17 +111,24 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
         // Check that the n1 results are as expected.
         for {
           response <- responses
+          kg <- ZIO.fromOption(response.message.knowledge_graph)
           results <- ZIO.fromOption(response.message.results)
           n1results = results.flatMap(_.node_bindings).filter(_._1 == "n1").flatMap(_._2)
           n1ids = n1results.map(_.id)
+          // This should trigger an error if any node is returned without a corresponding
+          // Knowledge Graph entry.
+          n1kgs = n1ids.map(id => (id, kg.nodes(id))).toMap
+          n1cats = n1kgs.transform((id, node) => node.categories.getOrElse(List()))
         } yield {
           // We got 11 results as of 2022-02-14; we don't expect to get fewer than that.
           assert(results.size)(Assertion.isGreaterThanEqualTo(11)) &&
           // Check for some expected nodes.
-          // MAP2K activity (GO:0004708)
+          // - MAP2K activity (GO:0004708)
           assert(n1ids)(Assertion.contains(IRI("http://purl.obolibrary.org/obo/GO_0004708"))) &&
-          // MAPK activity (GO:0004707)
-          assert(n1ids)(Assertion.contains(IRI("http://purl.obolibrary.org/obo/GO_0004707")))
+          // - MAPK activity (GO:0004707)
+          assert(n1ids)(Assertion.contains(IRI("http://purl.obolibrary.org/obo/GO_0004707"))) &&
+          // Every n1 should be a 'biolink:BiologicalProcessOrActivity'
+          assert(n1cats.values)(Assertion.forall(Assertion.contains(BiolinkClass("BiologicalProcessOrActivity"))))
         }
       }
     )
