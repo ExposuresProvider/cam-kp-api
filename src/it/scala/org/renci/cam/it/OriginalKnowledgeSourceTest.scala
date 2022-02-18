@@ -6,6 +6,7 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import io.circe.parser._
 import io.circe.Json._
+import io.circe.generic.semiauto.deriveDecoder
 import org.http4s._
 import org.http4s.headers._
 import org.http4s.implicits._
@@ -18,10 +19,11 @@ import zio.interop.catz._
 import zio.test.Assertion
 import zio.test._
 import zio.test.environment.testEnvironment
-import zio.{Has, RIO, Task}
-import zio.ZIO
-import collection.JavaConverters._
+import zio.{Has, Layer, RIO, Task, ZIO}
+import zio.config.ZConfig
+import zio.config.typesafe.TypesafeConfig
 
+import collection.JavaConverters._
 import java.nio.file.{Files, Paths}
 
 /**
@@ -34,7 +36,9 @@ import java.nio.file.{Files, Paths}
  */
 object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
 
-  def runTest(trapiQuery: TRAPIQuery, limit: Int = 1, include_extra_edges: Boolean = false): RIO[HttpClient with Has[BiolinkData], String] =
+  def runQuery(trapiQuery: TRAPIQuery, limit: Int = 1, include_extra_edges: Boolean = false):
+    RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[BiolinkData], TRAPIResponse]
+  =
     for {
       httpClient <- HttpClient.client
       biolinkData <- Biolink.biolinkData
@@ -46,13 +50,27 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
         trapiQuery.asJson.deepDropNullValues.noSpaces
       }
       // _ = println("encoded: " + encoded)
-      uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", limit).withQueryParam("include_extra_edges", include_extra_edges)
+      uri = uri"http://127.0.0.1:8080/query"
+        .withQueryParam("limit", limit)
+        .withQueryParam("include_extra_edges", include_extra_edges)
       request = Request[Task](Method.POST, uri)
         .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
         .withEntity(encoded)
       response <- httpClient.expect[String](request)
-      //        _ = println("response: " + response)
-    } yield response
+      // _ = println("response: " + response)
+      responseJson <- ZIO.fromEither(parse(response))
+      trapiMessage <- ZIO.fromEither({
+        implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+        implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+        implicit val decoderTRAPINode: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+        implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+        implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+        implicit val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+        implicit val decoderTRAPIMessage: Decoder[TRAPIMessage] = deriveDecoder[TRAPIMessage]
+        implicit val decoderTRAPIResponse: Decoder[TRAPIResponse] = deriveDecoder[TRAPIResponse]
+        responseJson.as[TRAPIResponse]
+      })
+    } yield trapiMessage
 
   /**
    * This query asks: "what is positively regulated by GO:0004709 [MAP3K activity]?"
@@ -69,27 +87,21 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
       val requestBody = TRAPIQuery(message, None)
       for {
         // TODO: setting limit to >28 leads to a 400 Bad Request error.
-        content <- runTest(requestBody, limit=28)
-        _ = Files.writeString(Paths.get("src/it/resources/test-positively-regulated-by-MAP3K.json"), content)
-        // json <- ZIO.fromEither(parse(content))
-        // response <- ZIO.fromEither(json.as[TRAPIResponse])
-        json = JSON.parse(content)
-        message = json.get("message").getAsObject
-        results = message.get("results").getAsArray
-      } yield {
+        response <- runQuery(requestBody, limit=28)
+        _ = Files.writeString(Paths.get("src/it/resources/test-positively-regulated-by-MAP3K.json"), response.toString)
+        } yield {
         // Make sure we have a non-empty response
-        assert(content)(Assertion.isNonEmptyString) &&
-        // We expect Success.
-        assert(json.get("status").getAsString.value)(Assertion.equalsIgnoreCase("Success")) &&
+        assert(response.status.get)(Assertion.equalsIgnoreCase("Success")) &&
         // We got 11 results as of 2022-02-14; we don't expect to get fewer than that.
-        assert(results.size)(Assertion.isGreaterThanEqualTo(11))
+        assert(response.message.results.get.size)(Assertion.isGreaterThanEqualTo(11))
       }
     }
   )
 
+  val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
   val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
-  val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
+  val camkpapiLayer = Blocking.live >>> HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
+  val testLayer = (configLayer ++ testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
 
   def spec = suite("original_knowledge_source tests")(
     testPositivelyRegulatedByMAP3K,
