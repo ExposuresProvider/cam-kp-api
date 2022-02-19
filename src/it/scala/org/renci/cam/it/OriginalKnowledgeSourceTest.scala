@@ -20,6 +20,7 @@ import zio.test.environment.testEnvironment
 import zio.{Has, Layer, RIO, Task, ZIO}
 
 import java.nio.file.{Files, Paths}
+import scala.collection.immutable
 
 /**
  * This test ensures that we return the correct original_knowledge_source on API queries.
@@ -70,8 +71,8 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
   /**
    * This query asks: "what is positively regulated by GO:0004709 [MAP3K activity]?"
    * The answer should include: MAP2K activity (GO:0004708) and MAPK activity (GO:0004707).
-   * All the answers should be: TODO
-   * The source should be: http://noctua.geneontology.org/editor/graph/gomodel:568b0f9600000284
+   * All the answers should be: biolink:BiologicalProcessOrActivity
+   * The source should be: http://model.geneontology.org/568b0f9600000284
    * The original knowledge source should be: infores:go-cam
    */
   val testPositivelyRegulatedByMAP3K = {
@@ -105,6 +106,27 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
         } yield {
           // Make sure the response was successful.
           assert(response.status.get)(Assertion.equalsIgnoreCase("Success"))
+        }
+      },
+      testM("Provenance information should be correct") {
+        for {
+          response <- responses
+          kg <- ZIO.fromOption(response.message.knowledge_graph)
+          // We would usually need to filter this to only the edges we're interested in,
+          // but this query only queries a single edge, so we can assume all edges refer
+          // to the same kind of thing.
+          attrsById = kg.edges.transform((_, value) => value.attributes.getOrElse(List()))
+          // We explicitly call `.get` here so that we get an exception if no attribute_source was present.
+          attrSources = attrsById.transform((_, value) => value.map(_.attribute_source.get))
+          attrsOKG = attrsById.transform((_, value) => value.filter(_.attribute_type_id == BiolinkPredicate("original_knowledge_source").iri))
+          attrsOKGValues = attrsOKG.map(_._2)
+        } yield {
+          // All the attribute_source values should be infores:cam-kp
+          assert(attrSources.values)(Assertion.forall(Assertion.equalTo(List("infores:cam-kp")))) &&
+          // At least one of the source URLs should be http://model.geneontology.org/568b0f9600000284
+          assert(attrsOKGValues.map(_.map(_.value_url)))(Assertion.forall(Assertion.contains("http://model.geneontology.org/568b0f9600000284"))) &&
+          // At least one of these records should be infores:go-cam
+          assert(attrsOKGValues.flatten.flatMap(_.value))(Assertion.contains("infores:go-cam"))
         }
       },
       testM("Check n1 results") {
