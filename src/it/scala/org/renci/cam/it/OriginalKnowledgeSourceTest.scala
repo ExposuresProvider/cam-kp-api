@@ -122,9 +122,9 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
           attrsOKGValues = attrsOKG.map(_._2)
         } yield {
           // All the attribute_source values should be infores:cam-kp
-          assert(attrSources.values)(Assertion.forall(Assertion.equalTo(List("infores:cam-kp")))) &&
+          assert(attrSources.values.flatten)(Assertion.forall(Assertion.equalTo("infores:cam-kp"))) &&
           // At least one of the source URLs should be http://model.geneontology.org/568b0f9600000284
-          assert(attrsOKGValues.map(_.map(_.value_url)))(Assertion.forall(Assertion.contains("http://model.geneontology.org/568b0f9600000284"))) &&
+          assert(attrsOKGValues.flatMap(_.flatMap(_.value_url)))(Assertion.contains("http://model.geneontology.org/568b0f9600000284")) &&
           // At least one of these records should be infores:go-cam
           assert(attrsOKGValues.flatten.flatMap(_.value))(Assertion.contains("infores:go-cam"))
         }
