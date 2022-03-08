@@ -21,6 +21,15 @@ CAMs (Causal Activity Models) are small knowledge graphs built using the [Web On
 - `sbt docker:stage docker:publishLocal`
 - `docker run -p 8080:8080 -it renciorg/cam-kp-api:0.1` (or detached mode: `docker run -p 8080:8080 -d renciorg/cam-kp-api:0.1`)
 
+## Testing
+
+Two types of tests are included in this repository:
+- Unit tests can be run by running `sbt test`
+- Integration tests require Docker. To run them:
+  1. Create the Docker image for cam-kp-api by running `sbt docker:stage docker:publishLocal`
+  2. Run the integration tests by running `sbt IntegrationTest/test`.
+     You can also run a single test by running e.g. `sbt "IntegrationTest/testOnly org.renci.cam.it.BiolinkTest"`
+
 ## Issue Management
 
 Anyone can create new issues by clicking on "New issue" button on the [issues](https://github.com/NCATS-Tangerine/cam-kp-api/issues) page of this repository. Click here for the [current issues](https://github.com/NCATS-Tangerine/cam-kp-api/issues).
