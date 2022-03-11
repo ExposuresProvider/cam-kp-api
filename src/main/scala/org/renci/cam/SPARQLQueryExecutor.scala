@@ -14,7 +14,7 @@ import zio.config.ZConfig
 import zio.duration.durationInt
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio.{Has, RIO, Task, URIO, ZIO, config => _}
+import zio.{config => _, Has, RIO, Task, URIO, ZIO}
 
 import java.nio.charset.StandardCharsets
 import scala.jdk.CollectionConverters._
@@ -50,13 +50,15 @@ object SPARQLQueryExecutor extends LazyLogging {
     for {
       appConfig <- zio.config.getConfig[AppConfig]
       _ = logger.debug("query: {}", query)
+      sparql_endpoint <- ZIO.fromOption(sys.env.get("CAM_KP_SPARQL_ENDPOINT")).orElseFail(throw new Exception("CAM_KP_SPARQL_ENDPOINT not in env"))
+      sparql_endpoint_uri <- ZIO.fromOption(Uri.fromString(sparql_endpoint).toOption).orElseFail(throw new Exception(s"Failed to parse CAM_KP_SPARQL_ENDPOINT as a Uri: ${sparql_endpoint}"))
       client <- HttpClient.client
-      uri = appConfig.sparqlEndpoint
-      request = Request[Task](Method.POST, uri).withEntity(query)
+      request = Request[Task](Method.POST, sparql_endpoint_uri).withEntity(query)
       response <- client.expect[ResultSet](request)
     } yield response.asScala.toList
 
-  def runSelectQueryWithCacheAs[T: FromQuerySolution](query: Query): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], List[T]] =
+  def runSelectQueryWithCacheAs[T: FromQuerySolution](
+    query: Query): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], List[T]] =
     for {
       cache <- ZIO.service[SPARQLCache]
       resultSet <- cache.get(query)
@@ -66,10 +68,11 @@ object SPARQLQueryExecutor extends LazyLogging {
 
   def runSelectQueryWithCache(query: Query): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], List[QuerySolution]] =
     for {
-    cache <- ZIO.service[SPARQLCache]
-    result <- cache.get(query)
+      cache <- ZIO.service[SPARQLCache]
+      result <- cache.get(query)
     } yield result
 
-  def makeCache: URIO[ZConfig[AppConfig] with HttpClient, Cache[Query, Throwable, List[QuerySolution]]] = Cache.make(50, 20.days, Lookup(runSelectQuery))
+  def makeCache: URIO[ZConfig[AppConfig] with HttpClient, Cache[Query, Throwable, List[QuerySolution]]] =
+    Cache.make(50, 20.days, Lookup(runSelectQuery))
 
 }
