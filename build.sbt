@@ -20,7 +20,7 @@ javaOptions += "-Xmx8G"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
-Compile /  packageDoc / publishArtifact := false
+Compile / packageDoc / publishArtifact := false
 
 configs(IntegrationTest)
 Defaults.itSettings
@@ -34,7 +34,7 @@ val zioCacheVersion = "0.1.0"
 val tapirVersion = "0.19.0-M13"
 val http4sVersion = "0.23.6"
 val circeVersion = "0.14.1"
-val logbackVersion = "1.2.6"
+val logbackVersion = "1.2.11"
 
 reStart / javaOptions += "-Xmx16G"
 
@@ -78,13 +78,24 @@ libraryDependencies ++= {
 dockerBaseImage := "openjdk:17-alpine"
 Docker / daemonUser := "camkpapi"
 dockerExposedPorts += 8080
+
 // test
-dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g")
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0")
+dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g",
+                      "CAM_KP_SPARQL_ENDPOINT" -> sys.env("CAM_KP_SPARQL_ENDPOINT"),
+                      "CAM_KP_LOG_LEVEL" -> sys.env("CAM_KP_LOG_LEVEL"))
+
 // dev
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api-dev.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/camdev/sparql -DMATURITY=development")
+//dockerEnvVars ++= Map(
+//  "JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api-dev.renci.org -DMATURITY=development",
+//  "CAM_KP_SPARQL_ENDPOINT" -> sys.env("CAM_KP_SPARQL_ENDPOINT")
+//)
+
 // prod
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/cam/sparql -DMATURITY=production")
+//dockerEnvVars ++= Map(
+//  "JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DMATURITY=production",
+//  "CAM_KP_SPARQL_ENDPOINT" -> sys.env("CAM_KP_SPARQL_ENDPOINT")
+//)
+
 dockerEntrypoint := Seq("/opt/docker/bin/server")
 Docker / dockerApiVersion := Some(DockerApiVersion(1, 40))
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
