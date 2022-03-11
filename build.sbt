@@ -82,7 +82,7 @@ dockerExposedPorts += 8080
 dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g")
 //dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0")
 // dev
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api-dev.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/camdev/sparql -DMATURITY=development")
+//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api-dev.renci.org -DSPARQL_ENDPOINT=https://cam-kp-sparql-dev.apps.renci.org/sparql -DMATURITY=development")
 // prod
 //dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/cam/sparql -DMATURITY=production")
 dockerEntrypoint := Seq("/opt/docker/bin/server")
