@@ -163,7 +163,7 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
    * The source should include: CTDBase
    * The original knowledge source should include: infores:ctd
    */
-  val testValproicAcid = {
+  val testRelatedToValproicAcid = {
     val n0Node = TRAPIQueryNode(Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_39867"))), None, None)
     val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("NamedThing"))), None)
     val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("related_to"))), "n0", "n1", None)
@@ -173,7 +173,7 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
 
     val responses = runQuery(requestBody, limit=2)
 
-    suite("testValproicAcid")(
+    suite("testRelatedToValproicAcid")(
       testM("Response should be sensible") {
         for {
           response <- responses
@@ -239,6 +239,89 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
   }
 
 
+  /**
+   * This query asks: "list all named things upstream of pyruvate (CHEBI:15361)"
+   * The answer should include: ...?
+   * All the answers should be: biolink:NamedThing
+   * The source should include: Signor
+   * The original knowledge source should include: infores:signor
+   */
+  val testRelatedToPyruvate = {
+    val n0Node = TRAPIQueryNode(Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_15361"))), None, None)
+    val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("NamedThing"))), None)
+    val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("related_to"))), "n0", "n1", None)
+    val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
+    val message = TRAPIMessage(Some(queryGraph), None, None)
+    val requestBody = TRAPIQuery(message, None)
+
+    val responses = runQuery(requestBody, limit=20)
+
+    suite("testRelatedToPyruvate")(
+      testM("Response should be sensible") {
+        for {
+          response <- responses
+          // For debugging purposes, we write out the JSON response to a file in src/it/resources.
+          biolinkData <- Biolink.biolinkData
+          _ = Files.writeString(
+            Paths.get("src/it/resources/test-named-things-related-to-pyruvate.json"),
+            {
+              implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+              implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
+              implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+              implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+
+              response.asJson.deepDropNullValues.spaces2SortKeys
+            }
+          )
+        } yield {
+          // Make sure the response was successful.
+          assert(response.status.get)(Assertion.equalsIgnoreCase("Success"))
+        }
+      },
+      testM("Provenance information should be correct") {
+        for {
+          response <- responses
+          kg <- ZIO.fromOption(response.message.knowledge_graph)
+          // We would usually need to filter this to only the edges we're interested in,
+          // but this query only queries a single edge, so we can assume all edges refer
+          // to the same kind of thing.
+          attrsById = kg.edges.transform((_, value) => value.attributes.getOrElse(List()))
+          // We explicitly call `.get` here so that we get an exception if no attribute_source was present.
+          attrSources = attrsById.transform((_, value) => value.map(_.attribute_source.get))
+          attrsOKG = attrsById.transform((_, value) => value.filter(_.attribute_type_id == BiolinkPredicate("original_knowledge_source").iri))
+          attrsOKGValues = attrsOKG.map(_._2)
+        } yield {
+          // All the attribute_source values should be infores:cam-kp
+          assert(attrSources.values.flatten)(Assertion.forall(Assertion.equalTo("infores:cam-kp"))) &&
+            // At least one of the source URLs should be http://model.geneontology.org/88e9910c-1a01-42dc-b4e6-2a259a2351cd
+            // This is the URL for https://github.com/NCATS-Tangerine/cam-pipeline/blob/95f98857d8b9215aba538bcbcbba6d75ad3f8350/signor-models/SIGNOR-Glycolysis.ttl
+            assert(attrsOKGValues.flatMap(_.flatMap(_.value_url)))(Assertion.contains("http://model.geneontology.org/88e9910c-1a01-42dc-b4e6-2a259a2351cd")) &&
+            // At least one of these records should be infores:signor
+            assert(attrsOKGValues.flatten.flatMap(_.value))(Assertion.contains("infores:signor"))
+        }
+      },
+      testM("Check n1 results") {
+        // Check that the n1 results are as expected.
+        for {
+          response <- responses
+          kg <- ZIO.fromOption(response.message.knowledge_graph)
+          results <- ZIO.fromOption(response.message.results)
+          n1results = results.flatMap(_.node_bindings).filter(_._1 == "n1").flatMap(_._2)
+          n1ids = n1results.map(_.id)
+          // This should trigger an error if any node is returned without a corresponding
+          // Knowledge Graph entry.
+          n1kgs = n1ids.map(id => (id, kg.nodes(id))).toMap
+          n1cats = n1kgs.transform((id, node) => node.categories.getOrElse(List()))
+        } yield {
+          // We got 4 results as of 2022-03-11; we don't expect to get fewer than that.
+          assert(results.size)(Assertion.isGreaterThanEqualTo(4)) &&
+            // Every n1 should be a 'biolink:NamedThing'
+            assert(n1cats.values)(Assertion.forall(Assertion.contains(BiolinkClass("NamedThing"))))
+        }
+      }
+    )
+  }
+
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
   val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
   val camkpapiLayer = Blocking.live >>> HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
@@ -246,7 +329,8 @@ object OriginalKnowledgeSourceTest extends DefaultRunnableSpec {
 
   def spec = suite("original_knowledge_source tests")(
     testPositivelyRegulatedByMAP3K,
-    testValproicAcid,
+    testRelatedToValproicAcid,
+    testRelatedToPyruvate,
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
