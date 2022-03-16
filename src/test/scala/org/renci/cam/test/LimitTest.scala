@@ -25,8 +25,8 @@ import zio.test.environment.testEnvironment
  */
 object LimitTest extends DefaultRunnableSpec with LazyLogging {
 
-  val testVariousLimits = {
-    val limitsToTest = List(10, 20, 30, 40)
+  val testQueryWithExpectedResults = {
+    val queryGraphExpectedResults = 14 // As of 2022mar16
     val testQueryGraph = TRAPIQueryGraph(
       Map(
         "n0" -> TRAPIQueryNode(Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_15361"))), None, None),
@@ -37,18 +37,30 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
       )
     )
 
-    suite("testVariousLimits")(
-      testM("Test a limit of 10") {
-        val limit = 10
+    def generateTestForLimit(limit: Int) =
+      testM(f"Test query with ${queryGraphExpectedResults} results, limit ${limit}") {
         for {
           exec <- QueryService.run(limit, false, testQueryGraph)
-          _ = logger.debug(f"Obtained ${exec.results.get.size} results when querying for ${limit}")
+          _ = println(f"Obtained ${exec.results.get.size} results when limited to ${limit}")
           results = exec.results.get
         } yield {
           assert(results.size)(Assertion.isGreaterThan(0)) &&
-            assert(results.size)(Assertion.isLessThanEqualTo(limit))
+            assert(results.size)(Assertion.equalTo(Math.min(queryGraphExpectedResults, limit)))
         }
       }
+
+    // val limitsToTest = Seq(0, 1, 2, 3, 4, 5, 10, 20, 30, 40)
+    suite("testQueryWithExpectedResults")(
+      generateTestForLimit(0),
+      generateTestForLimit(1),
+      generateTestForLimit(2),
+      generateTestForLimit(3),
+      generateTestForLimit(4),
+      generateTestForLimit(5),
+      generateTestForLimit(10),
+      generateTestForLimit(20),
+      generateTestForLimit(30),
+      generateTestForLimit(40)
     )
   }
 
@@ -56,6 +68,6 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
   val testLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
 
   def spec = suite("Limit tests")(
-    testVariousLimits
+    testQueryWithExpectedResults
   ).provideCustomLayer(testLayer.mapError(TestFailure.die))
 }
