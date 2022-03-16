@@ -40,9 +40,9 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
     def generateTestForLimit(limit: Int) =
       testM(f"Test query with ${queryGraphExpectedResults} results, limit ${limit}") {
         for {
-          exec <- QueryService.run(limit, false, testQueryGraph)
-          _ = println(f"Obtained ${exec.results.get.size} results when limited to ${limit}")
-          results = exec.results.get
+          message <- QueryService.run(limit, false, testQueryGraph)
+          _ = println(f"Retrieved ${message.results.get.size} results when limit=${limit}")
+          results = message.results.get
         } yield {
           assert(results.size)(Assertion.isGreaterThan(0)) &&
             assert(results.size)(Assertion.equalTo(Math.min(queryGraphExpectedResults, limit)))
@@ -60,7 +60,13 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
       generateTestForLimit(10),
       generateTestForLimit(20),
       generateTestForLimit(30),
-      generateTestForLimit(40)
+      generateTestForLimit(40),
+      generateTestForLimit(50),
+      generateTestForLimit(60),
+      generateTestForLimit(70),
+      generateTestForLimit(80),
+      generateTestForLimit(90),
+      generateTestForLimit(100)
     )
   }
 
