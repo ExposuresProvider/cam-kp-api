@@ -53,11 +53,9 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
   }
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
-  val sparqlCacheLayer = SPARQLQueryExecutor.makeCache.toLayer
-  val camkpapiLayer = Blocking.live >>> HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = (configLayer ++ camkpapiLayer).mapError(TestFailure.die)
+  val testLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
 
   def spec = suite("Limit tests")(
     testVariousLimits
-  ).provideLayerShared(testLayer)
+  ).provideCustomLayer(testLayer.mapError(TestFailure.die))
 }
