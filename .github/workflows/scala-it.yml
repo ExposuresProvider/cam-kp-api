@@ -16,6 +16,6 @@ jobs:
           java-version: 11
       - name: Run Integration Test
         env:
-          CAM_KP_LOG_LEVE: "INFO"
+          CAM_KP_LOG_LEVEL: "INFO"
           CAM_KP_SPARQL_ENDPOINT: "https://cam-kp-dev-sparql.apps.renci.org/blazegraph/sparql"
         run: sbt "it:testOnly *ProdQueryServiceTest"
