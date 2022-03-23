@@ -12,7 +12,7 @@ import zio.ExecutionStrategy.Sequential
 import zio.blocking.Blocking
 import zio.cache.Cache
 import zio.config.{ConfigModule, ZConfig}
-import zio.{Layer, ZIO, ZLayer}
+import zio.{Layer, RIO, ZIO, ZLayer, Runtime}
 import zio.config.typesafe.TypesafeConfig
 import zio.test.Assertion._
 import zio.test.TestAspect.{debug, ignore}
@@ -26,7 +26,7 @@ import zio.test.environment.testEnvironment
 object LimitTest extends DefaultRunnableSpec with LazyLogging {
 
   val testQueryWithExpectedResults = {
-    val queryGraphExpectedResults = 14 // As of 2022mar16
+    val queryGraphExpectedResults = 14 // expected results as of 2022-mar-23
     val testQueryGraph = TRAPIQueryGraph(
       Map(
         "n0" -> TRAPIQueryNode(Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_15361"))), None, None),
@@ -37,41 +37,25 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
       )
     )
 
-    def generateTestForLimit(limit: Int) =
-      testM(f"Test query with ${queryGraphExpectedResults} results, limit ${limit}") {
-        for {
-          message <- QueryService.run(limit, false, testQueryGraph)
-          _ = println(f"Retrieved ${message.results.get.size} results when limit=${limit}")
-          results = message.results.get
-        } yield {
-          assert(results.size)(Assertion.isGreaterThan(0)) &&
-            assert(results.size)(Assertion.equalTo(Math.min(queryGraphExpectedResults, limit)))
-        }
-      }
-
-    // val limitsToTest = Seq(0, 1, 2, 3, 4, 5, 10, 20, 30, 40)
+    val limitsToTest = Seq(1, 2, 3, 4, 5, 10, 20, 30, 40, 50)
     suite("testQueryWithExpectedResults")(
-      generateTestForLimit(0),
-      generateTestForLimit(1),
-      generateTestForLimit(2),
-      generateTestForLimit(3),
-      generateTestForLimit(4),
-      generateTestForLimit(5),
-      generateTestForLimit(10),
-      generateTestForLimit(20),
-      generateTestForLimit(30),
-      generateTestForLimit(40),
-      generateTestForLimit(50),
-      generateTestForLimit(60),
-      generateTestForLimit(70),
-      generateTestForLimit(80),
-      generateTestForLimit(90),
-      generateTestForLimit(100)
+      testM(s"Test query expecting ${queryGraphExpectedResults} results") {
+        ZIO.foreach(limitsToTest) { limit =>
+          for {
+            message <- QueryService.run(limit, false, testQueryGraph)
+            _ = println(s"Retrieved ${message.results.get.size} results when limit=${limit}")
+            results = message.results.get
+          } yield {
+            assert(results.size)(Assertion.isGreaterThan(0)) &&
+              assert(results.size)(Assertion.equalTo(Math.min(queryGraphExpectedResults, limit)))
+          }
+        }.map(_.reduce(_ && _))
+      }
     )
   }
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
-  val testLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
+  val testLayer = HttpClient.makeHttpClientLayer ++ Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
 
   def spec = suite("Limit tests")(
     testQueryWithExpectedResults
