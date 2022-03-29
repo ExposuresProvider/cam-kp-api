@@ -56,10 +56,20 @@ object ValproicAcidTest extends DefaultRunnableSpec with LazyLogging {
       testM(s"Find everything related to valproic acid") {
         for {
           message <- QueryService.run(100, false, testQueryGraph)
-          _ = Files.writeString(Paths.get("src/test/resources/test-valproic-acid.json"), message)
+
+          biolinkData <- Biolink.biolinkData
+          encoded = {
+            implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+            implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
+            implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+            implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+            message.asJson.deepDropNullValues.spaces2
+          }
+
+          _ = Files.writeString(Paths.get("src/test/resources/test-valproic-acid.json"), encoded)
           results = message.results.get
         } yield {
-          assert(results)(Assertion.isGreaterThan(0)) // Expect more than one result
+          assert(results.length)(Assertion.isGreaterThan(0)) // Expect more than one result
         }
       }
     )
