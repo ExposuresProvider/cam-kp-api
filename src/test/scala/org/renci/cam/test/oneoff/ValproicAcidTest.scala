@@ -51,11 +51,12 @@ object ValproicAcidTest extends DefaultRunnableSpec with LazyLogging {
         "e0" -> TRAPIQueryEdge(Some(List(BiolinkPredicate("related_to"))), "n0", "n1", None)
       )
     )
+    val expectedResultCount = 43536 // As of 2022mar29
 
     suite("testEverythingOnValproicAcid")(
       testM(s"Find everything related to valproic acid") {
         for {
-          message <- QueryService.run(100, false, testQueryGraph)
+          message <- QueryService.run(5000, false, testQueryGraph)
 
           biolinkData <- Biolink.biolinkData
           encoded = {
@@ -69,7 +70,7 @@ object ValproicAcidTest extends DefaultRunnableSpec with LazyLogging {
           _ = Files.writeString(Paths.get("src/test/resources/test-valproic-acid.json"), encoded)
           results = message.results.get
         } yield {
-          assert(results.length)(Assertion.isGreaterThan(0)) // Expect more than one result
+          assert(results.length)(Assertion.isGreaterThanEqualTo(expectedResultCount))
         }
       }
     )
