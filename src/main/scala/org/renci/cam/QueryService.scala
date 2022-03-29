@@ -140,6 +140,10 @@ object QueryService extends LazyLogging {
       sparql""" VALUES ${edgeVar}_class { ${idsList.asValues} }
                       $edgeVar $RDFType ${edgeVar}_class .
                       """
+    case (None, Some(List(BiolinkNamedThing))) =>
+      // Since everything is a NamedThing, we don't actually need to filter anything.
+      sparql"""$edgeVar $RDFType ${edgeVar}_class .
+        """
     case (None, Some(biolinkTypes)) =>
       val irisList = biolinkTypes.map(_.iri)
       sparql""" VALUES ${edgeVar}_class { ${irisList.asValues} }
