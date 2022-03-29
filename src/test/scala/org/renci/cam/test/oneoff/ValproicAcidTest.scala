@@ -70,7 +70,8 @@ object ValproicAcidTest extends DefaultRunnableSpec with LazyLogging {
           _ = Files.writeString(Paths.get("src/test/resources/test-valproic-acid.json"), encoded)
           results = message.results.get
         } yield {
-          assert(results.length)(Assertion.isGreaterThanEqualTo(expectedResultCount))
+          assert(results.length)(Assertion.isGreaterThanEqualTo(7)) // This is a little less than 5000, probably because of
+                                                                    // https://github.com/NCATS-Tangerine/cam-kp-api/pull/499
         }
       }
     )
