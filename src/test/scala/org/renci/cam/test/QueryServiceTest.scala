@@ -2,8 +2,10 @@ package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
 import org.apache.commons.io.IOUtils
-import org.apache.jena.query.{ResultSet, ResultSetFactory}
+import org.apache.jena.query.{QuerySolution, QuerySolutionMap, ResultSet, ResultSetFactory}
+import org.apache.jena.rdf.model.RDFNode
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLStringContext
+import org.renci.cam.QueryService.{Triple, getTRAPIEdgeBindingsMany, mapQueryBiolinkPredicatesToRelations, mapRelationsToLabelAndBiolink}
 import org.renci.cam._
 import org.renci.cam.domain._
 import zio._
@@ -170,13 +172,112 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     }
   )
 
+  /*
+   * The following tests were added as part of a series of tests about the different components of QueryService.
+   * Some of these tests may be better integrated in some of the tests above.
+   */
+
+  val testQueryServiceSteps = {
+    def createQuerySolutionMap(variableToValueMapping: Map[String, RDFNode]): QuerySolution = {
+      val qsm = new QuerySolutionMap()
+      variableToValueMapping.foreach({ case (varName, rdfNode) => qsm.add(varName, rdfNode) })
+      qsm
+    }
+
+    val initialQuerySolutions: List[QuerySolution] = List(
+      createQuerySolutionMap(Map(
+        "?n1_type" -> IRI("http://purl.obolibrary.org/obo/GO_0006094"),
+        "?e0" -> IRI("http://purl.obolibrary.org/obo/RO_0000056"),
+        "?n1" -> IRI("http://model.geneontology.org/R-HSA-70263/R-HSA-70263"),
+        "?n0_type" -> IRI("http://purl.obolibrary.org/obo/CHEBI_15361"),
+        "?n0" -> IRI("http://model.geneontology.org/R-ALL-113557_R-HSA-70501")
+      )),
+      createQuerySolutionMap(Map(
+        "?n1_type" -> IRI("http://purl.obolibrary.org/obo/GO_0046034"),
+        "?e0" -> IRI("http://purl.obolibrary.org/obo/RO_0000056"),
+        "?n1" -> IRI("http://model.geneontology.org/R-HSA-70263/R-HSA-70263"),
+        "?n0_type" -> IRI("http://purl.obolibrary.org/obo/CHEBI_15361"),
+        "?n0" -> IRI("http://model.geneontology.org/R-ALL-113557_R-HSA-70501")
+      )),
+      createQuerySolutionMap(Map(
+        "?n1_type" -> IRI("http://purl.obolibrary.org/obo/GO_0046034>"),
+        "?e0" -> IRI("http://purl.obolibrary.org/obo/RO_0000056"),
+        "?n1" -> IRI("http://model.geneontology.org/R-HSA-73621/R-HSA-73621"),
+        "?n0_type" -> IRI("http://purl.obolibrary.org/obo/CHEBI_15361"),
+        "?n0" -> IRI("http://model.geneontology.org/R-ALL-113557_R-HSA-909776")
+      ))
+    )
+
+    val queryGraph = TRAPIQueryGraph(nodes = Map(
+      "n0" -> TRAPIQueryNode(
+        ids = Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_15361"))),
+        categories = Some(List(QueryService.BiolinkNamedThing)),
+        is_set = None
+      ),
+      "n1" -> TRAPIQueryNode(
+        ids = None,
+        categories = Some(List(QueryService.BiolinkNamedThing)),
+        is_set = None
+      )
+    ), edges = Map(
+      "e0" -> TRAPIQueryEdge(
+        predicates = Some(List(BiolinkPredicate("related_to", IRI("https://w3id.org/biolink/vocab/related_to")))),
+        subject = "n0",
+        `object` = "n1",
+        constraints = None
+      )
+    ))
+
+    // QueryService.extractCoreTriples(initialQuerySolutions, queryGraph)
+    suite("testQueryServiceSteps")(
+      zio.test.test("Test extractCoreTriples()") {
+        val expectedCoreTriples = Set(
+          Triple(
+            subj = IRI("http://model.geneontology.org/R-ALL-113557_R-HSA-70501"),
+            pred = IRI("http://purl.obolibrary.org/obo/RO_0000056"),
+            obj = IRI("http://model.geneontology.org/R-HSA-70263/R-HSA-70263")
+          ),
+          Triple(
+            subj = IRI("http://model.geneontology.org/R-ALL-113557_R-HSA-909776"),
+            pred = IRI("http://purl.obolibrary.org/obo/RO_0000056"),
+            obj = IRI("http://model.geneontology.org/R-HSA-73621/R-HSA-73621")
+          )
+        )
+
+        assert(QueryService.extractCoreTriples(initialQuerySolutions, queryGraph))(Assertion.equalTo(expectedCoreTriples))
+      } /*,
+      zio.test.test("Test getTRAPINodes()") {
+
+      },
+      zio.test.test("Test getTRAPIEdges()") {
+
+      },
+      zio.test.test("Test getTRAPIEdges()") {
+
+      },
+      zio.test.test("Test getTRAPIEdgeBindingsMany()") {
+
+      },
+      zio.test.test("Test getTRAPINodeBindings()") {
+        val querySolutionsToEdgeBindings <- QueryService.getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate)
+
+        for {
+          querySolution <- initialQuerySolutions
+          trapiBindings <- QueryService.getTRAPINodeBindings(queryGraph, querySolution) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
+        }
+      } */
+    )
+  }
+
   def spec = suite("QueryService tests")(
 //    testGetNodeTypes,
     testEnforceQueryEdgeTypes,
     testGetTRAPINodeBindings,
     testQueryTexts,
     testGetNodesToDirectTypes,
-    testGetProjections
+    testGetProjections,
+
+    testQueryServiceSteps,
   ) @@ TestAspect.sequential
 
 }
