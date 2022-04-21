@@ -4,6 +4,8 @@ import com.google.common.base.CaseFormat
 import contextual.Case
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
+import org.apache.jena.rdf.model.RDFNode
+import org.apache.jena.rdf.model.impl.ResourceImpl
 import org.apache.jena.sparql.core.{Var => JenaVar}
 import org.phenoscape.sparql.FromQuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLInterpolator
@@ -31,6 +33,8 @@ package object domain {
         getResource(qs, variablePath).map(r => IRI(r.getURI))
 
     }
+
+    implicit def toRDFNode(iri: IRI): RDFNode = new ResourceImpl(iri.value)
 
     implicit val schema: Schema[IRI] = Schema.string
 
