@@ -356,16 +356,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
 
       },*/
       zio.test.testM("Test getTRAPINodeBindings()") {
-        // getTRAPIEdgeBindingsMany(
-        //  TRAPIQueryGraph(
-        //    Map(
-        //      n0 -> TRAPIQueryNode(Some(List(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))),Some(List(BiolinkClass(NamedThing,IRI(https://w3id.org/biolink/vocab/NamedThing)))),None),
-        //      n1 -> TRAPIQueryNode(None,Some(List(BiolinkClass(NamedThing,IRI(https://w3id.org/biolink/vocab/NamedThing)))),None)),
-        //      Map(e0 -> TRAPIQueryEdge(Some(List(BiolinkPredicate(related_to,IRI(https://w3id.org/biolink/vocab/related_to)))),n0,n1,None))),
-        //      List(
-        //        ( ?n1_type = <http://purl.obolibrary.org/obo/GO_0006094> ) ( ?e0 = <http://purl.obolibrary.org/obo/RO_0000056> ) ( ?n1 = <http://model.geneontology.org/R-HSA-70263/R-HSA-70263> ) ( ?n0_type = <http://purl.obolibrary.org/obo/CHEBI_15361> ) ( ?n0 = <http://model.geneontology.org/R-ALL-113557_R-HSA-70501> ), ( ?n1_type = <http://purl.obolibrary.org/obo/GO_0046034> ) ( ?e0 = <http://purl.obolibrary.org/obo/RO_0000056> ) ( ?n1 = <http://model.geneontology.org/R-HSA-70263/R-HSA-70263> ) ( ?n0_type = <http://purl.obolibrary.org/obo/CHEBI_15361> ) ( ?n0 = <http://model.geneontology.org/R-ALL-113557_R-HSA-70501> ), ( ?n1_type = <http://purl.obolibrary.org/obo/GO_0046034> ) ( ?e0 = <http://purl.obolibrary.org/obo/RO_0000056> ) ( ?n1 = <http://model.geneontology.org/R-HSA-73621/R-HSA-73621> ) ( ?n0_type = <http://purl.obolibrary.org/obo/CHEBI_15361> ) ( ?n0 = <http://model.geneontology.org/R-ALL-113557_R-HSA-909776> )),
-        //        HashMap()
-
+        // List((Map(n0 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))), n1 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/GO_0006094)))),Map(e0 -> List(TRAPIEdgeBinding(309229ebbc25b5b04fe79bf560d9ea20c1831703fa98605b4e97f78d73b47c56)))), (Map(n0 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))), n1 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/GO_0046034)))),Map(e0 -> List(TRAPIEdgeBinding(3e27e38fc631bbfaac62c84dbe8e475895797f6fe663a852d916df24a0522339)))), (Map(n0 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))), n1 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/GO_0046034>)))),Map(e0 -> List(TRAPIEdgeBinding(86cf45a0368b1fbf6dd93a9e6bdd1b6fcc030d53389d4e8b3e4d81e850ba0420)))))
         for {
           querySolutionsToEdgeBindings <- QueryService.getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate)
           trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
@@ -373,7 +364,11 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
               Task.effect(querySolutionsToEdgeBindings(querySolution))
           }
         } yield {
-          assert(trapiBindings)(Assertion.equalTo(List()))
+          // We should have three results
+          assert(trapiBindings.length)(Assertion.equalTo(3)) &&
+          // Each result should have two nodes and one edge
+            assert(trapiBindings.flatMap(_._1.keys).distinct.toSet)(Assertion.equalTo(Set("n0", "n1"))) &&
+            assert(trapiBindings.flatMap(_._2.keys).distinct.toSet)(Assertion.equalTo(Set("e0")))
         }
       }
     )
