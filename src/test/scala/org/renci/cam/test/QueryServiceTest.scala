@@ -5,6 +5,7 @@ import org.apache.commons.io.IOUtils
 import org.apache.jena.query.{QuerySolution, QuerySolutionMap, ResultSet, ResultSetFactory}
 import org.apache.jena.rdf.model.RDFNode
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLStringContext
+import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.QueryService.{Triple, getTRAPIEdgeBindingsMany, mapQueryBiolinkPredicatesToRelations, mapRelationsToLabelAndBiolink}
 import org.renci.cam._
 import org.renci.cam.domain._
@@ -184,6 +185,102 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
       qsm
     }
 
+    val relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] = Map(
+      IRI("http://purl.obolibrary.org/obo/RO_0002565") -> (Some("results in movement of"), IRI("https://w3id.org/biolink/vocab/participates_in")),
+      IRI("http://purl.obolibrary.org/obo/RO_0000057") -> (Some("has participant"), IRI("https://w3id.org/biolink/vocab/has_participant")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002087") -> (Some("immediately preceded by"), IRI("https://w3id.org/biolink/vocab/preceded_by")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002500") -> (Some("causal agent in process"), IRI("https://w3id.org/biolink/vocab/capable_of")),
+      IRI("http://www.w3.org/2004/02/skos/core#narrowMatch") -> (None,IRI("https://w3id.org/biolink/vocab/narrow_match")),
+      IRI("http://purl.obolibrary.org/obo/RO_0004007") -> (Some("has primary input or output"),IRI("https://w3id.org/biolink/vocab/has_participant")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002131") -> (Some("overlaps"),IRI("https://w3id.org/biolink/vocab/overlaps")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002206") -> (Some("expressed in"),IRI("https://w3id.org/biolink/vocab/expressed_in")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002436") -> (Some("molecularly interacts with"),IRI("https://w3id.org/biolink/vocab/molecularly_interacts_with")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002160") -> (Some("only in taxon"),IRI("https://w3id.org/biolink/vocab/in_taxon")),
+      IRI("http://purl.obolibrary.org/obo/RO_0001025") -> (Some("located in"),IRI("https://w3id.org/biolink/vocab/located_in")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002093") -> (Some("ends during"),IRI("https://w3id.org/biolink/vocab/temporally_related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002356") -> (Some("results in specification of"),IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://www.w3.org/2004/02/skos/core#relatedMatch") -> (None,IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002216") -> (Some("capable of part of"),IRI("https://w3id.org/biolink/vocab/participates_in")),
+      IRI("http://purl.obolibrary.org/obo/BFO_0000063") -> (Some("precedes"),IRI("https://w3id.org/biolink/vocab/precedes")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002432") -> (Some("is active in"),IRI("https://w3id.org/biolink/vocab/active_in")),
+      IRI("http://purl.obolibrary.org/obo/BFO_0000051") -> (Some("has part"),IRI("https://w3id.org/biolink/vocab/has_part")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002349") -> (Some("results in determination of"),IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002204") -> (Some("gene product of"),IRI("https://w3id.org/biolink/vocab/gene_product_of")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002488") -> (Some("existence starts during"),IRI("https://w3id.org/biolink/vocab/temporally_related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0004034") -> (Some("acts upstream of, positive effect"),IRI("https://w3id.org/biolink/vocab/acts_upstream_of_positive_effect")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002497") -> (Some("end stage"),IRI("https://w3id.org/biolink/vocab/temporally_related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002292") -> (Some("expresses"),IRI("https://w3id.org/biolink/vocab/expresses")),
+      IRI("http://purl.obolibrary.org/obo/RO_0004033") -> (Some("acts upstream of or within, negative effect"),IRI("https://w3id.org/biolink/vocab/acts_upstream_of_or_within_negative_effect")),
+      IRI("http://purl.obolibrary.org/obo/RO_0001015") -> (Some("location of"),IRI("https://w3id.org/biolink/vocab/location_of")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002434") -> (Some("interacts with"),IRI("https://w3id.org/biolink/vocab/interacts_with")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002263") -> (Some("acts upstream of"),IRI("https://w3id.org/biolink/vocab/acts_upstream_of")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002212") -> (Some("negatively regulates"),IRI("https://w3id.org/biolink/vocab/negatively_regulates")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002496") -> (Some("existence starts during or after"),IRI("https://w3id.org/biolink/vocab/temporally_related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002331") -> (Some("involved in"),IRI("https://w3id.org/biolink/vocab/actively_involved_in")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002608") -> (Some("process has causal agent"),IRI("https://w3id.org/biolink/vocab/caused_by")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002314") -> (Some("characteristic of part of"),IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002449") -> (Some("directly negatively regulates activity of"),IRI("https://w3id.org/biolink/vocab/entity_negatively_regulates_entity")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002333") -> (Some("enabled by"),IRI("https://w3id.org/biolink/vocab/enabled_by")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002298") -> (Some("results in morphogenesis of"),IRI("https://w3id.org/biolink/vocab/has_output")),
+      IRI("http://purl.obolibrary.org/obo/RO_0000056") -> (Some("participates in"),IRI("https://w3id.org/biolink/vocab/participates_in")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002229") -> (Some("ends"),IRI("https://w3id.org/biolink/vocab/temporally_related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0004032") -> (Some("acts upstream of or within, positive effect"),IRI("https://w3id.org/biolink/vocab/acts_upstream_of_or_within")),
+      IRI("http://translator.renci.org/ubergraph-axioms.ofn#acts_upstream_of_o_enabled_by") -> (Some("acts_upstream_of_o_enabled_by"),IRI("https://w3id.org/biolink/vocab/affects_activity_of")),
+      IRI("http://purl.obolibrary.org/obo/RO_0000052") -> (Some("characteristic of"),IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://purl.obolibrary.org/obo/BFO_0000066") -> (Some("occurs in"),IRI("https://w3id.org/biolink/vocab/occurs_in")),
+      IRI("http://www.w3.org/2004/02/skos/core#exactMatch") -> (None,IRI("https://w3id.org/biolink/vocab/same_as")),
+      IRI("http://www.w3.org/2000/01/rdf-schema#subClassOf") -> (None,IRI("https://w3id.org/biolink/vocab/subclass_of")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002588") -> (Some("results_in_assembly_of"),IRI("https://w3id.org/biolink/vocab/has_output")),
+      IRI("http://www.w3.org/2000/01/rdf-schema#subPropertyOf") -> (None,IRI("https://w3id.org/biolink/vocab/subclass_of")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002348") -> (Some("results in commitment to"),IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://purl.obolibrary.org/obo/BFO_0000062") -> (Some("preceded by"),IRI("https://w3id.org/biolink/vocab/preceded_by")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002211") -> (Some("regulates"),IRI("https://w3id.org/biolink/vocab/process_regulates_process")),
+      IRI("http://www.w3.org/2004/02/skos/core#closeMatch") -> (None,IRI("https://w3id.org/biolink/vocab/close_match")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002224") -> (Some("starts with"),IRI("https://w3id.org/biolink/vocab/temporally_related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002450") -> (Some("directly positively regulates activity of"),IRI("https://w3id.org/biolink/vocab/entity_positively_regulates_entity")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002205") -> (Some("has gene product"),IRI("https://w3id.org/biolink/vocab/has_gene_product")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002604") -> (Some("is opposite of"),IRI("https://w3id.org/biolink/vocab/opposite_of")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002448") -> (Some("directly regulates activity of"),IRI("https://w3id.org/biolink/vocab/entity_regulates_entity")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002344") -> (Some("results in transport to from or in"),IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002232") -> (Some("has end location"),IRI("https://w3id.org/biolink/vocab/occurs_in")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002338") -> (Some("has target start location"),IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002592") -> (Some("results in organization of"),IRI("https://w3id.org/biolink/vocab/affects")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002315") -> (Some("results in acquisition of features of"),IRI("https://w3id.org/biolink/vocab/causes")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002234") -> (Some("has output"),IRI("https://w3id.org/biolink/vocab/has_output")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002327") -> (Some("enables"),IRI("https://w3id.org/biolink/vocab/enables")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002492") -> (Some("existence ends during"),IRI("https://w3id.org/biolink/vocab/temporally_related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002090") -> (Some("immediately precedes"),IRI("https://w3id.org/biolink/vocab/precedes")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002412") -> (Some("immediately causally upstream of"),IRI("https://w3id.org/biolink/vocab/precedes")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002296") -> (Some("results in development of"),IRI("https://w3id.org/biolink/vocab/has_output")),
+      IRI("http://purl.obolibrary.org/obo/GOREL_0001006") -> (Some("acts_on_population_of"),IRI("https://w3id.org/biolink/vocab/affects")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002230") -> (Some("ends with"),IRI("https://w3id.org/biolink/vocab/temporally_related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002299") -> (Some("results in maturation of"),IRI("https://w3id.org/biolink/vocab/has_output")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002264") -> (Some("acts upstream of or within"),IRI("https://w3id.org/biolink/vocab/acts_upstream_of_or_within_positive_effect")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002092") -> (Some("happens during"),IRI("https://w3id.org/biolink/vocab/temporally_related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002084") -> (Some("during which ends"),IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002297") -> (Some("results in formation of"),IRI("https://w3id.org/biolink/vocab/has_output")),
+      IRI("http://purl.obolibrary.org/obo/RO_0004009") -> (Some("has primary input"),IRI("https://w3id.org/biolink/vocab/consumes")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002223") -> (Some("starts"),IRI("https://w3id.org/biolink/vocab/temporally_related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002339") -> (Some("has target end location"),IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://www.w3.org/2004/02/skos/core#broadMatch") -> (None,IRI("https://w3id.org/biolink/vocab/broad_match")),
+      IRI("http://purl.obolibrary.org/obo/UPHENO_0000001") -> (Some("has phenotype affecting"),IRI("https://w3id.org/biolink/vocab/affects")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002313") -> (Some("transports or maintains localization of"),IRI("https://w3id.org/biolink/vocab/affects_transport_of")),
+      IRI("http://purl.obolibrary.org/obo/RO_0004008") -> (Some("has primary output"),IRI("https://w3id.org/biolink/vocab/has_output")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002326") -> (Some("contributes to"),IRI("https://w3id.org/biolink/vocab/contributes_to")),
+      IRI("http://purl.obolibrary.org/obo/BFO_0000050") -> (Some("part of"),IRI("https://w3id.org/biolink/vocab/part_of")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002220") -> (Some("adjacent to"),IRI("https://w3id.org/biolink/vocab/coexists_with")),
+      IRI("http://purl.obolibrary.org/obo/RO_0001019") -> (Some("contains"),IRI("https://w3id.org/biolink/vocab/has_part")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002215") -> (Some("capable of"),IRI("https://w3id.org/biolink/vocab/capable_of")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002231") -> (Some("has start location"),IRI("https://w3id.org/biolink/vocab/occurs_in")),
+      IRI("http://purl.obolibrary.org/obo/RO_0000053") -> (Some("has characteristic"),IRI("https://w3id.org/biolink/vocab/has_attribute")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002411") -> (Some("causally upstream of"),IRI("https://w3id.org/biolink/vocab/precedes")),
+      IRI("http://purl.obolibrary.org/obo/RO_0004035") -> (Some("acts upstream of, negative effect"),IRI("https://w3id.org/biolink/vocab/acts_upstream_of_negative_effect")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002213") -> (Some("positively regulates"),IRI("https://w3id.org/biolink/vocab/positively_regulates")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002590") -> (Some("results in disassembly of"),IRI("https://w3id.org/biolink/vocab/has_input")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002328") -> (Some("functionally related to"),IRI("https://w3id.org/biolink/vocab/related_to")),
+      IRI("http://purl.obolibrary.org/obo/RO_0002233") -> (Some("has input"),IRI("https://w3id.org/biolink/vocab/has_input"))
+    )
+
     val initialQuerySolutions: List[QuerySolution] = List(
       createQuerySolutionMap(Map(
         "?n1_type" -> IRI("http://purl.obolibrary.org/obo/GO_0006094"),
@@ -245,7 +342,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         )
 
         assert(QueryService.extractCoreTriples(initialQuerySolutions, queryGraph))(Assertion.equalTo(expectedCoreTriples))
-      } /*,
+      }, /*
       zio.test.test("Test getTRAPINodes()") {
 
       },
@@ -257,15 +354,28 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
       },
       zio.test.test("Test getTRAPIEdgeBindingsMany()") {
 
-      },
-      zio.test.test("Test getTRAPINodeBindings()") {
-        val querySolutionsToEdgeBindings <- QueryService.getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate)
+      },*/
+      zio.test.testM("Test getTRAPINodeBindings()") {
+        // getTRAPIEdgeBindingsMany(
+        //  TRAPIQueryGraph(
+        //    Map(
+        //      n0 -> TRAPIQueryNode(Some(List(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))),Some(List(BiolinkClass(NamedThing,IRI(https://w3id.org/biolink/vocab/NamedThing)))),None),
+        //      n1 -> TRAPIQueryNode(None,Some(List(BiolinkClass(NamedThing,IRI(https://w3id.org/biolink/vocab/NamedThing)))),None)),
+        //      Map(e0 -> TRAPIQueryEdge(Some(List(BiolinkPredicate(related_to,IRI(https://w3id.org/biolink/vocab/related_to)))),n0,n1,None))),
+        //      List(
+        //        ( ?n1_type = <http://purl.obolibrary.org/obo/GO_0006094> ) ( ?e0 = <http://purl.obolibrary.org/obo/RO_0000056> ) ( ?n1 = <http://model.geneontology.org/R-HSA-70263/R-HSA-70263> ) ( ?n0_type = <http://purl.obolibrary.org/obo/CHEBI_15361> ) ( ?n0 = <http://model.geneontology.org/R-ALL-113557_R-HSA-70501> ), ( ?n1_type = <http://purl.obolibrary.org/obo/GO_0046034> ) ( ?e0 = <http://purl.obolibrary.org/obo/RO_0000056> ) ( ?n1 = <http://model.geneontology.org/R-HSA-70263/R-HSA-70263> ) ( ?n0_type = <http://purl.obolibrary.org/obo/CHEBI_15361> ) ( ?n0 = <http://model.geneontology.org/R-ALL-113557_R-HSA-70501> ), ( ?n1_type = <http://purl.obolibrary.org/obo/GO_0046034> ) ( ?e0 = <http://purl.obolibrary.org/obo/RO_0000056> ) ( ?n1 = <http://model.geneontology.org/R-HSA-73621/R-HSA-73621> ) ( ?n0_type = <http://purl.obolibrary.org/obo/CHEBI_15361> ) ( ?n0 = <http://model.geneontology.org/R-ALL-113557_R-HSA-909776> )),
+        //        HashMap()
 
         for {
-          querySolution <- initialQuerySolutions
-          trapiBindings <- QueryService.getTRAPINodeBindings(queryGraph, querySolution) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
+          querySolutionsToEdgeBindings <- QueryService.getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate)
+          trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
+            QueryService.getTRAPINodeBindings(queryGraph, querySolution) zip
+              Task.effect(querySolutionsToEdgeBindings(querySolution))
+          }
+        } yield {
+          assert(trapiBindings)(Assertion.equalTo(List()))
         }
-      } */
+      }
     )
   }
 
@@ -278,6 +388,6 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     testGetProjections,
 
     testQueryServiceSteps,
-  ) @@ TestAspect.sequential
+  ).provideCustomLayer(Biolink.makeUtilitiesLayer.mapError(TestFailure.die)) @@ TestAspect.sequential
 
 }
