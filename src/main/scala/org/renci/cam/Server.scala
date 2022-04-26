@@ -100,9 +100,11 @@ object Server extends App with LazyLogging {
         Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
 
       val example = {
-        val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
-        val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcess"))), None)
-        val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("has_participant"))), "n1", "n0", None)
+        // This example asks what biological process or activities positively regulate GO:0004707
+        // (MAP kinase activity, see http://purl.obolibrary.org/obo/GO_0004707)
+        val n0Node = TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None)
+        val n1Node = TRAPIQueryNode(Some(List(IRI("GO:0004707"))), None, None)
+        val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("positively_regulates"))), "n1", "n0", None)
         val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
         val message = TRAPIMessage(Some(queryGraph), None, None)
         TRAPIQuery(message, None)
