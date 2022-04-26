@@ -60,21 +60,33 @@ object QueryService extends LazyLogging {
           submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
     for {
       biolinkData <- biolinkData
-      _ = logger.debug("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
+      _ = logger.warn("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
       allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
       predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-      relationsToLabelAndBiolinkPredicate <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+      relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+      _ = logger.warn(s"findInitialQuerySolutions(${queryGraph}, ${predicatesToRelations}, ${limit})")
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+      _ = logger.warn(s"Initial query solutions: ${initialQuerySolutions.length} (limit: ${limit}): ${initialQuerySolutions}")
+      _ = logger.warn(s"extractCoreTriples(${initialQuerySolutions}, ${queryGraph})")
       solutionTriples = extractCoreTriples(initialQuerySolutions, queryGraph)
+      _ = logger.warn(s"Solution triples: ${solutionTriples.size} (limit: ${limit}): ${solutionTriples}")
       provs <- getProvenance(solutionTriples)
+      _ = logger.warn(s"provs: ${provs.size} (limit: ${limit}): ${provs}")
+      _ = logger.warn(s"getTRAPINodes(${queryGraph}, ${initialQuerySolutions}, ${biolinkData.classes})")
       initialKGNodes <- getTRAPINodes(queryGraph, initialQuerySolutions, biolinkData.classes)
+      _ = logger.warn(s"initialKGNodes: ${initialKGNodes.size} (limit: ${limit}): ${initialKGNodes}")
+      _ = logger.warn(s"getTRAPIEdges(${queryGraph}, ${initialQuerySolutions}, ${relationsToLabelAndBiolinkPredicate}, ${provs})")
       initialKGEdges <- getTRAPIEdges(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate, provs)
+      _ = logger.warn(s"initialKGEdges: ${initialKGEdges.size} (limit: ${limit}): ${initialKGEdges}")
+      _ = logger.warn(s"getTRAPIEdgeBindingsMany(${queryGraph}, ${initialQuerySolutions}, ${relationsToLabelAndBiolinkPredicate})")
       querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate)
+      _ = logger.warn(s"querySolutionsToEdgeBindings: ${querySolutionsToEdgeBindings} (length: ${querySolutionsToEdgeBindings.size}, limit: ${limit})")
       trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
         getTRAPINodeBindings(queryGraph, querySolution) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
       }
+      _ = logger.warn(s"trapiBindings: ${trapiBindings.length} (limit: ${limit})")
       _ <- ZIO.when(includeExtraEdges)(
         for {
           prov2CAMStuffTripleMap <- ZIO.foreachPar(provs.values)(prov => getCAMStuff(IRI(prov)).map(prov -> _)).map(_.toMap)
@@ -97,6 +109,8 @@ object QueryService extends LazyLogging {
         } yield ()
       )
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
+      _ = logger.warn(s"results: ${results} (length: ${results.length}, limit: ${limit})")
+      _ = logger.warn(s"results distinct: ${results.distinct} (length: ${results.distinct.length}, limit: ${limit})")
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes, initialKGEdges)), Some(results.distinct))
 
   def findInitialQuerySolutions(queryGraph: TRAPIQueryGraph,
@@ -128,10 +142,12 @@ object QueryService extends LazyLogging {
       sparql"""SELECT DISTINCT $projections
           WHERE {
             $nodesToDirectTypes
-            $edgePatterns
+            GRAPH ?g { $edgePatterns }
+            OPTIONAL { ?g $ProvWasDerivedFrom ?other }
           }
           $limitSparql
           """
+    logger.warn(s"Executing query: ${queryString}")
     SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
   }
 
@@ -322,7 +338,7 @@ object QueryService extends LazyLogging {
   def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph,
                                querySolutions: List[QuerySolution],
                                relationsMap: Map[IRI, (Option[String], IRI)])
-    : ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] =
+    : ZIO[Has[BiolinkData], Throwable, Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] =
     for {
       biolinkData <- biolinkData
       querySolutionsToEdgeBindings <- ZIO.foreach(querySolutions) { querySolution =>

@@ -297,7 +297,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         "?n0" -> IRI("http://model.geneontology.org/R-ALL-113557_R-HSA-70501")
       )),
       createQuerySolutionMap(Map(
-        "?n1_type" -> IRI("http://purl.obolibrary.org/obo/GO_0046034>"),
+        "?n1_type" -> IRI("http://purl.obolibrary.org/obo/GO_0046034"),
         "?e0" -> IRI("http://purl.obolibrary.org/obo/RO_0000056"),
         "?n1" -> IRI("http://model.geneontology.org/R-HSA-73621/R-HSA-73621"),
         "?n0_type" -> IRI("http://purl.obolibrary.org/obo/CHEBI_15361"),
@@ -359,16 +359,23 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         // List((Map(n0 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))), n1 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/GO_0006094)))),Map(e0 -> List(TRAPIEdgeBinding(309229ebbc25b5b04fe79bf560d9ea20c1831703fa98605b4e97f78d73b47c56)))), (Map(n0 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))), n1 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/GO_0046034)))),Map(e0 -> List(TRAPIEdgeBinding(3e27e38fc631bbfaac62c84dbe8e475895797f6fe663a852d916df24a0522339)))), (Map(n0 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))), n1 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/GO_0046034>)))),Map(e0 -> List(TRAPIEdgeBinding(86cf45a0368b1fbf6dd93a9e6bdd1b6fcc030d53389d4e8b3e4d81e850ba0420)))))
         for {
           querySolutionsToEdgeBindings <- QueryService.getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate)
+          _ = println(s"querySolutionsToEdgeBindings: ${querySolutionsToEdgeBindings} (length: ${querySolutionsToEdgeBindings.size})")
           trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
             QueryService.getTRAPINodeBindings(queryGraph, querySolution) zip
               Task.effect(querySolutionsToEdgeBindings(querySolution))
           }
+          results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
         } yield {
           // We should have three results
           assert(trapiBindings.length)(Assertion.equalTo(3)) &&
           // Each result should have two nodes and one edge
             assert(trapiBindings.flatMap(_._1.keys).distinct.toSet)(Assertion.equalTo(Set("n0", "n1"))) &&
-            assert(trapiBindings.flatMap(_._2.keys).distinct.toSet)(Assertion.equalTo(Set("e0")))
+            assert(trapiBindings.flatMap(_._2.keys).distinct.toSet)(Assertion.equalTo(Set("e0"))) &&
+          // The results should also have three records.
+          // assert(results)(Assertion.equalTo(List())) &&
+          assert(results.length)(Assertion.equalTo(3)) &&
+          // Three DISTINCT records.
+          assert(results.distinct.length)(Assertion.equalTo(3))
         }
       }
     )

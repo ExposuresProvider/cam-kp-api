@@ -26,7 +26,7 @@ import zio.test.environment.testEnvironment
 object LimitTest extends DefaultRunnableSpec with LazyLogging {
 
   val testQueryWithExpectedResults = {
-    val queryGraphExpectedResults = 14 // expected results as of 2022-mar-23
+    val queryGraphExpectedResults = 25 // expected results as of 2022-mar-23
     val testQueryGraph = TRAPIQueryGraph(
       Map(
         "n0" -> TRAPIQueryNode(Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_15361"))), None, None),
