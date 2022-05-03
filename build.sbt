@@ -80,21 +80,23 @@ Docker / daemonUser := "camkpapi"
 dockerExposedPorts += 8080
 
 // test
-dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g",
-                      "CAM_KP_SPARQL_ENDPOINT" -> sys.env("CAM_KP_SPARQL_ENDPOINT"),
-                      "CAM_KP_LOG_LEVEL" -> sys.env("CAM_KP_LOG_LEVEL"))
+//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g",
+//                      "SPARQL_ENDPOINT" -> sys.env("SPARQL_ENDPOINT"),
+//                      "CAM_KP_LOG_LEVEL" -> sys.env("CAM_KP_LOG_LEVEL"))
 
 // dev
 //dockerEnvVars ++= Map(
 //  "JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api-dev.renci.org -DMATURITY=development",
-//  "CAM_KP_SPARQL_ENDPOINT" -> sys.env("CAM_KP_SPARQL_ENDPOINT")
+//  "SPARQL_ENDPOINT" -> sys.env("SPARQL_ENDPOINT"),
+//  "CAM_KP_LOG_LEVEL" -> sys.env("CAM_KP_LOG_LEVEL")
 //)
 
 // prod
-//dockerEnvVars ++= Map(
-//  "JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DMATURITY=production",
-//  "CAM_KP_SPARQL_ENDPOINT" -> sys.env("CAM_KP_SPARQL_ENDPOINT")
-//)
+dockerEnvVars ++= Map(
+  "JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DMATURITY=production",
+  "SPARQL_ENDPOINT" -> sys.env("SPARQL_ENDPOINT"),
+  "CAM_KP_LOG_LEVEL" -> sys.env("CAM_KP_LOG_LEVEL")
+)
 
 dockerEntrypoint := Seq("/opt/docker/bin/server")
 Docker / dockerApiVersion := Some(DockerApiVersion(1, 40))
