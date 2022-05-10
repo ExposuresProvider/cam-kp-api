@@ -145,11 +145,11 @@ object QueryService extends LazyLogging {
       sparql"""PREFIX hint: <http://www.bigdata.com/queryHints#>
 
           SELECT DISTINCT $type_projections
-               (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?groups)
-               (GROUP_CONCAT(DISTINCT ?other; SEPARATOR='|') AS ?others)
+               (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?graphs)
+               (GROUP_CONCAT(DISTINCT ?d; SEPARATOR='|') AS ?derivedFrom)
           WHERE {
             $nodesToDirectTypes
-            OPTIONAL { ?g $ProvWasDerivedFrom ?other }
+            OPTIONAL { ?g $ProvWasDerivedFrom ?d }
             {
               SELECT $node_projections ?g
               WHERE {
