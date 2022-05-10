@@ -57,6 +57,7 @@ object QueryService extends LazyLogging {
   private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
 
   case class Result (
+    queryGraph: TRAPIQueryGraph,
     nodes: Map[String, IRI],
     edges: Map[String, IRI],
     graphs: Set[IRI],
@@ -72,11 +73,49 @@ object QueryService extends LazyLogging {
     val derivedFrom = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
 
     Result(
+      queryGraph,
       nodes,
       edges,
       graphs,
       derivedFrom
     )
+  }
+
+  def getAllTRAPINodes(results: List[Result]): Map[IRI, TRAPINode] = {
+    results.flatMap(r => {
+      r.nodes.keys.map(n => {
+        val iri = r.nodes(n)
+        val queryNode = r.queryGraph.nodes(n)
+        val name = n                          // TODO: replace this with labels from the server
+        val categories = queryNode.categories // TODO: replace this with categories from the server
+        val attributes = List()
+        val trapiNode = TRAPINode(Some(name), categories, Some(attributes))
+        (iri, trapiNode)
+      })
+    }).toMap
+  }
+
+  TRAPIQueryConstraint
+
+  def getAllTRAPIEdges(results: List[Result], queryGraph: TRAPIQueryGraph): Map[String, TRAPIEdge] = {
+    val allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
+    val predicatesToRelations = for {
+      predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
+    } yield predicatesToRelations
+    val allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
+    val relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+
+    results.flatMap(r => {
+      r.edges.keys.map(e => {
+        val iri = r.edges(e)
+        val queryEdge = r.queryGraph.edges(e)
+        val name = e                          // TODO: replace this with labels from the server
+        val categories = queryEdge.constraints // TODO: replace this with categories from the server
+        val attributes = List()
+        val trapiNode = TRAPINode(Some(name), categories, Some(attributes))
+        (iri, trapiNode)
+      })
+    }).toMap
   }
 
   /**
@@ -94,15 +133,12 @@ object QueryService extends LazyLogging {
       biolinkData <- biolinkData
       _ = logger.warn("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
-      allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-      predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
-      allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-      relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
       _ = logger.warn(s"findInitialQuerySolutions(${queryGraph}, ${predicatesToRelations}, ${limit})")
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
       results = initialQuerySolutions.map(convertQuerySolutionToResult(_, queryGraph))
       _ = logger.warn(s"Results: ${results}")
-      nodes = Map[IRI, TRAPINode]()
+      nodes = getAllTRAPINodes(results)
+      _ = logger.warn(s"Nodes: ${nodes}")
       edges = Map[String, TRAPIEdge]()
       trapiResults = List()
     } yield {
