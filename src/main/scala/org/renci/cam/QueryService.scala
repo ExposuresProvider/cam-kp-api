@@ -4,6 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
+import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
 import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
@@ -55,6 +56,29 @@ object QueryService extends LazyLogging {
   // instances are not thread-safe; should be retrieved for every use
   private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
 
+  case class Result (
+    nodes: Map[String, IRI],
+    edges: Map[String, IRI],
+    graphs: Set[IRI],
+    derivedFrom: Set[IRI]
+  )
+
+  def convertQuerySolutionToResult(qs: QuerySolution, queryGraph: TRAPIQueryGraph): Result = {
+    def resourceToIRI(res: Resource) = IRI(res.getURI)
+
+    val nodes = queryGraph.nodes.keySet.map(n => (n, resourceToIRI(qs.getResource(f"${n}_type")))).toMap
+    val edges = queryGraph.edges.keySet.map(e => (e, resourceToIRI(qs.getResource(e)))).toMap
+    val graphs = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
+    val derivedFrom = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
+
+    Result(
+      nodes,
+      edges,
+      graphs,
+      derivedFrom
+    )
+  }
+
   /**
    * Query the triplestore with a TRAPIQuery and return a TRAPIMessage with the result.
    *
@@ -76,11 +100,13 @@ object QueryService extends LazyLogging {
       relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
       _ = logger.warn(s"findInitialQuerySolutions(${queryGraph}, ${predicatesToRelations}, ${limit})")
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+      results = initialQuerySolutions.map(convertQuerySolutionToResult(_, queryGraph))
+      _ = logger.warn(s"Results: ${results}")
       nodes = Map[IRI, TRAPINode]()
       edges = Map[String, TRAPIEdge]()
-      results = List()
+      trapiResults = List()
     } yield {
-      TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(results.distinct))
+      TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct))
     }
 
   def oldRun(limit: Int,
