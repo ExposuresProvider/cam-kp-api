@@ -129,22 +129,36 @@ object QueryService extends LazyLogging {
       val objectNodeValuesClauses = getNodeValuesClauses(objectNode.ids, objectNode.categories, edgeTargetVar)
       val nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
       sparql"""
-              $predicatesValuesClause
               $nodesValuesClauses
-              $edgeSourceVar $edgeIDVar $edgeTargetVar .
+              GRAPH ?g {
+                $predicatesValuesClause
+                $edgeSourceVar $edgeIDVar $edgeTargetVar .
+              }
             """
     }
-    val projections = getProjections(queryGraph)
+    val node_projections = getProjections(queryGraph)
+    val type_projections = getProjections(queryGraph, true)
     val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes.keySet)
     val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
     val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
     val queryString =
-      sparql"""SELECT DISTINCT $projections
+      sparql"""PREFIX hint: <http://www.bigdata.com/queryHints#>
+
+          SELECT DISTINCT $type_projections
+               (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?groups)
+               (GROUP_CONCAT(DISTINCT ?other; SEPARATOR='|') AS ?others)
           WHERE {
             $nodesToDirectTypes
-            GRAPH ?g { $edgePatterns }
             OPTIONAL { ?g $ProvWasDerivedFrom ?other }
+            {
+              SELECT $node_projections ?g
+              WHERE {
+                $edgePatterns
+              }
+            }
+            hint:Prior hint:runFirst true .
           }
+          GROUP BY $type_projections
           $limitSparql
           """
     logger.warn(s"Executing query: ${queryString}")
@@ -190,11 +204,20 @@ object QueryService extends LazyLogging {
       .fold(sparql"")(_ + _)
 
 
-  def getProjections(queryGraph: TRAPIQueryGraph): QueryText = {
+  /**
+   * There are two "projections" that we need to generate for use in SPARQL:
+   *  - If typesInsteadOfNodes is false (the default), we should generate ?n0 ?e0 ?n1 for a one-hop.
+   *  - If typesInsteadOfNodes is true, we should generate ?n0_type ?e0 ?n1_type for a one-hop.
+   *
+   * @param queryGraph The query graph to generate projections for.
+   * @param typesInsteadOfNodes Use `_type` projections instead of just the raw node projections.
+   * @return A string listing all the projects for use in a SPARQL query.
+   */
+  def getProjections(queryGraph: TRAPIQueryGraph, typesInsteadOfNodes: Boolean = false): QueryText = {
     val projectionVariableNames =
       queryGraph.edges.keys ++
-        queryGraph.edges.flatMap(e => List(e._2.subject, e._2.`object`)) ++
-        queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_type")
+        (if(typesInsteadOfNodes) queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_type")
+        else queryGraph.edges.flatMap(e => List(e._2.subject, e._2.`object`)))
     projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
   }
 
