@@ -55,7 +55,35 @@ object QueryService extends LazyLogging {
   // instances are not thread-safe; should be retrieved for every use
   private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
 
+  /**
+   * Query the triplestore with a TRAPIQuery and return a TRAPIMessage with the result.
+   *
+   * @param limit The maximum number of results to return.
+   * @param includeExtraEdges Include additional information about the returned nodes.
+   * @param submittedQueryGraph The query graph to search the triplestore with.
+   * @return A TRAPIMessage displaying the results.
+   */
   def run(limit: Int,
+          includeExtraEdges: Boolean,
+          submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
+    for {
+      biolinkData <- biolinkData
+      _ = logger.warn("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
+      queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+      allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
+      predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
+      allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
+      relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+      _ = logger.warn(s"findInitialQuerySolutions(${queryGraph}, ${predicatesToRelations}, ${limit})")
+      initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+      nodes = Map[IRI, TRAPINode]()
+      edges = Map[String, TRAPIEdge]()
+      results = List()
+    } yield {
+      TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(results.distinct))
+    }
+
+  def oldRun(limit: Int,
           includeExtraEdges: Boolean,
           submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
     for {
