@@ -32,7 +32,7 @@ val zioVersion = "1.0.14"
 val zioConfigVersion = "1.0.0-RC29-1"
 val zioCacheVersion = "0.1.1"
 val tapirVersion = "0.19.0-M13"
-val http4sVersion = "0.23.6"
+val http4sVersion = "0.23.11"
 val circeVersion = "0.14.1"
 val logbackVersion = "1.2.6"
 
