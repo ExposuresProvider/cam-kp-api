@@ -49,11 +49,8 @@ object SPARQLQueryExecutor extends LazyLogging {
   def runSelectQuery(query: Query): RIO[ZConfig[AppConfig] with HttpClient, List[QuerySolution]] =
     for {
       appConfig <- zio.config.getConfig[AppConfig]
-      sparql_endpoint_uri <- ZIO
-        .fromOption(Uri.fromString(appConfig.sparqlEndpoint).toOption)
-        .orElseFail(new Exception(s"Failed to parse SPARQL_ENDPOINT as a Uri: ${appConfig.sparqlEndpoint}"))
       client <- HttpClient.client
-      request = Request[Task](Method.POST, sparql_endpoint_uri).withEntity(query)
+      request = Request[Task](Method.POST, appConfig.sparqlEndpoint).withEntity(query)
       response <- client.expect[ResultSet](request)
     } yield response.asScala.toList
 
