@@ -20,7 +20,7 @@ javaOptions += "-Xmx8G"
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
-Compile / packageDoc / publishArtifact := false
+Compile /  packageDoc / publishArtifact := false
 
 configs(IntegrationTest)
 Defaults.itSettings
@@ -69,7 +69,7 @@ libraryDependencies ++= {
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
     "dev.zio"                     %% "zio-test-sbt"                   % zioVersion % "it,test",
     "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.39.6"   % "it,test",
-    "com.google.guava"             % "guava"                          % "31.1-jre",
+    "com.google.guava"             % "guava"                          % "31.0.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
     "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.4"
   )
