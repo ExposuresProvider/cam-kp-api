@@ -1,4 +1,4 @@
-[![Build Status](https://travis-ci.com/NCATS-Tangerine/cam-kp-api.svg?branch=master)](https://travis-ci.com/NCATS-Tangerine/cam-kp-api)
+[![Scala CI](https://github.com/ExposuresProvider/cam-kp-api/actions/workflows/scala.yml/badge.svg)](https://github.com/ExposuresProvider/cam-kp-api/actions/workflows/scala.yml)
 
 # cam-kp-api
 
