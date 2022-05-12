@@ -321,7 +321,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
 
   val testDILIGeneList = suite("testDILIGeneList")(
     testM("DILIGeneList") {
-      val diliGeneList = Files.readAllLines(Paths.get("src/it/resources/dili-gene-list-alt.txt")).asScala.map(a => IRI(a.trim())).toList
+      val diliGeneList = Files.readAllLines(Paths.get("src/it/resources/dili-gene-list.txt")).asScala.map(a => IRI(a.trim())).toList
       val n0Node = TRAPIQueryNode(Some(diliGeneList), Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
       val n1Node = TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)
       val e0Edge = TRAPIQueryEdge(Some(List(BiolinkPredicate("affects"))), "n0", "n1", None)
