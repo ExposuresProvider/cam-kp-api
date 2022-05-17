@@ -17,6 +17,7 @@ import zio.{Has, RIO, Task, ZIO, config => _}
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
+import java.util.UUID
 import scala.jdk.CollectionConverters._
 
 object QueryService extends LazyLogging {
@@ -95,25 +96,21 @@ object QueryService extends LazyLogging {
     }).toMap
   }
 
-  TRAPIQueryConstraint
-
-  def getAllTRAPIEdges(results: List[Result], queryGraph: TRAPIQueryGraph): Map[String, TRAPIEdge] = {
-    val allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-    val predicatesToRelations = for {
-      predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
-    } yield predicatesToRelations
-    val allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-    val relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
-
+  def getAllTRAPIEdges(results: List[Result], relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)], biolinkData: BiolinkData): Map[String, TRAPIEdge] = {
     results.flatMap(r => {
       r.edges.keys.map(e => {
         val iri = r.edges(e)
+        val labelAndBiolinkPredicate = relationsToLabelAndBiolinkPredicate.get(iri)
+        val biolinkPredicateIRI = labelAndBiolinkPredicate.map(_._2)
+        val biolinkPred = biolinkData.predicates.find(a => biolinkPredicateIRI.forall(_.equals(a.iri)))
+        // logger.debug(s"Mapped edge ${iri} via labelAndBiolinkPredicate ${labelAndBiolinkPredicate} to Biolink Predicate ${biolinkPred}")
         val queryEdge = r.queryGraph.edges(e)
-        val name = e                          // TODO: replace this with labels from the server
-        val categories = queryEdge.constraints // TODO: replace this with categories from the server
-        val attributes = List()
-        val trapiNode = TRAPINode(Some(name), categories, Some(attributes))
-        (iri, trapiNode)
+        val subjectIRI = r.nodes(queryEdge.subject)
+        val objectIRI = r.nodes(queryEdge.`object`)
+        val attributes: List[TRAPIAttribute] = List()
+        val trapiEdge = TRAPIEdge(biolinkPred, subjectIRI, objectIRI, Some(attributes))
+        val edgeKey = UUID.randomUUID().toString
+        (edgeKey, trapiEdge)
       })
     }).toMap
   }
@@ -133,13 +130,19 @@ object QueryService extends LazyLogging {
       biolinkData <- biolinkData
       _ = logger.warn("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+      allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
+      predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
+      allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
+      relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+
       _ = logger.warn(s"findInitialQuerySolutions(${queryGraph}, ${predicatesToRelations}, ${limit})")
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
       results = initialQuerySolutions.map(convertQuerySolutionToResult(_, queryGraph))
       _ = logger.warn(s"Results: ${results}")
       nodes = getAllTRAPINodes(results)
       _ = logger.warn(s"Nodes: ${nodes}")
-      edges = Map[String, TRAPIEdge]()
+      edges = getAllTRAPIEdges(results, relationsToLabelAndBiolinkPredicate, biolinkData)
+      _ = logger.warn(s"Edges: ${edges}")
       trapiResults = List()
     } yield {
       TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct))

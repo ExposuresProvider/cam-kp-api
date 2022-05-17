@@ -46,6 +46,10 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
             _ = println(s"Retrieved ${message.results.get.size} results when limit=${limit}")
             results = message.results.get
           } yield {
+            logger.info(s"Results:")
+            for ((r, index) <- results.zipWithIndex) {
+              logger.info(s" - [${index + 1}] ${r}")
+            }
             assert(results.size)(Assertion.isGreaterThan(0)) &&
               assert(results.size)(Assertion.equalTo(Math.min(queryGraphExpectedResults, limit)))
           }
