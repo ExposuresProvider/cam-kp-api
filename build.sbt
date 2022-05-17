@@ -94,8 +94,8 @@ dockerExposedPorts += 8080
 // prod
 dockerEnvVars ++= Map(
   "JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DMATURITY=production",
-  "SPARQL_ENDPOINT" -> sys.env("SPARQL_ENDPOINT"),
-  "CAM_KP_LOG_LEVEL" -> sys.env("CAM_KP_LOG_LEVEL")
+  "SPARQL_ENDPOINT" -> sys.env.getOrElse("SPARQL_ENDPOINT", "https://cam-kp-sparql.apps.renci.org/sparql"),
+  "CAM_KP_LOG_LEVEL" -> sys.env.getOrElse("CAM_KP_LOG_LEVEL", "info")
 )
 
 dockerEntrypoint := Seq("/opt/docker/bin/server")
