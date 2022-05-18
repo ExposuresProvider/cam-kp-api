@@ -18,6 +18,7 @@ import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.util.UUID
+import scala.collection.mutable
 import scala.jdk.CollectionConverters._
 
 object QueryService extends LazyLogging {
@@ -96,23 +97,49 @@ object QueryService extends LazyLogging {
     }).toMap
   }
 
-  def getAllTRAPIEdges(results: List[Result], relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)], biolinkData: BiolinkData): Map[String, TRAPIEdge] = {
-    results.flatMap(r => {
-      r.edges.keys.map(e => {
+  def getTRAPIEdgesAndResults(results: List[Result], queryGraph: TRAPIQueryGraph, relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)], biolinkData: BiolinkData): (Map[String, TRAPIEdge], List[TRAPIResult]) = {
+    val trapiResults = mutable.ListBuffer[TRAPIResult]()
+    val edges = results.flatMap(r => {
+      val subjects = mutable.Set[String]()
+      val objects = mutable.Set[String]()
+      val edges = r.edges.keys.map(e => {
         val iri = r.edges(e)
         val labelAndBiolinkPredicate = relationsToLabelAndBiolinkPredicate.get(iri)
         val biolinkPredicateIRI = labelAndBiolinkPredicate.map(_._2)
         val biolinkPred = biolinkData.predicates.find(a => biolinkPredicateIRI.forall(_.equals(a.iri)))
         // logger.debug(s"Mapped edge ${iri} via labelAndBiolinkPredicate ${labelAndBiolinkPredicate} to Biolink Predicate ${biolinkPred}")
         val queryEdge = r.queryGraph.edges(e)
+
+        subjects += queryEdge.subject
+        objects += queryEdge.`object`
+
         val subjectIRI = r.nodes(queryEdge.subject)
         val objectIRI = r.nodes(queryEdge.`object`)
+
         val attributes: List[TRAPIAttribute] = List()
         val trapiEdge = TRAPIEdge(biolinkPred, subjectIRI, objectIRI, Some(attributes))
-        val edgeKey = UUID.randomUUID().toString
-        (edgeKey, trapiEdge)
-      })
+        val edgeKey = UUID.randomUUID().toString // TODO: replace with actual edge key algorithm
+        (e, (edgeKey, trapiEdge))
+      }).toMap
+
+      def nodesToNodeBindings(nodes: Set[String]): Map[String, List[TRAPINodeBinding]] = {
+        nodes.map(n => (n, TRAPINodeBinding(r.nodes(n)))).groupMap(_._1)(_._2)
+          .view.mapValues(_.toList).toMap
+      }
+
+      trapiResults += TRAPIResult(
+        node_bindings = nodesToNodeBindings(subjects.toSet) ++ nodesToNodeBindings(objects.toSet),
+        edge_bindings = edges
+          .map({ case (edgeName, (edgeKey, _)) => (edgeName, TRAPIEdgeBinding(edgeKey)) })
+          .groupMap(_._1)(_._2)
+          .view.mapValues(_.toList)
+          .toMap
+      )
+
+      edges.values
     }).toMap
+
+    (edges, trapiResults.toList)
   }
 
   /**
@@ -141,9 +168,9 @@ object QueryService extends LazyLogging {
       _ = logger.warn(s"Results: ${results}")
       nodes = getAllTRAPINodes(results)
       _ = logger.warn(s"Nodes: ${nodes}")
-      edges = getAllTRAPIEdges(results, relationsToLabelAndBiolinkPredicate, biolinkData)
+      (edges, trapiResults) = getTRAPIEdgesAndResults(results, queryGraph, relationsToLabelAndBiolinkPredicate, biolinkData)
       _ = logger.warn(s"Edges: ${edges}")
-      trapiResults = List()
+      _ = logger.warn(s"Results: ${trapiResults}")
     } yield {
       TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct))
     }
