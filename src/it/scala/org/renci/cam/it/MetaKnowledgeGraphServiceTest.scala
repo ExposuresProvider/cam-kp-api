@@ -2,9 +2,9 @@ package org.renci.cam.it
 
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
-import io.circe.{parser, Decoder, KeyDecoder, KeyEncoder}
+import io.circe.{Decoder, KeyDecoder, KeyEncoder, parser}
 import org.http4s._
-import org.http4s.headers.`Content-Type`
+import org.http4s.headers.{Accept, `Content-Type`}
 import org.http4s.implicits._
 import org.renci.cam._
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, MetaKnowledgeGraph}
@@ -26,8 +26,8 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLoggin
       for {
         httpClient <- HttpClient.client
         biolinkData <- Biolink.biolinkData
-        request = Request[Task](Method.GET, uri"http://127.0.0.1:8080/meta_knowledge_graph").withHeaders(
-          `Content-Type`(MediaType.application.json))
+        request = Request[Task](Method.GET, uri"http://127.0.0.1:8080/meta_knowledge_graph")
+          .withHeaders(Accept(MediaType.application.json))
         response <- httpClient.expect[String](request)
       } yield {
         implicit val iriKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder

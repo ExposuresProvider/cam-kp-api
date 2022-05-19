@@ -21,6 +21,7 @@ javaOptions += "-Xmx8G"
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
 Compile / packageDoc / publishArtifact := false
+Test / fork := true
 
 configs(IntegrationTest)
 Defaults.itSettings
@@ -68,7 +69,7 @@ libraryDependencies ++= {
     "io.circe"                    %% "circe-yaml"                     % circeVersion,
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
     "dev.zio"                     %% "zio-test-sbt"                   % zioVersion % "it,test",
-    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.39.12"  % "it,test",
+    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.40.7"  % "it,test",
     "com.google.guava"             % "guava"                          % "31.0.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
     "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.4"
@@ -94,8 +95,8 @@ dockerExposedPorts += 8080
 // prod
 dockerEnvVars ++= Map(
   "JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DMATURITY=production",
-  "SPARQL_ENDPOINT" -> sys.env("SPARQL_ENDPOINT"),
-  "CAM_KP_LOG_LEVEL" -> sys.env("CAM_KP_LOG_LEVEL")
+  "SPARQL_ENDPOINT" -> sys.env.getOrElse("SPARQL_ENDPOINT", "https://cam-kp-sparql.apps.renci.org/sparql"),
+  "CAM_KP_LOG_LEVEL" -> sys.env.getOrElse("CAM_KP_LOG_LEVEL", "info")
 )
 
 dockerEntrypoint := Seq("/opt/docker/bin/server")
