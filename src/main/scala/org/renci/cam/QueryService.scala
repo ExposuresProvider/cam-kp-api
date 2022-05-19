@@ -566,6 +566,8 @@ object QueryService extends LazyLogging {
     nodeMap
   }
 
+  // TODO:
+  // - Change this to cached queries (see mapQueryBiolinkPredicatesToRelations for example)
   def mapRelationsToLabelAndBiolink(relations: Set[IRI]): RIO[ZConfig[AppConfig] with HttpClient, Map[IRI, (Option[String], IRI)]] = {
     final case class RelationInfo(relation: IRI, biolinkSlot: IRI, label: Option[String])
     val queryText = sparql"""
