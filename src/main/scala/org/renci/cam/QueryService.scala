@@ -559,6 +559,7 @@ object QueryService extends LazyLogging {
     for {
       queryText <- Task.effect(getTRAPINodeDetailsQueryText(nodeIdList))
       termsAndBiolinkTypes <- SPARQLQueryExecutor.runSelectQueryAs[TermWithLabelAndBiolinkType](queryText.toQuery)
+      _ = logger.debug(s"getTRAPINodeDetails(${nodeIdList}) = ${termsAndBiolinkTypes}")
     } yield termsAndBiolinkTypes
 
   def getTRAPINodeBindings(queryGraph: TRAPIQueryGraph,
