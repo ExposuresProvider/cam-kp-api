@@ -12,8 +12,9 @@ import zio.ExecutionStrategy.Sequential
 import zio.blocking.Blocking
 import zio.cache.Cache
 import zio.config.{ConfigModule, ZConfig}
-import zio.{Layer, RIO, ZIO, ZLayer, Runtime}
+import zio.{Layer, RIO, Runtime, ZIO, ZLayer}
 import zio.config.typesafe.TypesafeConfig
+import zio.stream.ZStream
 import zio.test.Assertion._
 import zio.test.TestAspect.{debug, ignore}
 import zio.test._
@@ -38,14 +39,15 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
     )
 
     val limitsToTest = Seq(1, 2, 3, 4, 5, 10, 20, 30, 40, 50)
-    suite("testQueryWithExpectedResults")(
-      testM(s"Test query expecting ${queryGraphExpectedResults} results") {
-        ZIO.foreach(limitsToTest) { limit =>
+    suiteM("testQueryWithExpectedResults") {
+      ZStream.fromIterable(limitsToTest)
+        .map(limit => testM(s"Test query with limit of ${limit} expecting ${queryGraphExpectedResults} results") {
           for {
             message <- QueryService.run(limit, false, testQueryGraph)
             _ = println(s"Retrieved ${message.results.get.size} results when limit=${limit}")
             results = message.results.get
           } yield {
+            /*
             logger.info(s"Knowledge graph:")
             logger.info(s" - Nodes:")
             message.knowledge_graph.foreach(_.nodes.foreach(node =>
@@ -60,12 +62,12 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
             for ((r, index) <- results.zipWithIndex) {
               logger.info(s" - [${index + 1}] ${r}")
             }
+             */
             assert(results.size)(Assertion.isGreaterThan(0)) &&
               assert(results.size)(Assertion.equalTo(Math.min(queryGraphExpectedResults, limit)))
           }
-        }.map(_.reduce(_ && _))
-      }
-    )
+        }).runCollect
+    }
   }
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
