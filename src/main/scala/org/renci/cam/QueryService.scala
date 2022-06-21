@@ -110,6 +110,58 @@ object QueryService extends LazyLogging {
     }
   }
 
+  def getAllTRAPIEdges(results: List[Result], relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)]): ZIO[_root_.zio.config.ZConfig[AppConfig] with ZConfig[BiolinkData], Exception, Map[String, TRAPIEdge]] = {
+    for {
+      biolinkData <- biolinkData
+      appConfig <- getConfig[AppConfig]
+      originalKS <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source")).orElseFail(new Exception("could not get biolink:original_knowledge_source"))
+      aggregatorKS <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source")).orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
+      infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
+      edges <- ZStream.fromIterable(results)
+        .mapConcat(result => for {
+          key <- result.edges.keys
+          iri = result.edges(key)
+          labelAndBiolinkPredicate = relationsToLabelAndBiolinkPredicate.get(iri)
+          biolinkPredicateIRI = labelAndBiolinkPredicate.map(_._2)
+          biolinkPred = biolinkData.predicates.find(a => biolinkPredicateIRI.forall(_.equals(a.iri)))
+          queryEdge = result.queryGraph.edges(key)
+          subjectIRI = result.nodes(queryEdge.subject)
+          objectIRI = result.nodes(queryEdge.`object`)
+          derivedFroms = result.derivedFrom
+
+          /*
+            TODO: are we missing something?
+
+              relationLabelAndBiolinkPredicate
+          } <- ZIO
+            .fromOption(relationsMap.get(predicateIRI))
+            .orElseFail(new Exception("Unexpected edge relation"))
+          (relationLabelOpt, biolinkPredicateIRI) = relationLabelAndBiolinkPredicate
+
+          blPred = biolinkData.predicates.find(a => a.iri == biolinkPredicateIRI)
+           */
+
+          // Add attributes to this edge.
+          aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), aggregatorKS.iri, None, List("infores:cam-kp"), Some(infoResBiolinkClass.iri), Some(appConfig.location), None, None)
+          originalKnowledgeSources = derivedFroms.map {
+            case df@ctd if ctd.value.contains("ctdbase.org") => (df, "infores:ctd")
+            case df => (df, "infores:go-cam")
+          }
+          originalKSAttributes = originalKnowledgeSources.map({
+            case (derivedFrom, inforesKS) =>
+              TRAPIAttribute(Some("infores:cam-kp"), originalKS.iri, None, List(inforesKS), Some(infoResBiolinkClass.iri), Some(derivedFrom.value), None, None)
+          })
+          attributes = aggregatorKSAttribute +: originalKSAttributes.toList
+          trapiEdge = TRAPIEdge(biolinkPred, subjectIRI, objectIRI, Some(attributes))
+          edgeKey = getTRAPIEdgeKey(queryEdge.subject, biolinkPred, queryEdge.`object`)
+        } yield {
+          (edgeKey, trapiEdge)
+        }).runCollect
+    } yield {
+      edges.toMap
+    }
+  }
+
   def getTRAPIEdgesAndResults(results: List[Result], queryGraph: TRAPIQueryGraph, relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)], biolinkData: BiolinkData): (Map[String, TRAPIEdge], List[TRAPIResult]) = {
     val trapiResults = mutable.ListBuffer[TRAPIResult]()
     val edges = results.flatMap(r => {
@@ -181,8 +233,9 @@ object QueryService extends LazyLogging {
       _ = logger.warn(s"Results: ${results}")
       nodes <- getAllTRAPINodes(results)
       _ = logger.warn(s"Nodes: ${nodes}")
-      (edges, trapiResults) = getTRAPIEdgesAndResults(results, queryGraph, relationsToLabelAndBiolinkPredicate, biolinkData)
+      edges <- getAllTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
       _ = logger.warn(s"Edges: ${edges}")
+      (_, trapiResults) = getTRAPIEdgesAndResults(results, queryGraph, relationsToLabelAndBiolinkPredicate, biolinkData)
       _ = logger.warn(s"Results: ${trapiResults}")
     } yield {
       TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct))
