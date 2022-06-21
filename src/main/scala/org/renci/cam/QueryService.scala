@@ -12,6 +12,7 @@ import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.{TRAPIAttribute, _}
 import zio.config.{ZConfig, getConfig}
+import zio.stream.ZStream
 import zio.{Has, RIO, Task, ZIO, config => _}
 
 import java.math.BigInteger
@@ -83,18 +84,30 @@ object QueryService extends LazyLogging {
     )
   }
 
-  def getAllTRAPINodes(results: List[Result]): Map[IRI, TRAPINode] = {
-    results.flatMap(r => {
-      r.nodes.keys.map(n => {
-        val iri = r.nodes(n)
-        val queryNode = r.queryGraph.nodes(n)
-        val name = n                          // TODO: replace this with labels from the server
-        val categories = queryNode.categories // TODO: replace this with categories from the server
-        val attributes = List()
-        val trapiNode = TRAPINode(Some(name), categories, Some(attributes))
-        (iri, trapiNode)
-      })
-    }).toMap
+  def convertResultToTRAPINode(result: Result, allNodeDetails: List[TermWithLabelAndBiolinkType], biolinkData: BiolinkData): Iterable[(IRI, TRAPINode)] = {
+    for {
+      key <- result.nodes.keys
+      iri = result.nodes(key)
+      nodeDetails = allNodeDetails.filter(_.term == iri)
+      queryNode = result.queryGraph.nodes(key)
+      name = nodeDetails.flatMap(_.label).headOption
+      categories = nodeDetails.map(_.biolinkType).flatMap(iri => biolinkData.classes.filter(_.iri == iri))
+      categoriesAsOption = if (categories.isEmpty) None else Some(categories)
+      attributes = List()
+      trapiNode = TRAPINode(name, categoriesAsOption, Some(attributes))
+    } yield (iri, trapiNode)
+  }
+
+  def getAllTRAPINodes(results: List[Result]): ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[IRI, TRAPINode]] = {
+    for {
+      biolinkData <- biolinkData
+      nodeDetails <- getTRAPINodeDetails(results.map(_.nodes).flatMap(_.values).toSet.toList)
+      nodes <- ZStream.fromIterable(results)
+        .mapConcat(convertResultToTRAPINode(_, nodeDetails, biolinkData))
+        .runCollect
+    } yield {
+      nodes.toMap
+    }
   }
 
   def getTRAPIEdgesAndResults(results: List[Result], queryGraph: TRAPIQueryGraph, relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)], biolinkData: BiolinkData): (Map[String, TRAPIEdge], List[TRAPIResult]) = {
@@ -166,7 +179,7 @@ object QueryService extends LazyLogging {
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
       results = initialQuerySolutions.map(convertQuerySolutionToResult(_, queryGraph))
       _ = logger.warn(s"Results: ${results}")
-      nodes = getAllTRAPINodes(results)
+      nodes <- getAllTRAPINodes(results)
       _ = logger.warn(s"Nodes: ${nodes}")
       (edges, trapiResults) = getTRAPIEdgesAndResults(results, queryGraph, relationsToLabelAndBiolinkPredicate, biolinkData)
       _ = logger.warn(s"Edges: ${edges}")
@@ -233,6 +246,14 @@ object QueryService extends LazyLogging {
       _ = logger.warn(s"results distinct: ${results.distinct} (length: ${results.distinct.length}, limit: ${limit})")
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes, initialKGEdges)), Some(results.distinct))
 
+  /**
+   * Construct and execute a SPARQL query based on the provided query graph in the triplestore.
+   *
+   * @param queryGraph The query graph describing the
+   * @param predicatesToRelations Mappings between Biolink predicates and their corresponding IRIs in the triplestore.
+   * @param limit The number of results to return.
+   * @return
+   */
   def findInitialQuerySolutions(queryGraph: TRAPIQueryGraph,
                                 predicatesToRelations: Map[BiolinkPredicate, Set[IRI]],
                                 limit: Int): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, List[QuerySolution]] = {
@@ -464,6 +485,7 @@ object QueryService extends LazyLogging {
          GROUP BY ?term ?biolinkType"""
   }
 
+  // TODO: This would be a useful method to cache.
   def getTRAPINodeDetails(nodeIdList: List[IRI]): RIO[ZConfig[AppConfig] with HttpClient, List[TermWithLabelAndBiolinkType]] =
     for {
       queryText <- Task.effect(getTRAPINodeDetailsQueryText(nodeIdList))

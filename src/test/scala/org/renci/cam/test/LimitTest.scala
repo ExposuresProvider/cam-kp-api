@@ -46,6 +46,16 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
             _ = println(s"Retrieved ${message.results.get.size} results when limit=${limit}")
             results = message.results.get
           } yield {
+            logger.info(s"Knowledge graph:")
+            logger.info(s" - Nodes:")
+            message.knowledge_graph.foreach(_.nodes.foreach(node =>
+              logger.info(s"   - ${node._1}: ${node._2}")
+            ))
+            logger.info(s" - Edges:")
+            message.knowledge_graph.foreach(_.edges.foreach(edge =>
+              logger.info(s"   - ${edge._1}: ${edge._2}")
+            ))
+
             logger.info(s"Results:")
             for ((r, index) <- results.zipWithIndex) {
               logger.info(s" - [${index + 1}] ${r}")
