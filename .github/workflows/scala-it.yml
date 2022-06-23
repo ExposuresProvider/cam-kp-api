@@ -17,5 +17,5 @@ jobs:
       - name: Run Integration Test
         env:
           CAM_KP_LOG_LEVEL: "INFO"
-          SPARQL_ENDPOINT: "https://cam-kp-sparql-dev.apps.renci.org/sparql"
+          SPARQL_ENDPOINT: "https://cam-kp-sparql.apps.renci.org/sparql"
         run: sbt "it:testOnly *ProdQueryServiceTest"
