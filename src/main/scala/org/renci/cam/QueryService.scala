@@ -597,7 +597,7 @@ object QueryService extends LazyLogging {
   def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph,
                                querySolutions: List[QuerySolution],
                                relationsMap: Map[IRI, (Option[String], IRI)])
-    : ZIO[Has[BiolinkData], Throwable, Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] =
+    : RIO[Has[BiolinkData], Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] =
     for {
       biolinkData <- biolinkData
       querySolutionsToEdgeBindings <- ZIO.foreach(querySolutions) { querySolution =>
