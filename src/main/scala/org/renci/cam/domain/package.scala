@@ -34,6 +34,12 @@ package object domain {
 
     }
 
+    /**
+     * An implicit method for converting an IRI into an RDFNode.
+     *
+     * @param iri The IRI to convert to an RDFNode.
+     * @return The RDFNode representing the provided IRI.
+     */
     implicit def toRDFNode(iri: IRI): RDFNode = new ResourceImpl(iri.value)
 
     implicit val schema: Schema[IRI] = Schema.string
