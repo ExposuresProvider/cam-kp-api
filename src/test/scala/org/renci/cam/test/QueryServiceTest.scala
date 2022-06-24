@@ -69,8 +69,9 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     testM("test QueryService.enforceQueryEdgeTypes") {
       for {
         nodeTypes <- ZIO.effect(QueryService.enforceQueryEdgeTypes(queryGraph, List(BiolinkPredicate("related_to"))))
-      } yield assert(nodeTypes.edges)(hasKey("e0")) && assert(nodeTypes.edges("e0").predicates.get)(
-        equalTo(List(BiolinkPredicate("related_to"))))
+      } yield {
+        assert(nodeTypes.edges)(hasKey("e0")) && assertTrue(nodeTypes.edges("e0").predicates.get == List(BiolinkPredicate("related_to")))
+      }
     }
   )
 
@@ -81,8 +82,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         nodeBindings <- QueryService.getTRAPINodeBindings(queryGraph, resultSet.next())
       } yield assert(nodeBindings.keys)(
         contains("n0") && contains("n1")
-      ) && assert(nodeBindings.get("n0").get.map(a => a.id))(
-        contains(IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103")))
+      ) && assertTrue(nodeBindings.get("n0").get.map(a => a.id).contains(IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103")))
     }
   )
 
@@ -135,8 +135,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
       )
       for {
         queryText <- Task.effect(QueryService.getTRAPINodeDetailsQueryText(nodeIdList))
-      } yield assert(queryText.text)(
-        containsString("VALUES ?term {  <http://purl.obolibrary.org/obo/GO_0047196>  <http://purl.obolibrary.org/obo/GO_0017064>  }"))
+      } yield assertTrue(queryText.text.contains("VALUES ?term {  <http://purl.obolibrary.org/obo/GO_0047196>  <http://purl.obolibrary.org/obo/GO_0017064>  }"))
     },
     testM("test QueryService.getProvenanceQueryText") {
       for {
@@ -167,7 +166,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     testM("test QueryService.getCAMStuffQueryText") {
       for {
         queryText <- Task.effect(QueryService.getCAMStuffQueryText(IRI("http://model.geneontology.org/R-HSA-2142753")))
-      } yield assert(queryText.text)(containsString("{ GRAPH <http://model.geneontology.org/R-HSA-2142753>"))
+      } yield assertTrue(queryText.text.contains("{ GRAPH <http://model.geneontology.org/R-HSA-2142753>"))
     }
   )
 
@@ -401,8 +400,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
   val testLayer = HttpClient.makeHttpClientLayer ++ Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
-
-
+  
   def spec = suite("QueryService tests")(
     testIncludeExtraEdges,
 //    testGetNodeTypes,
