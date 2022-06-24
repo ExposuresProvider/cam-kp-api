@@ -17,8 +17,6 @@ import zio.{Has, RIO, Task, UIO, ZIO, config => _}
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
-import java.util.UUID
-import scala.collection.{immutable, mutable}
 import scala.jdk.CollectionConverters._
 
 object QueryService extends LazyLogging {
@@ -248,6 +246,11 @@ object QueryService extends LazyLogging {
       // Get the Biolink data.
       biolinkData <- biolinkData
       _ = logger.debug("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
+
+      // We don't actually support `includeExtraEdges`, so if this is set, we should throw an unimplemented exception.
+      includeExtraEdgesFlag <- if (includeExtraEdges)
+        ZIO.fail(new NotImplementedError("includeExtraEdges not yet supported in QueryService.run()"))
+      else ZIO.succeed(false)
 
       // Prepare the query graph for processing.
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
