@@ -121,7 +121,7 @@ object QueryService extends LazyLogging {
    * @return A ZIO that generates a Map of IRI to TRAPINode.
    * @see org.renci.cam.QueryService#getTRAPINodes
    */
-  def generateTRAPINodes(results: List[Result]): ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[IRI, TRAPINode]] = {
+  def generateTRAPINodes(results: List[Result]): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Map[IRI, TRAPINode]] = {
     for {
       biolinkData <- biolinkData
       // We need to get TRAPI Node Details for these nodes so that we can fill in label and category information.
@@ -157,7 +157,7 @@ object QueryService extends LazyLogging {
    * @return A ZIO that generates a map of edge keys and TRAPIEdges.
    * @see org.renci.cam.QueryService#getTRAPIEdges
    */
-  def generateTRAPIEdges(results: List[Result], relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)]): ZIO[ZConfig[AppConfig] with ZConfig[BiolinkData], Exception, Map[String, TRAPIEdge]] = {
+  def generateTRAPIEdges(results: List[Result], relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)]): RIO[ZConfig[AppConfig] with ZConfig[BiolinkData], Map[String, TRAPIEdge]] = {
     for {
       // Get some data we need to generate the TRAPI edges.
       biolinkData <- biolinkData
@@ -210,27 +210,28 @@ object QueryService extends LazyLogging {
   /**
    * Generate TRAPI results from a list of Results.
    *
+   * This is fairly straightforward: each result contains node IRIs as well as edge IRIs, but we need to generate the
+   * edge key via Result.getEdgeKey()
+   *
    * @param results The Results to convert into TRAPI Results.
-   * @param queryGraph
-   * @param relationsToLabelAndBiolinkPredicate
-   * @param biolinkData
-   * @return
+   * @return An UIO that generates the list of TRAPI Results.
    */
-  def generateTRAPIResults(results: List[Result], queryGraph: TRAPIQueryGraph, relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)], biolinkData: BiolinkData): UIO[List[TRAPIResult]] =
-    ZStream.fromIterable(results)
-      .map(result => {
-        val nodeBindings = result.nodes
-          .groupMap(_._1)(p => TRAPINodeBinding(p._2))
-          .map(p => (p._1, p._2.toList))
-        val edgeBindings = result.edges.keys.map(key => (key, List(TRAPIEdgeBinding(result.getEdgeKey(key))))).toMap
+  def generateTRAPIResults(results: List[Result]): UIO[List[TRAPIResult]] = {
+    val stream = for {
+      result <- ZStream.fromIterable(results)
 
-        TRAPIResult(
-            node_bindings = nodeBindings,
-            edge_bindings = edgeBindings
-        )
-      })
-      .runCollect
-      .map(_.toList)
+      nodeBindings = result.nodes
+        .groupMap(_._1)(p => TRAPINodeBinding(p._2))
+        .map(p => (p._1, p._2.toList))
+      edgeBindings = result.edges.keys
+        .map(key => (key, List(TRAPIEdgeBinding(result.getEdgeKey(key)))))
+        .toMap
+    } yield {
+      TRAPIResult(node_bindings = nodeBindings, edge_bindings = edgeBindings)
+    }
+
+    stream.runCollect.map(_.toList)
+  }
 
   /**
    * Query the triplestore with a TRAPIQuery and return a TRAPIMessage with the result.
@@ -244,25 +245,33 @@ object QueryService extends LazyLogging {
           includeExtraEdges: Boolean,
           submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
     for {
+      // Get the Biolink data.
       biolinkData <- biolinkData
       _ = logger.debug("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
+
+      // Prepare the query graph for processing.
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+
+      // Generate the relationsToLabelAndBiolinkPredicate.
       allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
       predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
       relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
 
+      // Generate query solutions.
       _ = logger.debug(s"findInitialQuerySolutions(${queryGraph}, ${predicatesToRelations}, ${limit})")
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
       results = initialQuerySolutions.zipWithIndex.map({
         case (qs, index) => Result.fromQuerySolution(qs, index, queryGraph)
       })
       _ = logger.debug(s"Results: ${results}")
+
+      // From the results, generate the TRAPI nodes, edges and results.
       nodes <- generateTRAPINodes(results)
       _ = logger.debug(s"Nodes: ${nodes}")
       edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
       _ = logger.debug(s"Edges: ${edges}")
-      trapiResults <- generateTRAPIResults(results, queryGraph, relationsToLabelAndBiolinkPredicate, biolinkData)
+      trapiResults <- generateTRAPIResults(results)
       _ = logger.debug(s"Results: ${trapiResults}")
     } yield {
       TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct))
