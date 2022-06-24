@@ -359,7 +359,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         // List((Map(n0 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))), n1 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/GO_0006094)))),Map(e0 -> List(TRAPIEdgeBinding(309229ebbc25b5b04fe79bf560d9ea20c1831703fa98605b4e97f78d73b47c56)))), (Map(n0 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))), n1 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/GO_0046034)))),Map(e0 -> List(TRAPIEdgeBinding(3e27e38fc631bbfaac62c84dbe8e475895797f6fe663a852d916df24a0522339)))), (Map(n0 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/CHEBI_15361))), n1 -> List(TRAPINodeBinding(IRI(http://purl.obolibrary.org/obo/GO_0046034>)))),Map(e0 -> List(TRAPIEdgeBinding(86cf45a0368b1fbf6dd93a9e6bdd1b6fcc030d53389d4e8b3e4d81e850ba0420)))))
         for {
           querySolutionsToEdgeBindings <- QueryService.getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate)
-          _ = println(s"querySolutionsToEdgeBindings: ${querySolutionsToEdgeBindings} (length: ${querySolutionsToEdgeBindings.size})")
+          _ = logger.debug(s"querySolutionsToEdgeBindings: ${querySolutionsToEdgeBindings} (length: ${querySolutionsToEdgeBindings.size})")
           trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
             QueryService.getTRAPINodeBindings(queryGraph, querySolution) zip
               Task.effect(querySolutionsToEdgeBindings(querySolution))

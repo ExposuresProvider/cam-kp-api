@@ -12,13 +12,13 @@ import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.{TRAPIAttribute, _}
 import zio.config.{ZConfig, getConfig}
 import zio.stream.ZStream
-import zio.{Has, RIO, Task, ZIO, config => _}
+import zio.{Has, RIO, Task, UIO, ZIO, config => _}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 import java.util.UUID
-import scala.collection.mutable
+import scala.collection.{immutable, mutable}
 import scala.jdk.CollectionConverters._
 
 object QueryService extends LazyLogging {
@@ -70,28 +70,41 @@ object QueryService extends LazyLogging {
    * @see org.renci.cam.QueryService#findInitialQuerySolutions
    */
   case class Result (
+    index: Long,
     queryGraph: TRAPIQueryGraph,
     nodes: Map[String, IRI],
     edges: Map[String, IRI],
     graphs: Set[IRI],
     derivedFrom: Set[IRI]
-  )
+  ) {
+    /**
+     * Return the edge key to be used when returning this result. Ideally, this would be hashed in some way so
+     * that duplicate edges were merged, but for now we can rely on ARAs to do this downstream for us. So at the
+     * moment, we do the simple thing of using the index of this result and adding the edge query key to it.
+     *
+     * @param queryEdgeKey The edge key used in the query (e.g. `e0`).
+     * @return A unique edge key for this edge in this result.
+     */
+    def getEdgeKey(queryEdgeKey: String): String = s"result_${index}_edge_${queryEdgeKey}"
+  }
 
   object Result {
     /**
      * Convert a QuerySolution to a Result.
      *
      * @param qs The QuerySolution to convert.
+     * @param index The index of this QuerySolution (this is stored in the Result object and used to generate the edge keys).
      * @param queryGraph The query graph used to generate this QuerySolution.
      * @return The Result this QuerySolution was converted to.
      */
-    def fromQuerySolution(qs: QuerySolution, queryGraph: TRAPIQueryGraph): Result = {
+    def fromQuerySolution(qs: QuerySolution, index: Long, queryGraph: TRAPIQueryGraph): Result = {
       val nodes = queryGraph.nodes.keySet.map(n => (n, IRI(qs.getResource(f"${n}_type").getURI))).toMap
       val edges = queryGraph.edges.keySet.map(e => (e, IRI(qs.getResource(e).getURI))).toMap
       val graphs = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
       val derivedFrom = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
 
       Result(
+        index,
         queryGraph,
         nodes,
         edges,
@@ -144,7 +157,7 @@ object QueryService extends LazyLogging {
    * @return A ZIO that generates a map of edge keys and TRAPIEdges.
    * @see org.renci.cam.QueryService#getTRAPIEdges
    */
-  def generateTRAPIEdges(results: List[Result], relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)]): ZIO[_root_.zio.config.ZConfig[AppConfig] with ZConfig[BiolinkData], Exception, Map[String, TRAPIEdge]] = {
+  def generateTRAPIEdges(results: List[Result], relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)]): ZIO[ZConfig[AppConfig] with ZConfig[BiolinkData], Exception, Map[String, TRAPIEdge]] = {
     for {
       // Get some data we need to generate the TRAPI edges.
       biolinkData <- biolinkData
@@ -184,7 +197,8 @@ object QueryService extends LazyLogging {
 
           // Generate the TRAPIEdge and its edge key.
           trapiEdge = TRAPIEdge(biolinkPred, subjectIRI, objectIRI, Some(attributes))
-          edgeKey = getTRAPIEdgeKey(queryEdge.subject, biolinkPred, queryEdge.`object`)
+          // edgeKey = getTRAPIEdgeKey(queryEdge.subject, biolinkPred, queryEdge.`object`)
+          edgeKey = result.getEdgeKey(key)
         } yield {
           (edgeKey, trapiEdge)
         }).runCollect
@@ -202,49 +216,21 @@ object QueryService extends LazyLogging {
    * @param biolinkData
    * @return
    */
-  def generateTRAPIResults(results: List[Result], queryGraph: TRAPIQueryGraph, relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)], biolinkData: BiolinkData): List[TRAPIResult] = {
-    val edges = results.flatMap(r => {
-      val subjects = mutable.Set[String]()
-      val objects = mutable.Set[String]()
-      val edges = r.edges.keys.map(e => {
-        val iri = r.edges(e)
-        val labelAndBiolinkPredicate = relationsToLabelAndBiolinkPredicate.get(iri)
-        val biolinkPredicateIRI = labelAndBiolinkPredicate.map(_._2)
-        val biolinkPred = biolinkData.predicates.find(a => biolinkPredicateIRI.forall(_.equals(a.iri)))
-        // logger.debug(s"Mapped edge ${iri} via labelAndBiolinkPredicate ${labelAndBiolinkPredicate} to Biolink Predicate ${biolinkPred}")
-        val queryEdge = r.queryGraph.edges(e)
+  def generateTRAPIResults(results: List[Result], queryGraph: TRAPIQueryGraph, relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)], biolinkData: BiolinkData): UIO[List[TRAPIResult]] =
+    ZStream.fromIterable(results)
+      .map(result => {
+        val nodeBindings = result.nodes
+          .groupMap(_._1)(p => TRAPINodeBinding(p._2))
+          .map(p => (p._1, p._2.toList))
+        val edgeBindings = result.edges.keys.map(key => (key, List(TRAPIEdgeBinding(result.getEdgeKey(key))))).toMap
 
-        subjects += queryEdge.subject
-        objects += queryEdge.`object`
-
-        val subjectIRI = r.nodes(queryEdge.subject)
-        val objectIRI = r.nodes(queryEdge.`object`)
-
-        val attributes: List[TRAPIAttribute] = List()
-        val trapiEdge = TRAPIEdge(biolinkPred, subjectIRI, objectIRI, Some(attributes))
-        val edgeKey = UUID.randomUUID().toString // TODO: replace with actual edge key algorithm
-        (e, (edgeKey, trapiEdge))
-      }).toMap
-
-      def nodesToNodeBindings(nodes: Set[String]): Map[String, List[TRAPINodeBinding]] = {
-        nodes.map(n => (n, TRAPINodeBinding(r.nodes(n)))).groupMap(_._1)(_._2)
-          .view.mapValues(_.toList).toMap
-      }
-
-      trapiResults += TRAPIResult(
-        node_bindings = nodesToNodeBindings(subjects.toSet) ++ nodesToNodeBindings(objects.toSet),
-        edge_bindings = edges
-          .map({ case (edgeName, (edgeKey, _)) => (edgeName, TRAPIEdgeBinding(edgeKey)) })
-          .groupMap(_._1)(_._2)
-          .view.mapValues(_.toList)
-          .toMap
-      )
-
-      edges.values
-    }).toMap
-
-    (edges, trapiResults.toList)
-  }
+        TRAPIResult(
+            node_bindings = nodeBindings,
+            edge_bindings = edgeBindings
+        )
+      })
+      .runCollect
+      .map(_.toList)
 
   /**
    * Query the triplestore with a TRAPIQuery and return a TRAPIMessage with the result.
@@ -268,13 +254,15 @@ object QueryService extends LazyLogging {
 
       _ = logger.debug(s"findInitialQuerySolutions(${queryGraph}, ${predicatesToRelations}, ${limit})")
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
-      results = initialQuerySolutions.map(Result.fromQuerySolution(_, queryGraph))
+      results = initialQuerySolutions.zipWithIndex.map({
+        case (qs, index) => Result.fromQuerySolution(qs, index, queryGraph)
+      })
       _ = logger.debug(s"Results: ${results}")
       nodes <- generateTRAPINodes(results)
       _ = logger.debug(s"Nodes: ${nodes}")
       edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
       _ = logger.debug(s"Edges: ${edges}")
-      (_, trapiResults) = generateTRAPIResults(results, queryGraph, relationsToLabelAndBiolinkPredicate, biolinkData)
+      trapiResults <- generateTRAPIResults(results, queryGraph, relationsToLabelAndBiolinkPredicate, biolinkData)
       _ = logger.debug(s"Results: ${trapiResults}")
     } yield {
       TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct))
