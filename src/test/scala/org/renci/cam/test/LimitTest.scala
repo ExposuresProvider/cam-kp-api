@@ -35,6 +35,11 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
       )
     )
 
+    /*
+     * Try querying the test query, and check to see if (1) we get back the expected number of results
+     * (this will change as the backend changes) and (2) make sure that we get back the correct number
+     * of limited results as we adjust the limit as per `limitsToTest`.
+     */
     suiteM("testQueryWithExpectedResults") {
       ZStream.fromIterable(limitsToTest)
         .map(limit => testM(s"Test query with limit of ${limit} expecting ${queryGraphExpectedResults} results") {
