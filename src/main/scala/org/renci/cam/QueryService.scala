@@ -259,7 +259,7 @@ object QueryService extends LazyLogging {
       allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
       predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-      relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+      relationsToLabelAndBiolinkPredicate <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
 
       // Generate query solutions.
       _ = logger.debug(s"findInitialQuerySolutions(${queryGraph}, ${predicatesToRelations}, ${limit})")
