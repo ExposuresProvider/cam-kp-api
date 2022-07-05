@@ -366,7 +366,7 @@ object QueryService extends LazyLogging {
     }
     val nodeProjections = getProjections(queryGraph)
     val typeProjections = getProjections(queryGraph, true)
-    val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes.keySet)
+    val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
     val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
     val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
     val queryString =
@@ -419,14 +419,19 @@ object QueryService extends LazyLogging {
       IRI(solution.getResource(queryEdge.`object`).getURI)
     )).to(Set)
 
-  def getNodesToDirectTypes(nodeIDs: Set[String]): QueryText =
-    nodeIDs
-      .map { nodeID =>
+  def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
+    nodes
+      .map { case (nodeID, node) =>
         val nodeVar = Var(nodeID)
         val nodeTypeVar = Var(s"${nodeID}_type")
-        val nodeClassVar = Var(s"${nodeID}_class")
+        val nodeClassVar = Var(s"${nodeID}_class_restrict")
+        val nodeValueRestriction = node.categories match {
+          case Some(categoryList) => sparql"""VALUES $nodeClassVar { ${categoryList.map(_.iri).asValues} }"""
+          case _ => sparql""
+        }
         sparql""" $nodeVar $SesameDirectType $nodeTypeVar .
                   $nodeTypeVar $RDFSSubClassOf $nodeClassVar .
+                  $nodeValueRestriction
               """
       }
       .fold(sparql"")(_ + _)

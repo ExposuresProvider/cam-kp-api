@@ -173,7 +173,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   val testGetNodesToDirectTypes = suite("testGetNodesToDirectTypes")(
     zio.test.test("test QueryService.getNodesToDirectTypes") {
       val (queryGraph, _) = getSimpleData
-      val queryText = QueryService.getNodesToDirectTypes(queryGraph.nodes.keySet)
+      val queryText = QueryService.getNodesToDirectTypes(queryGraph.nodes)
       assert(queryText.text.trim)(
         containsString("?n0 <http://www.openrdf.org/schema/sesame#directType> ?n0_type .") && containsString(
           "?n1 <http://www.openrdf.org/schema/sesame#directType> ?n1_type .")
