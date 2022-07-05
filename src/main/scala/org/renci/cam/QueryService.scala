@@ -11,7 +11,6 @@ import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.{TRAPIAttribute, _}
 import zio.config.{ZConfig, getConfig}
-import zio.stream.ZStream
 import zio.{Has, RIO, Task, UIO, ZIO, config => _}
 
 import java.math.BigInteger
@@ -125,8 +124,7 @@ object QueryService extends LazyLogging {
       // We need to get TRAPI Node Details for these nodes so that we can fill in label and category information.
       allNodeDetails <- getTRAPINodeDetails(results.map(_.nodes).flatMap(_.values).toSet.toList)
       // Generate the nodes.
-      nodes <- ZStream.fromIterable(results)
-        .mapConcat(result => for {
+      nodes = results.flatMap(result => for {
           key <- result.nodes.keys
 
           // Generate the pieces of the TRAPINode.
@@ -140,7 +138,6 @@ object QueryService extends LazyLogging {
           // Generate the TRAPINode.
           trapiNode = TRAPINode(name, categoriesAsOption, Some(attributes))
         } yield (iri, trapiNode))
-        .runCollect
     } yield {
       nodes.toMap
     }
@@ -167,8 +164,7 @@ object QueryService extends LazyLogging {
       infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
 
       // Generate the edges.
-      edges <- ZStream.fromIterable(results)
-        .mapConcat(result => for {
+      edges = results.flatMap(result => for {
           key <- result.edges.keys
 
           // Generate the pieces of this TRAPIEdge.
@@ -199,7 +195,7 @@ object QueryService extends LazyLogging {
           edgeKey = result.getEdgeKey(key)
         } yield {
           (edgeKey, trapiEdge)
-        }).runCollect
+        })
     } yield {
       edges.toMap
     }
@@ -214,9 +210,9 @@ object QueryService extends LazyLogging {
    * @param results The Results to convert into TRAPI Results.
    * @return An UIO that generates the list of TRAPI Results.
    */
-  def generateTRAPIResults(results: List[Result]): UIO[List[TRAPIResult]] = {
-    val stream = for {
-      result <- ZStream.fromIterable(results)
+  def generateTRAPIResults(results: List[Result]): List[TRAPIResult] = {
+    for {
+      result <- results
 
       nodeBindings = result.nodes
         .groupMap(_._1)(p => TRAPINodeBinding(p._2))
@@ -227,8 +223,6 @@ object QueryService extends LazyLogging {
     } yield {
       TRAPIResult(node_bindings = nodeBindings, edge_bindings = edgeBindings)
     }
-
-    stream.runCollect.map(_.toList)
   }
 
   /**
@@ -274,7 +268,7 @@ object QueryService extends LazyLogging {
       _ = logger.debug(s"Nodes: ${nodes}")
       edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
       _ = logger.debug(s"Edges: ${edges}")
-      trapiResults <- generateTRAPIResults(results)
+      trapiResults = generateTRAPIResults(results)
       _ = logger.debug(s"Results: ${trapiResults}")
     } yield {
       TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct))
