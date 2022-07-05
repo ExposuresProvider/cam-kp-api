@@ -24,6 +24,6 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLoggin
     }
   )
 
-  def spec = suite("MetaKnowledgeGraphService tests")( testGetEdges, testGetNodes )
+  def spec = suite("MetaKnowledgeGraphService tests")(testGetEdges, testGetNodes)
 
 }

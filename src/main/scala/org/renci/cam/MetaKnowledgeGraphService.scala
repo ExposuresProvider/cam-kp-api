@@ -41,7 +41,7 @@ object MetaKnowledgeGraphService extends LazyLogging {
         effectBlockingIO(source.getLines().mkString("\n"))
       }
     mkgNodeRecords <- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(mkgNodesData)).getRecords)
-    attributes = None //attributes: Option[List[MetaAttribute]]
+    attributes = None // attributes: Option[List[MetaAttribute]]
     metaNodes = mkgNodeRecords.asScala
       .groupBy(a => BiolinkClass(a.get(0)))
       .view

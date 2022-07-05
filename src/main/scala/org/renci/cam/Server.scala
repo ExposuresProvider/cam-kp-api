@@ -82,7 +82,7 @@ object Server extends App with LazyLogging {
       }
       .toRoutes
 
-  val queryEndpointZ: URIO[Has[BiolinkData], Endpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse, Any]] = {
+  val queryEndpointZ: URIO[Has[BiolinkData], Endpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse, Any]] =
     for {
       biolinkData <- biolinkData
     } yield {
@@ -128,7 +128,6 @@ object Server extends App with LazyLogging {
         .out(jsonBody[TRAPIResponse])
         .summary("Submit a TRAPI question graph and retrieve matching solutions")
     }
-  }
 
   def queryRouteR(
     queryEndpoint: Endpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =

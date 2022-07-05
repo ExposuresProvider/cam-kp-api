@@ -34,15 +34,15 @@ package object domain {
 
     }
 
-    /**
-     * An implicit method for converting an IRI into an RDFNode.
-     *
-     * It's probably good enough to treat iri.value as a URI, but _just in case_
-     * we use Jena's IRIFactory to convert it into an URI first.
-     *
-     * @param iri The IRI to convert to an RDFNode.
-     * @return The RDFNode representing the provided IRI.
-     */
+    /** An implicit method for converting an IRI into an RDFNode.
+      *
+      * It's probably good enough to treat iri.value as a URI, but _just in case_ we use Jena's IRIFactory to convert it into an URI first.
+      *
+      * @param iri
+      *   The IRI to convert to an RDFNode.
+      * @return
+      *   The RDFNode representing the provided IRI.
+      */
     implicit def toNode(iri: IRI): RDFNode = ResourceFactory.createResource(
       IRIFactory.iriImplementation().construct(iri.value).toURI.toString
     )
@@ -168,7 +168,7 @@ package object domain {
 
   object TRAPIKnowledgeGraph {
 
-    //FIXME IRI needs to be shortened
+    // FIXME IRI needs to be shortened
     implicit lazy val nodesSchema: Schema[Map[IRI, TRAPINode]] = Schema.schemaForMap(_.value)
 
     implicit lazy val schema: Schema[TRAPIKnowledgeGraph] = Schema.derived
@@ -209,9 +209,9 @@ package object domain {
 
   object MetaKnowledgeGraph {
 
-     implicit lazy val nodesSchema: Schema[Map[BiolinkClass, MetaNode]] = Schema.schemaForMap(_.withBiolinkPrefix)
+    implicit lazy val nodesSchema: Schema[Map[BiolinkClass, MetaNode]] = Schema.schemaForMap(_.withBiolinkPrefix)
 
-     implicit lazy val schema: Schema[MetaKnowledgeGraph] = Schema.derived
+    implicit lazy val schema: Schema[MetaKnowledgeGraph] = Schema.derived
 
   }
 

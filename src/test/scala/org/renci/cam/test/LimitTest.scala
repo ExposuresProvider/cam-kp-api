@@ -9,16 +9,14 @@ import zio.config.typesafe.TypesafeConfig
 import zio.stream.ZStream
 import zio.test._
 
-/**
- * Tests whether queries work as expected with limits, i.e. given a query, can we increase limits arbitrarily
- * and see consistently increasing numbers of results?
- */
+/** Tests whether queries work as expected with limits, i.e. given a query, can we increase limits arbitrarily and see consistently
+  * increasing numbers of results?
+  */
 object LimitTest extends DefaultRunnableSpec with LazyLogging {
 
-  /**
-   * For a query with a certain number of expected results, this code block creates a number of tests that test
-   * whether setting `limit` from 1..50 return the correct number of expected results.
-   */
+  /** For a query with a certain number of expected results, this code block creates a number of tests that test whether setting `limit`
+    * from 1..50 return the correct number of expected results.
+    */
   val testQueryWithExpectedResults = {
     // Expected results as of 2022-may-18 for the test query
     val queryGraphExpectedResults = 30
@@ -41,31 +39,29 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
      * of limited results as we adjust the limit as per `limitsToTest`.
      */
     suiteM("testQueryWithExpectedResults") {
-      ZStream.fromIterable(limitsToTest)
-        .map(limit => testM(s"Test query with limit of ${limit} expecting ${queryGraphExpectedResults} results") {
-          for {
-            message <- QueryService.run(limit, false, testQueryGraph)
-            _ = logger.info(s"Retrieved ${message.results.get.size} results when limit=${limit}")
-            results = message.results.get
-          } yield {
-            logger.debug(s"Knowledge graph:")
-            logger.debug(s" - Nodes:")
-            message.knowledge_graph.foreach(_.nodes.foreach(node =>
-              logger.debug(s"   - ${node._1}: ${node._2}")
-            ))
-            logger.debug(s" - Edges:")
-            message.knowledge_graph.foreach(_.edges.foreach(edge =>
-              logger.debug(s"   - ${edge._1}: ${edge._2}")
-            ))
-            logger.debug(s"Results:")
-            for ((r, index) <- results.zipWithIndex) {
-              logger.debug(s" - [${index + 1}] ${r}")
-            }
+      ZStream
+        .fromIterable(limitsToTest)
+        .map(limit =>
+          testM(s"Test query with limit of $limit expecting $queryGraphExpectedResults results") {
+            for {
+              message <- QueryService.run(limit, false, testQueryGraph)
+              _ = logger.info(s"Retrieved ${message.results.get.size} results when limit=$limit")
+              results = message.results.get
+            } yield {
+              logger.debug(s"Knowledge graph:")
+              logger.debug(s" - Nodes:")
+              message.knowledge_graph.foreach(_.nodes.foreach(node => logger.debug(s"   - ${node._1}: ${node._2}")))
+              logger.debug(s" - Edges:")
+              message.knowledge_graph.foreach(_.edges.foreach(edge => logger.debug(s"   - ${edge._1}: ${edge._2}")))
+              logger.debug(s"Results:")
+              for ((r, index) <- results.zipWithIndex)
+                logger.debug(s" - [${index + 1}] $r")
 
-            assert(results.size)(Assertion.isGreaterThan(0)) &&
+              assert(results.size)(Assertion.isGreaterThan(0)) &&
               assert(results.size)(Assertion.equalTo(Math.min(queryGraphExpectedResults, limit)))
-          }
-        }).runCollect
+            }
+          })
+        .runCollect
     }
   }
 
@@ -75,4 +71,5 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
   def spec: Spec[environment.TestEnvironment, TestFailure[Throwable], TestSuccess] = suite("Limit tests")(
     testQueryWithExpectedResults
   ).provideCustomLayer(testLayer.mapError(TestFailure.die))
+
 }
