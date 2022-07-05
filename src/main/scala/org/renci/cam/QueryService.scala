@@ -364,29 +364,29 @@ object QueryService extends LazyLogging {
               }
             """
     }
-    val node_projections = getProjections(queryGraph)
-    val type_projections = getProjections(queryGraph, true)
+    val nodeProjections = getProjections(queryGraph)
+    val typeProjections = getProjections(queryGraph, true)
     val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes.keySet)
     val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
     val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
     val queryString =
       sparql"""PREFIX hint: <http://www.bigdata.com/queryHints#>
 
-          SELECT DISTINCT $type_projections
+          SELECT DISTINCT $typeProjections
                (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?graphs)
                (GROUP_CONCAT(DISTINCT ?d; SEPARATOR='|') AS ?derivedFrom)
           WHERE {
             $nodesToDirectTypes
             OPTIONAL { ?g $ProvWasDerivedFrom ?d }
             {
-              SELECT $node_projections ?g
+              SELECT $nodeProjections ?g
               WHERE {
                 $edgePatterns
               }
             }
             hint:Prior hint:runFirst true .
           }
-          GROUP BY $type_projections
+          GROUP BY $typeProjections
           $limitSparql
           """
     logger.debug(s"Executing query: ${queryString}")
