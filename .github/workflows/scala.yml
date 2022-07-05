@@ -20,3 +20,5 @@ jobs:
         CAM_KP_LOG_LEVEL: "INFO"
         SPARQL_ENDPOINT: "https://cam-kp-sparql.apps.renci.org/sparql"
       run: sbt test
+    - name: Check formatting with Scalafmt
+      run: sbt scalafmtCheckAll
