@@ -386,13 +386,10 @@ object QueryServiceTest extends DefaultRunnableSpec {
     testChemicalToGeneOrGeneProduct,
     testChemicalSubstanceKCNMA1,
     testDILIGeneList,
-    // The following tests currently fail. These failures are documented in the respective issues:
-    // - https://github.com/ExposuresProvider/cam-kp-api/issues/517
-    testSimpleQuery @@ TestAspect.failing,
-    testSimpleQueryRaw @@ TestAspect.failing,
-    testSimpleQueryRawWithSinglePredicate @@ TestAspect.failing,
-    // - https://github.com/ExposuresProvider/cam-kp-api/issues/518
-    testRelatedToQuery @@ TestAspect.failing,
+    testSimpleQuery,
+    testSimpleQueryRaw,
+    testSimpleQueryRawWithSinglePredicate,
+    testRelatedToQuery,
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }
