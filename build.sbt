@@ -42,7 +42,7 @@ reStart / javaOptions += "-Xmx16G"
 libraryDependencies ++= {
   Seq(
     "dev.zio"                     %% "zio"                            % zioVersion,
-    "dev.zio"                     %% "zio-interop-cats"               % "3.2.9.1",
+    "dev.zio"                     %% "zio-interop-cats"               % "3.3.0",
     "dev.zio"                     %% "zio-config"                     % zioConfigVersion,
     "dev.zio"                     %% "zio-config-magnolia"            % zioConfigVersion,
     "dev.zio"                     %% "zio-config-typesafe"            % zioConfigVersion,
@@ -69,7 +69,7 @@ libraryDependencies ++= {
     "io.circe"                    %% "circe-yaml"                     % circeVersion,
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
     "dev.zio"                     %% "zio-test-sbt"                   % zioVersion % "it,test",
-    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.40.7"  % "it,test",
+    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.40.7"   % "it,test",
     "com.google.guava"             % "guava"                          % "31.0.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
     "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.4"
