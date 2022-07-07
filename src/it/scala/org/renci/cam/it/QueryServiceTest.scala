@@ -389,7 +389,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
     testSimpleQuery,
     testSimpleQueryRaw,
     testSimpleQueryRawWithSinglePredicate,
-    testRelatedToQuery,
+    testRelatedToQuery
   ).provideLayerShared(testLayer) @@ TestAspect.sequential
 
 }

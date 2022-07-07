@@ -48,7 +48,7 @@ object SerializationTest extends DefaultRunnableSpec with LazyLogging {
 //        }
 
         val encoded = requestBody.asJson.deepDropNullValues.noSpaces
-        //println("encoded: " + encoded)
+        // println("encoded: " + encoded)
         assert(expected)(equalsIgnoreCase(encoded))
       }
     }

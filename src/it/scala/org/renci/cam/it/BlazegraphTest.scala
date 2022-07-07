@@ -14,7 +14,8 @@ import zio.test.environment.testEnvironment
 
 object BlazegraphTest extends DefaultRunnableSpec {
 
-  val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer >+> TypesafeConfig.fromDefaultLoader(AppConfig.config)).mapError(TestFailure.die)
+  val testLayer =
+    (testEnvironment ++ HttpClient.makeHttpClientLayer >+> TypesafeConfig.fromDefaultLoader(AppConfig.config)).mapError(TestFailure.die)
 
   val testBlazegraphServiceDirectly = suite("testBlazegraphServiceDirectly")(
     testM("test Blazegraph service directly") {
@@ -81,7 +82,7 @@ object BlazegraphTest extends DefaultRunnableSpec {
         request = Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json),
                                                               `Content-Type`(MediaType.application.json))
         response <- httpClient.expect[String](request)
-        //_ = println(response)
+        // _ = println(response)
       } yield assert(response)(isNonEmptyString)
     }
   )

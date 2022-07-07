@@ -109,7 +109,7 @@ object SerializationTest extends DefaultRunnableSpec {
         while (varIter.hasNext()) {
           val nodeVar = varIter.next()
           val node = binding.get(nodeVar)
-          bindings2 += s"<${node}>"
+          bindings2 += s"<$node>"
         }
       }
 //      println("bindings2: " + bindings2.mkString(" "))
