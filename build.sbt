@@ -33,7 +33,7 @@ val zioVersion = "1.0.14"
 val zioConfigVersion = "1.0.0-RC29-1"
 val zioCacheVersion = "0.1.1"
 val tapirVersion = "0.19.0-M13"
-val http4sVersion = "0.23.11"
+val http4sVersion = "0.23.12"
 val circeVersion = "0.14.1"
 val logbackVersion = "1.2.11"
 
@@ -69,7 +69,7 @@ libraryDependencies ++= {
     "io.circe"                    %% "circe-yaml"                     % circeVersion,
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
     "dev.zio"                     %% "zio-test-sbt"                   % zioVersion % "it,test",
-    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.40.7"  % "it,test",
+    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.40.7"   % "it,test",
     "com.google.guava"             % "guava"                          % "31.0.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
     "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.4"
