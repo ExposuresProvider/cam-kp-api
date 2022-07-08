@@ -72,7 +72,7 @@ libraryDependencies ++= {
     "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.40.7"   % "it,test",
     "com.google.guava"             % "guava"                          % "31.0.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
-    "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.4"
+    "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.5"
   )
 }
 
