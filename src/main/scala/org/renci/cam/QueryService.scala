@@ -5,13 +5,13 @@ import io.circe.generic.auto._
 import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{BiolinkData, biolinkData}
+import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.{TRAPIAttribute, _}
-import zio.config.{ZConfig, getConfig}
-import zio.{Has, RIO, Task, ZIO, config => _}
+import zio.config.{getConfig, ZConfig}
+import zio.{config => _, Has, RIO, Task, UIO, ZIO}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -55,26 +55,285 @@ object QueryService extends LazyLogging {
   // instances are not thread-safe; should be retrieved for every use
   private def messageDigest: MessageDigest = MessageDigest.getInstance("SHA-256")
 
-  def run(limit: Int,
-          includeExtraEdges: Boolean,
-          submittedQueryGraph: TRAPIQueryGraph): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
+  /** This case class is a way of storing the results we retrieved from the SPARQL query alongside the information we need access to.
+    *
+    * @param queryGraph
+    *   The query graph that we are attempting to respond to.
+    * @param nodes
+    *   The nodes returned from the query, with node labels as the key.
+    * @param edges
+    *   The edges returned from the query, with edge labels as the key.
+    * @param graphs
+    *   The RDF graphs in which these results are asserted.
+    * @param derivedFrom
+    *   The graphs that the graphs in which these results are asserted were derived.
+    * @see
+    *   org.renci.cam.QueryService#findInitialQuerySolutions
+    */
+  case class Result(
+    index: Long,
+    queryGraph: TRAPIQueryGraph,
+    nodes: Map[String, IRI],
+    edges: Map[String, IRI],
+    graphs: Set[IRI],
+    derivedFrom: Set[IRI]
+  ) {
+
+    /** Return the edge key to be used when returning this result. Ideally, this would be hashed in some way so that duplicate edges were
+      * merged, but for now we can rely on ARAs to do this downstream for us. So at the moment, we do the simple thing of using the index of
+      * this result and adding the edge query key to it.
+      *
+      * @param queryEdgeKey
+      *   The edge key used in the query (e.g. `e0`).
+      * @return
+      *   A unique edge key for this edge in this result.
+      */
+    def getEdgeKey(queryEdgeKey: String): String = s"result_${index}_edge_$queryEdgeKey"
+  }
+
+  object Result {
+
+    /** Convert a QuerySolution to a Result.
+      *
+      * @param qs
+      *   The QuerySolution to convert.
+      * @param index
+      *   The index of this QuerySolution (this is stored in the Result object and used to generate the edge keys).
+      * @param queryGraph
+      *   The query graph used to generate this QuerySolution.
+      * @return
+      *   The Result this QuerySolution was converted to.
+      */
+    def fromQuerySolution(qs: QuerySolution, index: Long, queryGraph: TRAPIQueryGraph): Result = {
+      val nodes = queryGraph.nodes.keySet.map(n => (n, IRI(qs.getResource(f"${n}_type").getURI))).toMap
+      val edges = queryGraph.edges.keySet.map(e => (e, IRI(qs.getResource(e).getURI))).toMap
+      val graphs = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
+      val derivedFrom = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
+
+      Result(
+        index,
+        queryGraph,
+        nodes,
+        edges,
+        graphs,
+        derivedFrom
+      )
+    }
+
+  }
+
+  /** Generate the TRAPI node map (IRI -> TRAPINode) from a list of Results.
+    *
+    * @param results
+    *   The list of Results retrieved from a query.
+    * @return
+    *   A ZIO that generates a Map of IRI to TRAPINode.
+    * @see
+    *   org.renci.cam.QueryService#getTRAPINodes
+    */
+  def generateTRAPINodes(results: List[Result]): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Map[IRI, TRAPINode]] =
     for {
       biolinkData <- biolinkData
+      // We need to get TRAPI Node Details for these nodes so that we can fill in label and category information.
+      allNodeDetails <- getTRAPINodeDetails(results.map(_.nodes).flatMap(_.values).toSet.toList)
+      // Generate the nodes.
+      nodes = results.flatMap(result =>
+        for {
+          key <- result.nodes.keys
+
+          // Generate the pieces of the TRAPINode.
+          iri = result.nodes(key)
+          nodeDetails = allNodeDetails.filter(_.term == iri)
+          name = nodeDetails.flatMap(_.label).headOption
+          categories = nodeDetails.map(_.biolinkType).flatMap(iri => biolinkData.classes.filter(_.iri == iri))
+          categoriesAsOption = if (categories.isEmpty) None else Some(categories)
+          attributes = List()
+
+          // Generate the TRAPINode.
+          trapiNode = TRAPINode(name, categoriesAsOption, Some(attributes))
+        } yield (iri, trapiNode))
+    } yield nodes.toMap
+
+  /** Generate TRAPI Edges from a list of results along with some additional data.
+    *
+    * @param results
+    *   A list of Results.
+    * @param relationsToLabelAndBiolinkPredicate
+    *   Information on Biolink relations. TODO: generate this in this method if nobody else needs it.
+    * @return
+    *   A ZIO that generates a map of edge keys and TRAPIEdges.
+    * @see
+    *   org.renci.cam.QueryService#getTRAPIEdges
+    */
+  def generateTRAPIEdges(results: List[Result], relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)])
+    : RIO[ZConfig[AppConfig] with ZConfig[BiolinkData], Map[String, TRAPIEdge]] =
+    for {
+      // Get some data we need to generate the TRAPI edges.
+      biolinkData <- biolinkData
+      appConfig <- getConfig[AppConfig]
+
+      // Generate the attributes we will need to produce the edge output.
+      originalKS <- ZIO
+        .fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source"))
+        .orElseFail(new Exception("could not get biolink:original_knowledge_source"))
+      aggregatorKS <- ZIO
+        .fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source"))
+        .orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
+      infoResBiolinkClass <- ZIO
+        .fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource"))
+        .orElseFail(new Exception("could not get biolink:InformationResource"))
+
+      // Generate the edges.
+      edges = results.flatMap(result =>
+        for {
+          key <- result.edges.keys
+
+          // Generate the pieces of this TRAPIEdge.
+          iri = result.edges(key)
+          labelAndBiolinkPredicate = relationsToLabelAndBiolinkPredicate.get(iri)
+          biolinkPredicateIRI = labelAndBiolinkPredicate.map(_._2)
+          biolinkPred = biolinkData.predicates.find(a => biolinkPredicateIRI.forall(_.equals(a.iri)))
+          queryEdge = result.queryGraph.edges(key)
+          subjectIRI = result.nodes(queryEdge.subject)
+          objectIRI = result.nodes(queryEdge.`object`)
+          derivedFroms = result.derivedFrom
+
+          // Generate the attributes for this edge.
+          aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
+                                                 aggregatorKS.iri,
+                                                 None,
+                                                 List("infores:cam-kp"),
+                                                 Some(infoResBiolinkClass.iri),
+                                                 Some(appConfig.location),
+                                                 None,
+                                                 None)
+          originalKnowledgeSources = derivedFroms.map {
+            case df @ ctd if ctd.value.contains("ctdbase.org") => (df, "infores:ctd")
+            case df                                            => (df, "infores:go-cam")
+          }
+          originalKSAttributes = originalKnowledgeSources.map { case (derivedFrom, inforesKS) =>
+            TRAPIAttribute(Some("infores:cam-kp"),
+                           originalKS.iri,
+                           None,
+                           List(inforesKS),
+                           Some(infoResBiolinkClass.iri),
+                           Some(derivedFrom.value),
+                           None,
+                           None)
+          }
+          attributes = aggregatorKSAttribute +: originalKSAttributes.toList
+
+          // Generate the TRAPIEdge and its edge key.
+          trapiEdge = TRAPIEdge(biolinkPred, subjectIRI, objectIRI, Some(attributes))
+          // edgeKey = getTRAPIEdgeKey(queryEdge.subject, biolinkPred, queryEdge.`object`)
+          edgeKey = result.getEdgeKey(key)
+        } yield (edgeKey, trapiEdge))
+    } yield edges.toMap
+
+  /** Generate TRAPI results from a list of Results.
+    *
+    * This is fairly straightforward: each result contains node IRIs as well as edge IRIs, but we need to generate the edge key via
+    * Result.getEdgeKey()
+    *
+    * @param results
+    *   The Results to convert into TRAPI Results.
+    * @return
+    *   An UIO that generates the list of TRAPI Results.
+    */
+  def generateTRAPIResults(results: List[Result]): List[TRAPIResult] =
+    for {
+      result <- results
+
+      nodeBindings = result.nodes
+        .groupMap(_._1)(p => TRAPINodeBinding(p._2))
+        .map(p => (p._1, p._2.toList))
+      edgeBindings = result.edges.keys
+        .map(key => (key, List(TRAPIEdgeBinding(result.getEdgeKey(key)))))
+        .toMap
+    } yield TRAPIResult(node_bindings = nodeBindings, edge_bindings = edgeBindings)
+
+  /** Query the triplestore with a TRAPIQuery and return a TRAPIMessage with the result.
+    *
+    * @param limit
+    *   The maximum number of results to return.
+    * @param includeExtraEdges
+    *   Include additional information about the returned nodes.
+    * @param submittedQueryGraph
+    *   The query graph to search the triplestore with.
+    * @return
+    *   A TRAPIMessage displaying the results.
+    */
+  def run(limit: Int, includeExtraEdges: Boolean, submittedQueryGraph: TRAPIQueryGraph)
+    : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
+    for {
+      // Get the Biolink data.
+      biolinkData <- biolinkData
       _ = logger.debug("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
+
+      // We don't actually support `includeExtraEdges`, so if this is set, we should throw an unimplemented exception.
+      includeExtraEdgesFlag <-
+        if (includeExtraEdges)
+          ZIO.fail(new NotImplementedError("includeExtraEdges not yet supported in QueryService.run()"))
+        else ZIO.succeed(false)
+
+      // Prepare the query graph for processing.
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+
+      // Generate the relationsToLabelAndBiolinkPredicate.
       allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
       predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
       relationsToLabelAndBiolinkPredicate <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+
+      // Generate query solutions.
+      _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+      results = initialQuerySolutions.zipWithIndex.map { case (qs, index) =>
+        Result.fromQuerySolution(qs, index, queryGraph)
+      }
+      _ = logger.debug(s"Results: $results")
+
+      // From the results, generate the TRAPI nodes, edges and results.
+      nodes <- generateTRAPINodes(results)
+      _ = logger.debug(s"Nodes: $nodes")
+      edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
+      _ = logger.debug(s"Edges: $edges")
+      trapiResults = generateTRAPIResults(results)
+      _ = logger.debug(s"Results: $trapiResults")
+    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct))
+
+  def oldRun(limit: Int, includeExtraEdges: Boolean, submittedQueryGraph: TRAPIQueryGraph)
+    : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
+    for {
+      biolinkData <- biolinkData
+      _ = logger.warn("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
+      queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+      allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
+      predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
+      allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
+      relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+      _ = logger.warn(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
+      initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+      _ = logger.warn(s"Initial query solutions: ${initialQuerySolutions.length} (limit: $limit): $initialQuerySolutions")
+      _ = logger.warn(s"extractCoreTriples($initialQuerySolutions, $queryGraph)")
       solutionTriples = extractCoreTriples(initialQuerySolutions, queryGraph)
+      _ = logger.warn(s"Solution triples: ${solutionTriples.size} (limit: $limit): $solutionTriples")
       provs <- getProvenance(solutionTriples)
+      _ = logger.warn(s"provs: ${provs.size} (limit: $limit): $provs")
+      _ = logger.warn(s"getTRAPINodes($queryGraph, $initialQuerySolutions, ${biolinkData.classes})")
       initialKGNodes <- getTRAPINodes(queryGraph, initialQuerySolutions, biolinkData.classes)
+      _ = logger.warn(s"initialKGNodes: ${initialKGNodes.size} (limit: $limit): $initialKGNodes")
+      _ = logger.warn(s"getTRAPIEdges($queryGraph, $initialQuerySolutions, $relationsToLabelAndBiolinkPredicate, $provs)")
       initialKGEdges <- getTRAPIEdges(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate, provs)
+      _ = logger.warn(s"initialKGEdges: ${initialKGEdges.size} (limit: $limit): $initialKGEdges")
+      _ = logger.warn(s"getTRAPIEdgeBindingsMany($queryGraph, $initialQuerySolutions, $relationsToLabelAndBiolinkPredicate)")
       querySolutionsToEdgeBindings <- getTRAPIEdgeBindingsMany(queryGraph, initialQuerySolutions, relationsToLabelAndBiolinkPredicate)
+      _ = logger.warn(
+        s"querySolutionsToEdgeBindings: $querySolutionsToEdgeBindings (length: ${querySolutionsToEdgeBindings.size}, limit: $limit)")
       trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
         getTRAPINodeBindings(queryGraph, querySolution) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
       }
+      _ = logger.warn(s"trapiBindings: ${trapiBindings.length} (limit: $limit)")
       _ <- ZIO.when(includeExtraEdges)(
         for {
           prov2CAMStuffTripleMap <- ZIO.foreachPar(provs.values)(prov => getCAMStuff(IRI(prov)).map(prov -> _)).map(_.toMap)
@@ -97,8 +356,23 @@ object QueryService extends LazyLogging {
         } yield ()
       )
       results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) => TRAPIResult(resultNodeBindings, resultEdgeBindings) }
+      _ = logger.warn(s"results: $results (length: ${results.length}, limit: $limit)")
+      _ = logger.warn(s"results distinct: ${results.distinct} (length: ${results.distinct.length}, limit: $limit)")
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes, initialKGEdges)), Some(results.distinct))
 
+  /** Construct and execute a SPARQL query based on the provided query graph in the triplestore.
+    *
+    * @param queryGraph
+    *   The query graph describing the
+    * @param predicatesToRelations
+    *   Mappings between Biolink predicates and their corresponding IRIs in the triplestore.
+    * @param limit
+    *   The number of results to return.
+    * @return
+    *   A ZIO that resolves to a list of QuerySolutions
+    * @see
+    *   org.renci.cam.QueryService#Result for a more human-readable version of the query solution.
+    */
   def findInitialQuerySolutions(queryGraph: TRAPIQueryGraph,
                                 predicatesToRelations: Map[BiolinkPredicate, Set[IRI]],
                                 limit: Int): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, List[QuerySolution]] = {
@@ -115,38 +389,58 @@ object QueryService extends LazyLogging {
       val objectNodeValuesClauses = getNodeValuesClauses(objectNode.ids, objectNode.categories, edgeTargetVar)
       val nodesValuesClauses = List(subjectNodeValuesClauses, objectNodeValuesClauses).fold(sparql"")(_ + _)
       sparql"""
-              $predicatesValuesClause
               $nodesValuesClauses
-              $edgeSourceVar $edgeIDVar $edgeTargetVar .
+              GRAPH ?g {
+                $predicatesValuesClause
+                $edgeSourceVar $edgeIDVar $edgeTargetVar .
+              }
             """
     }
-    val projections = getProjections(queryGraph)
-    val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes.keySet)
+    val nodeProjections = getProjections(queryGraph)
+    val typeProjections = getProjections(queryGraph, true)
+    val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
     val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
     val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
     val queryString =
-      sparql"""SELECT DISTINCT $projections
+      sparql"""PREFIX hint: <http://www.bigdata.com/queryHints#>
+
+          SELECT DISTINCT $typeProjections
+               (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?graphs)
+               (GROUP_CONCAT(DISTINCT ?d; SEPARATOR='|') AS ?derivedFrom)
           WHERE {
             $nodesToDirectTypes
-            $edgePatterns
+            OPTIONAL { ?g $ProvWasDerivedFrom ?d }
+            {
+              SELECT $nodeProjections ?g
+              WHERE {
+                $edgePatterns
+              }
+            }
+            hint:Prior hint:runFirst true .
           }
+          GROUP BY $typeProjections
           $limitSparql
           """
+    logger.debug(s"Executing query: $queryString")
     SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
   }
 
-  def getNodeValuesClauses(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], edgeVar: Var): QueryText = (ids, categories) match {
-    case (Some(idsList), _) =>
-      sparql""" VALUES ${edgeVar}_class { ${idsList.asValues} }
+  def getNodeValuesClauses(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], edgeVar: Var): QueryText =
+    (ids, categories) match {
+      case (Some(idsList), _) =>
+        sparql""" VALUES ${edgeVar}_class { ${idsList.asValues} }
                       $edgeVar $RDFType ${edgeVar}_class .
                       """
-    case (None, Some(biolinkTypes)) =>
-      val irisList = biolinkTypes.map(_.iri)
-      sparql""" VALUES ${edgeVar}_class { ${irisList.asValues} }
+      case (None, Some(List(BiolinkNamedThing))) =>
+        // Since everything is a Biolink Named Thing, we don't actually need to filter to it.
+        sparql""
+      case (None, Some(biolinkTypes)) =>
+        val irisList = biolinkTypes.map(_.iri)
+        sparql""" VALUES ${edgeVar}_class { ${irisList.asValues} }
                       $edgeVar $RDFType ${edgeVar}_class .
                       """
-    case (None, None) => sparql""
-  }
+      case (None, None) => sparql""
+    }
 
   def extractCoreTriples(solutions: List[QuerySolution], queryGraph: TRAPIQueryGraph): Set[Triple] =
     (for {
@@ -158,24 +452,39 @@ object QueryService extends LazyLogging {
       IRI(solution.getResource(queryEdge.`object`).getURI)
     )).to(Set)
 
-  def getNodesToDirectTypes(nodeIDs: Set[String]): QueryText =
-    nodeIDs
-      .map { nodeID =>
+  def getNodesToDirectTypes(nodes: Map[String, TRAPIQueryNode]): QueryText =
+    nodes
+      .map { case (nodeID, node) =>
         val nodeVar = Var(nodeID)
         val nodeTypeVar = Var(s"${nodeID}_type")
-        val nodeClassVar = Var(s"${nodeID}_class")
+        val nodeClassVar = Var(s"${nodeID}_class_restrict")
+        val nodeValueRestriction = node.categories match {
+          case Some(categoryList) => sparql"""VALUES $nodeClassVar { ${categoryList.map(_.iri).asValues} }"""
+          case _                  => sparql""
+        }
         sparql""" $nodeVar $SesameDirectType $nodeTypeVar .
                   $nodeTypeVar $RDFSSubClassOf $nodeClassVar .
+                  $nodeValueRestriction
               """
       }
       .fold(sparql"")(_ + _)
 
-
-  def getProjections(queryGraph: TRAPIQueryGraph): QueryText = {
+  /** There are two "projections" that we need to generate for use in SPARQL:
+    *   - If typesInsteadOfNodes is false (the default), we should generate ?n0 ?e0 ?n1 for a one-hop.
+    *   - If typesInsteadOfNodes is true, we should generate ?n0_type ?e0 ?n1_type for a one-hop.
+    *
+    * @param queryGraph
+    *   The query graph to generate projections for.
+    * @param typesInsteadOfNodes
+    *   Use `_type` projections instead of just the raw node projections.
+    * @return
+    *   A string listing all the projects for use in a SPARQL query.
+    */
+  def getProjections(queryGraph: TRAPIQueryGraph, typesInsteadOfNodes: Boolean = false): QueryText = {
     val projectionVariableNames =
       queryGraph.edges.keys ++
-        queryGraph.edges.flatMap(e => List(e._2.subject, e._2.`object`)) ++
-        queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_type")
+        (if (typesInsteadOfNodes) queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_type")
+         else queryGraph.edges.flatMap(e => List(e._2.subject, e._2.`object`)))
     projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
   }
 
@@ -209,7 +518,6 @@ object QueryService extends LazyLogging {
                     querySolutions: List[QuerySolution],
                     relationsMap: Map[IRI, (Option[String], IRI)],
                     provs: Map[TripleString, String]): ZIO[ZConfig[AppConfig] with Has[BiolinkData], Throwable, Map[String, TRAPIEdge]] =
-
     for {
       biolinkData <- biolinkData
 
@@ -226,17 +534,37 @@ object QueryService extends LazyLogging {
               predicate = querySolution.getResource(queryEdgeID).getURI
               predicateIRI = IRI(predicate)
               tripleString = TripleString(source, predicate, target)
-              originalKS <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source")).orElseFail(new Exception("could not get biolink:original_knowledge_source"))
-              aggregatorKS <- ZIO.fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source")).orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
+              originalKS <- ZIO
+                .fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source"))
+                .orElseFail(new Exception("could not get biolink:original_knowledge_source"))
+              aggregatorKS <- ZIO
+                .fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source"))
+                .orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
 
               provValue <- ZIO.fromOption(provs.get(tripleString)).orElseFail(new Exception("no prov value"))
-              infoResBiolinkClass <- ZIO.fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource")).orElseFail(new Exception("could not get biolink:InformationResource"))
-              aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), aggregatorKS.iri, None, List("infores:cam-kp"), Some(infoResBiolinkClass.iri), Some(appConfig.location), None, None)
+              infoResBiolinkClass <- ZIO
+                .fromOption(biolinkData.classes.find(p => p.shorthand == "InformationResource"))
+                .orElseFail(new Exception("could not get biolink:InformationResource"))
+              aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
+                                                     aggregatorKS.iri,
+                                                     None,
+                                                     List("infores:cam-kp"),
+                                                     Some(infoResBiolinkClass.iri),
+                                                     Some(appConfig.location),
+                                                     None,
+                                                     None)
               originalKSstr = provValue match {
                 case ctd if provValue.contains("ctdbase.org") => "infores:ctd"
-                case _ => "infores:go-cam"
+                case _                                        => "infores:go-cam"
               }
-              originalKSAttribute = TRAPIAttribute(Some("infores:cam-kp"), originalKS.iri, None, List(originalKSstr), Some(infoResBiolinkClass.iri), Some(provValue), None, None)
+              originalKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
+                                                   originalKS.iri,
+                                                   None,
+                                                   List(originalKSstr),
+                                                   Some(infoResBiolinkClass.iri),
+                                                   Some(provValue),
+                                                   None,
+                                                   None)
               attributes = List(aggregatorKSAttribute, originalKSAttribute)
               relationLabelAndBiolinkPredicate <- ZIO
                 .fromOption(relationsMap.get(predicateIRI))
@@ -244,7 +572,7 @@ object QueryService extends LazyLogging {
               (relationLabelOpt, biolinkPredicateIRI) = relationLabelAndBiolinkPredicate
               blPred = biolinkData.predicates.find(a => a.iri == biolinkPredicateIRI)
               trapiEdgeKey = getTRAPIEdgeKey(sourceType.value, blPred, targetType.value)
-              //FIXME add relation CURIE here?
+              // FIXME add relation CURIE here?
               trapiEdge = TRAPIEdge(blPred, sourceType, targetType, Some(attributes))
             } yield trapiEdgeKey -> trapiEdge
           }
@@ -252,8 +580,10 @@ object QueryService extends LazyLogging {
       }
     } yield trapiEdges.flatten.toMap
 
-  def getTRAPINodes(queryGraph: TRAPIQueryGraph, querySolutions: List[QuerySolution], bionlinkClasses: List[BiolinkClass])
-    : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Map[IRI, TRAPINode]] = {
+  def getTRAPINodes(
+    queryGraph: TRAPIQueryGraph,
+    querySolutions: List[QuerySolution],
+    bionlinkClasses: List[BiolinkClass]): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Map[IRI, TRAPINode]] = {
     val allOntClassIRIsZ = ZIO
       .foreach(querySolutions) { qs =>
         ZIO.foreach(qs.varNames.asScala.filter(_.endsWith("_type")).to(Iterable)) { typeVar =>
@@ -302,10 +632,12 @@ object QueryService extends LazyLogging {
          GROUP BY ?term ?biolinkType"""
   }
 
+  // TODO: This would be a useful method to cache.
   def getTRAPINodeDetails(nodeIdList: List[IRI]): RIO[ZConfig[AppConfig] with HttpClient, List[TermWithLabelAndBiolinkType]] =
     for {
       queryText <- Task.effect(getTRAPINodeDetailsQueryText(nodeIdList))
       termsAndBiolinkTypes <- SPARQLQueryExecutor.runSelectQueryAs[TermWithLabelAndBiolinkType](queryText.toQuery)
+      _ = logger.debug(s"getTRAPINodeDetails($nodeIdList) = $termsAndBiolinkTypes")
     } yield termsAndBiolinkTypes
 
   def getTRAPINodeBindings(queryGraph: TRAPIQueryGraph,
@@ -319,10 +651,10 @@ object QueryService extends LazyLogging {
       }
     } yield nodeBindings
 
-  def getTRAPIEdgeBindingsMany(queryGraph: TRAPIQueryGraph,
-                               querySolutions: List[QuerySolution],
-                               relationsMap: Map[IRI, (Option[String], IRI)])
-    : ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] =
+  def getTRAPIEdgeBindingsMany(
+    queryGraph: TRAPIQueryGraph,
+    querySolutions: List[QuerySolution],
+    relationsMap: Map[IRI, (Option[String], IRI)]): RIO[Has[BiolinkData], Map[QuerySolution, Map[String, List[TRAPIEdgeBinding]]]] =
     for {
       biolinkData <- biolinkData
       querySolutionsToEdgeBindings <- ZIO.foreach(querySolutions) { querySolution =>
@@ -404,6 +736,8 @@ object QueryService extends LazyLogging {
     nodeMap
   }
 
+  // TODO:
+  // - Change this to cached queries (see mapQueryBiolinkPredicatesToRelations for example)
   def mapRelationsToLabelAndBiolink(relations: Set[IRI]): RIO[ZConfig[AppConfig] with HttpClient, Map[IRI, (Option[String], IRI)]] = {
     final case class RelationInfo(relation: IRI, biolinkSlot: IRI, label: Option[String])
     val queryText = sparql"""
