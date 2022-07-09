@@ -5,6 +5,8 @@ import org.http4s.headers._
 import org.http4s.implicits._
 import org.renci.cam._
 import zio.Task
+import zio.config.getConfig
+import zio.config.typesafe.TypesafeConfig
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
@@ -12,7 +14,8 @@ import zio.test.environment.testEnvironment
 
 object BlazegraphTest extends DefaultRunnableSpec {
 
-  val testLayer = (testEnvironment ++ HttpClient.makeHttpClientLayer).mapError(TestFailure.die)
+  val testLayer =
+    (testEnvironment ++ HttpClient.makeHttpClientLayer >+> TypesafeConfig.fromDefaultLoader(AppConfig.config)).mapError(TestFailure.die)
 
   val testBlazegraphServiceDirectly = suite("testBlazegraphServiceDirectly")(
     testM("test Blazegraph service directly") {
@@ -71,14 +74,15 @@ object BlazegraphTest extends DefaultRunnableSpec {
                 LIMIT   1"""
 
       for {
+        appConfig <- getConfig[AppConfig]
         httpClient <- HttpClient.client
-        uri = uri"https://stars-app.renci.org/camdev/sparql"
+        uri = appConfig.sparqlEndpoint
           .withQueryParam("query", query)
           .withQueryParam("format", "json")
         request = Request[Task](Method.POST, uri).withHeaders(Accept(MediaType.application.json),
                                                               `Content-Type`(MediaType.application.json))
         response <- httpClient.expect[String](request)
-        //_ = println(response)
+        // _ = println(response)
       } yield assert(response)(isNonEmptyString)
     }
   )

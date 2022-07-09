@@ -21,6 +21,7 @@ javaOptions += "-Xmx8G"
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
 Compile / packageDoc / publishArtifact := false
+Test / fork := true
 
 configs(IntegrationTest)
 Defaults.itSettings
@@ -28,11 +29,11 @@ IntegrationTest / parallelExecution := false
 
 coverageExcludedPackages := "<empty>;org\\.renci\\.cam\\.domain\\..*;org\\.renci\\.cam\\.Server.*;org\\.renci\\.cam\\.Biolink.*;org\\.renci\\.cam\\.HttpClient.*;org\\.renci\\.cam\\.AppConfig.*;org\\.renci\\.cam\\.Util.*;org\\.renci\\.cam\\.util\\.UpdateBiolinkResources.*;org\\.renci\\.cam\\.SPARQLQueryExecutor.*"
 
-val zioVersion = "1.0.14"
+val zioVersion = "1.0.15"
 val zioConfigVersion = "1.0.0-RC29-1"
-val zioCacheVersion = "0.1.1"
+val zioCacheVersion = "0.1.2"
 val tapirVersion = "0.19.0-M13"
-val http4sVersion = "0.23.11"
+val http4sVersion = "0.23.12"
 val circeVersion = "0.14.1"
 val logbackVersion = "1.2.11"
 
@@ -68,23 +69,36 @@ libraryDependencies ++= {
     "io.circe"                    %% "circe-yaml"                     % circeVersion,
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
     "dev.zio"                     %% "zio-test-sbt"                   % zioVersion % "it,test",
-    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.39.12"  % "it,test",
+    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.40.7"   % "it,test",
     "com.google.guava"             % "guava"                          % "31.0.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
-    "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.4"
+    "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.5"
   )
 }
 
 dockerBaseImage := "openjdk:17-alpine"
 Docker / daemonUser := "camkpapi"
 dockerExposedPorts += 8080
+
 // test
-dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g")
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0")
+//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g",
+//                      "SPARQL_ENDPOINT" -> sys.env("SPARQL_ENDPOINT"),
+//                      "CAM_KP_LOG_LEVEL" -> sys.env("CAM_KP_LOG_LEVEL"))
+
 // dev
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api-dev.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/camdev/sparql -DMATURITY=development")
+//dockerEnvVars ++= Map(
+//  "JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api-dev.renci.org -DMATURITY=development",
+//  "SPARQL_ENDPOINT" -> sys.env("SPARQL_ENDPOINT"),
+//  "CAM_KP_LOG_LEVEL" -> sys.env("CAM_KP_LOG_LEVEL")
+//)
+
 // prod
-//dockerEnvVars ++= Map("JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DSPARQL_ENDPOINT=https://stars-app.renci.org/cam/sparql -DMATURITY=production")
+dockerEnvVars ++= Map(
+  "JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DMATURITY=production",
+  "SPARQL_ENDPOINT" -> sys.env.getOrElse("SPARQL_ENDPOINT", "https://cam-kp-sparql.apps.renci.org/sparql"),
+  "CAM_KP_LOG_LEVEL" -> sys.env.getOrElse("CAM_KP_LOG_LEVEL", "info")
+)
+
 dockerEntrypoint := Seq("/opt/docker/bin/server")
 Docker / dockerApiVersion := Some(DockerApiVersion(1, 40))
 dockerChmodType := DockerChmodType.UserGroupWriteExecute
