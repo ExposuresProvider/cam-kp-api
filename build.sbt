@@ -94,7 +94,10 @@ dockerExposedPorts += 8080
 
 // prod
 dockerEnvVars ++= Map(
-  "JAVA_OPTS" -> "-Xmx16g -Xms16g -DTRAPI_VERSION=1.2.0 -DLOCATION=https://cam-kp-api.renci.org -DMATURITY=production",
+  "JAVA_OPTS" -> "-Xmx16g -Xms16g",
+  "TRAPI_VERSION" -> "1.2.0",
+  "LOCATION" -> sys.env.getOrElse("LOCATION", "https://cam-kp-api.renci.org"),
+  "MATURITY" -> sys.env.getOrElse("MATURITY", "production"),
   "SPARQL_ENDPOINT" -> sys.env.getOrElse("SPARQL_ENDPOINT", "https://cam-kp-sparql.apps.renci.org/sparql"),
   "CAM_KP_LOG_LEVEL" -> sys.env.getOrElse("CAM_KP_LOG_LEVEL", "info")
 )
