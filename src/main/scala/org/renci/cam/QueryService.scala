@@ -256,25 +256,17 @@ object QueryService extends LazyLogging {
     *
     * @param limit
     *   The maximum number of results to return.
-    * @param includeExtraEdges
-    *   Include additional information about the returned nodes.
     * @param submittedQueryGraph
     *   The query graph to search the triplestore with.
     * @return
     *   A TRAPIMessage displaying the results.
     */
-  def run(limit: Int, includeExtraEdges: Boolean, submittedQueryGraph: TRAPIQueryGraph)
+  def run(limit: Int, submittedQueryGraph: TRAPIQueryGraph)
     : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
     for {
       // Get the Biolink data.
       biolinkData <- biolinkData
-      _ = logger.debug("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
-
-      // We don't actually support `includeExtraEdges`, so if this is set, we should throw an unimplemented exception.
-      includeExtraEdgesFlag <-
-        if (includeExtraEdges)
-          ZIO.fail(new NotImplementedError("includeExtraEdges not yet supported in QueryService.run()"))
-        else ZIO.succeed(false)
+      _ = logger.debug("limit: {}", limit)
 
       // Prepare the query graph for processing.
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
