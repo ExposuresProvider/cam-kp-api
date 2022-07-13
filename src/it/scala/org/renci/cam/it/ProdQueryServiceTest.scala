@@ -36,7 +36,7 @@ object ProdQueryServiceTest extends DefaultRunnableSpec {
       }
       _ = println("encoded: " + encoded)
       // TODO: this should probably be in the AppConfig somewhere.
-      uri = Uri.fromString(s"https://cam-kp-api.renci.org/${appConfig.trapiVersion}/query").toOption.get
+      uri = Uri.fromString(s"https://${appConfig.location}/${appConfig.trapiVersion}/query").toOption.get
       _ = println("uri: " + uri)
       uriWithQueryParams = uri.withQueryParam("limit", limit).withQueryParam("include_extra_edges", include_extra_edges)
       request = Request[Task](Method.POST, uriWithQueryParams)
