@@ -26,13 +26,6 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   val e0Edge = TRAPIQueryEdge(None, "n1", "n0", None)
   val queryGraph = TRAPIQueryGraph(Map("n0" -> n0Node, "n1" -> n1Node), Map("e0" -> e0Edge))
 
-  /* Tests for the new QueryService.run() method. */
-  val testIncludeExtraEdges = testM("testIncludeExtraEdges") {
-    for {
-      result <- QueryService.run(100, true, queryGraph).run
-    } yield assert(result)(fails(isSubtype[NotImplementedError](anything)))
-  }
-
   /* Tests for the old QueryService.oldRun() method. These will be deleted as they are deprecated. */
 //  val testGetNodeTypes = suite("testGetNodeTypes")(
 //    testM("test get node types sans id") {
@@ -463,7 +456,6 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   val testLayer = HttpClient.makeHttpClientLayer ++ Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
 
   def spec = suite("QueryService tests")(
-    testIncludeExtraEdges,
 //    testGetNodeTypes,
     testEnforceQueryEdgeTypes,
     testGetTRAPINodeBindings,
