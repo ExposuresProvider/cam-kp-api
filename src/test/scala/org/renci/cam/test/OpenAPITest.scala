@@ -25,11 +25,24 @@ object OpenAPITest extends DefaultRunnableSpec with LazyLogging {
 
         // Look up info.version.
         infoVersionOpt = openApiDoc.hcursor.downField("info").downField("version").as[String].toOption
+
+        // Look up info.x-trapi.version
+        infoXTrapiVersion = openApiDoc.hcursor.downField("info").downField("x-trapi").downField("version").as[String].toOption
+
+        // Look up servers[0] url and x-maturity.
+        servers0Url = openApiDoc.hcursor.downField("servers").downN(0).downField("url").as[String].toOption
+        servers0XMaturity = openApiDoc.hcursor.downField("servers").downN(0).downField("x-maturity").as[String].toOption
+
       } yield assert(response.status)(Assertion.equalTo(Status.Ok)) &&
         assert(content)(Assertion.isNonEmptyString) &&
         // Check the info.version value.
         assert(infoVersionOpt)(Assertion.isSome(Assertion.isNonEmptyString)) &&
-        assert(infoVersionOpt)(Assertion.equalTo(Some(appConfig.version)))
+        assert(infoVersionOpt)(Assertion.equalTo(Some(appConfig.version))) &&
+        // Check info.x-trapi.version.
+        assert(infoXTrapiVersion)(Assertion.equalTo(Some(appConfig.trapiVersion))) &&
+        // Check servers[0].
+        assert(servers0Url)(Assertion.equalTo(Some(appConfig.location + '/' + appConfig.trapiVersion))) &&
+        assert(servers0XMaturity)(Assertion.equalTo(Some(appConfig.maturity)))
     }
   }
 
