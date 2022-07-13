@@ -140,15 +140,6 @@ object Server extends App with LazyLogging {
       }
       .toRoutes
 
-  val openAPIInfo: Info = Info(
-    "CAM-KP API",
-    "0.1",
-    Some("TRAPI interface to database of Causal Activity Models"),
-    Some("https://opensource.org/licenses/MIT"),
-    Some(Contact(Some("Jim Balhoff"), Some("balhoff@renci.org"), None)),
-    Some(License("MIT License", Some("https://opensource.org/licenses/MIT")))
-  )
-
   val server: RIO[ZEnv with EndpointEnv, Unit] =
     ZIO.runtime[ZEnv with EndpointEnv].flatMap { implicit runtime =>
       for {
@@ -160,8 +151,17 @@ object Server extends App with LazyLogging {
         queryRoute = queryRouteR(queryEndpoint)
         routes = queryRoute <+> metaKnowledgeGraphRoute
         openAPI: String = OpenAPIDocsInterpreter()
-          .toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", "0.1")
-          .copy(info = openAPIInfo)
+          .toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", appConfig.version)
+          .copy(
+            info = Info(
+              "CAM-KP API",
+              appConfig.version,
+              Some("TRAPI interface to database of Causal Activity Models"),
+              Some("https://opensource.org/licenses/MIT"),
+              Some(Contact(Some("Jim Balhoff"), Some("balhoff@renci.org"), None)),
+              Some(License("MIT License", Some("https://opensource.org/licenses/MIT")))
+            )
+          )
           .copy(tags = List(sttp.tapir.apispec.Tag("maturity"), sttp.tapir.apispec.Tag("translator"), sttp.tapir.apispec.Tag("trapi")))
           .servers(
             List(
