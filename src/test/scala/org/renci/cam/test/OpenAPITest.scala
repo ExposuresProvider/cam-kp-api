@@ -1,29 +1,35 @@
 package org.renci.cam.test
 
-import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe.yaml.parser
 import org.http4s.{EntityDecoder, Request, Status, Uri}
 import org.renci.cam._
-import org.renci.cam.domain._
-import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
+import zio.config.{getConfig, ZConfig}
 import zio.interop.catz.concurrentInstance
 import zio.test._
 import zio.{Layer, ZIO}
 
 object OpenAPITest extends DefaultRunnableSpec with LazyLogging {
-  // implicit val F = Concurrent[IO]
 
   val testOpenAPISpecification = suite("testOpenAPISpecification") {
     testM("Validate and check Open API specification") {
       for {
+        appConfig <- getConfig[AppConfig]
+
+        // Retrieve /docs/docs.yaml from the server.
         server <- Server.httpApp
         response <- server(Request(uri = Uri.unsafeFromString("/docs/docs.yaml")))
         content <- EntityDecoder.decodeText(response)
         openApiDoc <- ZIO.fromEither(parser.parse(content))
+
+        // Look up info.version.
+        infoVersionOpt = openApiDoc.hcursor.downField("info").downField("version").as[String].toOption
       } yield assert(response.status)(Assertion.equalTo(Status.Ok)) &&
-        assert(content)(Assertion.isNonEmptyString)
+        assert(content)(Assertion.isNonEmptyString) &&
+        // Check the info.version value.
+        assert(infoVersionOpt)(Assertion.isSome(Assertion.isNonEmptyString)) &&
+        assert(infoVersionOpt)(Assertion.equalTo(Some(appConfig.version)))
     }
   }
 
