@@ -69,7 +69,7 @@ libraryDependencies ++= {
     "io.circe"                    %% "circe-yaml"                     % circeVersion,
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
     "dev.zio"                     %% "zio-test-sbt"                   % zioVersion % "it,test",
-    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.40.8"   % "it,test",
+    "com.dimafeng"                %% "testcontainers-scala-scalatest" % "0.40.9"   % "it,test",
     "com.google.guava"             % "guava"                          % "31.1-jre",
     "ch.qos.logback"               % "logback-classic"                % logbackVersion,
     "com.typesafe.scala-logging"  %% "scala-logging"                  % "3.9.5"
