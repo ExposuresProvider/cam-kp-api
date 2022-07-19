@@ -21,8 +21,9 @@ import zio.{Has, Layer, RIO, Task, ZIO}
 
 object ProdQueryServiceTest extends DefaultRunnableSpec {
 
-  def runQuery(trapiQuery: TRAPIQuery, limit: Int = 1, include_extra_edges: Boolean = false)
-    : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], (Map[IRI, TRAPINode], Map[String, TRAPIEdge])] =
+  def runQuery(
+    trapiQuery: TRAPIQuery,
+    limit: Int = 1): RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], (Map[IRI, TRAPINode], Map[String, TRAPIEdge])] =
     for {
       appConfig <- getConfig[AppConfig]
       httpClient <- HttpClient.client
@@ -38,7 +39,7 @@ object ProdQueryServiceTest extends DefaultRunnableSpec {
       // TODO: this should probably be in the AppConfig somewhere.
       uri = Uri.fromString(s"https://cam-kp-api.renci.org/${appConfig.trapiVersion}/query").toOption.get
       _ = println("uri: " + uri)
-      uriWithQueryParams = uri.withQueryParam("limit", limit).withQueryParam("include_extra_edges", include_extra_edges)
+      uriWithQueryParams = uri.withQueryParam("limit", limit)
       request = Request[Task](Method.POST, uriWithQueryParams)
         .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
         .withEntity(encoded)

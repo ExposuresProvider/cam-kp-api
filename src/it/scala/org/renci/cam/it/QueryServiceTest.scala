@@ -22,7 +22,7 @@ import scala.jdk.CollectionConverters._
 
 object QueryServiceTest extends DefaultRunnableSpec {
 
-  def runTest(trapiQuery: TRAPIQuery, limit: Int = 1, include_extra_edges: Boolean = false): RIO[HttpClient with Has[BiolinkData], String] =
+  def runTest(trapiQuery: TRAPIQuery, limit: Int = 1): RIO[HttpClient with Has[BiolinkData], String] =
     for {
       httpClient <- HttpClient.client
       biolinkData <- Biolink.biolinkData
@@ -34,7 +34,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
         trapiQuery.asJson.deepDropNullValues.noSpaces
       }
       _ = println("encoded: " + encoded)
-      uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", limit).withQueryParam("include_extra_edges", include_extra_edges)
+      uri = uri"http://127.0.0.1:8080/query".withQueryParam("limit", limit)
       request = Request[Task](Method.POST, uri)
         .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
         .withEntity(encoded)
