@@ -82,7 +82,7 @@ object Server extends App with LazyLogging {
       }
       .toRoutes
 
-  val queryEndpointZ: URIO[Has[BiolinkData], Endpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse, Any]] =
+  val queryEndpointZ: URIO[Has[BiolinkData], Endpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse, Any]] =
     for {
       biolinkData <- biolinkData
     } yield {
@@ -111,7 +111,6 @@ object Server extends App with LazyLogging {
       }
 
       val defaultAndExampleLimit = Some(10)
-      val defaultAndExampleIncludeExtraEdges = Some(false)
 
       endpoint.post
         .in("query")
@@ -119,9 +118,6 @@ object Server extends App with LazyLogging {
           query[Option[Int]]("limit")
             .default(defaultAndExampleLimit)
             .example(defaultAndExampleLimit)
-            .and(query[Option[Boolean]]("include_extra_edges")
-              .default(defaultAndExampleIncludeExtraEdges)
-              .example(defaultAndExampleIncludeExtraEdges))
         )
         .in(jsonBody[TRAPIQuery].default(example).example(example))
         .errorOut(stringBody)
@@ -129,58 +125,57 @@ object Server extends App with LazyLogging {
         .summary("Submit a TRAPI question graph and retrieve matching solutions")
     }
 
-  def queryRouteR(
-    queryEndpoint: Endpoint[(Option[Int], Option[Boolean], TRAPIQuery), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
+  def queryRouteR(queryEndpoint: Endpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
     ZHttp4sServerInterpreter[EndpointEnv]()
-      .from(queryEndpoint) { case (limit, includeExtraEdges, body) =>
+      .from(queryEndpoint) { case (limit, body) =>
         val program: ZIO[EndpointEnv, Throwable, TRAPIResponse] = for {
           queryGraph <-
             ZIO
               .fromOption(body.message.query_graph)
               .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
           limitValue <- ZIO.fromOption(limit).orElse(ZIO.effect(1000))
-          includeExtraEdgesValue <- ZIO.fromOption(includeExtraEdges).orElse(ZIO.effect(false))
-          message <- QueryService.run(limitValue, includeExtraEdgesValue, queryGraph)
+          message <- QueryService.run(limitValue, queryGraph)
         } yield TRAPIResponse(message, Some("Success"), None, None)
         program.mapError(error => error.getMessage)
       }
       .toRoutes
 
-  val openAPIInfo: Info = Info(
-    "CAM-KP API",
-    "0.1",
-    Some("TRAPI interface to database of Causal Activity Models"),
-    Some("https://opensource.org/licenses/MIT"),
-    Some(Contact(Some("Jim Balhoff"), Some("balhoff@renci.org"), None)),
-    Some(License("MIT License", Some("https://opensource.org/licenses/MIT")))
-  )
-
-  val server: RIO[ZEnv with EndpointEnv, Unit] =
-    ZIO.runtime[ZEnv with EndpointEnv].flatMap { implicit runtime =>
-      for {
-        appConfig <- getConfig[AppConfig]
-        biolinkData <- biolinkData
-        metaKnowledgeGraphEndpoint <- metaKnowledgeGraphEndpointZ
-        metaKnowledgeGraphRoute = metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint)
-        queryEndpoint <- queryEndpointZ
-        queryRoute = queryRouteR(queryEndpoint)
-        routes = queryRoute <+> metaKnowledgeGraphRoute
-        openAPI: String = OpenAPIDocsInterpreter()
-          .toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", "0.1")
-          .copy(info = openAPIInfo)
-          .copy(tags = List(sttp.tapir.apispec.Tag("maturity"), sttp.tapir.apispec.Tag("translator"), sttp.tapir.apispec.Tag("trapi")))
-          .servers(
-            List(
-              sttp.tapir.openapi
-                .Server(s"${appConfig.location}/${appConfig.trapiVersion}")
-                .description("Default server")
-                .extensions(ListMap("x-maturity" -> ExtensionValue(s"${appConfig.maturity}"), "x-location" -> ExtensionValue("RENCI")))
-            )
+  /** A ZIO that produces the HttpApp object that is hosted as a server.
+    */
+  val httpApp: ZIO[ZConfig[BiolinkData] with Has[AppConfig], ParsingFailure, HttpApp[RIO[EndpointEnv, *]]] =
+    for {
+      appConfig <- getConfig[AppConfig]
+      biolinkData <- biolinkData
+      metaKnowledgeGraphEndpoint <- metaKnowledgeGraphEndpointZ
+      metaKnowledgeGraphRoute = metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint)
+      queryEndpoint <- queryEndpointZ
+      queryRoute = queryRouteR(queryEndpoint)
+      routes = queryRoute <+> metaKnowledgeGraphRoute
+      openAPI: String = OpenAPIDocsInterpreter()
+        .toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", appConfig.version)
+        .copy(
+          info = Info(
+            "CAM-KP API",
+            appConfig.version,
+            Some("TRAPI interface to database of Causal Activity Models"),
+            Some("https://opensource.org/licenses/MIT"),
+            Some(Contact(Some("Jim Balhoff"), Some("balhoff@renci.org"), None)),
+            Some(License("MIT License", Some("https://opensource.org/licenses/MIT")))
           )
-          .toYaml
-        openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
-        info: String =
-          s"""
+        )
+        .copy(tags = List(sttp.tapir.apispec.Tag("maturity"), sttp.tapir.apispec.Tag("translator"), sttp.tapir.apispec.Tag("trapi")))
+        .servers(
+          List(
+            sttp.tapir.openapi
+              .Server(s"${appConfig.location}/${appConfig.trapiVersion}")
+              .description("Default server")
+              .extensions(ListMap("x-maturity" -> ExtensionValue(s"${appConfig.maturity}"), "x-location" -> ExtensionValue("RENCI")))
+          )
+        )
+        .toYaml
+      openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
+      info: String =
+        s"""
              {
                 "info": {
                   "x-translator": {
@@ -196,24 +191,32 @@ object Server extends App with LazyLogging {
                 }
              }
           """
-        infoJson <- ZIO.fromEither(io.circe.parser.parse(info))
-        openAPIinfo = infoJson.deepMerge(openAPIJson).asYaml.spaces2
-        docsRoute = ZHttp4sServerInterpreter().from(SwaggerUI[RIO[EndpointEnv, *]](openAPIinfo)).toRoutes
-        httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
-        httpAppWithLogging = Logger.httpApp(true, false)(httpApp)
-        result <-
-          BlazeServerBuilder[RIO[EndpointEnv, *]](runtime.platform.executor.asEC)
-            .bindHttp(appConfig.port, appConfig.host)
-            .withHttpApp(CORS.policy.withAllowOriginAll
-              .withAllowCredentials(false)
-              .apply(httpAppWithLogging))
-            .withResponseHeaderTimeout(120.seconds)
-            .withIdleTimeout(180.seconds)
-            .serve
-            .compile
-            .drain
-      } yield result
-    }
+      infoJson <- ZIO.fromEither(io.circe.parser.parse(info))
+      openAPIinfo = infoJson.deepMerge(openAPIJson).asYaml.spaces2
+      docsRoute = ZHttp4sServerInterpreter().from(SwaggerUI[RIO[EndpointEnv, *]](openAPIinfo)).toRoutes
+      httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
+      httpAppWithLogging = Logger.httpApp(true, false)(httpApp)
+    } yield httpAppWithLogging
+
+  /** A RIO that runs the HTTP server returned by this.httpApp until it exits.
+    */
+  val server: RIO[ZEnv with EndpointEnv, Unit] = ZIO.runtime[ZEnv with EndpointEnv].flatMap { implicit runtime =>
+    for {
+      appConfig <- getConfig[AppConfig]
+      httpApp <- httpApp
+
+      serverInstance <- BlazeServerBuilder[RIO[EndpointEnv, *]](runtime.platform.executor.asEC)
+        .bindHttp(appConfig.port, appConfig.host)
+        .withHttpApp(CORS.policy.withAllowOriginAll
+          .withAllowCredentials(false)
+          .apply(httpApp))
+        .withResponseHeaderTimeout(120.seconds)
+        .withIdleTimeout(180.seconds)
+        .serve
+        .compile
+        .drain
+    } yield serverInstance
+  }
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
