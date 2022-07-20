@@ -37,8 +37,9 @@ object ExampleQueriesTest extends DefaultRunnableSpec {
             }
             for {
               exampleJson <- ZIO.fromEither(parser.parse(exampleText))
-              descriptions = exampleJson \\ "description"
-            } yield assert(descriptions)(hasSize(equalTo(1))) && assert(descriptions.head.asString)(isSome(isNonEmptyString))
+              descriptionOpt = exampleJson.hcursor.downField("description").as[String].toOption
+              messageText <- ZIO.fromEither(exampleJson.hcursor.downField("message").as[Json].map(_.noSpaces))
+            } yield assert(descriptionOpt)(isSome(isNonEmptyString)) && assert(messageText)(isNonEmptyString)
           })
         .runCollect
     }
