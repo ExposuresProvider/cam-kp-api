@@ -8,6 +8,7 @@ import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.headers.{`Content-Type`, Accept}
 import org.http4s.implicits._
 import org.renci.cam.Biolink.biolinkData
+import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIAttribute, TRAPIResponse}
 import org.renci.cam.{AppConfig, Biolink, HttpClient, Implicits}
 import zio.blocking.Blocking
@@ -19,22 +20,28 @@ import zio.test.Assertion._
 import zio.test._
 import zio.{Layer, Task, ZIO}
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 
-object ExampleQueriesTest extends DefaultRunnableSpec {
-  val exampleDir = Paths.get("src/it/resources/examples")
+object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
+  val exampleDir: Path = Paths.get("src/it/resources/examples")
+  val exampleResultsDir: Path = Paths.get("src/it/resources/example-results")
 
-  val endpointToTest = uri"https://cam-kp-api.renci.org/1.2.0/query"
+  val endpointToTest: Uri =
+    sys.env.get("CAM_KP_ENDPOINT") match {
+      case None      => uri"https://cam-kp-api.renci.org/1.2.0/query"
+      case Some(str) => Uri.fromString(str).toOption.get
+    }
 
-  val testEachExampleFile = {
+  val testEachExampleFile: Spec[ZConfig[Biolink.BiolinkData] with HttpClient, TestFailure[Throwable], TestSuccess] = {
     // List of example files to process.
     val exampleFiles = Files
       .walk(exampleDir)
       .iterator()
       .asScala
       .filter(Files.isRegularFile(_))
+      .filter(_.toString.toLowerCase.endsWith(".json"))
       .toSeq
 
     suiteM("Test example files in the src/it/resources/examples directory") {
@@ -52,11 +59,18 @@ object ExampleQueriesTest extends DefaultRunnableSpec {
 
               exampleJson <- ZIO.fromEither(io.circe.parser.parse(exampleText))
               descriptionOpt = exampleJson.hcursor.downField("description").as[String].toOption
+              minExpectedResultsOpt = exampleJson.hcursor.downField("minExpectedResults").as[Int].toOption
+
               messageText <- ZIO.fromEither(exampleJson.hcursor.downField("message").as[Json].map(_.noSpaces))
+
               request = Request[Task](Method.POST, endpointToTest)
                 .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
                 .withEntity("{\"message\": " + messageText + "}")
               response <- httpClient.expect[Json](request)
+
+              outputFilename = exampleResultsDir.resolve(exampleDir.relativize(exampleFile))
+              _ = Files.writeString(outputFilename, response.spaces2SortKeys)
+
               trapiResponse <- ZIO.fromEither(
                 {
                   implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
@@ -69,10 +83,16 @@ object ExampleQueriesTest extends DefaultRunnableSpec {
                   response.as[TRAPIResponse]
                 }
               )
-              _ = println("response: " + response)
             } yield assert(descriptionOpt)(isSome(isNonEmptyString)) &&
               assert(messageText)(isNonEmptyString) &&
-              assert(trapiResponse.status)(isSome(equalTo("Success")))
+              assert(trapiResponse.status)(isSome(equalTo("Success"))) &&
+              // If a minExpectedResults is provided, make sure that the number of results is indeed greater than or equal to it.
+              (minExpectedResultsOpt match {
+                case None => assertCompletes
+                case Some(minExpectedResults) =>
+                  val resultCount = trapiResponse.message.results.getOrElse(List()).size
+                  assert(resultCount)(isGreaterThanEqualTo(minExpectedResults))
+              })
           })
         .runCollect
     }
