@@ -57,20 +57,25 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
               httpClient <- HttpClient.client
               biolinkData <- biolinkData
 
+              // Read the example JSON file.
               exampleJson <- ZIO.fromEither(io.circe.parser.parse(exampleText))
               descriptionOpt = exampleJson.hcursor.downField("description").as[String].toOption
               minExpectedResultsOpt = exampleJson.hcursor.downField("minExpectedResults").as[Int].toOption
-
+              maxExpectedResultsOpt = exampleJson.hcursor.downField("maxExpectedResults").as[Int].toOption
               messageText <- ZIO.fromEither(exampleJson.hcursor.downField("message").as[Json].map(_.noSpaces))
 
+              // Prepare request for the CAM-KP-API endpoint.
               request = Request[Task](Method.POST, endpointToTest)
                 .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
                 .withEntity("{\"message\": " + messageText + "}")
               response <- httpClient.expect[Json](request)
 
+              // Write out the response in `src/it/resources/example-results` for debugging.
               outputFilename = exampleResultsDir.resolve(exampleDir.relativize(exampleFile))
+              _ = Files.createDirectories(outputFilename.getParent)
               _ = Files.writeString(outputFilename, response.spaces2SortKeys)
 
+              // Translate the response into a TRAPIResponse for testing.
               trapiResponse <- ZIO.fromEither(
                 {
                   implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
@@ -92,6 +97,13 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
                 case Some(minExpectedResults) =>
                   val resultCount = trapiResponse.message.results.getOrElse(List()).size
                   assert(resultCount)(isGreaterThanEqualTo(minExpectedResults))
+              }) &&
+              // If a maxExpectedResults is provided, make sure that the number of results is indeed less than or equal to it.
+              (maxExpectedResultsOpt match {
+                case None => assertCompletes
+                case Some(maxExpectedResults) =>
+                  val resultCount = trapiResponse.message.results.getOrElse(List()).size
+                  assert(resultCount)(isLessThanEqualTo(maxExpectedResults))
               })
           })
         .runCollect
