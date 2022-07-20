@@ -1,0 +1,23 @@
+{
+  "description": "A simple query to test a CAM-KP-API endpoint.",
+  "message": {
+    "query_graph": {
+      "nodes": {
+        "n0": {
+          "categories": ["biolink:GeneOrGeneProduct"]
+        },
+        "n1": {
+          "categories": ["biolink:AnatomicalEntity"],
+          "ids": ["GO:0005634"]
+        }
+      },
+      "edges": {
+        "e0": {
+          "subject": "n0",
+          "object": "n1",
+          "predicates": ["biolink:part_of"]
+        }
+      }
+    }
+  }
+}
