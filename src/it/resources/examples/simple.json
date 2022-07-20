@@ -20,6 +20,6 @@
       }
     }
   },
-  "minExpectedResults": 34,
-  "maxExpectedResults": 34
+  "minExpectedResults": 160,
+  "maxExpectedResults": 160
 }

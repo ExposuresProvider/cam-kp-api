@@ -24,6 +24,9 @@ import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 
+/** Run example queries against a CAM-KP-API endpoint, writing the responses out in `src/it/resources/example-results` and then testing the
+  * expectations described in the example file.
+  */
 object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
   val exampleDir: Path = Paths.get("src/it/resources/examples")
   val exampleResultsDir: Path = Paths.get("src/it/resources/example-results")
