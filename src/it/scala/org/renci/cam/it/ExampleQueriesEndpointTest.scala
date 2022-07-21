@@ -63,12 +63,13 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
               // Read the example JSON file.
               exampleJson <- ZIO.fromEither(io.circe.parser.parse(exampleText))
               descriptionOpt = exampleJson.hcursor.downField("description").as[String].toOption
+              limit = exampleJson.hcursor.downField("limit").as[Long].toOption.getOrElse(0)
               minExpectedResultsOpt = exampleJson.hcursor.downField("minExpectedResults").as[Int].toOption
               maxExpectedResultsOpt = exampleJson.hcursor.downField("maxExpectedResults").as[Int].toOption
               messageText <- ZIO.fromEither(exampleJson.hcursor.downField("message").as[Json].map(_.noSpaces))
 
               // Prepare request for the CAM-KP-API endpoint.
-              request = Request[Task](Method.POST, endpointToTest)
+              request = Request[Task](Method.POST, endpointToTest.withQueryParam("limit", limit.toString))
                 .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
                 .withEntity("{\"message\": " + messageText + "}")
               response <- httpClient.expect[Json](request)
