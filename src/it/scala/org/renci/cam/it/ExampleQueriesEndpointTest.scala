@@ -3,13 +3,14 @@ package org.renci.cam.it
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto._
+import io.circe.syntax.EncoderOps
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
 import org.http4s.headers.{`Content-Type`, Accept}
 import org.http4s.implicits._
 import org.renci.cam.Biolink.biolinkData
 import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIAttribute, TRAPIResponse}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIAttribute, TRAPIMessage, TRAPIResponse}
 import org.renci.cam.{AppConfig, Biolink, HttpClient, Implicits}
 import zio.blocking.Blocking
 import zio.config.ZConfig
@@ -30,6 +31,14 @@ import scala.jdk.CollectionConverters._
 object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
   val exampleDir: Path = Paths.get("src/it/resources/examples")
   val exampleResultsDir: Path = Paths.get("src/it/resources/example-results")
+
+  case class ExampleJsonFile(
+    description: Option[String],
+    message: TRAPIMessage,
+    limit: Option[Int],
+    minExpectedResults: Option[Int],
+    maxExpectedResults: Option[Int]
+  )
 
   val endpointToTest: Uri =
     sys.env.get("CAM_KP_ENDPOINT") match {
@@ -62,16 +71,37 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
 
               // Read the example JSON file.
               exampleJson <- ZIO.fromEither(io.circe.parser.parse(exampleText))
-              descriptionOpt = exampleJson.hcursor.downField("description").as[String].toOption
-              limit = exampleJson.hcursor.downField("limit").as[Long].toOption.getOrElse(0)
-              minExpectedResultsOpt = exampleJson.hcursor.downField("minExpectedResults").as[Int].toOption
-              maxExpectedResultsOpt = exampleJson.hcursor.downField("maxExpectedResults").as[Int].toOption
-              messageText <- ZIO.fromEither(exampleJson.hcursor.downField("message").as[Json].map(_.noSpaces))
+              example <- ZIO.fromEither(
+                {
+                  implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+                  implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+                  implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+                  implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
+                    Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+                  implicit val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+
+                  exampleJson.as[ExampleJsonFile]
+                }
+              )
+
+              descriptionOpt = example.description
+              limit = example.limit.getOrElse(0)
+              minExpectedResultsOpt = example.minExpectedResults
+              maxExpectedResultsOpt = example.maxExpectedResults
 
               // Prepare request for the CAM-KP-API endpoint.
+              messageText = {
+                implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+                implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
+                implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+                implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
+                  Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+
+                example.message.asJson.deepDropNullValues.noSpaces
+              }
               request = Request[Task](Method.POST, endpointToTest.withQueryParam("limit", limit.toString))
                 .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-                .withEntity("{\"message\": " + messageText + "}")
+                .withEntity(messageText)
               response <- httpClient.expect[Json](request)
 
               // Write out the response in `src/it/resources/example-results` for debugging.
