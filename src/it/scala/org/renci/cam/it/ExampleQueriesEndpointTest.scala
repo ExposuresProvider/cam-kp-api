@@ -10,7 +10,7 @@ import org.http4s.headers.{`Content-Type`, Accept}
 import org.http4s.implicits._
 import org.renci.cam.Biolink.biolinkData
 import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIAttribute, TRAPIMessage, TRAPIResponse}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIAttribute, TRAPIMessage, TRAPIQuery, TRAPIResponse}
 import org.renci.cam.{AppConfig, Biolink, HttpClient, Implicits}
 import zio.blocking.Blocking
 import zio.config.ZConfig
@@ -27,6 +27,8 @@ import scala.jdk.CollectionConverters._
 
 /** Run example queries against a CAM-KP-API endpoint, writing the responses out in `src/it/resources/example-results` and then testing the
   * expectations described in the example file.
+  *
+  * The endpoint is read from the environmental variable CAM_KP_ENDPOINT; otherwise, we default to the RENCI prod instance.
   */
 object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
   val exampleDir: Path = Paths.get("src/it/resources/examples")
@@ -97,8 +99,9 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
                 implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
                   Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
 
-                example.message.asJson.deepDropNullValues.noSpaces
+                TRAPIQuery(message = example.message, log_level = None).asJson.deepDropNullValues.noSpaces
               }
+              // _ = println(s"messageText = ${messageText}")
               request = Request[Task](Method.POST, endpointToTest.withQueryParam("limit", limit.toString))
                 .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
                 .withEntity(messageText)
