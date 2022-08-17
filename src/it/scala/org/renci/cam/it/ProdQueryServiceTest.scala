@@ -60,7 +60,7 @@ object ProdQueryServiceTest extends DefaultRunnableSpec {
         implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
         implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
         implicit val decoderTRAPINode: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-        implicit val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+        implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
         knowledgeGraphNodesJson.as[Map[IRI, TRAPINode]]
       }
 
@@ -76,7 +76,7 @@ object ProdQueryServiceTest extends DefaultRunnableSpec {
         implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
         implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
         implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-        implicit val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+        implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
         knowledgeGraphEdgesJson.as[Map[String, TRAPIEdge]]
       }
 
