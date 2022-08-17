@@ -154,15 +154,7 @@ package object domain {
                                   value_type_id: Option[IRI],
                                   value_url: Option[String],
                                   description: Option[String],
-                                  attributes: Option[List[TRAPISubAttribute]])
-
-  final case class TRAPISubAttribute(attribute_source: Option[String],
-                                     attribute_type_id: IRI,
-                                     original_attribute_name: Option[String],
-                                     value: List[String],
-                                     value_type_id: Option[IRI],
-                                     value_url: Option[String],
-                                     description: Option[String])
+                                  attributes: Option[List[TRAPIAttribute]])
 
   final case class TRAPIKnowledgeGraph(nodes: Map[IRI, TRAPINode], edges: Map[String, TRAPIEdge])
 
