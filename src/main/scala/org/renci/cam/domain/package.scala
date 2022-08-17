@@ -150,6 +150,10 @@ package object domain {
   final case class TRAPIAttribute(attribute_source: Option[String],
                                   attribute_type_id: IRI,
                                   original_attribute_name: Option[String],
+                                  // Note that `value` is actually supposed to be able to support
+                                  // any data type, including lists.
+                                  // https://github.com/NCATSTranslator/ReasonerAPI/blob/7520ac564e63289dffe092d4c7affd6db4ba22f1/TranslatorReasonerAPI.yaml#L761-L764
+                                  // Not sure if a List[String] is close enough to read attributes here.
                                   value: List[String],
                                   value_type_id: Option[IRI],
                                   value_url: Option[String],
