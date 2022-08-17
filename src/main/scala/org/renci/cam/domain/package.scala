@@ -171,7 +171,7 @@ package object domain {
 
   }
 
-  final case class TRAPINodeBinding(id: IRI, query_id: IRI, attributes: Option[List[TRAPIAttribute]])
+  final case class TRAPINodeBinding(id: IRI, query_id: Option[IRI] = None, attributes: Option[List[TRAPIAttribute]] = None)
 
   final case class TRAPIEdgeBinding(id: String)
 
