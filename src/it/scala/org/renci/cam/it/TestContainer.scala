@@ -12,7 +12,7 @@ object TestContainer {
   def camkpapi: ZLayer[Blocking, Nothing, CAMKPAPI] =
     ZManaged.make {
       effectBlocking {
-        val container = FixedHostPortGenericContainer("renciorg/cam-kp-api:0.1",
+        val container = FixedHostPortGenericContainer("renciorg/cam-kp-api:0.1.3-SNAPSHOT",
                                                       exposedHostPort = 8080,
                                                       exposedContainerPort = 8080,
                                                       waitStrategy = Wait.forHttp("/meta_knowledge_graph"))
