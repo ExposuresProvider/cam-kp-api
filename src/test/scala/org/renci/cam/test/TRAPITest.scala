@@ -85,7 +85,7 @@ object TRAPITest extends DefaultRunnableSpec with LazyLogging {
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
   val testLayer = HttpClient.makeHttpClientLayer ++ Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
 
-  def spec = suite("OpenAPI tests")(
+  def spec = suite("TRAPI tests")(
     testUnexpectedPropertiesOnQNodeAndQEdge
   ).provideCustomLayer(testLayer.mapError(TestFailure.die))
 
