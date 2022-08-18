@@ -10,60 +10,63 @@ import java.io.{File, FileWriter, PrintWriter}
 
 object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLogging {
 
-  def writeNodesToTSV(tsvFile: File, nodesMap: Map[BiolinkClass, MetaNode]) = {
-    // We sort by shorthands
-    val nodesSorted = nodesMap.keySet.map(blc => (blc.shorthand, blc)).toSeq.sortBy(_._1).map(_._2)
+  def writeNodesToTSV(tsvFile: File, nodesMap: Map[BiolinkClass, MetaNode]) =
+    // Is there an output directory to write to?
+    if (tsvFile.getParentFile.exists()) {
+      // We sort by shorthands
+      val nodesSorted = nodesMap.keySet.map(blc => (blc.shorthand, blc)).toSeq.sortBy(_._1).map(_._2)
 
-    val pw = new PrintWriter(new FileWriter(tsvFile))
+      val pw = new PrintWriter(new FileWriter(tsvFile))
 
-    pw.println("biolinkclass\tbiolinkclass_iri\tid_prefixes\tattrs_size\tattrs")
+      pw.println("biolinkclass\tbiolinkclass_iri\tid_prefixes\tattrs_size\tattrs")
 
-    nodesSorted.foreach { biolinkClass =>
-      val metaNode = nodesMap(biolinkClass)
-      val attrs = metaNode.attributes.getOrElse(List())
+      nodesSorted.foreach { biolinkClass =>
+        val metaNode = nodesMap(biolinkClass)
+        val attrs = metaNode.attributes.getOrElse(List())
 
-      pw.println(
-        biolinkClass.shorthand + "\t" +
-          biolinkClass.iri.value + "\t" +
-          metaNode.id_prefixes.mkString("|") + "\t" +
-          attrs.size + "\t" +
-          attrs.mkString("|").replace('\t', ' ')
-      )
-    }
-
-    pw.close()
-  }
-
-  def writeEdgesToTSV(tsvFile: File, edgesList: List[MetaEdge]) = {
-    val groupedByPreds = edgesList.groupBy(_.predicate)
-    val sortedPreds = groupedByPreds.keySet.toSeq.sortBy(_.shorthand)
-
-    val pw = new PrintWriter(new FileWriter(tsvFile))
-
-    pw.println("subject\tsubject_iri\tpredicate\tpredicate_iri\tobject\tobject_iri\tattributes_count\tattributes_list")
-
-    sortedPreds.foreach { predicate =>
-      val edges = groupedByPreds(predicate)
-
-      edges.foreach { edge =>
-        val attrs = edge.attributes.getOrElse(List())
-
-        // I'm going to assume that shorthands and IRIs don't have tabs in them.
         pw.println(
-          edge.subject.shorthand + "\t" +
-            edge.subject.iri.value + "\t" +
-            edge.predicate.shorthand + "\t" +
-            edge.predicate.iri.value + "\t" +
-            edge.`object`.shorthand + "\t" +
-            edge.`object`.iri.value + "\t" +
+          biolinkClass.shorthand + "\t" +
+            biolinkClass.iri.value + "\t" +
+            metaNode.id_prefixes.mkString("|") + "\t" +
             attrs.size + "\t" +
             attrs.mkString("|").replace('\t', ' ')
         )
       }
+
+      pw.close()
     }
 
-    pw.close()
-  }
+  def writeEdgesToTSV(tsvFile: File, edgesList: List[MetaEdge]) =
+    if (tsvFile.getParentFile.exists()) {
+      val groupedByPreds = edgesList.groupBy(_.predicate)
+      val sortedPreds = groupedByPreds.keySet.toSeq.sortBy(_.shorthand)
+
+      val pw = new PrintWriter(new FileWriter(tsvFile))
+
+      pw.println("subject\tsubject_iri\tpredicate\tpredicate_iri\tobject\tobject_iri\tattributes_count\tattributes_list")
+
+      sortedPreds.foreach { predicate =>
+        val edges = groupedByPreds(predicate)
+
+        edges.foreach { edge =>
+          val attrs = edge.attributes.getOrElse(List())
+
+          // I'm going to assume that shorthands and IRIs don't have tabs in them.
+          pw.println(
+            edge.subject.shorthand + "\t" +
+              edge.subject.iri.value + "\t" +
+              edge.predicate.shorthand + "\t" +
+              edge.predicate.iri.value + "\t" +
+              edge.`object`.shorthand + "\t" +
+              edge.`object`.iri.value + "\t" +
+              attrs.size + "\t" +
+              attrs.mkString("|").replace('\t', ' ')
+          )
+        }
+      }
+
+      pw.close()
+    }
 
   val testGetEdges = suite("MetaKnowledgeGraphService.getEdges")(
     testM("test MetaKnowledgeGraphService.getEdges") {
