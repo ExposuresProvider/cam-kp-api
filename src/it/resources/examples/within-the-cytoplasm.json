@@ -1,0 +1,24 @@
+{
+  "description": "Molecular activities occuring within the cytoplasm",
+  "message": {
+    "query_graph": {
+      "nodes": {
+        "n0": {
+          "categories": ["biolink:BiologicalProcessOrActivity"]
+        },
+        "n1": {
+          "categories": ["biolink:AnatomicalEntity"],
+          "ids": ["GO:0005737"]
+        }
+      },
+      "edges": {
+        "e0": {
+          "subject": "n0",
+          "object": "n1",
+          "predicates": ["biolink:occurs_in"]
+        }
+      }
+    }
+  },
+  "minExpectedResults": 38
+}
