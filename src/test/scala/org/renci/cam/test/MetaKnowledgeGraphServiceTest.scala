@@ -2,15 +2,74 @@ package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
 import org.renci.cam.MetaKnowledgeGraphService
+import org.renci.cam.domain.{BiolinkClass, MetaEdge, MetaNode}
 import zio.test.Assertion.isNonEmpty
 import zio.test._
 
+import java.io.{File, FileWriter, PrintWriter}
+
 object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLogging {
+
+  def writeNodesToTSV(tsvFile: File, nodesMap: Map[BiolinkClass, MetaNode]) = {
+    // We sort by shorthands
+    val nodesSorted = nodesMap.keySet.map(blc => (blc.shorthand, blc)).toSeq.sortBy(_._1).map(_._2)
+
+    val pw = new PrintWriter(new FileWriter(tsvFile))
+
+    pw.println("biolinkclass\tbiolinkclass_iri\tid_prefixes\tattrs_size\tattrs")
+
+    nodesSorted.foreach { biolinkClass =>
+      val metaNode = nodesMap(biolinkClass)
+      val attrs = metaNode.attributes.getOrElse(List())
+
+      pw.println(
+        biolinkClass.shorthand + "\t" +
+          biolinkClass.iri.value + "\t" +
+          metaNode.id_prefixes.mkString("|") + "\t" +
+          attrs.size + "\t" +
+          attrs.mkString("|").replace('\t', ' ')
+      )
+    }
+
+    pw.close()
+  }
+
+  def writeEdgesToTSV(tsvFile: File, edgesList: List[MetaEdge]) = {
+    val groupedByPreds = edgesList.groupBy(_.predicate)
+    val sortedPreds = groupedByPreds.keySet.toSeq.sortBy(_.shorthand)
+
+    val pw = new PrintWriter(new FileWriter(tsvFile))
+
+    pw.println("subject\tsubject_iri\tpredicate\tpredicate_iri\tobject\tobject_iri\tattributes_count\tattributes_list")
+
+    sortedPreds.foreach { predicate =>
+      val edges = groupedByPreds(predicate)
+
+      edges.foreach { edge =>
+        val attrs = edge.attributes.getOrElse(List())
+
+        // I'm going to assume that shorthands and IRIs don't have tabs in them.
+        pw.println(
+          edge.subject.shorthand + "\t" +
+            edge.subject.iri.value + "\t" +
+            edge.predicate.shorthand + "\t" +
+            edge.predicate.iri.value + "\t" +
+            edge.`object`.shorthand + "\t" +
+            edge.`object`.iri.value + "\t" +
+            attrs.size + "\t" +
+            attrs.mkString("|").replace('\t', ' ')
+        )
+      }
+    }
+
+    pw.close()
+  }
 
   val testGetEdges = suite("MetaKnowledgeGraphService.getEdges")(
     testM("test MetaKnowledgeGraphService.getEdges") {
       for {
         edges <- MetaKnowledgeGraphService.getEdges
+        _ = writeEdgesToTSV(new File("src/test/resources/meta-edges.tsv"), edges)
       } yield assert(edges)(isNonEmpty)
     }
   )
@@ -19,7 +78,7 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLoggin
     testM("test MetaKnowledgeGraphService.getNodes") {
       for {
         nodes <- MetaKnowledgeGraphService.getNodes
-//        _ = logger.info("nodes: {}", nodes)
+        _ = writeNodesToTSV(new File("src/test/resources/meta-nodes.tsv"), nodes)
       } yield assert(nodes)(isNonEmpty)
     }
   )
