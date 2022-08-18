@@ -131,7 +131,8 @@ package object domain {
   final case class TRAPIQueryEdge(predicates: Option[List[BiolinkPredicate]],
                                   subject: String,
                                   `object`: String,
-                                  constraints: Option[List[TRAPIQueryConstraint]])
+                                  constraints: Option[List[TRAPIQueryConstraint]],
+                                  knowledge_type: Option[String] = None)
 
   final case class TRAPIQueryConstraint(id: IRI,
                                         name: String,
