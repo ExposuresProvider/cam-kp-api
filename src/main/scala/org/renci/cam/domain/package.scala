@@ -205,7 +205,8 @@ package object domain {
   final case class MetaEdge(subject: BiolinkClass,
                             predicate: BiolinkPredicate,
                             `object`: BiolinkClass,
-                            attributes: Option[List[MetaAttribute]])
+                            attributes: Option[List[MetaAttribute]],
+                            knowledge_types: Option[List[String]] = Some(List("lookup")))
 
   final case class MetaAttribute(attribute_type_id: IRI,
                                  attribute_source: Option[String],
