@@ -2,7 +2,7 @@ package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
 import org.renci.cam.MetaKnowledgeGraphService
-import org.renci.cam.domain.{BiolinkClass, MetaEdge, MetaNode}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, MetaEdge, MetaNode}
 import zio.test.Assertion.isNonEmpty
 import zio.test._
 
@@ -70,7 +70,33 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLoggin
       for {
         edges <- MetaKnowledgeGraphService.getEdges
         _ = writeEdgesToTSV(new File("src/test/resources/meta-edges.tsv"), edges)
-      } yield assert(edges)(isNonEmpty)
+      } yield {
+        val ensureIncludedNamedThingRelatedToNamedThing: TestResult = {
+          // In order to meet the requirements of
+          // https://github.com/NCATSTranslator/ReasonerAPI/commit/e2ed87aa4f02dac55dcbd8eac7e190b8c188fbdd,
+          // we need to confirm that implied ancestor relations are reported in the edge results as well.
+          // Since we can be fairly sure that there are no explicit NamedThing-related_to-NamedThing relations,
+          // if we see this in the edges, then we can be sure that we are reporting ancestor relations as well.
+          val expectedEdge = MetaEdge(
+            BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing")),
+            BiolinkPredicate("related_to", IRI("https://w3id.org/biolink/vocab/related_to")),
+            BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing")),
+            attributes = None
+          )
+
+          val notExpectedEdge = MetaEdge(
+            BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing")),
+            // Note typo in BiolinkPredicate's shorthand
+            BiolinkPredicate("relate_to", IRI("https://w3id.org/biolink/vocab/related_to")),
+            BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing")),
+            attributes = None
+          )
+
+          assert(edges)(Assertion.contains(expectedEdge)) && assert(edges)(Assertion.not(Assertion.contains(notExpectedEdge)))
+        }
+
+        assert(edges)(isNonEmpty) && ensureIncludedNamedThingRelatedToNamedThing
+      }
     }
   )
 
