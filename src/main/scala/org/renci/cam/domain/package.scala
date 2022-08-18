@@ -181,7 +181,7 @@ package object domain {
                                 knowledge_graph: Option[TRAPIKnowledgeGraph],
                                 results: Option[List[TRAPIResult]])
 
-  final case class TRAPIQuery(message: TRAPIMessage, log_level: Option[String])
+  final case class TRAPIQuery(message: TRAPIMessage, log_level: Option[String], submitter: Option[String])
 
   final case class TRAPIResponse(message: TRAPIMessage, status: Option[String], description: Option[String], logs: Option[List[LogEntry]])
 
