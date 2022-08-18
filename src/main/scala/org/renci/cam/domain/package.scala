@@ -135,8 +135,8 @@ package object domain {
                                   subject: String,
                                   `object`: String,
                                   knowledge_type: Option[String] = None,
-                                  attribute_constraints: Option[List[TRAPIAttributeConstraint]],
-                                  qualifier_constraints: Option[List[TRAPIQualifierConstraint]])
+                                  attribute_constraints: Option[List[TRAPIAttributeConstraint]] = None,
+                                  qualifier_constraints: Option[List[TRAPIQualifierConstraint]] = None)
 
   final case class TRAPIAttributeConstraint(id: IRI,
                                         name: String,
@@ -153,8 +153,8 @@ package object domain {
   final case class TRAPIEdge(predicate: Option[BiolinkPredicate],
                              subject: IRI,
                              `object`: IRI,
-                             attributes: Option[List[TRAPIAttribute]],
-                             qualifiers: Option[List[TRAPIQualifier]])
+                             attributes: Option[List[TRAPIAttribute]] = None,
+                             qualifiers: Option[List[TRAPIQualifier]] = None)
 
   final case class TRAPIAttribute(attribute_source: Option[String],
                                   attribute_type_id: IRI,
@@ -194,7 +194,7 @@ package object domain {
                                 knowledge_graph: Option[TRAPIKnowledgeGraph],
                                 results: Option[List[TRAPIResult]])
 
-  final case class TRAPIQuery(message: TRAPIMessage, log_level: Option[String], submitter: Option[String])
+  final case class TRAPIQuery(message: TRAPIMessage, log_level: Option[String], submitter: Option[String] = None)
 
   final case class TRAPIResponse(message: TRAPIMessage, status: Option[String], description: Option[String], logs: Option[List[LogEntry]])
 
