@@ -251,7 +251,16 @@ object QueryService extends LazyLogging {
       result <- results
 
       nodeBindings = result.nodes
-        .groupMap(_._1)(p => TRAPINodeBinding(p._2))
+        .groupMap(_._1)(p =>
+          TRAPINodeBinding(
+            id = p._2,
+            query_id = result.originalNodes.get(p._1) match {
+              // According to the TRAPI 1.3 spec, we SHOULD NOT provide a query_id if it is the
+              // same as the id.
+              case Some(p._2) => None
+              case x          => x
+            }
+          ))
         .map(p => (p._1, p._2.toList))
       edgeBindings = result.edges.keys
         .map(key => (key, List(TRAPIEdgeBinding(result.getEdgeKey(key)))))
