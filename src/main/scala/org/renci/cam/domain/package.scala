@@ -129,7 +129,7 @@ package object domain {
   final case class TRAPIQueryNode(ids: Option[List[IRI]],
                                   categories: Option[List[BiolinkClass]],
                                   is_set: Option[Boolean] = Some(false),
-                                  constraints: List[TRAPIAttributeConstraint] = List())
+                                  constraints: Option[List[TRAPIAttributeConstraint]] = None)
 
   final case class TRAPIQueryEdge(predicates: Option[List[BiolinkPredicate]],
                                   subject: String,
