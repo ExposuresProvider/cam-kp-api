@@ -126,15 +126,19 @@ package object domain {
 
   }
 
-  final case class TRAPIQueryNode(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], is_set: Option[Boolean])
+  final case class TRAPIQueryNode(ids: Option[List[IRI]],
+                                  categories: Option[List[BiolinkClass]],
+                                  is_set: Option[Boolean] = Some(false),
+                                  constraints: List[TRAPIAttributeConstraint] = List())
 
   final case class TRAPIQueryEdge(predicates: Option[List[BiolinkPredicate]],
                                   subject: String,
                                   `object`: String,
-                                  constraints: Option[List[TRAPIQueryConstraint]],
-                                  knowledge_type: Option[String] = None)
+                                  knowledge_type: Option[String] = None,
+                                  attribute_constraints: Option[List[TRAPIAttributeConstraint]],
+                                  qualifier_constraints: Option[List[TRAPIQualifierConstraint]])
 
-  final case class TRAPIQueryConstraint(id: IRI,
+  final case class TRAPIAttributeConstraint(id: IRI,
                                         name: String,
                                         not: Option[Boolean],
                                         operator: String,
@@ -146,7 +150,11 @@ package object domain {
 
   final case class TRAPINode(name: Option[String], categories: Option[List[BiolinkClass]], attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPIEdge(predicate: Option[BiolinkPredicate], subject: IRI, `object`: IRI, attributes: Option[List[TRAPIAttribute]])
+  final case class TRAPIEdge(predicate: Option[BiolinkPredicate],
+                             subject: IRI,
+                             `object`: IRI,
+                             attributes: Option[List[TRAPIAttribute]],
+                             qualifiers: Option[List[TRAPIQualifier]])
 
   final case class TRAPIAttribute(attribute_source: Option[String],
                                   attribute_type_id: IRI,
@@ -160,6 +168,10 @@ package object domain {
                                   value_url: Option[String],
                                   description: Option[String],
                                   attributes: Option[List[TRAPIAttribute]])
+
+  final case class TRAPIQualifier(qualifier_type_id: String, qualifier_value: String)
+
+  final case class TRAPIQualifierConstraint(qualifier_set: List[TRAPIQualifier])
 
   final case class TRAPIKnowledgeGraph(nodes: Map[IRI, TRAPINode], edges: Map[String, TRAPIEdge])
 
