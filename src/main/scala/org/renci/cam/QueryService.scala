@@ -61,6 +61,9 @@ object QueryService extends LazyLogging {
     *   The query graph that we are attempting to respond to.
     * @param nodes
     *   The nodes returned from the query, with node labels as the key.
+    * @param originalNodes
+    *   The node was used to search for this result -- for example, if the user searches for node n0 as cytoplasm (GO:0005737) and the
+    *   search result was associated with germ plasm (GO:0060293), then nodes["n0"] == GO:0060293, but originalNodes["n0"] == GO:0005737.
     * @param edges
     *   The edges returned from the query, with edge labels as the key.
     * @param graphs
@@ -74,6 +77,7 @@ object QueryService extends LazyLogging {
     index: Long,
     queryGraph: TRAPIQueryGraph,
     nodes: Map[String, IRI],
+    originalNodes: Map[String, IRI],
     edges: Map[String, IRI],
     graphs: Set[IRI],
     derivedFrom: Set[IRI]
@@ -106,6 +110,7 @@ object QueryService extends LazyLogging {
       */
     def fromQuerySolution(qs: QuerySolution, index: Long, queryGraph: TRAPIQueryGraph): Result = {
       val nodes = queryGraph.nodes.keySet.map(n => (n, IRI(qs.getResource(f"${n}_type").getURI))).toMap
+      val originalNodes = queryGraph.nodes.keySet.map(n => (n, IRI(qs.getResource(f"${n}_class").getURI))).toMap
       val edges = queryGraph.edges.keySet.map(e => (e, IRI(qs.getResource(e).getURI))).toMap
       val graphs = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
       val derivedFrom = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
@@ -114,6 +119,7 @@ object QueryService extends LazyLogging {
         index,
         queryGraph,
         nodes,
+        originalNodes,
         edges,
         graphs,
         derivedFrom
@@ -515,6 +521,8 @@ object QueryService extends LazyLogging {
     *   - If typesInsteadOfNodes is false (the default), we should generate ?n0 ?e0 ?n1 for a one-hop.
     *   - If typesInsteadOfNodes is true, we should generate ?n0_type ?e0 ?n1_type for a one-hop.
     *
+    * In either case, we should generate ?n0_class as well.
+    *
     * @param queryGraph
     *   The query graph to generate projections for.
     * @param typesInsteadOfNodes
@@ -525,6 +533,7 @@ object QueryService extends LazyLogging {
   def getProjections(queryGraph: TRAPIQueryGraph, typesInsteadOfNodes: Boolean = false): QueryText = {
     val projectionVariableNames =
       queryGraph.edges.keys ++
+        queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_class") ++
         (if (typesInsteadOfNodes) queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_type")
          else queryGraph.edges.flatMap(e => List(e._2.subject, e._2.`object`)))
     projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
