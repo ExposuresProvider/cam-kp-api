@@ -24,3 +24,14 @@ CAMs (Causal Activity Models) are small knowledge graphs built using the [Web On
 ## Issue Management
 
 Anyone can create new issues by clicking on "New issue" button on the [issues](https://github.com/NCATS-Tangerine/cam-kp-api/issues) page of this repository. Click here for the [current issues](https://github.com/NCATS-Tangerine/cam-kp-api/issues).
+
+## Example queries
+
+Example queries are included in [./src/it/resources/examples](./src/it/resources/examples).
+Look for the `message` field in each JSON file in that directory. You can run them by running:
+
+```shell
+$ CAM_KP_ENDPOINT=https://cam-kp-api-dev.renci.org/1.2.0/query sbt "IntegrationTest/testOnly org.renci.cam.it.ExampleQueriesEndpointTest"
+```
+
+Server responses will be written to the `./src/it/resources/example-results` directory.
