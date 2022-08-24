@@ -2,6 +2,8 @@ package org.renci.cam
 
 import com.google.common.base.CaseFormat
 import contextual.Case
+import io.circe.generic.extras._
+import io.circe.syntax._
 import org.apache.commons.lang3.StringUtils
 import org.apache.jena.iri.IRIFactory
 import org.apache.jena.query.{ParameterizedSparqlString, QuerySolution}
@@ -17,6 +19,11 @@ import scala.util.Try
 
 package object domain {
 
+  /** This configuration allows us to use @ConfiguredJsonCodec to designate case classes that should be decoded strictly.
+    */
+  implicit val config: Configuration = Configuration.default.withStrictDecoding
+
+  @ConfiguredJsonCodec
   final case class IRI(value: String)
 
   object IRI {
@@ -71,6 +78,7 @@ package object domain {
 
   }
 
+  @ConfiguredJsonCodec
   final case class BiolinkClass(shorthand: String, iri: IRI) extends BiolinkTerm
 
   object BiolinkClass {
@@ -90,6 +98,7 @@ package object domain {
     def withBiolinkPrefix = s"biolink:${blClass.shorthand}"
   }
 
+  @ConfiguredJsonCodec
   final case class BiolinkPredicate(shorthand: String, iri: IRI) extends BiolinkTerm
 
   object BiolinkPredicate {
@@ -126,13 +135,16 @@ package object domain {
 
   }
 
+  @ConfiguredJsonCodec
   final case class TRAPIQueryNode(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], is_set: Option[Boolean])
 
+  @ConfiguredJsonCodec
   final case class TRAPIQueryEdge(predicates: Option[List[BiolinkPredicate]],
                                   subject: String,
                                   `object`: String,
                                   constraints: Option[List[TRAPIQueryConstraint]])
 
+  @ConfiguredJsonCodec
   final case class TRAPIQueryConstraint(id: IRI,
                                         name: String,
                                         not: Option[Boolean],

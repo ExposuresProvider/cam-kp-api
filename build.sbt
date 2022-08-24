@@ -14,7 +14,7 @@ licenses := Seq("MIT license" -> url("https://opensource.org/licenses/MIT"))
 
 scalaVersion := "2.13.8"
 
-scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
+scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-Ymacro-annotations")
 
 javaOptions += "-Xmx8G"
 
@@ -65,6 +65,7 @@ libraryDependencies ++= {
     "org.apache.commons"           % "commons-csv"                    % "1.9.0",
     "io.circe"                    %% "circe-core"                     % circeVersion,
     "io.circe"                    %% "circe-generic"                  % circeVersion,
+    "io.circe"                    %% "circe-generic-extras"           % circeVersion,
     "io.circe"                    %% "circe-parser"                   % circeVersion,
     "io.circe"                    %% "circe-yaml"                     % circeVersion,
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
