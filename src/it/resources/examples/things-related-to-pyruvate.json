@@ -1,0 +1,24 @@
+{
+  "description": "Named things related to pyruvate (CHEBI:15361)",
+  "message": {
+    "query_graph": {
+      "nodes": {
+        "n0": {
+          "ids": ["http://purl.obolibrary.org/obo/CHEBI_15361"]
+        },
+        "n1": {
+          "categories": ["biolink:NamedThing"]
+        }
+      },
+      "edges": {
+        "e0": {
+          "subject": "n0",
+          "object": "n1",
+          "predicates": ["biolink:related_to"]
+        }
+      }
+    }
+  },
+  "limit": 100000,
+  "minExpectedResults": 1035
+}
