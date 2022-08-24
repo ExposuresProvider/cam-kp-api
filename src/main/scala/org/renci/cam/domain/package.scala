@@ -139,12 +139,12 @@ package object domain {
                                   qualifier_constraints: Option[List[TRAPIQualifierConstraint]] = None)
 
   final case class TRAPIAttributeConstraint(id: IRI,
-                                        name: String,
-                                        not: Option[Boolean],
-                                        operator: String,
-                                        value: String,
-                                        unit_id: Option[IRI],
-                                        unit_name: Option[String])
+                                            name: String,
+                                            not: Option[Boolean],
+                                            operator: String,
+                                            value: String,
+                                            unit_id: Option[IRI],
+                                            unit_name: Option[String])
 
   final case class TRAPIQueryGraph(nodes: Map[String, TRAPIQueryNode], edges: Map[String, TRAPIQueryEdge])
 
