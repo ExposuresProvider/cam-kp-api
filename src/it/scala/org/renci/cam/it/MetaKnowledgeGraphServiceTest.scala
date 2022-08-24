@@ -17,7 +17,7 @@ import zio.test.environment.testEnvironment
 
 object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLogging {
 
-  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
+  val camkpapiTestLayer = (Blocking.live ++ Server.configLayer) >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
   val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
 

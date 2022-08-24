@@ -366,7 +366,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
     }
   )
 
-  val camkpapiTestLayer = Blocking.live >>> TestContainer.camkpapi
+  val camkpapiTestLayer = (Blocking.live ++ org.renci.cam.Server.configLayer) >>> TestContainer.camkpapi
   val camkpapiLayer = HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
   val testLayer = (testEnvironment ++ camkpapiTestLayer ++ camkpapiLayer).mapError(TestFailure.die)
 
