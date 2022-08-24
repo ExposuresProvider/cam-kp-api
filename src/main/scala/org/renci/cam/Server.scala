@@ -82,7 +82,7 @@ object Server extends App with LazyLogging {
       }
       .toRoutes
 
-  val queryEndpointZ: URIO[Has[BiolinkData], Endpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse, Any]] =
+  val queryEndpointZ: URIO[Has[BiolinkData], Endpoint[(Option[Int], Option[TRAPIQuery]), String, TRAPIResponse, Any]] =
     for {
       biolinkData <- biolinkData
     } yield {
@@ -119,24 +119,42 @@ object Server extends App with LazyLogging {
             .default(defaultAndExampleLimit)
             .example(defaultAndExampleLimit)
         )
-        .in(jsonBody[TRAPIQuery].default(example).example(example))
+        .in(jsonBody[Option[TRAPIQuery]].default(Some(example)).example(Some(example)))
         .errorOut(stringBody)
         .out(jsonBody[TRAPIResponse])
         .summary("Submit a TRAPI question graph and retrieve matching solutions")
     }
 
-  def queryRouteR(queryEndpoint: Endpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
+  def queryRouteR(queryEndpoint: Endpoint[(Option[Int], Option[TRAPIQuery]), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
     ZHttp4sServerInterpreter[EndpointEnv]()
       .from(queryEndpoint) { case (limit, body) =>
-        val program: ZIO[EndpointEnv, Throwable, TRAPIResponse] = for {
-          queryGraph <-
-            ZIO
-              .fromOption(body.message.query_graph)
-              .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
-          limitValue <- ZIO.fromOption(limit).orElse(ZIO.effect(1000))
+        val program: ZIO[EndpointEnv, Serializable, TRAPIResponse] = for {
+          queryGraph <- ZIO.fromOption(body.getOrElse(TRAPIQuery(TRAPIMessage(None, None, None), None)).message.query_graph)
+          limitValue <- ZIO.fromOption(limit).orElse(ZIO.succeed(1000))
           message <- QueryService.run(limitValue, queryGraph)
         } yield TRAPIResponse(message, Some("Success"), None, None)
-        program.mapError(error => error.getMessage)
+        program.catchAll(
+          { ex =>
+            /* If something went wrong, we should report it as an error. */
+            ZIO.succeed(
+              TRAPIResponse(
+                TRAPIMessage(None, None, None),
+                Some("Error"),
+                None,
+                Some(
+                  List(
+                    LogEntry(
+                      Some(java.time.Instant.now().toString),
+                      Some("ERROR"),
+                      None,
+                      Some(ex.toString)
+                    )
+                  )
+                )
+              )
+            )
+          }
+        )
       }
       .toRoutes
 
