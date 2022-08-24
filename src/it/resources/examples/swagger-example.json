@@ -1,0 +1,29 @@
+{
+  "description": "The query used as our example query in Swagger",
+  "message": {
+    "query_graph": {
+      "nodes": {
+        "n0": {
+          "categories": [
+            "biolink:BiologicalProcessOrActivity"
+          ]
+        },
+        "n1": {
+          "ids": [
+            "GO:0004707"
+          ]
+        }
+      },
+      "edges": {
+        "e0": {
+          "predicates": [
+            "biolink:positively_regulates"
+          ],
+          "subject": "n0",
+          "object": "n1"
+        }
+      }
+    }
+  },
+  "minExpectedResults": 34
+}
