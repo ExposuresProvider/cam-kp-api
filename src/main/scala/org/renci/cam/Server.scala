@@ -31,6 +31,7 @@ import zio.config.typesafe.TypesafeConfig
 import zio.config.{getConfig, ZConfig}
 import zio.interop.catz._
 
+import java.time.OffsetDateTime
 import java.util.Properties
 import scala.collection.immutable.ListMap
 import scala.concurrent.duration._
@@ -82,7 +83,7 @@ object Server extends App with LazyLogging {
       }
       .toRoutes
 
-  val queryEndpointZ: URIO[Has[BiolinkData], Endpoint[(Option[Int], Option[TRAPIQuery]), String, TRAPIResponse, Any]] =
+  val queryEndpointZ: URIO[Has[BiolinkData], Endpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse, Any]] =
     for {
       biolinkData <- biolinkData
     } yield {
@@ -119,36 +120,35 @@ object Server extends App with LazyLogging {
             .default(defaultAndExampleLimit)
             .example(defaultAndExampleLimit)
         )
-        .in(jsonBody[Option[TRAPIQuery]].default(Some(example)).example(Some(example)))
+        .in(jsonBody[TRAPIQuery].default(example).example(example))
         .errorOut(stringBody)
         .out(jsonBody[TRAPIResponse])
         .summary("Submit a TRAPI question graph and retrieve matching solutions")
     }
 
-  def queryRouteR(queryEndpoint: Endpoint[(Option[Int], Option[TRAPIQuery]), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
+  def queryRouteR(queryEndpoint: Endpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
     ZHttp4sServerInterpreter[EndpointEnv]()
       .from(queryEndpoint) { case (limit, body) =>
         val program: ZIO[EndpointEnv, Serializable, TRAPIResponse] = for {
-          queryGraph <- ZIO.fromOption(body.getOrElse(TRAPIQuery(TRAPIMessage(None, None, None), None)).message.query_graph)
+          queryGraph <- ZIO.fromOption(body.message.query_graph)
           limitValue <- ZIO.fromOption(limit).orElse(ZIO.succeed(1000))
           message <- QueryService.run(limitValue, queryGraph)
         } yield TRAPIResponse(message, Some("Success"), None, None)
         program.catchAll(
           { ex =>
-            /* If something went wrong, we should report it as an error. */
-            ZIO.succeed(
-              TRAPIResponse(
-                TRAPIMessage(None, None, None),
-                Some("Error"),
-                None,
-                Some(
-                  List(
-                    LogEntry(
-                      Some(java.time.Instant.now().toString),
-                      Some("ERROR"),
-                      None,
-                      Some(ex.toString)
-                    )
+            for {
+              dt <- clock.currentDateTime.orElse(ZIO.succeed(OffsetDateTime.now()))
+            } yield TRAPIResponse(
+              TRAPIMessage(None, None, None),
+              Some("Error"),
+              None,
+              Some(
+                List(
+                  LogEntry(
+                    Some(dt.toString),
+                    Some("ERROR"),
+                    None,
+                    Some(ex.toString)
                   )
                 )
               )
