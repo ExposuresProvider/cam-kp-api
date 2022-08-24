@@ -16,12 +16,16 @@ scalaVersion := "2.13.8"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-Ymacro-annotations")
 
-javaOptions += "-Xmx8G"
-
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
+Compile / mainClass := Some("org.renci.cam.Server")
+run / mainClass := Some("org.renci.cam.Server")
+
 Compile / packageDoc / publishArtifact := false
+
+// Note that javaOptions will be ignored if Test.fork = True
 Test / fork := true
+// javaOptions += "-Xmx8G"
 
 configs(IntegrationTest)
 Defaults.itSettings
