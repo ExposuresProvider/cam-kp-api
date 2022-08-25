@@ -16,12 +16,17 @@ scalaVersion := "2.13.8"
 
 scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
 
-javaOptions += "-Xmx8G"
-
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
+// Set the mainClass to org.renci.cam.Server so we start the Server by default.
+Compile / mainClass := Some("org.renci.cam.Server")
+run / mainClass := Some("org.renci.cam.Server")
+
 Compile / packageDoc / publishArtifact := false
+
+// Note that javaOptions will be ignored during tests if Test.fork = True
 Test / fork := true
+javaOptions += "-Xmx8G"
 
 configs(IntegrationTest)
 Defaults.itSettings
