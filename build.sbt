@@ -14,14 +14,18 @@ licenses := Seq("MIT license" -> url("https://opensource.org/licenses/MIT"))
 
 scalaVersion := "2.13.8"
 
-scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8")
-
-javaOptions += "-Xmx8G"
+scalacOptions := Seq("-unchecked", "-deprecation", "-encoding", "utf8", "-Ymacro-annotations")
 
 testFrameworks += new TestFramework("zio.test.sbt.ZTestFramework")
 
+Compile / mainClass := Some("org.renci.cam.Server")
+run / mainClass := Some("org.renci.cam.Server")
+
 Compile / packageDoc / publishArtifact := false
+
+// Note that javaOptions will be ignored if Test.fork = True
 Test / fork := true
+// javaOptions += "-Xmx8G"
 
 configs(IntegrationTest)
 Defaults.itSettings
@@ -65,6 +69,7 @@ libraryDependencies ++= {
     "org.apache.commons"           % "commons-csv"                    % "1.9.0",
     "io.circe"                    %% "circe-core"                     % circeVersion,
     "io.circe"                    %% "circe-generic"                  % circeVersion,
+    "io.circe"                    %% "circe-generic-extras"           % circeVersion,
     "io.circe"                    %% "circe-parser"                   % circeVersion,
     "io.circe"                    %% "circe-yaml"                     % circeVersion,
     "dev.zio"                     %% "zio-test"                       % zioVersion % "it,test",
