@@ -4,7 +4,9 @@ import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.yaml.syntax._
+import org.http4s
 import org.http4s._
 import org.http4s.blaze.server.BlazeServerBuilder
 import org.http4s.implicits._
@@ -21,7 +23,10 @@ import sttp.tapir.generic.auto._
 import sttp.tapir.json.circe._
 import sttp.tapir.openapi._
 import sttp.tapir.openapi.circe.yaml._
+import sttp.tapir.server.http4s.Http4sServerOptions
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
+import sttp.tapir.server.interceptor.{CustomInterceptors, DecodeFailureContext, EndpointInterceptor, ValuedEndpointOutput}
+import sttp.tapir.server.interceptor.decodefailure.DecodeFailureHandler
 import sttp.tapir.swagger.SwaggerUI
 import sttp.tapir.ztapir._
 import zio._
@@ -29,6 +34,7 @@ import zio.blocking.Blocking
 import zio.clock.Clock
 import zio.config.typesafe.TypesafeConfig
 import zio.config.{getConfig, ZConfig}
+import zio.interop.CBlocking
 import zio.interop.catz._
 
 import java.time.OffsetDateTime
@@ -126,8 +132,55 @@ object Server extends App with LazyLogging {
         .summary("Submit a TRAPI question graph and retrieve matching solutions")
     }
 
-  def queryRouteR(queryEndpoint: Endpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
-    ZHttp4sServerInterpreter[EndpointEnv]()
+  def queryRouteR(queryEndpoint: Endpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse, Any],
+                  biolinkData: BiolinkData): HttpRoutes[RIO[EndpointEnv, *]] = {
+    val conf = Http4sServerOptions.customInterceptors.decodeFailureHandler(
+      new DecodeFailureHandler() {
+        override def apply(ctx: DecodeFailureContext): Option[ValuedEndpointOutput[_]] =
+          Some(
+            ValuedEndpointOutput(
+              {
+                implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+                implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+
+                implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
+                implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+
+                implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+                implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+
+                implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+                implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
+                  Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
+
+                implicit val encoder: Encoder[TRAPIResponse] = deriveEncoder[TRAPIResponse]
+                implicit val decoder: Decoder[TRAPIResponse] = deriveDecoder[TRAPIResponse]
+
+                jsonBody[TRAPIResponse]
+              },
+              TRAPIResponse(
+                TRAPIMessage(None, None, None),
+                Some("Error"),
+                None,
+                Some(
+                  List(
+                    LogEntry(
+                      Some(java.time.Instant.now().toString),
+                      Some("ERROR"),
+                      None,
+                      Some(ctx.failure.toString)
+                    )
+                  )
+                )
+              )
+            )
+          )
+      }
+    )
+
+    val interp: ZHttp4sServerInterpreter[EndpointEnv] = ZHttp4sServerInterpreter[EndpointEnv](conf)
+
+    interp
       .from(queryEndpoint) { case (limit, body) =>
         val program: ZIO[EndpointEnv, Serializable, TRAPIResponse] = for {
           queryGraph <- ZIO.fromOption(body.message.query_graph)
@@ -139,7 +192,7 @@ object Server extends App with LazyLogging {
             for {
               dt <- clock.currentDateTime.orElse(ZIO.succeed(OffsetDateTime.now()))
             } yield TRAPIResponse(
-              TRAPIMessage(None, None, None),
+              TRAPIMessage(query_graph = body.message.query_graph, None, None),
               Some("Error"),
               None,
               Some(
@@ -157,6 +210,7 @@ object Server extends App with LazyLogging {
         )
       }
       .toRoutes
+  }
 
   /** A ZIO that produces the HttpApp object that is hosted as a server.
     */
@@ -167,7 +221,7 @@ object Server extends App with LazyLogging {
       metaKnowledgeGraphEndpoint <- metaKnowledgeGraphEndpointZ
       metaKnowledgeGraphRoute = metaKnowledgeGraphRouteR(metaKnowledgeGraphEndpoint)
       queryEndpoint <- queryEndpointZ
-      queryRoute = queryRouteR(queryEndpoint)
+      queryRoute = queryRouteR(queryEndpoint, biolinkData)
       routes = queryRoute <+> metaKnowledgeGraphRoute
       openAPI: String = OpenAPIDocsInterpreter()
         .toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", appConfig.version)
@@ -212,7 +266,10 @@ object Server extends App with LazyLogging {
       infoJson <- ZIO.fromEither(io.circe.parser.parse(info))
       openAPIinfo = infoJson.deepMerge(openAPIJson).asYaml.spaces2
       docsRoute = ZHttp4sServerInterpreter().from(SwaggerUI[RIO[EndpointEnv, *]](openAPIinfo)).toRoutes
-      httpApp = Router("/" -> (routes <+> docsRoute)).orNotFound
+      httpApp = Router("/" -> (routes <+> docsRoute)).handleError { case mbf: InvalidMessageBodyFailure =>
+        println(s"Error: ${mbf}")
+        http4s.Response(Status.NotAcceptable)
+      }.orNotFound
       httpAppWithLogging = Logger.httpApp(true, false)(httpApp)
     } yield httpAppWithLogging
 
