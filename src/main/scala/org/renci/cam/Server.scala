@@ -16,7 +16,9 @@ import org.renci.cam.Biolink._
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.domain._
-import sttp.tapir.Endpoint
+import sttp.tapir.DecodeResult.Error
+import sttp.tapir.DecodeResult.Error.{JsonDecodeException, JsonError}
+import sttp.tapir.{DecodeResult, Endpoint}
 import sttp.tapir.apispec.ExtensionValue
 import sttp.tapir.docs.openapi._
 import sttp.tapir.generic.auto._
@@ -134,51 +136,60 @@ object Server extends App with LazyLogging {
 
   def queryRouteR(queryEndpoint: Endpoint[(Option[Int], TRAPIQuery), String, TRAPIResponse, Any],
                   biolinkData: BiolinkData): HttpRoutes[RIO[EndpointEnv, *]] = {
-    val conf = Http4sServerOptions.customInterceptors.decodeFailureHandler(
-      new DecodeFailureHandler() {
-        override def apply(ctx: DecodeFailureContext): Option[ValuedEndpointOutput[_]] =
-          Some(
-            ValuedEndpointOutput(
-              {
-                implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-                implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
 
-                implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-                implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-
-                implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-                implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-
-                implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
-                implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
-                  Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
-
-                implicit val encoder: Encoder[TRAPIResponse] = deriveEncoder[TRAPIResponse]
-                implicit val decoder: Decoder[TRAPIResponse] = deriveDecoder[TRAPIResponse]
-
-                jsonBody[TRAPIResponse]
-              },
-              TRAPIResponse(
-                TRAPIMessage(None, None, None),
-                Some("Error"),
-                None,
+    val customInterceptors = Http4sServerOptions
+      .customInterceptors[RIO[EndpointEnv, *], RIO[EndpointEnv, *]]
+      .decodeFailureHandler(
+        new DecodeFailureHandler() {
+          override def apply(ctx: DecodeFailureContext): Option[ValuedEndpointOutput[_]] =
+            ctx.failure match {
+              case DecodeResult.Error(original: String, exception: JsonDecodeException) =>
                 Some(
-                  List(
-                    LogEntry(
-                      Some(java.time.Instant.now().toString),
-                      Some("ERROR"),
+                  ValuedEndpointOutput(
+                    {
+                      implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+                      implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+
+                      implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
+                      implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+
+                      implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+                      implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+
+                      implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
+                        Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+                      implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
+                        Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
+
+                      implicit val encoder: Encoder[TRAPIResponse] = deriveEncoder[TRAPIResponse]
+                      implicit val decoder: Decoder[TRAPIResponse] = deriveDecoder[TRAPIResponse]
+
+                      jsonBody[TRAPIResponse]
+                    },
+                    TRAPIResponse(
+                      TRAPIMessage(None, None, None),
+                      Some("Error"),
                       None,
-                      Some(ctx.failure.toString)
+                      Some(
+                        exception.errors.map(jsonError =>
+                          LogEntry(
+                            Some(java.time.Instant.now().toString),
+                            Some("ERROR"),
+                            None,
+                            Some(jsonError.message)
+                          ))
+                      )
                     )
                   )
                 )
-              )
-            )
-          )
-      }
-    )
+              // If it's not a DecodeError, don't do anything here.
+              case _ => None
+            }
+        }
+      )
 
-    val interp: ZHttp4sServerInterpreter[EndpointEnv] = ZHttp4sServerInterpreter[EndpointEnv](conf)
+    val conf = customInterceptors.options
+    val interp: ZHttp4sServerInterpreter[EndpointEnv] = ZHttp4sServerInterpreter[EndpointEnv](serverOptions = conf)
 
     interp
       .from(queryEndpoint) { case (limit, body) =>
