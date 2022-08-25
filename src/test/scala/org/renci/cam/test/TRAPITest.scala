@@ -76,9 +76,14 @@ object TRAPITest extends DefaultRunnableSpec with LazyLogging {
         )
 
         logs = trapiResponse.logs
-      } yield assert(response.status)(Assertion.hasField("isSuccess", _.isSuccess, Assertion.isTrue)) &&
-        assert(content)(Assertion.isNonEmptyString) &&
-        assert(logs)(Assertion.isSome(Assertion.isNonEmpty))
+
+      } yield
+      // Expect a 400 Bad Request
+      assert(response.status.code)(Assertion.equalTo(400)) &&
+      assert(response.status.reason)(Assertion.equalTo("Bad Request")) &&
+      // Nevertheless, the content should be some content with logs.
+      assert(content)(Assertion.isNonEmptyString) &&
+      assert(logs)(Assertion.isSome(Assertion.isNonEmpty))
     }
   }
 
