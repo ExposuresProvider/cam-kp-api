@@ -24,9 +24,9 @@ run / mainClass := Some("org.renci.cam.Server")
 
 Compile / packageDoc / publishArtifact := false
 
-// Note that javaOptions will be ignored during tests if Test.fork = True
+// Fork Java during testing with the specified options.
 Test / fork := true
-javaOptions += "-Xmx8G"
+Test / javaOptions += "-Xmx8G"
 
 configs(IntegrationTest)
 Defaults.itSettings
