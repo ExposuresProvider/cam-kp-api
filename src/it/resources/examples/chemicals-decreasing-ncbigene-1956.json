@@ -1,0 +1,39 @@
+{
+  "description": "Chemicals decreasing the activity of epidermal growth factor receptor (NCBIGene:1956)",
+  "message": {
+    "query_graph": {
+      "nodes": {
+        "n0": {
+          "name": "Chemical Substance",
+          "categories": ["biolink:ChemicalSubstance"]
+        },
+        "n1": {
+          "name": "EGFR",
+          "ids": [
+            "NCBIGene:1956"
+          ],
+          "categories": [
+            "biolink:Gene"
+          ]
+        }
+      },
+      "edges": {
+        "e0": {
+          "subject": "n0",
+          "object": "n1",
+          "predicates": [
+            "biolink:decreases_abundance_of",
+            "biolink:decreases_activity_of",
+            "biolink:decreases_expression_of",
+            "biolink:decreases_synthesis_of",
+            "biolink:increases_degradation_of",
+            "biolink:disrupts",
+            "biolink:negatively_regulates_entity_to_entity"
+          ]
+        }
+      }
+    }
+  },
+  "limit": 100,
+  "minExpectedResults": 100
+}
