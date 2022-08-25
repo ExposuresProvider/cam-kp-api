@@ -386,7 +386,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
           predicates = Some(List(BiolinkPredicate("related_to", IRI("https://w3id.org/biolink/vocab/related_to")))),
           subject = "n0",
           `object` = "n1",
-          constraints = None
+          attribute_constraints = None
         )
       )
     )

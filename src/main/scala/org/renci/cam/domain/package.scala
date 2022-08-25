@@ -126,43 +126,52 @@ package object domain {
 
   }
 
-  final case class TRAPIQueryNode(ids: Option[List[IRI]], categories: Option[List[BiolinkClass]], is_set: Option[Boolean])
+  final case class TRAPIQueryNode(ids: Option[List[IRI]],
+                                  categories: Option[List[BiolinkClass]],
+                                  is_set: Option[Boolean] = Some(false),
+                                  constraints: Option[List[TRAPIAttributeConstraint]] = None)
 
   final case class TRAPIQueryEdge(predicates: Option[List[BiolinkPredicate]],
                                   subject: String,
                                   `object`: String,
-                                  constraints: Option[List[TRAPIQueryConstraint]])
+                                  knowledge_type: Option[String] = None,
+                                  attribute_constraints: Option[List[TRAPIAttributeConstraint]] = None,
+                                  qualifier_constraints: Option[List[TRAPIQualifierConstraint]] = None)
 
-  final case class TRAPIQueryConstraint(id: IRI,
-                                        name: String,
-                                        not: Option[Boolean],
-                                        operator: String,
-                                        value: String,
-                                        unit_id: Option[IRI],
-                                        unit_name: Option[String])
+  final case class TRAPIAttributeConstraint(id: IRI,
+                                            name: String,
+                                            not: Option[Boolean],
+                                            operator: String,
+                                            value: String,
+                                            unit_id: Option[IRI],
+                                            unit_name: Option[String])
 
   final case class TRAPIQueryGraph(nodes: Map[String, TRAPIQueryNode], edges: Map[String, TRAPIQueryEdge])
 
   final case class TRAPINode(name: Option[String], categories: Option[List[BiolinkClass]], attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPIEdge(predicate: Option[BiolinkPredicate], subject: IRI, `object`: IRI, attributes: Option[List[TRAPIAttribute]])
+  final case class TRAPIEdge(predicate: Option[BiolinkPredicate],
+                             subject: IRI,
+                             `object`: IRI,
+                             attributes: Option[List[TRAPIAttribute]] = None,
+                             qualifiers: Option[List[TRAPIQualifier]] = None)
 
   final case class TRAPIAttribute(attribute_source: Option[String],
                                   attribute_type_id: IRI,
                                   original_attribute_name: Option[String],
+                                  // Note that `value` is actually supposed to be able to support
+                                  // any data type, including lists.
+                                  // https://github.com/NCATSTranslator/ReasonerAPI/blob/7520ac564e63289dffe092d4c7affd6db4ba22f1/TranslatorReasonerAPI.yaml#L761-L764
+                                  // Not sure if a List[String] is close enough to read attributes here.
                                   value: List[String],
                                   value_type_id: Option[IRI],
                                   value_url: Option[String],
                                   description: Option[String],
-                                  attributes: Option[List[TRAPISubAttribute]])
+                                  attributes: Option[List[TRAPIAttribute]])
 
-  final case class TRAPISubAttribute(attribute_source: Option[String],
-                                     attribute_type_id: IRI,
-                                     original_attribute_name: Option[String],
-                                     value: List[String],
-                                     value_type_id: Option[IRI],
-                                     value_url: Option[String],
-                                     description: Option[String])
+  final case class TRAPIQualifier(qualifier_type_id: String, qualifier_value: String)
+
+  final case class TRAPIQualifierConstraint(qualifier_set: List[TRAPIQualifier])
 
   final case class TRAPIKnowledgeGraph(nodes: Map[IRI, TRAPINode], edges: Map[String, TRAPIEdge])
 
@@ -175,7 +184,7 @@ package object domain {
 
   }
 
-  final case class TRAPINodeBinding(id: IRI)
+  final case class TRAPINodeBinding(id: IRI, query_id: Option[IRI] = None, attributes: Option[List[TRAPIAttribute]] = None)
 
   final case class TRAPIEdgeBinding(id: String)
 
@@ -185,7 +194,7 @@ package object domain {
                                 knowledge_graph: Option[TRAPIKnowledgeGraph],
                                 results: Option[List[TRAPIResult]])
 
-  final case class TRAPIQuery(message: TRAPIMessage, log_level: Option[String])
+  final case class TRAPIQuery(message: TRAPIMessage, log_level: Option[String], submitter: Option[String] = None)
 
   final case class TRAPIResponse(message: TRAPIMessage, status: Option[String], description: Option[String], logs: Option[List[LogEntry]])
 
@@ -196,7 +205,8 @@ package object domain {
   final case class MetaEdge(subject: BiolinkClass,
                             predicate: BiolinkPredicate,
                             `object`: BiolinkClass,
-                            attributes: Option[List[MetaAttribute]])
+                            attributes: Option[List[MetaAttribute]],
+                            knowledge_types: Option[List[String]] = Some(List("lookup")))
 
   final case class MetaAttribute(attribute_type_id: IRI,
                                  attribute_source: Option[String],

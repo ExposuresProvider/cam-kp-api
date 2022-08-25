@@ -80,7 +80,7 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
                   implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
                   implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
                     Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-                  implicit val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+                  implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
 
                   exampleJson.as[ExampleJsonFile]
                 }
@@ -120,7 +120,7 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
                   implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
                   implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
                     Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-                  implicit val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+                  implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
 
                   response.as[TRAPIResponse]
                 }
