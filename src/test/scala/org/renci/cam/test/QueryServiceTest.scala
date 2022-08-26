@@ -454,7 +454,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   }
 
   val testQueryIds = {
-    def createTestTRAPIQueryGraph(n0: TRAPIQueryNode, n1: TRAPIQueryNode = TRAPIQueryNode(None, categories=Some(List(BiolinkClass("GeneOrGeneProduct"))), None),  e0: TRAPIQueryEdge = TRAPIQueryEdge(
+    def createTestTRAPIQueryGraph(n0: TRAPIQueryNode, n1: TRAPIQueryNode = TRAPIQueryNode(None, categories=Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),  e0: TRAPIQueryEdge = TRAPIQueryEdge(
       subject="n0",
       `object`="n1",
       predicates=Some(List(BiolinkPredicate("positively_regulates")))
@@ -464,22 +464,22 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     suite("testQueryIds")(
       testM("Ensure that query_id is absent for nodes without ids") {
         for {
-          response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)))
+          response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None)))
           _ = logger.warn(s"Response: ${response}")
-          nodeBindings = response.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          nodeBindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
           queryIds = nodeBindings.map(_.query_id)
-        } yield assert(response.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
           assert(queryIds)(Assertion.forall(Assertion.isNone))
       },
       testM("Ensure that query_id is present only when the identifier is ambiguous") {
         for {
-          response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(IRI("UniProtKB:Q9HC97"))), None)))
+          response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(IRI("GO:0033549"))), None)))
           _ = logger.warn(s"Response: ${response}")
-          nodeBindings = response.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          nodeBindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
           queryIds = nodeBindings.map(_.query_id)
           queryIdsUnambiguous = nodeBindings.filter(_.id == IRI("UniProtKB:Q9HC97")).map(_.query_id)
           queryIdsAmbiguous = nodeBindings.filter(_.id == IRI("UniProtKB:Q9HC97")).map(_.query_id)
-        } yield assert(response.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
           assert(queryIds)(Assertion.forall(Assertion.isNone))
       }
     )
