@@ -4,6 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
+import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
 import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
@@ -110,7 +111,13 @@ object QueryService extends LazyLogging {
       */
     def fromQuerySolution(qs: QuerySolution, index: Long, queryGraph: TRAPIQueryGraph): Result = {
       val nodes = queryGraph.nodes.keySet.map(n => (n, IRI(qs.getResource(f"${n}_type").getURI))).toMap
-      val originalNodes = queryGraph.nodes.keySet.map(n => (n, IRI(qs.getResource(f"${n}_class").getURI))).toMap
+      val originalNodes = queryGraph.nodes.keySet
+        .flatMap(n =>
+          qs.getResource(f"${n}_class") match {
+            case r: Resource => Seq((n, IRI(r.getURI)))
+            case null        => Seq()
+          })
+        .toMap
       val edges = queryGraph.edges.keySet.map(e => (e, IRI(qs.getResource(e).getURI))).toMap
       val graphs = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
       val derivedFrom = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
