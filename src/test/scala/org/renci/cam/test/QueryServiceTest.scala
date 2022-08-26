@@ -453,19 +453,36 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     )
   }
 
-  val testQueryIds = suite("testQueryIds") {
+  val testQueryIds = {
     def createTestTRAPIQueryGraph(n0: TRAPIQueryNode, n1: TRAPIQueryNode = TRAPIQueryNode(None, categories=Some(List(BiolinkClass("https://w3id.org/biolink/vocab/GeneOrGeneProduct"))), None),  e0: TRAPIQueryEdge = TRAPIQueryEdge(
       subject="n0",
       `object`="n1",
-      predicates=Some(List(BiolinkPredicate("https://w3id.org/biolink/vocab/in_pathway_with")))
+      predicates=Some(List(BiolinkPredicate("https://w3id.org/biolink/vocab/affects_activity_of")))
     )) =
       TRAPIQueryGraph(Map("n0" -> n0, "n1" -> n1), Map("e0" -> e0))
 
-    testM("Ensure that query_id is absent for nodes without ids") {
-      for {
-        response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("biolink:GeneOrGeneProduct"))), None)))
-      } yield assert(response.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000))))
-    }
+    suite("testQueryIds")(
+      testM("Ensure that query_id is absent for nodes without ids") {
+        for {
+          response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("biolink:GeneOrGeneProduct"))), None)))
+          _ = logger.warn(s"Response: ${response}")
+          nodeBindings = response.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          queryIds = nodeBindings.map(_.query_id)
+        } yield assert(response.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
+          assert(queryIds)(Assertion.forall(Assertion.isNone))
+      },
+      testM("Ensure that query_id is present only when the identifier is ambiguous") {
+        for {
+          response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(IRI("UniProtKB:Q9HC97"))), None)))
+          _ = logger.warn(s"Response: ${response}")
+          nodeBindings = response.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          queryIds = nodeBindings.map(_.query_id)
+          queryIdsUnambiguous = nodeBindings.filter(_.id == IRI("UniProtKB:Q9HC97")).map(_.query_id)
+          queryIdsAmbiguous = nodeBindings.filter(_.id == IRI("UniProtKB:Q9HC97")).map(_.query_id)
+        } yield assert(response.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
+          assert(queryIds)(Assertion.forall(Assertion.isNone))
+      }
+    )
   }
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
@@ -478,7 +495,8 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     testQueryTexts,
     testGetNodesToDirectTypes,
     testGetProjections,
-    testQueryServiceSteps
+    testQueryServiceSteps,
+    testQueryIds
   ).provideCustomLayer(testLayer.mapError(TestFailure.die))
 
 }
