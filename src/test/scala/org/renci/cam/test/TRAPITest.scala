@@ -85,7 +85,7 @@ object TRAPITest extends DefaultRunnableSpec with LazyLogging {
 
           logs = trapiResponse.logs
           logsWithUnsupportedAttributeConstraint = logs.getOrElse(List()).filter {
-            case LogEntry(_, Some("Error"), Some("UnsupportedAttributeConstraint"), _) => true
+            case LogEntry(_, Some("ERROR"), Some("UnsupportedAttributeConstraint"), _) => true
             case _                                                                     => false
           }
         } yield assert(response.status)(Assertion.hasField("isSuccess", _.isSuccess, Assertion.isTrue)) &&
