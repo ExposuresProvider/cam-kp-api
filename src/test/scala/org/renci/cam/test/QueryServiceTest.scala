@@ -180,7 +180,8 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     zio.test.test("test QueryService.getProjections") {
       val (queryGraph, _) = getSimpleData
       val queryText = QueryService.getProjections(queryGraph)
-      assertTrue(queryText.text.trim.split("\\s+", -1).to(Set) == Set("?e0", "?n1", "?n0"))
+      // In addition to ?e0, ?n0, ?n1, we also return ?n0_class and ?n1_class in order to be able to identify the original class.
+      assertTrue(queryText.text.trim.split("\\s+", -1).to(Set) == Set("?e0", "?n0", "?n1", "?n0_class", "?n1_class"))
     }
   )
 
