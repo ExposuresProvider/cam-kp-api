@@ -454,17 +454,17 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   }
 
   val testQueryIds = {
-    def createTestTRAPIQueryGraph(n0: TRAPIQueryNode, n1: TRAPIQueryNode = TRAPIQueryNode(None, categories=Some(List(BiolinkClass("https://w3id.org/biolink/vocab/GeneOrGeneProduct"))), None),  e0: TRAPIQueryEdge = TRAPIQueryEdge(
+    def createTestTRAPIQueryGraph(n0: TRAPIQueryNode, n1: TRAPIQueryNode = TRAPIQueryNode(None, categories=Some(List(BiolinkClass("GeneOrGeneProduct"))), None),  e0: TRAPIQueryEdge = TRAPIQueryEdge(
       subject="n0",
       `object`="n1",
-      predicates=Some(List(BiolinkPredicate("https://w3id.org/biolink/vocab/affects_activity_of")))
+      predicates=Some(List(BiolinkPredicate("positively_regulates")))
     )) =
       TRAPIQueryGraph(Map("n0" -> n0, "n1" -> n1), Map("e0" -> e0))
 
     suite("testQueryIds")(
       testM("Ensure that query_id is absent for nodes without ids") {
         for {
-          response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("biolink:GeneOrGeneProduct"))), None)))
+          response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None)))
           _ = logger.warn(s"Response: ${response}")
           nodeBindings = response.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
           queryIds = nodeBindings.map(_.query_id)
