@@ -4,25 +4,30 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto._
+import org.apache.jena.query.{Query, QuerySolution}
 import org.http4s.headers.{`Content-Type`, Accept}
 import org.http4s.{EntityDecoder, MediaType, Method, Request, Uri}
 import org.renci.cam.Biolink.biolinkData
+import org.renci.cam.HttpClient.HttpClient
+import org.renci.cam.Server.EndpointEnv
 import org.renci.cam._
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, LogEntry, TRAPIAttribute, TRAPIResponse}
+import zio.cache.Cache
 import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
 import zio.interop.catz.concurrentInstance
 import zio.test._
-import zio.{Layer, ZIO}
+import zio.{Layer, ZIO, ZLayer}
 
 object TRAPITest extends DefaultRunnableSpec with LazyLogging {
 
   /** If CAM-KP-API receives a attribute constraint that it does not support, it MUST respond with an error Code
     * "UnsupportedAttributeConstraint".
     */
-  val testUnsupportedAttributeConstraints = suite("testUnsupportedAttributeConstraints") {
-    // Examples taken from https://github.com/NCATSTranslator/ReasonerAPI/blob/1e0795a1c4ff5bcac3ccd5f188fdc09ec6bd27c3/ImplementationRules.md#specifying-permitted-and-excluded-kps-to-an-ara
-    val query = """{
+  val testUnsupportedAttributeConstraints: Spec[EndpointEnv, TestFailure[Throwable], TestSuccess] =
+    suite("testUnsupportedAttributeConstraints") {
+      // Examples taken from https://github.com/NCATSTranslator/ReasonerAPI/blob/1e0795a1c4ff5bcac3ccd5f188fdc09ec6bd27c3/ImplementationRules.md#specifying-permitted-and-excluded-kps-to-an-ara
+      val query = """{
                      "message": {
                        "query_graph": {
                          "nodes": {
@@ -49,49 +54,49 @@ object TRAPITest extends DefaultRunnableSpec with LazyLogging {
                      }
                    }"""
 
-    testM("test unsupported attribute constraint") {
-      for {
-        biolinkData <- biolinkData
+      testM("test unsupported attribute constraint") {
+        for {
+          biolinkData <- biolinkData
 
-        server <- Server.httpApp
-        response <- server(
-          Request(
-            method = Method.POST,
-            uri = Uri.unsafeFromString("/query")
+          server <- Server.httpApp
+          response <- server(
+            Request(
+              method = Method.POST,
+              uri = Uri.unsafeFromString("/query")
+            )
+              .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
+              .withEntity(query)
           )
-            .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-            .withEntity(query)
-        )
-        content <- EntityDecoder.decodeText(response)
-        trapiResponseJson <- ZIO.fromEither(io.circe.parser.parse(content))
+          content <- EntityDecoder.decodeText(response)
+          trapiResponseJson <- ZIO.fromEither(io.circe.parser.parse(content))
 
-        trapiResponse <- ZIO.fromEither(
-          {
-            implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-            implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-            implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-            implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
-              Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-            implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+          trapiResponse <- ZIO.fromEither(
+            {
+              implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+              implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+              implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+              implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
+                Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+              implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
 
-            trapiResponseJson.as[TRAPIResponse]
+              trapiResponseJson.as[TRAPIResponse]
+            }
+          )
+
+          logs = trapiResponse.logs
+          logsWithUnsupportedAttributeConstraint = logs.getOrElse(List()).filter {
+            case LogEntry(_, Some("Error"), Some("UnsupportedAttributeConstraint"), _) => true
+            case _                                                                     => false
           }
-        )
-
-        logs = trapiResponse.logs
-        logsWithUnsupportedAttributeConstraint = logs.getOrElse(List()).filter {
-          case LogEntry(_, Some("Error"), Some("UnsupportedAttributeConstraint"), _) => true
-          case _                                                                     => false
-        }
-      } yield assert(response.status)(Assertion.hasField("isSuccess", _.isSuccess, Assertion.isTrue)) &&
-        assert(content)(Assertion.isNonEmptyString) &&
-        // Should return an UnsupportedAttributeConstraint as the status ...
-        assert(trapiResponse.status)(Assertion.isSome(Assertion.equalTo("UnsupportedAttributeConstraint"))) &&
-        // ... and in the logs.
-        assert(logs)(Assertion.isSome(Assertion.isNonEmpty)) &&
-        assert(logsWithUnsupportedAttributeConstraint)(Assertion.isNonEmpty)
+        } yield assert(response.status)(Assertion.hasField("isSuccess", _.isSuccess, Assertion.isTrue)) &&
+          assert(content)(Assertion.isNonEmptyString) &&
+          // Should return an UnsupportedAttributeConstraint as the status ...
+          assert(trapiResponse.status)(Assertion.isSome(Assertion.equalTo("UnsupportedAttributeConstraint"))) &&
+          // ... and in the logs.
+          assert(logs)(Assertion.isSome(Assertion.isNonEmpty)) &&
+          assert(logsWithUnsupportedAttributeConstraint)(Assertion.isNonEmpty)
+      }
     }
-  }
 
   /** If CAM-KP-API receives a qualifier constraint that it does not support, it MUST return an empty response (since no edges meet the
     * constraint).
@@ -177,9 +182,14 @@ object TRAPITest extends DefaultRunnableSpec with LazyLogging {
   }
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
-  val testLayer = HttpClient.makeHttpClientLayer ++ Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
 
-  def spec = suite("TRAPI tests")(
+  val testLayer: ZLayer[
+    Any,
+    Throwable,
+    HttpClient with ZConfig[Biolink.BiolinkData] with ZConfig[AppConfig] with ZConfig[Cache[Query, Throwable, List[QuerySolution]]]] =
+    HttpClient.makeHttpClientLayer ++ Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
+
+  def spec: Spec[environment.TestEnvironment, TestFailure[Throwable], TestSuccess] = suite("TRAPI tests")(
     testUnsupportedAttributeConstraints,
     testUnsupportedQualifierConstraints
   ).provideCustomLayer(testLayer.mapError(TestFailure.die))
