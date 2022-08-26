@@ -166,7 +166,7 @@ object TRAPITest extends DefaultRunnableSpec with LazyLogging {
         logs = trapiResponse.logs
         logWarningOfQualifierConstraints = logs.getOrElse(List()).filter {
           // We've made this up ourselves.
-          case LogEntry(_, Some("Warning"), Some("UnsupportedQualifierConstraint"), _) => true
+          case LogEntry(_, Some("WARNING"), Some("UnsupportedQualifierConstraint"), _) => true
           case _                                                                       => false
         }
       } yield assert(response.status)(Assertion.hasField("isSuccess", _.isSuccess, Assertion.isTrue)) &&

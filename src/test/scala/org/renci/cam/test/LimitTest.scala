@@ -44,7 +44,8 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
         .map(limit =>
           testM(s"Test query with limit of $limit expecting $queryGraphExpectedResults results") {
             for {
-              message <- QueryService.run(limit, testQueryGraph)
+              response <- QueryService.run(limit, testQueryGraph)
+              message = response.message
               _ = logger.info(s"Retrieved ${message.results.get.size} results when limit=$limit")
               results = message.results.get
             } yield {
