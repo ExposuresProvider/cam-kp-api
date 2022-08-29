@@ -454,18 +454,22 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
   }
 
   val testQueryIds = {
-    def createTestTRAPIQueryGraph(n0: TRAPIQueryNode, n1: TRAPIQueryNode = TRAPIQueryNode(None, categories=Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),  e0: TRAPIQueryEdge = TRAPIQueryEdge(
-      subject="n0",
-      `object`="n1",
-      predicates=Some(List(BiolinkPredicate("positively_regulates")))
-    )) =
+    def createTestTRAPIQueryGraph(n0: TRAPIQueryNode,
+                                  n1: TRAPIQueryNode =
+                                    TRAPIQueryNode(None, categories = Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),
+                                  e0: TRAPIQueryEdge = TRAPIQueryEdge(
+                                    subject = "n0",
+                                    `object` = "n1",
+                                    predicates = Some(List(BiolinkPredicate("positively_regulates")))
+                                  )) =
       TRAPIQueryGraph(Map("n0" -> n0, "n1" -> n1), Map("e0" -> e0))
 
     suite("testQueryIds")(
       testM("Ensure that query_id is absent for nodes without ids") {
         for {
-          response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None)))
-          _ = logger.warn(s"Response: ${response}")
+          response <- QueryService
+            .run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None)))
+          // _ = logger.warn(s"Response: ${response}")
           nodeBindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
           queryIds = nodeBindings.map(_.query_id)
         } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
@@ -473,8 +477,9 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
       },
       testM("Ensure that query_id is present only when the identifier is ambiguous") {
         for {
-          response <- QueryService.run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(IRI("GO:0033549"))), None)))
-          _ = logger.warn(s"Response: ${response}")
+          response <- QueryService
+            .run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(IRI("http://purl.obolibrary.org/obo/GO_0033549"))), None)))
+          // _ = logger.warn(s"Response: ${response}")
           nodeBindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
           queryIds = nodeBindings.map(_.query_id)
           queryIdsUnambiguous = nodeBindings.filter(_.id == IRI("UniProtKB:Q9HC97")).map(_.query_id)
@@ -490,12 +495,15 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
 
   def spec = suite("QueryService tests")(
 //    testGetNodeTypes,
+    /*
     testEnforceQueryEdgeTypes,
     testGetTRAPINodeBindings,
     testQueryTexts,
     testGetNodesToDirectTypes,
     testGetProjections,
     testQueryServiceSteps,
+
+     */
     testQueryIds
   ).provideCustomLayer(testLayer.mapError(TestFailure.die))
 

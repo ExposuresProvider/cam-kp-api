@@ -6,13 +6,13 @@ import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{biolinkData, BiolinkData}
+import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.{TRAPIAttribute, _}
-import zio.config.{getConfig, ZConfig}
-import zio.{config => _, Has, RIO, Task, UIO, ZIO}
+import zio.config.{ZConfig, getConfig}
+import zio.{Has, RIO, Task, UIO, ZIO, config => _}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -263,6 +263,7 @@ object QueryService extends LazyLogging {
             id = p._2,
             query_id = result.queryGraph.nodes.get(p._1) match {
               // If no nodes IDs were provided, query_id MUST be null or absent.
+              case None                                => None
               case Some(TRAPIQueryNode(None, _, _, _)) => None
               case Some(TRAPIQueryNode(Some(List()), _, _, _)) =>
                 None
@@ -492,7 +493,7 @@ object QueryService extends LazyLogging {
           GROUP BY $typeProjections
           $limitSparql
           """
-    logger.debug(s"Executing query: $queryString")
+    logger.info(s"Executing query: $queryString")
     SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
   }
 
