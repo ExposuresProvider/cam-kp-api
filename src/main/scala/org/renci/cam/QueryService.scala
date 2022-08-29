@@ -259,40 +259,90 @@ object QueryService extends LazyLogging {
     * @param submittedQueryGraph
     *   The query graph to search the triplestore with.
     * @return
-    *   A TRAPIMessage displaying the results.
+    *   A TRAPIResponse to return to the client.
     */
   def run(limit: Int, submittedQueryGraph: TRAPIQueryGraph)
-    : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
-    for {
-      // Get the Biolink data.
-      biolinkData <- biolinkData
-      _ = logger.debug("limit: {}", limit)
+    : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIResponse] = {
+    val emptyTRAPIMessage = TRAPIMessage(Some(submittedQueryGraph), None, Some(List()))
 
-      // Prepare the query graph for processing.
-      queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+    val allAttributeConstraints = submittedQueryGraph.nodes.values.flatMap(
+      _.constraints.getOrElse(List())) ++ submittedQueryGraph.edges.values.flatMap(_.attribute_constraints.getOrElse(List()))
+    val allQualifierConstraints = submittedQueryGraph.edges.values.flatMap(_.qualifier_constraints.getOrElse(List()))
 
-      // Generate the relationsToLabelAndBiolinkPredicate.
-      allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-      predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
-      allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-      relationsToLabelAndBiolinkPredicate <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+    if (allAttributeConstraints.nonEmpty) {
+      ZIO.succeed(
+        TRAPIResponse(
+          emptyTRAPIMessage,
+          Some("UnsupportedAttributeConstraint"),
+          None,
+          Some(
+            List(
+              LogEntry(
+                Some(java.time.Instant.now().toString),
+                Some("ERROR"),
+                Some("UnsupportedAttributeConstraint"),
+                Some(s"The following attributes are not supported: ${allAttributeConstraints}")
+              )
+            )
+          )
+        )
+      )
+    } else if (allQualifierConstraints.nonEmpty) {
+      // Are there any qualifier constraints? If so, we can't match them, so we should return an empty list of results.
+      ZIO.succeed(
+        TRAPIResponse(
+          emptyTRAPIMessage,
+          Some("Success"),
+          None,
+          Some(
+            List(
+              LogEntry(
+                Some(java.time.Instant.now().toString),
+                Some("WARNING"),
+                Some("UnsupportedQualifierConstraint"),
+                Some(s"The following qualifier constraints are not supported: ${allQualifierConstraints}")
+              )
+            )
+          )
+        )
+      )
+    } else
+      for {
+        // Get the Biolink data.
+        biolinkData <- biolinkData
+        _ = logger.debug("limit: {}", limit)
 
-      // Generate query solutions.
-      _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
-      initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
-      results = initialQuerySolutions.zipWithIndex.map { case (qs, index) =>
-        Result.fromQuerySolution(qs, index, queryGraph)
-      }
-      _ = logger.debug(s"Results: $results")
+        // Prepare the query graph for processing.
+        queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
 
-      // From the results, generate the TRAPI nodes, edges and results.
-      nodes <- generateTRAPINodes(results)
-      _ = logger.debug(s"Nodes: $nodes")
-      edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
-      _ = logger.debug(s"Edges: $edges")
-      trapiResults = generateTRAPIResults(results)
-      _ = logger.debug(s"Results: $trapiResults")
-    } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct))
+        // Generate the relationsToLabelAndBiolinkPredicate.
+        allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
+        predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
+        allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
+        relationsToLabelAndBiolinkPredicate <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+
+        // Generate query solutions.
+        _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
+        initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+        results = initialQuerySolutions.zipWithIndex.map { case (qs, index) =>
+          Result.fromQuerySolution(qs, index, queryGraph)
+        }
+        _ = logger.debug(s"Results: $results")
+
+        // From the results, generate the TRAPI nodes, edges and results.
+        nodes <- generateTRAPINodes(results)
+        _ = logger.debug(s"Nodes: $nodes")
+        edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
+        _ = logger.debug(s"Edges: $edges")
+        trapiResults = generateTRAPIResults(results)
+        _ = logger.debug(s"Results: $trapiResults")
+      } yield TRAPIResponse(
+        TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct)),
+        Some("Success"),
+        None,
+        None
+      )
+  }
 
   def oldRun(limit: Int, includeExtraEdges: Boolean, submittedQueryGraph: TRAPIQueryGraph)
     : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =

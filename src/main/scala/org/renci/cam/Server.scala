@@ -134,8 +134,8 @@ object Server extends App with LazyLogging {
               .fromOption(body.message.query_graph)
               .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
           limitValue <- ZIO.fromOption(limit).orElse(ZIO.effect(1000))
-          message <- QueryService.run(limitValue, queryGraph)
-        } yield TRAPIResponse(message, Some("Success"), None, None)
+          response <- QueryService.run(limitValue, queryGraph)
+        } yield response
         program.mapError(error => error.getMessage)
       }
       .toRoutes
