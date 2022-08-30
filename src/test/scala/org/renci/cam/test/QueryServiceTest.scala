@@ -476,16 +476,22 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
           assert(queryIds)(Assertion.forall(Assertion.isNone))
       },
       testM("Ensure that query_id is present only when the identifier is ambiguous") {
+        val iriToQuery = IRI("http://purl.obolibrary.org/obo/GO_0033549")
+
         for {
           response <- QueryService
-            .run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(IRI("http://purl.obolibrary.org/obo/GO_0033549"))), None)))
+            .run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(iriToQuery)), None)))
           // _ = logger.warn(s"Response: ${response}")
           nodeBindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
           queryIds = nodeBindings.map(_.query_id)
-          queryIdsUnambiguous = nodeBindings.filter(_.id == IRI("UniProtKB:Q9HC97")).map(_.query_id)
-          queryIdsAmbiguous = nodeBindings.filter(_.id == IRI("UniProtKB:Q9HC97")).map(_.query_id)
-        } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
-          assert(queryIds)(Assertion.forall(Assertion.isNone))
+          queryIdsUnambiguous = nodeBindings.filter(_.id == iriToQuery).map(_.query_id)
+          queryIdsAmbiguous = nodeBindings.filter(_.id != iriToQuery).map(_.query_id)
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.isNonEmpty)) &&
+          assert(queryIds)(Assertion.isNonEmpty) &&
+          assert(queryIdsUnambiguous)(Assertion.isNonEmpty) &&
+          assert(queryIdsUnambiguous)(Assertion.forall(Assertion.isNone)) &&
+          assert(queryIdsAmbiguous)(Assertion.isNonEmpty) &&
+          assert(queryIdsAmbiguous)(Assertion.forall(Assertion.isSome(Assertion.equalTo(iriToQuery))))
       }
     )
   }
