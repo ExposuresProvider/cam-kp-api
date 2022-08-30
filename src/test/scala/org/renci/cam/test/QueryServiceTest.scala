@@ -475,7 +475,8 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
           assert(queryIds)(Assertion.forall(Assertion.isNone))
       },
-      testM("Ensure that query_id is present only when the identifier is ambiguous") {
+      testM(
+        "Ensure that query_id is present only when the identifier is ambiguous for a process (GO:0033549, MAP kinase phosphatase activity)") {
         val iriToQuery = IRI("http://purl.obolibrary.org/obo/GO_0033549")
 
         for {
@@ -492,6 +493,38 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
           assert(queryIdsUnambiguous)(Assertion.forall(Assertion.isNone)) &&
           assert(queryIdsAmbiguous)(Assertion.isNonEmpty) &&
           assert(queryIdsAmbiguous)(Assertion.forall(Assertion.isSome(Assertion.equalTo(iriToQuery))))
+      },
+      testM("Ensure that query_id is present only when the identifier is ambiguous for a location (GO:0005737, cytoplasm)") {
+        val cytoplasm = IRI("http://purl.obolibrary.org/obo/GO_0005737")
+        val germplasm = IRI("http://purl.obolibrary.org/obo/GO_0060293")
+
+        for {
+          response <- QueryService
+            .run(
+              1000,
+              createTestTRAPIQueryGraph(
+                TRAPIQueryNode(Some(List(cytoplasm)), None),
+                TRAPIQueryNode(None, categories = Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),
+                TRAPIQueryEdge(
+                  subject = "n1",
+                  `object` = "n0",
+                  predicates = Some(List(BiolinkPredicate("occurs_in")))
+                )
+              )
+            )
+          // _ = logger.warn(s"Response: ${response}")
+          node0Bindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          queryIds = node0Bindings.map(_.query_id)
+          queryIdsUnambiguous = node0Bindings.filter(_.id == cytoplasm).map(_.query_id)
+          queryIdsAmbiguous = node0Bindings.filter(_.id != cytoplasm).map(_.query_id)
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.isNonEmpty)) &&
+          assert(queryIds)(Assertion.isNonEmpty) &&
+          assert(queryIdsUnambiguous)(Assertion.isNonEmpty) &&
+          assert(queryIdsUnambiguous)(Assertion.forall(Assertion.isNone)) &&
+          assert(queryIdsAmbiguous)(Assertion.isNonEmpty) &&
+          assert(queryIdsAmbiguous)(Assertion.forall(Assertion.isSome(Assertion.equalTo(cytoplasm)))) &&
+          // If this works, some of the ambiguous results should be for germplasm, which is a kind of cytoplasm
+          assert(node0Bindings)(Assertion.contains(TRAPINodeBinding(id = germplasm, query_id = Some(cytoplasm))))
       }
     )
   }
