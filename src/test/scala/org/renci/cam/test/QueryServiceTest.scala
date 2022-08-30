@@ -570,15 +570,12 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
 
   def spec = suite("QueryService tests")(
 //    testGetNodeTypes,
-    /*
     testEnforceQueryEdgeTypes,
     testGetTRAPINodeBindings,
     testQueryTexts,
     testGetNodesToDirectTypes,
     testGetProjections,
     testQueryServiceSteps,
-
-     */
     testQueryIds
   ).provideCustomLayer(testLayer.mapError(TestFailure.die))
 
