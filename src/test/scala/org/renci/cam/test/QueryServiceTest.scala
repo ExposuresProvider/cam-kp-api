@@ -525,6 +525,42 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
           assert(queryIdsAmbiguous)(Assertion.forall(Assertion.isSome(Assertion.equalTo(cytoplasm)))) &&
           // If this works, some of the ambiguous results should be for germplasm, which is a kind of cytoplasm
           assert(node0Bindings)(Assertion.contains(TRAPINodeBinding(id = germplasm, query_id = Some(cytoplasm))))
+      },
+      testM("Ensure that two different identifiers can be provided for the same node, to be disambiguated by query_id") {
+        val dna = IRI("http://purl.obolibrary.org/obo/CHEBI_16991")
+        val rna = IRI("http://purl.obolibrary.org/obo/CHEBI_33697")
+
+        for {
+          response <- QueryService
+            .run(
+              1000,
+              createTestTRAPIQueryGraph(
+                TRAPIQueryNode(Some(List(dna, rna)), None),
+                TRAPIQueryNode(None, categories = Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),
+                TRAPIQueryEdge(
+                  subject = "n1",
+                  `object` = "n0",
+                  predicates = Some(List(BiolinkPredicate("has_participant")))
+                )
+              )
+            )
+          // _ = logger.warn(s"Response: ${response}")
+          node0Bindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          queryIdsUnambiguous = node0Bindings.filter(b => b.id == dna || b.id == rna).map(_.query_id)
+          idsAmbiguousDNA = node0Bindings.filter(_.query_id.contains(dna)).map(_.id)
+          idsAmbiguousRNA = node0Bindings.filter(_.query_id.contains(rna)).map(_.id)
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.isGreaterThanEqualTo(50)))) &&
+          // All unambiguous IDs -- DNA and RNA -- should have empty query_ids.
+          assert(queryIdsUnambiguous)(Assertion.isNonEmpty) &&
+          assert(queryIdsUnambiguous)(Assertion.forall(Assertion.isNone)) &&
+          // Ambiguous IDs that came from DNA should not have either DNA or RNA in them.
+          assert(idsAmbiguousDNA)(Assertion.isNonEmpty) &&
+          assert(idsAmbiguousDNA)(Assertion.not(Assertion.contains(TRAPINodeBinding(id = rna, query_id = Some(rna))))) &&
+          assert(idsAmbiguousDNA)(Assertion.not(Assertion.contains(TRAPINodeBinding(id = rna, query_id = Some(dna))))) &&
+          // Ambiguous IDs that came from RNA should not have either DNA or RNA in them.
+          assert(idsAmbiguousRNA)(Assertion.isNonEmpty) &&
+          assert(idsAmbiguousRNA)(Assertion.not(Assertion.contains(TRAPINodeBinding(id = dna, query_id = Some(rna))))) &&
+          assert(idsAmbiguousDNA)(Assertion.not(Assertion.contains(TRAPINodeBinding(id = rna, query_id = Some(rna)))))
       }
     )
   }
