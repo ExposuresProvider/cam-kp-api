@@ -8,7 +8,7 @@ organization := "org.renci"
 
 name := "cam-kp-api"
 
-version := "0.2-pre1"
+version := "0.2"
 
 licenses := Seq("MIT license" -> url("https://opensource.org/licenses/MIT"))
 
