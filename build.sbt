@@ -8,7 +8,7 @@ organization := "org.renci"
 
 name := "cam-kp-api"
 
-version := "0.1.3-SNAPSHOT"
+version := "0.2"
 
 licenses := Seq("MIT license" -> url("https://opensource.org/licenses/MIT"))
 
@@ -95,7 +95,7 @@ dockerExposedPorts += 8080
 // prod
 dockerEnvVars ++= Map(
   "JAVA_OPTS" -> "-Xmx16g -Xms16g",
-  "TRAPI_VERSION" -> "1.2.0",
+  "TRAPI_VERSION" -> "1.3.0",
   "LOCATION" -> sys.env.getOrElse("LOCATION", "https://cam-kp-api.renci.org"),
   "MATURITY" -> sys.env.getOrElse("MATURITY", "production"),
   "SPARQL_ENDPOINT" -> sys.env.getOrElse("SPARQL_ENDPOINT", "https://cam-kp-sparql.apps.renci.org/sparql"),
