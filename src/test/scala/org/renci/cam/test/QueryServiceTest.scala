@@ -180,7 +180,8 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     zio.test.test("test QueryService.getProjections") {
       val (queryGraph, _) = getSimpleData
       val queryText = QueryService.getProjections(queryGraph)
-      assertTrue(queryText.text.trim.split("\\s+", -1).to(Set) == Set("?e0", "?n1", "?n0"))
+      // In addition to ?e0, ?n0, ?n1, we also return ?n0_class and ?n1_class in order to be able to identify the original class.
+      assertTrue(queryText.text.trim.split("\\s+", -1).to(Set) == Set("?e0", "?n0", "?n1", "?n0_class", "?n1_class"))
     }
   )
 
@@ -452,6 +453,118 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     )
   }
 
+  val testQueryIds = {
+    def createTestTRAPIQueryGraph(n0: TRAPIQueryNode,
+                                  n1: TRAPIQueryNode =
+                                    TRAPIQueryNode(None, categories = Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),
+                                  e0: TRAPIQueryEdge = TRAPIQueryEdge(
+                                    subject = "n0",
+                                    `object` = "n1",
+                                    predicates = Some(List(BiolinkPredicate("positively_regulates")))
+                                  )) =
+      TRAPIQueryGraph(Map("n0" -> n0, "n1" -> n1), Map("e0" -> e0))
+
+    suite("testQueryIds")(
+      testM("Ensure that query_id is absent for nodes without ids") {
+        for {
+          response <- QueryService
+            .run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None)))
+          // _ = logger.warn(s"Response: ${response}")
+          nodeBindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          queryIds = nodeBindings.map(_.query_id)
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
+          assert(queryIds)(Assertion.forall(Assertion.isNone))
+      },
+      testM(
+        "Ensure that query_id is present only when the identifier is ambiguous for a process (GO:0033549, MAP kinase phosphatase activity)") {
+        val iriToQuery = IRI("http://purl.obolibrary.org/obo/GO_0033549")
+
+        for {
+          response <- QueryService
+            .run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(iriToQuery)), None)))
+          // _ = logger.warn(s"Response: ${response}")
+          nodeBindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          queryIds = nodeBindings.map(_.query_id)
+          queryIdsUnambiguous = nodeBindings.filter(_.id == iriToQuery).map(_.query_id)
+          queryIdsAmbiguous = nodeBindings.filter(_.id != iriToQuery).map(_.query_id)
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.isNonEmpty)) &&
+          assert(queryIds)(Assertion.isNonEmpty) &&
+          assert(queryIdsUnambiguous)(Assertion.isNonEmpty) &&
+          assert(queryIdsUnambiguous)(Assertion.forall(Assertion.isNone)) &&
+          assert(queryIdsAmbiguous)(Assertion.isNonEmpty) &&
+          assert(queryIdsAmbiguous)(Assertion.forall(Assertion.isSome(Assertion.equalTo(iriToQuery))))
+      },
+      testM("Ensure that query_id is present only when the identifier is ambiguous for a location (GO:0005737, cytoplasm)") {
+        val cytoplasm = IRI("http://purl.obolibrary.org/obo/GO_0005737")
+        val germplasm = IRI("http://purl.obolibrary.org/obo/GO_0060293")
+
+        for {
+          response <- QueryService
+            .run(
+              1000,
+              createTestTRAPIQueryGraph(
+                TRAPIQueryNode(Some(List(cytoplasm)), None),
+                TRAPIQueryNode(None, categories = Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),
+                TRAPIQueryEdge(
+                  subject = "n1",
+                  `object` = "n0",
+                  predicates = Some(List(BiolinkPredicate("occurs_in")))
+                )
+              )
+            )
+          // _ = logger.warn(s"Response: ${response}")
+          node0Bindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          queryIds = node0Bindings.map(_.query_id)
+          queryIdsUnambiguous = node0Bindings.filter(_.id == cytoplasm).map(_.query_id)
+          queryIdsAmbiguous = node0Bindings.filter(_.id != cytoplasm).map(_.query_id)
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.isNonEmpty)) &&
+          assert(queryIds)(Assertion.isNonEmpty) &&
+          assert(queryIdsUnambiguous)(Assertion.isNonEmpty) &&
+          assert(queryIdsUnambiguous)(Assertion.forall(Assertion.isNone)) &&
+          assert(queryIdsAmbiguous)(Assertion.isNonEmpty) &&
+          assert(queryIdsAmbiguous)(Assertion.forall(Assertion.isSome(Assertion.equalTo(cytoplasm)))) &&
+          // If this works, some of the ambiguous results should be for germplasm, which is a kind of cytoplasm
+          assert(node0Bindings)(Assertion.contains(TRAPINodeBinding(id = germplasm, query_id = Some(cytoplasm))))
+      },
+      testM("Ensure that two different identifiers can be provided for the same node, to be disambiguated by query_id") {
+        val glucose = IRI("http://purl.obolibrary.org/obo/CHEBI_17234")
+        val rna = IRI("http://purl.obolibrary.org/obo/CHEBI_33697")
+
+        for {
+          response <- QueryService
+            .run(
+              1000,
+              createTestTRAPIQueryGraph(
+                TRAPIQueryNode(Some(List(glucose, rna)), None),
+                TRAPIQueryNode(None, categories = Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),
+                TRAPIQueryEdge(
+                  subject = "n1",
+                  `object` = "n0",
+                  predicates = Some(List(BiolinkPredicate("has_participant")))
+                )
+              )
+            )
+          // _ = logger.warn(s"Response: ${response}")
+          node0Bindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          queryIdsUnambiguous = node0Bindings.filter(b => b.id == glucose || b.id == rna).map(_.query_id)
+          idsAmbiguousGlucose = node0Bindings.filter(_.query_id.contains(glucose)).map(_.id)
+          idsAmbiguousRNA = node0Bindings.filter(_.query_id.contains(rna)).map(_.id)
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.isGreaterThanEqualTo(50)))) &&
+          // All unambiguous IDs -- glucose and RNA -- should have empty query_ids.
+          assert(queryIdsUnambiguous)(Assertion.isNonEmpty) &&
+          assert(queryIdsUnambiguous)(Assertion.forall(Assertion.isNone)) &&
+          // Ambiguous IDs that came from glucose should not have either glucose or RNA in them.
+          assert(idsAmbiguousGlucose)(Assertion.isNonEmpty) &&
+          assert(idsAmbiguousGlucose)(Assertion.not(Assertion.contains(TRAPINodeBinding(id = glucose, query_id = Some(glucose))))) &&
+          assert(idsAmbiguousGlucose)(Assertion.not(Assertion.contains(TRAPINodeBinding(id = rna, query_id = Some(glucose))))) &&
+          // Ambiguous IDs that came from RNA should not have either DNA or RNA in them.
+          assert(idsAmbiguousRNA)(Assertion.isNonEmpty) &&
+          assert(idsAmbiguousRNA)(Assertion.not(Assertion.contains(TRAPINodeBinding(id = glucose, query_id = Some(rna))))) &&
+          assert(idsAmbiguousRNA)(Assertion.not(Assertion.contains(TRAPINodeBinding(id = rna, query_id = Some(rna)))))
+      }
+    )
+  }
+
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
   val testLayer = HttpClient.makeHttpClientLayer ++ Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
 
@@ -462,7 +575,8 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
     testQueryTexts,
     testGetNodesToDirectTypes,
     testGetProjections,
-    testQueryServiceSteps
+    testQueryServiceSteps,
+    testQueryIds
   ).provideCustomLayer(testLayer.mapError(TestFailure.die))
 
 }
