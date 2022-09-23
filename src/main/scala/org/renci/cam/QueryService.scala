@@ -4,6 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
+import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
 import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
@@ -61,6 +62,9 @@ object QueryService extends LazyLogging {
     *   The query graph that we are attempting to respond to.
     * @param nodes
     *   The nodes returned from the query, with node labels as the key.
+    * @param originalNodes
+    *   The node was used to search for this result -- for example, if the user searches for node n0 as cytoplasm (GO:0005737) and the
+    *   search result was associated with germ plasm (GO:0060293), then nodes["n0"] == GO:0060293, but originalNodes["n0"] == GO:0005737.
     * @param edges
     *   The edges returned from the query, with edge labels as the key.
     * @param graphs
@@ -74,6 +78,7 @@ object QueryService extends LazyLogging {
     index: Long,
     queryGraph: TRAPIQueryGraph,
     nodes: Map[String, IRI],
+    originalNodes: Map[String, IRI],
     edges: Map[String, IRI],
     graphs: Set[IRI],
     derivedFrom: Set[IRI]
@@ -106,6 +111,13 @@ object QueryService extends LazyLogging {
       */
     def fromQuerySolution(qs: QuerySolution, index: Long, queryGraph: TRAPIQueryGraph): Result = {
       val nodes = queryGraph.nodes.keySet.map(n => (n, IRI(qs.getResource(f"${n}_type").getURI))).toMap
+      val originalNodes = queryGraph.nodes.keySet
+        .flatMap(n =>
+          qs.getResource(f"${n}_class") match {
+            case r: Resource => Seq((n, IRI(r.getURI)))
+            case null        => Seq()
+          })
+        .toMap
       val edges = queryGraph.edges.keySet.map(e => (e, IRI(qs.getResource(e).getURI))).toMap
       val graphs = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
       val derivedFrom = qs.getLiteral("graphs").getString.split("\\|").map(IRI(_)).toSet
@@ -114,6 +126,7 @@ object QueryService extends LazyLogging {
         index,
         queryGraph,
         nodes,
+        originalNodes,
         edges,
         graphs,
         derivedFrom
@@ -245,7 +258,24 @@ object QueryService extends LazyLogging {
       result <- results
 
       nodeBindings = result.nodes
-        .groupMap(_._1)(p => TRAPINodeBinding(p._2))
+        .groupMap(_._1)(p =>
+          TRAPINodeBinding(
+            id = p._2,
+            query_id = result.queryGraph.nodes.get(p._1) match {
+              // If no nodes IDs were provided, query_id MUST be null or absent.
+              case None                                => None
+              case Some(TRAPIQueryNode(None, _, _, _)) => None
+              case Some(TRAPIQueryNode(Some(List()), _, _, _)) =>
+                None
+              case Some(TRAPIQueryNode(Some(ids), _, _, _)) =>
+                result.originalNodes.get(p._1) match {
+                  // According to the TRAPI 1.3 spec, we SHOULD NOT provide a query_id if it is the
+                  // same as the id.
+                  case Some(p._2) => None
+                  case x          => x
+                }
+            }
+          ))
         .map(p => (p._1, p._2.toList))
       edgeBindings = result.edges.keys
         .map(key => (key, List(TRAPIEdgeBinding(result.getEdgeKey(key)))))
@@ -463,7 +493,7 @@ object QueryService extends LazyLogging {
           GROUP BY $typeProjections
           $limitSparql
           """
-    logger.debug(s"Executing query: $queryString")
+    logger.info(s"Executing query: $queryString")
     SPARQLQueryExecutor.runSelectQuery(queryString.toQuery)
   }
 
@@ -515,6 +545,8 @@ object QueryService extends LazyLogging {
     *   - If typesInsteadOfNodes is false (the default), we should generate ?n0 ?e0 ?n1 for a one-hop.
     *   - If typesInsteadOfNodes is true, we should generate ?n0_type ?e0 ?n1_type for a one-hop.
     *
+    * In either case, we should generate ?n0_class as well.
+    *
     * @param queryGraph
     *   The query graph to generate projections for.
     * @param typesInsteadOfNodes
@@ -525,6 +557,7 @@ object QueryService extends LazyLogging {
   def getProjections(queryGraph: TRAPIQueryGraph, typesInsteadOfNodes: Boolean = false): QueryText = {
     val projectionVariableNames =
       queryGraph.edges.keys ++
+        queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_class") ++
         (if (typesInsteadOfNodes) queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_type")
          else queryGraph.edges.flatMap(e => List(e._2.subject, e._2.`object`)))
     projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
