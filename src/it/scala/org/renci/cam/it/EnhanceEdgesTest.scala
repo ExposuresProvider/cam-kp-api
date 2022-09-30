@@ -1,5 +1,6 @@
 package org.renci.cam.it
 
+import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto._
@@ -10,7 +11,7 @@ import org.http4s.headers.{`Content-Type`, Accept}
 import org.http4s.implicits._
 import org.renci.cam.Biolink.biolinkData
 import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIAttribute, TRAPIMessage, TRAPIQuery, TRAPIQueryEdge, TRAPIQueryGraph, TRAPIQueryNode, TRAPIResponse}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, MetaKnowledgeGraph, TRAPIAttribute, TRAPIMessage, TRAPIQuery, TRAPIQueryEdge, TRAPIQueryGraph, TRAPIQueryNode, TRAPIResponse}
 import org.renci.cam.{AppConfig, Biolink, HttpClient, Implicits}
 import zio.blocking.Blocking
 import zio.config.ZConfig
@@ -23,7 +24,7 @@ import zio.{Layer, Task, ZIO}
 import java.nio.file.{Path, Paths}
 import scala.jdk.CollectionConverters._
 
-object EnhanceEdgesTest extends DefaultRunnableSpec {
+object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
   val exampleDir: Path = Paths.get("src/it/resources/enhance-edge-tests")
   val exampleResultsDir: Path = Paths.get("src/it/resources/example-results")
 
@@ -33,7 +34,106 @@ object EnhanceEdgesTest extends DefaultRunnableSpec {
       case Some(str) => Uri.fromString(str).toOption.get
     }
 
+  val endpointMetaKG: Uri = Uri.fromString(endpointToTest.toString.replaceFirst("/query$", "/meta_knowledge_graph")).toOption.get
+
+  val endpointNodeNorm: Uri =
+    sys.env.get("NODE_NORM_ENDPOINT") match {
+      case None      => uri"https://nodenormalization-sri.renci.org/1.3/get_normalized_nodes"
+      case Some(str) => Uri.fromString(str).toOption.get
+    }
+
   val limit: Int = sys.env.getOrElse("CAM_KP_LIMIT", 1000).toString.toInt
+
+  val metaKG: MetaKnowledgeGraph =
+    zio.Runtime
+      .unsafeFromLayer(HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer)
+      .unsafeRun(
+        for {
+          httpClient <- HttpClient.client
+          biolinkData <- biolinkData
+
+          request = Request[Task](Method.GET, endpointMetaKG)
+            .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
+          response <- httpClient.expect[Json](request)
+          metaKG <- ZIO.fromEither(
+            {
+              implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+              implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+              implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+              implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
+                Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+              implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+
+              response.as[MetaKnowledgeGraph]
+            }
+          )
+        } yield metaKG
+      )
+
+  val acceptableIDs: Set[String] = metaKG.nodes.values.flatMap(_.id_prefixes).toSet
+
+  def getCURIEPrefix(curie: IRI): String = {
+    val cs = curie.value.split(':')
+    if (cs.length == 0) curie.value
+    else cs(0)
+  }
+
+  def getAcceptableCURIE(curie: IRI): Option[IRI] = {
+    val prefix = getCURIEPrefix(curie)
+
+    if (acceptableIDs.contains(prefix)) {
+      logger.info(s"getAcceptableCURIE(${curie}): acceptable prefix ${prefix}")
+      Some(curie)
+    } else {
+      case class NodeNormIdentifier(
+        identifier: IRI,
+        label: String
+      )
+
+      case class NodeNormResponse(
+        id: NodeNormIdentifier,
+        equivalent_identifiers: List[NodeNormIdentifier],
+        `type`: List[IRI],
+        information_content: Float
+      )
+
+      zio.Runtime
+        .unsafeFromLayer(HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer)
+        .unsafeRun(
+          for {
+            httpClient <- HttpClient.client
+            biolinkData <- biolinkData
+
+            request = Request[Task](Method.GET, endpointNodeNorm.+?("curie", curie.value))
+              .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
+            response <- httpClient.expect[Json](request)
+
+            result <- ZIO.fromOption((response \\ curie.value).headOption)
+            nnResponse <- ZIO.fromEither(
+              {
+                implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+                implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
+                implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+                implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
+                  Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+
+                implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+                implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+                implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+                implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
+                  Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+                implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+
+                result.as[NodeNormResponse]
+              }
+            )
+          } yield nnResponse.equivalent_identifiers
+            .filter(id => acceptableIDs.contains(getCURIEPrefix(id.identifier)))
+            .headOption
+            .map(_.identifier)
+        )
+    }
+  }
 
   def testEdge(subj: String,
                pred: String,
@@ -52,6 +152,7 @@ object EnhanceEdgesTest extends DefaultRunnableSpec {
 
           val subjIRI = IRI(subj)
           val objIRI = IRI(obj)
+
           val queryGraph = TRAPIQueryGraph(
             nodes = Map(
               "n0" -> TRAPIQueryNode(ids = Some(List(subjIRI)), None, None, None),
@@ -89,7 +190,11 @@ object EnhanceEdgesTest extends DefaultRunnableSpec {
     }
 
   // Let's test one out.
-  val testOne = testEdge("UniProtKB:P56856", "biolink:has_fisher_exact_test_p_value_with", "CHEMBL.COMPOUND:CHEMBL1201129")
+  val testOne = testEdge(
+    getAcceptableCURIE(IRI("UniProtKB:P56856")).map(_.value).getOrElse("UniProtKB:P56856"),
+    "biolink:has_fisher_exact_test_p_value_with",
+    getAcceptableCURIE(IRI("CHEMBL.COMPOUND:CHEMBL1201129")).map(_.value).getOrElse("CHEMBL.COMPOUND:CHEMBL1201129")
+  )
 
   /*
   val testEachExampleFile: Spec[ZConfig[Biolink.BiolinkData] with HttpClient, TestFailure[Throwable], TestSuccess] = {
