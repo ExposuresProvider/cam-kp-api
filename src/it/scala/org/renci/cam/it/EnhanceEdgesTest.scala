@@ -7,7 +7,7 @@ import io.circe.generic.semiauto._
 import io.circe.syntax.EncoderOps
 import org.http4s._
 import org.http4s.circe.jsonDecoder
-import org.http4s.headers.{`Content-Type`, Accept}
+import org.http4s.headers.{Accept, `Content-Type`}
 import org.http4s.implicits._
 import org.renci.cam.Biolink.biolinkData
 import org.renci.cam.HttpClient.HttpClient
@@ -25,6 +25,16 @@ import java.nio.file.{Path, Paths}
 import scala.jdk.CollectionConverters._
 
 object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
+  /* Set up test environment */
+  val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
+  val camkpapiLayer = Blocking.live >>> HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
+  val testLayer = (configLayer ++ camkpapiLayer).mapError(TestFailure.die)
+
+  def spec = suite("EnhanceEdgesTest")(
+    testOne
+  ).provideCustomLayer(testLayer)
+
+  /* Configure tests */
   val exampleDir: Path = Paths.get("src/it/resources/enhance-edge-tests")
   val exampleResultsDir: Path = Paths.get("src/it/resources/example-results")
 
@@ -44,19 +54,27 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
 
   val limit: Int = sys.env.getOrElse("CAM_KP_LIMIT", 1000).toString.toInt
 
+  /* We will need the MetaKnowledgeGraph to normalize input nodes, so we load that here. */
+  val zioRuntime = zio.Runtime.unsafeFromLayer(camkpapiLayer)
   val metaKG: MetaKnowledgeGraph = {
     logger.info("Retrieving MetaKnowledgeGraph")
-
-    zio.Runtime
-      .unsafeFromLayer(HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer)
+    zioRuntime
       .unsafeRun(
         for {
           httpClient <- HttpClient.client
           biolinkData <- biolinkData
 
+          _ = logger.info(s"Ready to make request to ${endpointMetaKG}.")
+
           request = Request[Task](Method.GET, endpointMetaKG)
-            .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
+            // .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
+
+          _ = logger.info(s"Ready to make request ${request} to HTTP client ${httpClient}.")
+
           response <- httpClient.expect[Json](request)
+
+          _ = logger.info(s"Response received: ${response}")
+
           metaKG <- ZIO.fromEither(
             {
               implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
@@ -72,7 +90,7 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
             }
           )
         } yield {
-          logger.info("MetaKnowledgeGraph retrieved")
+          logger.info(s"MetaKnowledgeGraph retrieved: ${metaKG}")
 
           metaKG
         }
@@ -108,9 +126,7 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
         information_content: Float
       )
 
-      val result = zio.Runtime
-        .unsafeFromLayer(HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer)
-        .unsafeRun(
+      val result = zioRuntime.unsafeRun(
           for {
             httpClient <- HttpClient.client
             biolinkData <- biolinkData
@@ -314,12 +330,5 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
   }
    */
 
-  val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
-  val camkpapiLayer = Blocking.live >>> HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
-  val testLayer = (configLayer ++ camkpapiLayer).mapError(TestFailure.die)
-
-  def spec = suite("EnhanceEdgesTest")(
-    testOne
-  ).provideCustomLayer(testLayer)
 
 }
