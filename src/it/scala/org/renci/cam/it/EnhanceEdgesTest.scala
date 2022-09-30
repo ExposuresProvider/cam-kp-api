@@ -4,7 +4,8 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto._
-import io.circe.syntax.EncoderOps
+import io.circe.parser._
+import io.circe.syntax.{EncoderOps, _}
 import org.http4s._
 import org.http4s.circe.jsonDecoder
 import org.http4s.headers.{Accept, `Content-Type`}
@@ -22,6 +23,7 @@ import zio.test._
 import zio.{Layer, Task, ZIO}
 
 import java.nio.file.{Path, Paths}
+import scala.io.Source
 import scala.jdk.CollectionConverters._
 
 object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
@@ -58,22 +60,16 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
   val zioRuntime = zio.Runtime.unsafeFromLayer(camkpapiLayer)
   val metaKG: MetaKnowledgeGraph = {
     logger.info("Retrieving MetaKnowledgeGraph")
+
+    // TODO: replace with ZIO I guess.
+    val metaKGSource = Source.fromURL(endpointMetaKG.toString())
+    val metaKGString = metaKGSource.mkString
+    metaKGSource.close()
+
     zioRuntime
       .unsafeRun(
         for {
-          httpClient <- HttpClient.client
           biolinkData <- biolinkData
-
-          _ = logger.info(s"Ready to make request to ${endpointMetaKG}.")
-
-          request = Request[Task](Method.GET, endpointMetaKG)
-            // .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-
-          _ = logger.info(s"Ready to make request ${request} to HTTP client ${httpClient}.")
-
-          response <- httpClient.expect[Json](request)
-
-          _ = logger.info(s"Response received: ${response}")
 
           metaKG <- ZIO.fromEither(
             {
@@ -86,12 +82,10 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
               implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
               implicit lazy val decoderMetaKnowledgeGraph: Decoder[MetaKnowledgeGraph] = deriveDecoder[MetaKnowledgeGraph]
 
-              response.as[MetaKnowledgeGraph]
+              decode[MetaKnowledgeGraph](metaKGString)
             }
           )
         } yield {
-          logger.info(s"MetaKnowledgeGraph retrieved: ${metaKG}")
-
           metaKG
         }
       )
@@ -116,14 +110,14 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
 
       case class NodeNormIdentifier(
         identifier: IRI,
-        label: String
+        label: Option[String]
       )
 
       case class NodeNormResponse(
         id: NodeNormIdentifier,
         equivalent_identifiers: List[NodeNormIdentifier],
         `type`: List[IRI],
-        information_content: Float
+        information_content: Option[Float]
       )
 
       val result = zioRuntime.unsafeRun(
@@ -154,7 +148,7 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
                 result.as[NodeNormResponse]
               }
             )
-          } yield nnResponse.equivalent_identifiers
+          } yield (nnResponse.id :: nnResponse.equivalent_identifiers)
             .find(id => acceptableIDs.contains(getCURIEPrefix(id.identifier)))
             .map(_.identifier)
         )
