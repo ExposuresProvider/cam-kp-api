@@ -44,7 +44,9 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
 
   val limit: Int = sys.env.getOrElse("CAM_KP_LIMIT", 1000).toString.toInt
 
-  val metaKG: MetaKnowledgeGraph =
+  val metaKG: MetaKnowledgeGraph = {
+    logger.info("Retrieving MetaKnowledgeGraph")
+
     zio.Runtime
       .unsafeFromLayer(HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer)
       .unsafeRun(
@@ -59,16 +61,23 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
             {
               implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
               implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+              implicit val iriKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
               implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
               implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
                 Implicits.biolinkPredicateDecoder(biolinkData.predicates)
               implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+              implicit lazy val decoderMetaKnowledgeGraph: Decoder[MetaKnowledgeGraph] = deriveDecoder[MetaKnowledgeGraph]
 
               response.as[MetaKnowledgeGraph]
             }
           )
-        } yield metaKG
+        } yield {
+          logger.info("MetaKnowledgeGraph retrieved")
+
+          metaKG
+        }
       )
+  }
 
   val acceptableIDs: Set[String] = metaKG.nodes.values.flatMap(_.id_prefixes).toSet
 
@@ -82,9 +91,11 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
     val prefix = getCURIEPrefix(curie)
 
     if (acceptableIDs.contains(prefix)) {
-      logger.info(s"getAcceptableCURIE(${curie}): acceptable prefix ${prefix}")
+      logger.info(s"getAcceptableCURIE(${curie}): prefix ${prefix} acceptable")
       Some(curie)
     } else {
+      logger.info(s"getAcceptableCURIE(${curie}): prefix ${prefix} not acceptable")
+
       case class NodeNormIdentifier(
         identifier: IRI,
         label: String
@@ -97,7 +108,7 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
         information_content: Float
       )
 
-      zio.Runtime
+      val result = zio.Runtime
         .unsafeFromLayer(HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer)
         .unsafeRun(
           for {
@@ -128,10 +139,12 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
               }
             )
           } yield nnResponse.equivalent_identifiers
-            .filter(id => acceptableIDs.contains(getCURIEPrefix(id.identifier)))
-            .headOption
+            .find(id => acceptableIDs.contains(getCURIEPrefix(id.identifier)))
             .map(_.identifier)
         )
+
+      logger.info(s"getAcceptableCURIE(${curie}): replaced with ${result}")
+      result
     }
   }
 
@@ -190,11 +203,15 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
     }
 
   // Let's test one out.
-  val testOne = testEdge(
+  val testOne = test("testOne") {
+    assert(getAcceptableCURIE(IRI("CHEMBL.COMPOUND:CHEMBL1201129")))(Assertion.isNone)
+  }
+
+  /* testEdge(
     getAcceptableCURIE(IRI("UniProtKB:P56856")).map(_.value).getOrElse("UniProtKB:P56856"),
     "biolink:has_fisher_exact_test_p_value_with",
     getAcceptableCURIE(IRI("CHEMBL.COMPOUND:CHEMBL1201129")).map(_.value).getOrElse("CHEMBL.COMPOUND:CHEMBL1201129")
-  )
+  ) */
 
   /*
   val testEachExampleFile: Spec[ZConfig[Biolink.BiolinkData] with HttpClient, TestFailure[Throwable], TestSuccess] = {
