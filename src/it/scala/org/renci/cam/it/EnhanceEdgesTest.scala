@@ -22,7 +22,7 @@ import zio.test.Assertion._
 import zio.test._
 import zio.{Layer, Task, ZIO}
 
-import java.nio.file.{Path, Paths}
+import java.nio.file.{Files, Path, Paths}
 import scala.io.Source
 import scala.jdk.CollectionConverters._
 
@@ -31,10 +31,6 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
   val camkpapiLayer = Blocking.live >>> HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
   val testLayer = (configLayer ++ camkpapiLayer).mapError(TestFailure.die)
-
-  def spec = suite("EnhanceEdgesTest")(
-    testOne
-  ).provideCustomLayer(testLayer)
 
   /* Configure tests */
   val exampleDir: Path = Paths.get("src/it/resources/enhance-edge-tests")
@@ -93,13 +89,13 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
 
   val acceptableIDs: Set[String] = metaKG.nodes.values.flatMap(_.id_prefixes).toSet
 
-  def getCURIEPrefix(curie: IRI): String = {
-    val cs = curie.value.split(':')
-    if (cs.length == 0) curie.value
+  def getCURIEPrefix(curie: String): String = {
+    val cs = curie.split(':')
+    if (cs.length == 0) curie
     else cs(0)
   }
 
-  def getAcceptableCURIE(curie: IRI): Option[IRI] = {
+  def getAcceptableCURIE(curie: String): Option[String] = {
     val prefix = getCURIEPrefix(curie)
 
     if (acceptableIDs.contains(prefix)) {
@@ -109,27 +105,29 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
       logger.info(s"getAcceptableCURIE(${curie}): prefix ${prefix} not acceptable")
 
       case class NodeNormIdentifier(
-        identifier: IRI,
+        identifier: String,
         label: Option[String]
       )
 
       case class NodeNormResponse(
-        id: NodeNormIdentifier,
+        id: Option[NodeNormIdentifier],
         equivalent_identifiers: List[NodeNormIdentifier],
-        `type`: List[IRI],
+        `type`: List[BiolinkClass],
         information_content: Option[Float]
       )
 
+      // TODO: move to ZIO (I guess).
+      val nodeNormSource = Source.fromURL(endpointNodeNorm.+?("curie", curie).toString())
+      val nodeNormString = nodeNormSource.mkString
+      nodeNormSource.close()
+
       val result = zioRuntime.unsafeRun(
           for {
-            httpClient <- HttpClient.client
             biolinkData <- biolinkData
 
-            request = Request[Task](Method.GET, endpointNodeNorm.+?("curie", curie.value))
-              .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-            response <- httpClient.expect[Json](request)
-
-            result <- ZIO.fromOption((response \\ curie.value).headOption)
+            response <- ZIO.fromEither(decode[Json](nodeNormString))
+            curieResult = (response \\ curie)
+            result <- ZIO.fromOption(curieResult.headOption)
             nnResponse <- ZIO.fromEither(
               {
                 implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
@@ -148,9 +146,17 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
                 result.as[NodeNormResponse]
               }
             )
-          } yield (nnResponse.id :: nnResponse.equivalent_identifiers)
-            .find(id => acceptableIDs.contains(getCURIEPrefix(id.identifier)))
-            .map(_.identifier)
+          } yield {
+            if (curieResult.isEmpty) {
+              logger.warn(s"NodeNorm could not resolve ${curie}.")
+              None
+            } else nnResponse.equivalent_identifiers
+              .find(id => {
+                logger.info(s"Checking to see if ${id.identifier} (prefix: ${getCURIEPrefix(id.identifier)}) is in ${acceptableIDs}")
+                acceptableIDs.contains(getCURIEPrefix(id.identifier))
+              })
+              .map(_.identifier)
+          }
         )
 
       logger.info(s"getAcceptableCURIE(${curie}): replaced with ${result}")
@@ -166,15 +172,17 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
         biolinkData <- biolinkData
         httpClient <- HttpClient.client
 
-        messageText = {
+        messageText: String = {
           implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
           implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
           implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
           implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
             Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
 
-          val subjIRI = IRI(subj)
-          val objIRI = IRI(obj)
+          val subjIRI = IRI(getAcceptableCURIE(subj).getOrElse(subj))
+          val objIRI = IRI(getAcceptableCURIE(obj).getOrElse(obj))
+
+          logger.info(s"Querying CAM-KP-API with subj=${subjIRI}, objIRI=${objIRI}")
 
           val queryGraph = TRAPIQueryGraph(
             nodes = Map(
@@ -192,6 +200,7 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
 
           TRAPIQuery(message = message, log_level = None).asJson.deepDropNullValues.noSpaces
         }
+
         request = Request[Task](Method.POST, endpointToTest.withQueryParam("limit", limit.toString))
           .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
           .withEntity(messageText)
@@ -209,120 +218,61 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
           }
         )
         results = trapiResponse.message.results
+        resultsOrEmpty = results.getOrElse(Seq())
+        _ = logger.info(s"Querying CAM-KP-API with query ${messageText} results in ${resultsOrEmpty.size} results: ${resultsOrEmpty}")
       } yield assert(results)(Assertion.isSome(Assertion.isNonEmpty))
     }
 
-  // Let's test one out.
-  val testOne = test("testOne") {
-    assert(getAcceptableCURIE(IRI("CHEMBL.COMPOUND:CHEMBL1201129")))(Assertion.isNone)
+  // Let's test the acceptable CURIE lookup system.
+  val testCURIEs = suite("Test CURIEs to ensure we can convert them into acceptable IDs") {
+    val curiesToTest = Map(
+      "CHEMBL.COMPOUND:CHEMBL1201129" -> "CHEBI:50131",
+      "UniProtKB:P56856" -> "UniProtKB:P56856"
+    )
+
+    curiesToTest.map({ case (id, acceptableId) =>
+      test(s"Test whether ${id} can be converted into acceptable ID ${acceptableId}") {
+        assert(getAcceptableCURIE(id))(Assertion.isSome(Assertion.equalTo(acceptableId)))
+      }
+    }).reduce(_ + _)
   }
 
-  /* testEdge(
-    getAcceptableCURIE(IRI("UniProtKB:P56856")).map(_.value).getOrElse("UniProtKB:P56856"),
-    "biolink:has_fisher_exact_test_p_value_with",
-    getAcceptableCURIE(IRI("CHEMBL.COMPOUND:CHEMBL1201129")).map(_.value).getOrElse("CHEMBL.COMPOUND:CHEMBL1201129")
-  ) */
-
-  /*
-  val testEachExampleFile: Spec[ZConfig[Biolink.BiolinkData] with HttpClient, TestFailure[Throwable], TestSuccess] = {
+  val testEachExampleFile = {
     // List of example files to process.
     val exampleFiles = Files
       .walk(exampleDir)
       .iterator()
       .asScala
       .filter(Files.isRegularFile(_))
-      .filter(_.toString.toLowerCase.endsWith(".json"))
+      .filter(_.toString.toLowerCase.endsWith(".tsv"))
       .toSeq
 
-    suiteM("Test example files in the src/it/resources/examples directory") {
-      ZStream
-        .fromIterable(exampleFiles)
-        .map(exampleFile =>
-          testM(s"Testing ${exampleDir.relativize(exampleFile)}") {
-            val exampleText = {
-              val source = Source.fromFile(exampleFile.toFile)
-              source.getLines().mkString("\n")
-            }
-            for {
-              httpClient <- HttpClient.client
-              biolinkData <- biolinkData
+    suite("Test example files in the src/it/resources/examples directory") {
+      exampleFiles.map(exampleFile =>
+        suite(s"Testing ${exampleDir.relativize(exampleFile)}") {
+          val outputFile = exampleDir.resolve(exampleFile.getFileName.toString.replaceFirst(".tsv$", ".txt"))
 
-              // Read the example JSON file.
-              exampleJson <- ZIO.fromEither(io.circe.parser.parse(exampleText))
-              example <- ZIO.fromEither(
-                {
-                  implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-                  implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-                  implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-                  implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
-                    Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-                  implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+          val exampleText = {
+            val source = Source.fromFile(exampleFile.toFile)
+            source.getLines()
+          }
 
-                  exampleJson.as[ExampleJsonFile]
-                }
-              )
+          val tests = for {
+            // Read the example JSON file.
+            line <- exampleText
+            cols = line.split("\t")
+          } yield {
+            testEdge(cols(0), cols(1), cols(2))
+          }
 
-              descriptionOpt = example.description
-              limit = example.limit.getOrElse(0)
-              minExpectedResultsOpt = example.minExpectedResults
-              maxExpectedResultsOpt = example.maxExpectedResults
-
-              // Prepare request for the CAM-KP-API endpoint.
-              messageText = {
-                implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-                implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-                implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-                implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-                  Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
-
-                TRAPIQuery(message = example.message, log_level = None).asJson.deepDropNullValues.noSpaces
-              }
-              // _ = println(s"messageText = ${messageText}")
-              request = Request[Task](Method.POST, endpointToTest.withQueryParam("limit", limit.toString))
-                .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
-                .withEntity(messageText)
-              response <- httpClient.expect[Json](request)
-
-              // Write out the response in `src/it/resources/example-results` for debugging.
-              outputFilename = exampleResultsDir.resolve(exampleDir.relativize(exampleFile))
-              _ = Files.createDirectories(outputFilename.getParent)
-              _ = Files.writeString(outputFilename, response.spaces2SortKeys)
-
-              // Translate the response into a TRAPIResponse for testing.
-              trapiResponse <- ZIO.fromEither(
-                {
-                  implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-                  implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-                  implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-                  implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
-                    Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-                  implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
-
-                  response.as[TRAPIResponse]
-                }
-              )
-            } yield assert(descriptionOpt)(isSome(isNonEmptyString)) &&
-              assert(messageText)(isNonEmptyString) &&
-              assert(trapiResponse.status)(isSome(equalTo("Success"))) &&
-              // If a minExpectedResults is provided, make sure that the number of results is indeed greater than or equal to it.
-              (minExpectedResultsOpt match {
-                case None => assertCompletes
-                case Some(minExpectedResults) =>
-                  val resultCount = trapiResponse.message.results.getOrElse(List()).size
-                  assert(resultCount)(isGreaterThanEqualTo(minExpectedResults))
-              }) &&
-              // If a maxExpectedResults is provided, make sure that the number of results is indeed less than or equal to it.
-              (maxExpectedResultsOpt match {
-                case None => assertCompletes
-                case Some(maxExpectedResults) =>
-                  val resultCount = trapiResponse.message.results.getOrElse(List()).size
-                  assert(resultCount)(isLessThanEqualTo(maxExpectedResults))
-              })
-          })
-        .runCollect
+          tests.reduce(_ + _)
+        }
+      ).reduce(_ + _)
     }
   }
-   */
 
-
+  def spec: Spec[environment.TestEnvironment, TestFailure[Throwable], TestSuccess] = suite("EnhanceEdgesTest")(
+    testCURIEs,
+    testEachExampleFile
+  ).provideCustomLayer(testLayer)
 }
