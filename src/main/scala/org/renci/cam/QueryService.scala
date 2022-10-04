@@ -35,6 +35,8 @@ object QueryService extends LazyLogging {
 
   val BiolinkMLSlotDefinition: IRI = IRI("https://w3id.org/linkml/SlotDefinition")
 
+  val BiolinkMLClassDefinition: IRI = IRI("https://w3id.org/linkml/ClassDefinition")
+
   val BiolinkMLIsA: IRI = IRI("https://w3id.org/linkml/is_a")
 
   val BiolinkMLMixins: IRI = IRI("https://w3id.org/linkml/mixins")

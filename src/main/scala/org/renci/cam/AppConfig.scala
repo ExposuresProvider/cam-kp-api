@@ -10,7 +10,8 @@ final case class AppConfig(host: String,
                            sparqlEndpoint: Uri,
                            trapiVersion: String,
                            maturity: String,
-                           version: String)
+                           version: String,
+                           ontologyPath: String)
 
 object AppConfig {
 
