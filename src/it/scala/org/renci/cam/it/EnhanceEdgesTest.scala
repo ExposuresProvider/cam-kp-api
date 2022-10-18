@@ -262,10 +262,11 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
             line <- exampleText
             cols = line.split("\t")
           } yield {
-            testEdge(cols(0), cols(1), cols(2))
+            if (line.trim.isEmpty) None
+            else Some(testEdge(cols(0), cols(1), cols(2)))
           }
 
-          tests.reduce(_ + _)
+          tests.flatten.reduce(_ + _)
         }
       ).reduce(_ + _)
     }
