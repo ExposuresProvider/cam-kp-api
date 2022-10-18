@@ -237,7 +237,7 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
     }).reduce(_ + _)
   }
 
-  val testEachExampleFile = {
+  val testEachExampleFile: Spec[ZConfig[Biolink.BiolinkData] with HttpClient, TestFailure[Throwable], TestSuccess] = {
     // List of example files to process.
     val exampleFiles = Files
       .walk(exampleDir)
