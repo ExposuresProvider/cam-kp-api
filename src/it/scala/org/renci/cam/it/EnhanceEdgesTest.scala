@@ -263,6 +263,10 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
             cols = line.split("\t")
           } yield {
             if (line.trim.isEmpty) None
+            else if (cols.length != 3) {
+              logger.error(s"Unable to parse line '${line.trim}' from ${exampleFile}")
+              None
+            }
             else Some(testEdge(cols(0), cols(1), cols(2)))
           }
 
