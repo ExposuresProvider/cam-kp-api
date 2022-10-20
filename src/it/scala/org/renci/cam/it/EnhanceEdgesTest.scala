@@ -8,7 +8,7 @@ import io.circe.parser._
 import io.circe.syntax.{EncoderOps, _}
 import org.http4s._
 import org.http4s.circe.jsonDecoder
-import org.http4s.headers.{Accept, `Content-Type`}
+import org.http4s.headers.{`Content-Type`, Accept}
 import org.http4s.implicits._
 import org.renci.cam.Biolink.biolinkData
 import org.renci.cam.HttpClient.HttpClient
@@ -54,6 +54,7 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
 
   /* We will need the MetaKnowledgeGraph to normalize input nodes, so we load that here. */
   val zioRuntime = zio.Runtime.unsafeFromLayer(camkpapiLayer)
+
   val metaKG: MetaKnowledgeGraph = {
     logger.info("Retrieving MetaKnowledgeGraph")
 
@@ -81,9 +82,7 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
               decode[MetaKnowledgeGraph](metaKGString)
             }
           )
-        } yield {
-          metaKG
-        }
+        } yield metaKG
       )
   }
 
@@ -95,12 +94,12 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
     else cs(0)
   }
 
-  def getAcceptableCURIE(curie: String): Option[String] = {
+  def getAcceptableCURIEs(curie: String): Seq[String] = {
     val prefix = getCURIEPrefix(curie)
 
     if (acceptableIDs.contains(prefix)) {
       logger.info(s"getAcceptableCURIE(${curie}): prefix ${prefix} acceptable")
-      Some(curie)
+      Seq(curie)
     } else {
       logger.info(s"getAcceptableCURIE(${curie}): prefix ${prefix} not acceptable")
 
@@ -121,7 +120,8 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
       val nodeNormString = nodeNormSource.mkString
       nodeNormSource.close()
 
-      val result = zioRuntime.unsafeRun(
+      val result = zioRuntime
+        .unsafeRun(
           for {
             biolinkData <- biolinkData
 
@@ -146,18 +146,20 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
                 result.as[NodeNormResponse]
               }
             )
-          } yield {
+          } yield
             if (curieResult.isEmpty) {
               logger.warn(s"NodeNorm could not resolve ${curie}.")
               None
-            } else nnResponse.equivalent_identifiers
-              .find(id => {
-                logger.info(s"Checking to see if ${id.identifier} (prefix: ${getCURIEPrefix(id.identifier)}) is in ${acceptableIDs}")
-                acceptableIDs.contains(getCURIEPrefix(id.identifier))
-              })
-              .map(_.identifier)
-          }
+            } else
+              nnResponse.equivalent_identifiers
+                .filter { id =>
+                  logger.info(s"Checking to see if ${id.identifier} (prefix: ${getCURIEPrefix(id.identifier)}) is in ${acceptableIDs}")
+                  acceptableIDs.contains(getCURIEPrefix(id.identifier))
+                }
+                .map(_.identifier)
         )
+        .iterator
+        .toSeq
 
       logger.info(s"getAcceptableCURIE(${curie}): replaced with ${result}")
       result
@@ -179,22 +181,29 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
           implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
             Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
 
-          val subjIRI = IRI(getAcceptableCURIE(subj).getOrElse(subj))
-          val objIRI = IRI(getAcceptableCURIE(obj).getOrElse(obj))
+          val subjIRIs = getAcceptableCURIEs(subj).map(IRI(_))
+          val objIRIs = getAcceptableCURIEs(obj).map(IRI(_))
 
-          logger.info(s"Querying CAM-KP-API with subj=${subjIRI}, objIRI=${objIRI}")
+          logger.info(s"Querying CAM-KP-API with subj=${subjIRIs}, objIRI=${objIRIs}")
 
           val queryGraph = TRAPIQueryGraph(
             nodes = Map(
-              "n0" -> TRAPIQueryNode(ids = Some(List(subjIRI)), None, None, None),
-              "n1" -> TRAPIQueryNode(ids = Some(List(objIRI)), None, None, None)
+              "n0" -> TRAPIQueryNode(ids = Some(subjIRIs.toList), None, None, None),
+              "n1" -> TRAPIQueryNode(None, None, None, None),
+              "n2" -> TRAPIQueryNode(ids = Some(objIRIs.toList), None, None, None)
             ),
             edges = Map(
               "e0" -> TRAPIQueryEdge(
                 predicates = Some(List(BiolinkPredicate("related_to"))),
                 subject = "n0",
                 `object` = "n1"
-              ))
+              ),
+              "e1" -> TRAPIQueryEdge(
+                predicates = Some(List(BiolinkPredicate("related_to"))),
+                subject = "n1",
+                `object` = "n2"
+              )
+            )
           )
           val message = TRAPIMessage(Some(queryGraph), None, None)
 
@@ -230,14 +239,16 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
       "UniProtKB:P56856" -> "UniProtKB:P56856"
     )
 
-    curiesToTest.map({ case (id, acceptableId) =>
-      test(s"Test whether ${id} can be converted into acceptable ID ${acceptableId}") {
-        assert(getAcceptableCURIE(id))(Assertion.isSome(Assertion.equalTo(acceptableId)))
+    curiesToTest
+      .map { case (id, acceptableId) =>
+        test(s"Test whether ${id} can be converted into acceptable ID ${acceptableId}") {
+          assert(getAcceptableCURIEs(id))(Assertion.equalTo(List(acceptableId)))
+        }
       }
-    }).reduce(_ + _)
+      .reduce(_ + _)
   }
 
-  val testEachExampleFile: Spec[ZConfig[Biolink.BiolinkData] with HttpClient, TestFailure[Throwable], TestSuccess] = {
+  val testEachExampleFile = {
     // List of example files to process.
     val exampleFiles = Files
       .walk(exampleDir)
@@ -248,31 +259,25 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
       .toSeq
 
     suite("Test example files in the src/it/resources/examples directory") {
-      exampleFiles.map(exampleFile =>
-        suite(s"Testing ${exampleDir.relativize(exampleFile)}") {
-          val outputFile = exampleDir.resolve(exampleFile.getFileName.toString.replaceFirst(".tsv$", ".txt"))
+      exampleFiles
+        .map(exampleFile =>
+          suite(s"Testing ${exampleDir.relativize(exampleFile)}") {
+            val outputFile = exampleDir.resolve(exampleFile.getFileName.toString.replaceFirst(".tsv$", ".txt"))
 
-          val exampleText = {
-            val source = Source.fromFile(exampleFile.toFile)
-            source.getLines()
-          }
-
-          val tests = for {
-            // Read the example JSON file.
-            line <- exampleText
-            cols = line.split("\t")
-          } yield {
-            if (line.trim.isEmpty) None
-            else if (cols.length != 3) {
-              logger.error(s"Unable to parse line '${line.trim}' from ${exampleFile}")
-              None
+            val exampleText = {
+              val source = Source.fromFile(exampleFile.toFile)
+              source.getLines()
             }
-            else Some(testEdge(cols(0), cols(1), cols(2)))
-          }
 
-          tests.flatten.reduce(_ + _)
-        }
-      ).reduce(_ + _)
+            val tests = for {
+              // Read the example JSON file.
+              line <- exampleText
+              cols = line.split("\t")
+            } yield testEdge(cols(0), cols(1), cols(2))
+
+            tests.reduce(_ + _)
+          })
+        .reduce(_ + _)
     }
   }
 
@@ -280,4 +285,5 @@ object EnhanceEdgesTest extends DefaultRunnableSpec with LazyLogging {
     testCURIEs,
     testEachExampleFile
   ).provideCustomLayer(testLayer)
+
 }
