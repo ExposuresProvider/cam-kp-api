@@ -3,9 +3,9 @@ package org.renci.cam
 import sttp.tapir.generic.auto._
 import io.circe.generic.semiauto._
 import io.circe.generic.auto._
-import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder}
+import io.circe.{Decoder, Encoder, Json, KeyDecoder, KeyEncoder}
 import org.http4s.{HttpRoutes, InvalidBodyException}
-import org.renci.cam.Biolink.{BiolinkData, biolinkData}
+import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Server.EndpointEnv
 import org.renci.cam.Server.LocalTapirJsonCirce.jsonBody
@@ -14,27 +14,46 @@ import sttp.tapir.Endpoint
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.ztapir.{endpoint, query, stringBody}
 import zio.{Has, RIO, URIO, ZIO}
+import org.http4s.implicits._
 
-/**
- * The LookupService can be used to look up concepts within CAM-KP-API without needing to use either high-level TRAPI
- * queries or low-level SPARQL queries. It is intended to provide a middle path to interrogate the database and to
- * identify cases where the TRAPI interface (QueryService) doesn't provide the correct results.
- */
+/** The LookupService can be used to look up concepts within CAM-KP-API without needing to use either high-level TRAPI queries or low-level
+  * SPARQL queries. It is intended to provide a middle path to interrogate the database and to identify cases where the TRAPI interface
+  * (QueryService) doesn't provide the correct results.
+  */
 object LookupService {
+
   /* DATA STRUCTURES */
-  case class Result (
+  case class ResultTriples(
     s: Option[TRAPINode],
     p: Option[BiolinkPredicate],
     o: Option[TRAPINode]
-                    )
+  )
 
+  case class Result(
+    predicates: Set[BiolinkPredicate],
+    subjectTriples: Seq[ResultTriples],
+    objectTriples: Seq[ResultTriples]
+  )
+
+  case class Error(
+    code: String,
+    message: String
+  )
+
+  /* CONTROLLER */
+  type LookupEndpointParams = (Option[String], Option[String], Option[String])
+  type LookupEndpoint = Endpoint[LookupEndpointParams, Error, Result, Any]
+
+  def lookup(subject: Option[String], predicate: Option[String], obj: Option[String]): ZIO[EndpointEnv, Error, Result] =
+    ZIO.succeed(
+      Result(
+        Set(),
+        Seq(),
+        Seq()
+      ))
 
   /* HTTP4S INTERFACE */
-  type LookupEndpoint = Endpoint[(Option[Int], Option[String], Option[String], Option[String]), List[LogEntry], List[Result], Any]
-  val lookupEndpointZ: URIO[Has[BiolinkData], LookupEndpoint] = {
-
-    // This example asks what biological process or activities positively regulate GO:0004707
-    // (MAP kinase activity, see http://purl.obolibrary.org/obo/GO_0004707)
+  val lookupEndpointZ: URIO[Has[BiolinkData], LookupEndpoint] =
     for {
       biolinkData <- biolinkData
     } yield {
@@ -51,13 +70,10 @@ object LookupService {
       implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
         Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
 
+      // The encoded example asks what biological process or activities positively regulate GO:0004707
+      // (MAP kinase activity, see http://purl.obolibrary.org/obo/GO_0004707)
       endpoint.get
         .in("lookup")
-        .in(
-          query[Option[Int]]("limit")
-            .default(Some(100))
-            .example(Some(100))
-        )
         .in(
           query[Option[String]]("subject")
             .default(None)
@@ -73,25 +89,14 @@ object LookupService {
             .default(None)
             .example(Some("GO:0004707"))
         )
-        .out(jsonBody[List[Result]])
-        .errorOut(jsonBody[List[LogEntry]])
+        .out(jsonBody[Result])
+        .errorOut(jsonBody[Error])
         .summary("Look up relationships within CAM-KP-API by identifier.")
     }
-  }
 
-
-  def lookupRouteR(queryEndpoint: Endpoint[(Int, String), String, TRAPIResponse, Any]): HttpRoutes[RIO[EndpointEnv, *]] =
+  def lookupRouteR(lookupEndpoint: LookupEndpoint): HttpRoutes[RIO[EndpointEnv, *]] =
     ZHttp4sServerInterpreter[EndpointEnv]()
-      .from(queryEndpoint) { case (limit, body) =>
-        val program: ZIO[EndpointEnv, Throwable, TRAPIResponse] = for {
-          queryGraph <-
-            ZIO
-              .fromOption(body.message.query_graph)
-              .orElseFail(new InvalidBodyException("A query graph is required, but hasn't been provided."))
-          limitValue <- ZIO.fromOption(limit).orElse(ZIO.effect(1000))
-          message <- QueryService.run(limitValue, queryGraph)
-        } yield TRAPIResponse(message, Some("Success"), None, None)
-        program.mapError(error => error.getMessage)
-      }
+      .from(lookupEndpoint) { case (s, p, o) => lookup(s, p, o) }
       .toRoutes
+
 }
