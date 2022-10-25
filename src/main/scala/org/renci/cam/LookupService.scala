@@ -1,9 +1,13 @@
 package org.renci.cam
 
+import com.typesafe.scalalogging.LazyLogging
 import sttp.tapir.generic.auto._
+import org.phenoscape.sparql.SPARQLInterpolation._
 import io.circe.generic.semiauto._
 import io.circe.generic.auto._
 import io.circe.{Decoder, Encoder, Json, KeyDecoder, KeyEncoder}
+import org.apache.jena.query.QuerySolution
+import org.apache.jena.rdf.model.{RDFNode, Resource}
 import org.http4s.{HttpRoutes, InvalidBodyException}
 import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
@@ -20,19 +24,20 @@ import org.http4s.implicits._
   * SPARQL queries. It is intended to provide a middle path to interrogate the database and to identify cases where the TRAPI interface
   * (QueryService) doesn't provide the correct results.
   */
-object LookupService {
+object LookupService extends LazyLogging {
 
   /* DATA STRUCTURES */
-  case class ResultTriples(
-    s: Option[TRAPINode],
-    p: Option[BiolinkPredicate],
-    o: Option[TRAPINode]
+  case class ResultTriplesIRIs(
+    s: String,
+    p: String,
+    o: String,
+    g: String
   )
 
   case class Result(
     predicates: Set[BiolinkPredicate],
-    subjectTriples: Seq[ResultTriples],
-    objectTriples: Seq[ResultTriples]
+    subjectTriples: Seq[ResultTriplesIRIs],
+    objectTriples: Seq[ResultTriplesIRIs]
   )
 
   case class Error(
@@ -41,16 +46,42 @@ object LookupService {
   )
 
   /* CONTROLLER */
-  type LookupEndpointParams = (Option[String], Option[String], Option[String])
+  type LookupEndpointParams = (String, Option[String], Option[String])
   type LookupEndpoint = Endpoint[LookupEndpointParams, Error, Result, Any]
 
-  def lookup(subject: Option[String], predicate: Option[String], obj: Option[String]): ZIO[EndpointEnv, Error, Result] =
-    ZIO.succeed(
-      Result(
-        Set(),
-        Seq(),
-        Seq()
-      ))
+  def convertSPOToResultTriplesIRIs(result: QuerySolution): ResultTriplesIRIs =
+    // Note that either ?s or ?o may be bnodes!
+    ResultTriplesIRIs(
+      result.get("s").toString,
+      result.get("p").toString,
+      result.get("o").toString,
+      result.get("g").toString
+    )
+
+  def lookup(subject: String, predicateOpt: Option[String], objOpt: Option[String]): ZIO[EndpointEnv, Throwable, Result] = for {
+    biolinkData <- biolinkData
+
+    subjectIRI = {
+      implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+
+      // TODO: throw an error here.
+      iriKeyDecoder(subject).getOrElse(IRI("http://identifiers.org/ncbigene/478"))
+    }
+
+    subjectTriplesQueryString = sparql"""SELECT DISTINCT ($subjectIRI AS ?s) ?p ?o ?g { GRAPH ?g { $subjectIRI ?p ?o }}"""
+    subjectTriples <- SPARQLQueryExecutor.runSelectQuery(subjectTriplesQueryString.toQuery)
+    _ = logger.debug(s"SPARQL query for subjectTriples: ${subjectTriplesQueryString.toQuery}")
+    _ = logger.debug(s"Results for subjectTriples: ${subjectTriples}")
+
+    objectTriplesQueryString = sparql"""SELECT DISTINCT ?s ?p ($subjectIRI AS ?o) ?g { GRAPH ?g { ?s ?p $subjectIRI }}"""
+    objectTriples <- SPARQLQueryExecutor.runSelectQuery(objectTriplesQueryString.toQuery)
+    _ = logger.debug(s"SPARQL query for objectTriples: ${objectTriplesQueryString.toQuery}")
+    _ = logger.debug(s"Results for objectTriples: ${objectTriples}")
+  } yield Result(
+    Set(),
+    subjectTriples.map(convertSPOToResultTriplesIRIs),
+    objectTriples.map(convertSPOToResultTriplesIRIs)
+  )
 
   /* HTTP4S INTERFACE */
   val lookupEndpointZ: URIO[Has[BiolinkData], LookupEndpoint] =
@@ -75,19 +106,18 @@ object LookupService {
       endpoint.get
         .in("lookup")
         .in(
-          query[Option[String]]("subject")
-            .default(None)
-            .example(Some("biolink:BiologicalProcessOrActivity"))
+          query[String]("subject")
+            .default("NCBIGene:478")
         )
         .in(
           query[Option[String]]("predicate")
             .default(None)
-            .example(Some("biolink:positively_regulates"))
+            .example(None)
         )
         .in(
           query[Option[String]]("object")
             .default(None)
-            .example(Some("GO:0004707"))
+            .example(None)
         )
         .out(jsonBody[Result])
         .errorOut(jsonBody[Error])
@@ -96,7 +126,7 @@ object LookupService {
 
   def lookupRouteR(lookupEndpoint: LookupEndpoint): HttpRoutes[RIO[EndpointEnv, *]] =
     ZHttp4sServerInterpreter[EndpointEnv]()
-      .from(lookupEndpoint) { case (s, p, o) => lookup(s, p, o) }
+      .from(lookupEndpoint) { case (s, p, o) => lookup(s, p, o).mapError(ex => Error("interp_error", ex.getMessage)) }
       .toRoutes
 
 }

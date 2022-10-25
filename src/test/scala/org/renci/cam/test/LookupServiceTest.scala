@@ -1,18 +1,20 @@
 package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
+import io.circe._
 import io.circe.generic.auto._
 import io.circe.generic.semiauto._
+import io.circe.syntax.EncoderOps
 import org.apache.jena.query.{Query, QuerySolution}
 import org.http4s.{EntityDecoder, Request, Uri}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam._
 import org.renci.cam.domain._
 import zio.cache.Cache
+import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{getConfig, ZConfig}
 import zio.interop.catz.concurrentInstance
-import zio.test._
+import zio.test.{assert, _}
 import zio.{Layer, ZIO, ZLayer}
 
 /** Test the `/lookup` endpoint (implemented by LookupService)
@@ -31,7 +33,11 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
           resultOrErrorJson <- ZIO.fromEither(io.circe.parser.parse(content))
 
           result <- ZIO.fromEither(resultOrErrorJson.as[LookupService.Result])
-        } yield assert(content)(Assertion.isNonEmptyString) && assert(result.predicates)(Assertion.isNonEmpty)
+          _ = logger.info(s"Results: ${result.asJson.deepDropNullValues.spaces2SortKeys}")
+        } yield assert(content)(Assertion.isNonEmptyString) &&
+          assert(result.subjectTriples)(Assertion.isNonEmpty) &&
+          assert(result.objectTriples)(Assertion.isNonEmpty) &&
+          assert(result.predicates)(Assertion.isEmpty)
       }
     }
 
