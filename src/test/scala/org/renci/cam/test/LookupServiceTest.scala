@@ -1,6 +1,8 @@
 package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
+import io.circe.generic.auto._
+import io.circe.generic.semiauto._
 import org.apache.jena.query.{Query, QuerySolution}
 import org.http4s.{EntityDecoder, Request, Uri}
 import org.renci.cam.HttpClient.HttpClient
@@ -11,7 +13,7 @@ import zio.config.typesafe.TypesafeConfig
 import zio.config.{getConfig, ZConfig}
 import zio.interop.catz.concurrentInstance
 import zio.test._
-import zio.{Layer, ZLayer}
+import zio.{Layer, ZIO, ZLayer}
 
 /** Test the `/lookup` endpoint (implemented by LookupService)
   */
@@ -22,13 +24,14 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
     suite("testDefault") {
       testM("Check the default lookup") {
         for {
-          appConfig <- getConfig[AppConfig]
-
           // Retrieve /docs/docs.yaml from the server.
           server <- Server.httpApp
           response <- server(Request(uri = Uri.unsafeFromString("/lookup")))
           content <- EntityDecoder.decodeText(response)
-        } yield assert(content)(Assertion.isNonEmptyString)
+          resultOrErrorJson <- ZIO.fromEither(io.circe.parser.parse(content))
+
+          result <- ZIO.fromEither(resultOrErrorJson.as[LookupService.Result])
+        } yield assert(content)(Assertion.isNonEmptyString) && assert(result.predicates)(Assertion.isNonEmpty)
       }
     }
 
