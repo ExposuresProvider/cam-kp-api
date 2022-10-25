@@ -35,7 +35,8 @@ object LookupService extends LazyLogging {
   )
 
   case class Result(
-    predicates: Set[BiolinkPredicate],
+    biolinkPredicates: Set[BiolinkPredicate],
+    snaks: Seq[Snak],
     subjectTriples: Seq[ResultTriplesIRIs],
     objectTriples: Seq[ResultTriplesIRIs]
   )
@@ -43,6 +44,18 @@ object LookupService extends LazyLogging {
   case class Error(
     code: String,
     message: String
+  )
+
+  case class LabeledIRI(
+    iri: String,
+    label: Option[String]
+  )
+
+  case class Snak(
+    p: LabeledIRI,
+    biolinkPredicate: Option[LabeledIRI],
+    obj: LabeledIRI,
+    g: String
   )
 
   /* CONTROLLER */
@@ -68,17 +81,67 @@ object LookupService extends LazyLogging {
       iriKeyDecoder(subject).getOrElse(IRI("http://identifiers.org/ncbigene/478"))
     }
 
+    // Get every triple that has the subject as a subject.
     subjectTriplesQueryString = sparql"""SELECT DISTINCT ($subjectIRI AS ?s) ?p ?o ?g { GRAPH ?g { $subjectIRI ?p ?o }}"""
     subjectTriples <- SPARQLQueryExecutor.runSelectQuery(subjectTriplesQueryString.toQuery)
     _ = logger.debug(s"SPARQL query for subjectTriples: ${subjectTriplesQueryString.toQuery}")
     _ = logger.debug(s"Results for subjectTriples: ${subjectTriples}")
 
+    // Get every triple that has the subject as an object.
     objectTriplesQueryString = sparql"""SELECT DISTINCT ?s ?p ($subjectIRI AS ?o) ?g { GRAPH ?g { ?s ?p $subjectIRI }}"""
     objectTriples <- SPARQLQueryExecutor.runSelectQuery(objectTriplesQueryString.toQuery)
     _ = logger.debug(s"SPARQL query for objectTriples: ${objectTriplesQueryString.toQuery}")
     _ = logger.debug(s"Results for objectTriples: ${objectTriples}")
+
+    // Get every biolink predicate that has the subject as a subject.
+    snaksQuery =
+      sparql"""PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
+               PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
+               
+               SELECT DISTINCT ?p ?pLabel ?obj ?objLabel ?g {
+                  ?s rdf:type $subjectIRI .
+                  ?o rdf:type ?obj .
+                  
+                  GRAPH ?g { 
+                    ?s ?p ?o
+                  }
+                  
+                  OPTIONAL {
+                    ?p rdfs:label ?pLabel
+                  }
+               }"""
+    snakResults <- SPARQLQueryExecutor.runSelectQuery(snaksQuery.toQuery)
+    preds = snakResults.map(_.getResource("p").getURI).map(IRI(_))
+    biolinkRelationMap <- QueryService.mapRelationsToLabelAndBiolink(preds.toSet)
+    snaks = snakResults.map { res =>
+      val predIRI = res.getResource("p").getURI
+      val pred = res.getLiteral("pLabel") match {
+        case null => LabeledIRI(predIRI, None)
+        case lit  => LabeledIRI(predIRI, Some(lit.getString))
+      }
+      val biolinkRes = biolinkRelationMap.get(IRI(predIRI))
+      val biolink = biolinkRes match {
+        case None                     => None
+        case Some((None, iri))        => Some(LabeledIRI(iri.value, None))
+        case Some((Some(label), iri)) => Some(LabeledIRI(iri.value, Some(label)))
+      }
+
+      val objIRI = res.getResource("obj").getURI
+      val obj = res.getLiteral("objLabel") match {
+        case null => LabeledIRI(objIRI, None)
+        case lit  => LabeledIRI(objIRI, Some(lit.getString))
+      }
+
+      Snak(
+        pred,
+        biolink,
+        obj,
+        res.getResource("g").getURI
+      )
+    }
   } yield Result(
     Set(),
+    snaks,
     subjectTriples.map(convertSPOToResultTriplesIRIs),
     objectTriples.map(convertSPOToResultTriplesIRIs)
   )
