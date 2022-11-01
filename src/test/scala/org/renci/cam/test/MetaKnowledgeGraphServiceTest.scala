@@ -14,6 +14,8 @@ import java.io.{File, FileWriter, PrintWriter}
 
 object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLogging {
 
+  val namedThing = BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing"))
+
   def writeNodesToTSV(tsvFile: File, nodesMap: Map[BiolinkClass, MetaNode]) =
     // Is there an output directory to write to?
     if (!tsvFile.getParentFile.exists()) ZIO.unit
@@ -84,32 +86,22 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLoggin
       for {
         edges <- MetaKnowledgeGraphService.getEdges
         _ <- writeEdgesToTSV(new File("src/test/resources/meta-edges.tsv"), edges)
-      } yield {
-        val ensureIncludedNamedThingRelatedToNamedThing: TestResult = {
+        ensureNamedThingRelatedToNamedThingMissing = {
           // In order to meet the requirements of
-          // https://github.com/NCATSTranslator/ReasonerAPI/commit/e2ed87aa4f02dac55dcbd8eac7e190b8c188fbdd,
-          // we need to confirm that implied ancestor relations are reported in the edge results as well.
-          // Since we can be fairly sure that there are no explicit NamedThing-related_to-NamedThing relations,
-          // if we see this in the edges, then we can be sure that we are reporting ancestor relations as well.
+          // https://github.com/NCATSTranslator/ReasonerAPI/commit/0359f99054133d348076ce0ff6686cbc28825a4a
+          // we need to confirm that implied ancestor relations are NOT reported in the edge results: only the most
+          // specific predicates should be included.
           val expectedEdge = MetaEdge(
-            BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing")),
+            namedThing,
             BiolinkPredicate("related_to", IRI("https://w3id.org/biolink/vocab/related_to")),
-            BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing")),
+            namedThing,
             attributes = None
           )
 
-          val notExpectedEdge = MetaEdge(
-            BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing")),
-            // Note typo in BiolinkPredicate's shorthand
-            BiolinkPredicate("relate_to", IRI("https://w3id.org/biolink/vocab/related_to")),
-            BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing")),
-            attributes = None
-          )
-
-          assert(edges)(Assertion.contains(expectedEdge)) && assert(edges)(Assertion.not(Assertion.contains(notExpectedEdge)))
+          assert(edges)(Assertion.not(Assertion.contains(expectedEdge)))
         }
-
-        assert(edges)(isNonEmpty) && ensureIncludedNamedThingRelatedToNamedThing
+      } yield {
+        assertTrue(edges.nonEmpty) && ensureNamedThingRelatedToNamedThingMissing
       }
     }
   )
@@ -119,7 +111,15 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLoggin
       for {
         nodes <- MetaKnowledgeGraphService.getNodes
         _ <- writeNodesToTSV(new File("src/test/resources/meta-nodes.tsv"), nodes)
-      } yield assert(nodes)(isNonEmpty)
+        ensureNamedThingMissing: TestResult = {
+          // In order to meet the requirements of
+          // https://github.com/NCATSTranslator/ReasonerAPI/commit/0359f99054133d348076ce0ff6686cbc28825a4a
+          // we need to confirm that implied ancestor relations are NOT reported in the node results: only the most
+          // specific nodes should be included. Since we shouldn't include any NamedThings, we can test to
+          // ensure that those are missing.
+          assert(nodes.keySet)(Assertion.not(Assertion.contains(namedThing)))
+        }
+      } yield assert(nodes)(isNonEmpty) && ensureNamedThingMissing
     }
   )
 
