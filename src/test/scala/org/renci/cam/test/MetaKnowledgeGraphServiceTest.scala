@@ -10,78 +10,72 @@ import zio.stream.ZStream
 import zio.test.Assertion.isNonEmpty
 import zio.test._
 
-import java.io.{File, FileWriter, PrintWriter}
+import java.io.{File, FileWriter, IOException, PrintWriter}
 
 object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLogging {
 
-  val namedThing = BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing"))
+  val namedThing: BiolinkClass = BiolinkClass("NamedThing", IRI("https://w3id.org/biolink/vocab/NamedThing"))
 
-  def writeNodesToTSV(tsvFile: File, nodesMap: Map[BiolinkClass, MetaNode]) =
+  def writeNodesToTSV(tsvFile: File, nodesMap: Map[BiolinkClass, MetaNode]): ZIO[Blocking, IOException, Unit] =
     // Is there an output directory to write to?
-    if (!tsvFile.getParentFile.exists()) ZIO.unit
-    else {
-      effectBlockingIO(new PrintWriter(new FileWriter(tsvFile)))
-        .bracketAuto { pw =>
-          // We sort by shorthands
-          val rows = ZStream
-            .fromIterable(nodesMap.keySet.map(blc => (blc.shorthand, blc)).toSeq.sortBy(_._1).map(_._2))
-            .map { biolinkClass =>
-              val metaNode = nodesMap(biolinkClass)
-              val attrs = metaNode.attributes.getOrElse(List())
+    effectBlockingIO(new PrintWriter(new FileWriter(tsvFile)))
+      .bracketAuto { pw =>
+        // We sort by shorthands
+        val rows = ZStream
+          .fromIterable(nodesMap.keySet.map(blc => (blc.shorthand, blc)).toSeq.sortBy(_._1).map(_._2))
+          .map { biolinkClass =>
+            val metaNode = nodesMap(biolinkClass)
+            val attrs = metaNode.attributes.getOrElse(List())
 
-              biolinkClass.shorthand + "\t" +
-                biolinkClass.iri.value + "\t" +
-                metaNode.id_prefixes.mkString("|") + "\t" +
+            biolinkClass.shorthand + "\t" +
+              biolinkClass.iri.value + "\t" +
+              metaNode.id_prefixes.mkString("|") + "\t" +
+              attrs.size + "\t" +
+              attrs.mkString("|").replace('\t', ' ')
+          }
+
+        val output = ZStream("biolinkclass\tbiolinkclass_iri\tid_prefixes\tattrs_size\tattrs") ++ rows
+        output.foreach { row =>
+          pw.println(row)
+          ZIO.unit
+        }
+      }.when(tsvFile.getParentFile.exists())
+
+  def writeEdgesToTSV(tsvFile: File, edgesList: List[MetaEdge]): ZIO[Blocking, IOException, Unit] =
+    effectBlockingIO(new PrintWriter(new FileWriter(tsvFile)))
+      .bracketAuto { pw =>
+        // We sort by predicate
+        val groupedByPreds = edgesList.groupBy(_.predicate)
+        val sortedPreds = groupedByPreds.keySet.toSeq.sortBy(_.shorthand)
+
+        val rows = ZStream
+          .fromIterable(sortedPreds)
+          .flatMap { predicate =>
+            ZStream.fromIterable(groupedByPreds(predicate)).map { edge =>
+              val attrs = edge.attributes.getOrElse(List())
+
+              // I'm going to assume that shorthands and IRIs don't have tabs in them.
+              edge.subject.shorthand + "\t" +
+                edge.subject.iri.value + "\t" +
+                edge.predicate.shorthand + "\t" +
+                edge.predicate.iri.value + "\t" +
+                edge.`object`.shorthand + "\t" +
+                edge.`object`.iri.value + "\t" +
                 attrs.size + "\t" +
                 attrs.mkString("|").replace('\t', ' ')
             }
-
-          val output = ZStream("biolinkclass\tbiolinkclass_iri\tid_prefixes\tattrs_size\tattrs") ++ rows
-          output.foreach { row =>
-            pw.println(row)
-            ZIO.unit
           }
+
+        val output =
+          ZStream("subject\tsubject_iri\tpredicate\tpredicate_iri\tobject\tobject_iri\tattributes_count\tattributes_list") ++ rows
+
+        output.foreach { row =>
+          pw.println(row)
+          ZIO.unit
         }
-    }
+      }.when(tsvFile.getParentFile.exists())
 
-  def writeEdgesToTSV(tsvFile: File, edgesList: List[MetaEdge]) =
-    if (!tsvFile.getParentFile.exists()) ZIO.unit
-    else {
-      effectBlockingIO(new PrintWriter(new FileWriter(tsvFile)))
-        .bracketAuto { pw =>
-          // We sort by predicate
-          val groupedByPreds = edgesList.groupBy(_.predicate)
-          val sortedPreds = groupedByPreds.keySet.toSeq.sortBy(_.shorthand)
-
-          val rows = ZStream
-            .fromIterable(sortedPreds)
-            .flatMap { predicate =>
-              ZStream.fromIterable(groupedByPreds(predicate)).map { edge =>
-                val attrs = edge.attributes.getOrElse(List())
-
-                // I'm going to assume that shorthands and IRIs don't have tabs in them.
-                edge.subject.shorthand + "\t" +
-                  edge.subject.iri.value + "\t" +
-                  edge.predicate.shorthand + "\t" +
-                  edge.predicate.iri.value + "\t" +
-                  edge.`object`.shorthand + "\t" +
-                  edge.`object`.iri.value + "\t" +
-                  attrs.size + "\t" +
-                  attrs.mkString("|").replace('\t', ' ')
-              }
-            }
-
-          val output =
-            ZStream("subject\tsubject_iri\tpredicate\tpredicate_iri\tobject\tobject_iri\tattributes_count\tattributes_list") ++ rows
-
-          output.foreach { row =>
-            pw.println(row)
-            ZIO.unit
-          }
-        }
-    }
-
-  val testGetEdges = suite("MetaKnowledgeGraphService.getEdges")(
+  val testGetEdges: Spec[Blocking, TestFailure[Throwable], TestSuccess] = suite("MetaKnowledgeGraphService.getEdges")(
     testM("test MetaKnowledgeGraphService.getEdges") {
       for {
         edges <- MetaKnowledgeGraphService.getEdges
@@ -106,7 +100,7 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLoggin
     }
   )
 
-  val testGetNodes = suite("MetaKnowledgeGraphService.getNodes")(
+  val testGetNodes: Spec[Blocking, TestFailure[Throwable], TestSuccess] = suite("MetaKnowledgeGraphService.getNodes")(
     testM("test MetaKnowledgeGraphService.getNodes") {
       for {
         nodes <- MetaKnowledgeGraphService.getNodes
@@ -123,6 +117,6 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLoggin
     }
   )
 
-  def spec = suite("MetaKnowledgeGraphService tests")(testGetEdges, testGetNodes)
+  def spec: Spec[_root_.zio.test.environment.TestEnvironment, TestFailure[Throwable], TestSuccess] = suite("MetaKnowledgeGraphService tests")(testGetEdges, testGetNodes)
 
 }
