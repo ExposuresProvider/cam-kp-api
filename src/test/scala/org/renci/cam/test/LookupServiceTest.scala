@@ -37,7 +37,7 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
         } yield assert(content)(Assertion.isNonEmptyString) &&
           assert(result.subjectTriples)(Assertion.isNonEmpty) &&
           assert(result.objectTriples)(Assertion.isNonEmpty) &&
-          assert(result.snaks)(Assertion.isNonEmpty) &&
+          assert(result.relations)(Assertion.isNonEmpty) &&
           assert(result.biolinkPredicates)(Assertion.isEmpty)
       }
     }
