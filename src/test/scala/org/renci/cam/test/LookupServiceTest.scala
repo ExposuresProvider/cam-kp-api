@@ -53,7 +53,7 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
   def testIdentifier(id: String): ZSpec[EndpointEnv, Throwable] =
     testM(s"Test whether we can retrieve results for identifier ${id}") {
       val idFilenameSafe = id.replaceAll("\\W", "_")
-      val outputFile = new File(s"./src/test/resources/lookup-service-results/${idFilenameSafe}.json")
+      val outputFile = new File(s"./src/test/resources/lookup-service-test/${idFilenameSafe}.json")
 
       for {
         server <- Server.httpApp
@@ -74,7 +74,7 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
         assert(fileWritten)(Assertion.isTrue)
     }
 
-  val lookupServiceIdFile = new File("./src/test/resources/lookup-service-ids.txt")
+  val lookupServiceIdFile = new File("./src/test/resources/lookup-service-test/ids.txt")
 
   val testIdentifiersInFile: Spec[EndpointEnv, TestFailure[Throwable], TestSuccess] =
     suiteM(s"Test identifiers in ${lookupServiceIdFile}") {
