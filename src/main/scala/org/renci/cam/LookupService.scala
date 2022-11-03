@@ -79,7 +79,7 @@ object LookupService extends LazyLogging {
     *   The graph that this relation comes from.
     */
   case class Relation(
-    subj: LabeledIRI,
+    subj: Set[LabeledIRI],
     preds: Set[LabeledIRI],
     biolinkPredicates: Map[String, Set[LabeledIRI]],
     obj: Set[LabeledIRI],
@@ -165,9 +165,12 @@ object LookupService extends LazyLogging {
         sparql"""PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
                PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
 
-               SELECT DISTINCT ?subjLabel ?p ?pLabel ?obj ?objLabel ?g {
-                  ?s rdf:type $subjectIRI .
-                  ?o rdf:type ?obj .
+               SELECT DISTINCT ?subj ?subjLabel ?p ?pLabel ?obj ?objLabel ?g {
+                  ?s <http://www.openrdf.org/schema/sesame#directType> ?subj .
+                  ?subj <http://www.w3.org/2000/01/rdf-schema#subClassOf> $subjectIRI .
+                  
+                  ?o <http://www.openrdf.org/schema/sesame#directType> ?obj .
+                  ?obj <http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://w3id.org/biolink/vocab/NamedThing> .
 
                   GRAPH ?g {
                     ?s ?p ?o
@@ -204,25 +207,29 @@ object LookupService extends LazyLogging {
         }
 
         val objLabeled = results
-          .map({ res =>
-            res.getLiteral("objLabel") match {
-              case null => LabeledIRI(obj, Set())
-              case lit  => LabeledIRI(obj, Set(lit.getString))
+          .map(
+            { res =>
+              res.getLiteral("objLabel") match {
+                case null => LabeledIRI(res.getResource("obj").getURI, Set())
+                case lit  => LabeledIRI(res.getResource("obj").getURI, Set(lit.getString))
+              }
             }
-          })
+          )
           .toSet
 
         val subjLabeled = results
-          .flatMap({ res =>
-            res.getLiteral("subjLabel") match {
-              case null => Set()
-              case lit  => Set(lit.getString)
+          .map(
+            { res =>
+              res.getLiteral("subjLabel") match {
+                case null => LabeledIRI(res.getResource("subj").getURI, Set())
+                case lit  => LabeledIRI(res.getResource("subj").getURI, Set(lit.getString))
+              }
             }
-          })
+          )
           .toSet
 
         Relation(
-          LabeledIRI(subjectIRI.value, subjLabeled),
+          subjLabeled,
           predResults.map(_._1).toSet,
           predResults.map(kv => (kv._1.iri, kv._2)).toMap,
           objLabeled,
