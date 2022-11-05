@@ -136,7 +136,7 @@ object LookupService extends LazyLogging {
   )
 
   /* CONTROLLER */
-  type LookupEndpointParams = (String, Option[String], Int)
+  type LookupEndpointParams = (String, Int, Option[String], String)
   type LookupEndpoint = Endpoint[LookupEndpointParams, Error, Result, Any]
 
   /* Helper methods */
@@ -155,16 +155,16 @@ object LookupService extends LazyLogging {
     *   A ZIO that returns a Relation, possibly containing multiple Relations in its objRelations field.
     */
   def getRelations(
-    subject: String,
+    qualifiedIds: Set[String],
     hopLimit: Int,
     subjectsPreviouslyQueried: Set[String]): ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Iterable[Relation]] =
     for {
       biolinkData <- biolinkData
 
-      subjectIRI = {
+      subjectIRIs = {
         implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
 
-        iriKeyDecoder(subject).get
+        qualifiedIds.map(qualifiedId => iriKeyDecoder(qualifiedId).get)
       }
 
       relationsQuery =
@@ -173,7 +173,8 @@ object LookupService extends LazyLogging {
 
                SELECT DISTINCT ?subj ?subjLabel ?p ?pLabel ?obj ?objLabel ?g {
                   ?s <http://www.openrdf.org/schema/sesame#directType> ?subj .
-                  ?subj <http://www.w3.org/2000/01/rdf-schema#subClassOf> $subjectIRI .
+                  ?subj <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?subjClass .
+                  VALUES ?subjClass { ${subjectIRIs.asValues} } .
                   
                   ?o <http://www.openrdf.org/schema/sesame#directType> ?obj .
                   ?obj <http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://w3id.org/biolink/vocab/NamedThing> .
@@ -182,7 +183,7 @@ object LookupService extends LazyLogging {
                     ?s ?p ?o
                   }
 
-                  OPTIONAL { $subjectIRI rdfs:label ?subjLabel }
+                  OPTIONAL { ?subjClass rdfs:label ?subjLabel }
                   OPTIONAL { ?p rdfs:label ?pLabel }
                   OPTIONAL { ?obj rdfs:label ?objLabel }
                }"""
@@ -260,14 +261,17 @@ object LookupService extends LazyLogging {
     information_content: Option[Float]
   )
 
-  def getQualifiedIdsFromNodeNorm(nodeNormURL: String, queryId: String) =
+  def getQualifiedIdsFromNodeNorm(queryId: String, nodeNormURL: String, conflation: String) =
     for {
       nnUri <- ZIO.fromEither(Uri.fromString(nodeNormURL))
       // TODO: convert this into ZIO, I guess.
       strResult = {
-        val s = Source.fromURL(nnUri.+?("curie", queryId).toString())
+        val uri = nnUri.+?("curie", queryId).+?("conflate", conflation).toString()
+        val s = Source.fromURL(uri)
         val result = s.mkString
         s.close()
+
+        logger.warn(s"Queried ${uri}, got result: ${result}.")
 
         result
       }
@@ -294,14 +298,14 @@ object LookupService extends LazyLogging {
     * @return
     *   A ZIO returning a Result to the user.
     */
-  def lookup(queryId: String, nodeNormURL: Option[String], hopLimit: Int): ZIO[EndpointEnv, Throwable, Result] = for {
+  def lookup(queryId: String, hopLimit: Int, nodeNormURL: Option[String], conflation: String): ZIO[EndpointEnv, Throwable, Result] = for {
     biolinkData <- biolinkData
 
     // Retrieve id_prefixes we support.
     defaultQualifiedIds: Set[LabeledIRI] = Set(LabeledIRI(queryId, Set()))
     qualifiedIds <- nodeNormURL match {
       case None      => ZIO.succeed(defaultQualifiedIds)
-      case Some(nnu) => getQualifiedIdsFromNodeNorm(nnu, queryId)
+      case Some(nnu) => getQualifiedIdsFromNodeNorm(queryId, nnu, conflation)
     }
 
     // Normalize subjectIRI using NodeNorm.
@@ -314,19 +318,19 @@ object LookupService extends LazyLogging {
     }
 
     // Get every triple that has the subject as a subject.
-    subjectTriplesQueryString = sparql"""SELECT DISTINCT ?s ?p ?o ?g { GRAPH ?g { ?s ?p ?o } . ?s VALUES ${subjectIRIs.asValues}}"""
+    subjectTriplesQueryString = sparql"""SELECT DISTINCT ?s ?p ?o ?g { GRAPH ?g { ?s ?p ?o } . VALUES ?s { ${subjectIRIs.asValues} }}"""
     subjectTriples <- SPARQLQueryExecutor.runSelectQuery(subjectTriplesQueryString.toQuery)
     _ = logger.debug(s"SPARQL query for subjectTriples: ${subjectTriplesQueryString.toQuery}")
     _ = logger.debug(s"Results for subjectTriples: ${subjectTriples}")
 
     // Get every triple that has the subject as an object.
-    objectTriplesQueryString = sparql"""SELECT DISTINCT ?s ?p ?o ?g { GRAPH ?g { ?s ?p ?o } . ?o VALUES ${subjectIRIs.asValues}}"""
+    objectTriplesQueryString = sparql"""SELECT DISTINCT ?s ?p ?o ?g { GRAPH ?g { ?s ?p ?o } . VALUES ?o { ${subjectIRIs.asValues} }}"""
     objectTriples <- SPARQLQueryExecutor.runSelectQuery(objectTriplesQueryString.toQuery)
     _ = logger.debug(s"SPARQL query for objectTriples: ${objectTriplesQueryString.toQuery}")
     _ = logger.debug(s"Results for objectTriples: ${objectTriples}")
 
     // Get every relation from this subject.
-    relations <- getRelations(queryId, hopLimit - 1, Set(queryId))
+    relations <- getRelations(qualifiedIds.map(_.iri), hopLimit - 1, Set(queryId))
   } yield Result(
     queryId,
     qualifiedIds,
@@ -363,16 +367,22 @@ object LookupService extends LazyLogging {
             .default("NCBIGene:478")
         )
         .in(
+          query[Int]("hopLimit")
+            .description("The number of hops to recurse in objRelations")
+            .default(10)
+            .example(10)
+        )
+        .in(
           query[Option[String]]("nodeNormURL")
             .description("The URL where the Translator NodeNormalizer can be found")
             .default(Some("https://nodenorm.transltr.io/1.3/get_normalized_nodes"))
             .example(Some("https://nodenorm.transltr.io/1.3/get_normalized_nodes"))
         )
         .in(
-          query[Int]("hopLimit")
-            .description("The number of hops to recurse in objRelations")
-            .default(10)
-            .example(10)
+          query[String]("conflate")
+            .description("Whether or not to use conflation (should be 'true' or 'false')")
+            .default("true")
+            .example("true")
         )
         .out(jsonBody[Result])
         .errorOut(jsonBody[Error])
@@ -381,8 +391,8 @@ object LookupService extends LazyLogging {
 
   def lookupRouteR(lookupEndpoint: LookupEndpoint): HttpRoutes[RIO[EndpointEnv, *]] =
     ZHttp4sServerInterpreter[EndpointEnv]()
-      .from(lookupEndpoint) { case (subj, nodeNormURL, hopLimit) =>
-        lookup(subj, nodeNormURL, hopLimit)
+      .from(lookupEndpoint) { case (subj, hopLimit, nodeNormURL, conflation) =>
+        lookup(subj, hopLimit, nodeNormURL, conflation)
           .mapError(ex => Error("interp_error", ex.getMessage))
       }
       .toRoutes
