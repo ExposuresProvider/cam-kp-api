@@ -1,18 +1,14 @@
 package org.renci.cam.test
 
 import com.typesafe.scalalogging.LazyLogging
-import io.circe._
 import io.circe.generic.auto._
-import io.circe.generic.semiauto._
 import io.circe.syntax.EncoderOps
 import org.apache.jena.query.{Query, QuerySolution}
 import org.http4s.Method.GET
-import org.http4s.client.dsl.io._
 import org.http4s.{EntityDecoder, Request, Uri}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.Server.EndpointEnv
 import org.renci.cam._
-import org.renci.cam.domain._
 import zio.blocking.effectBlockingIO
 import zio.cache.Cache
 import zio.config.ZConfig

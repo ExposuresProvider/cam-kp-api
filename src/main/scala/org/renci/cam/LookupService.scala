@@ -1,36 +1,26 @@
 package org.renci.cam
 
 import com.typesafe.scalalogging.LazyLogging
-import io.circe
-import sttp.tapir.generic.auto._
-import org.phenoscape.sparql.SPARQLInterpolation._
-import io.circe.generic.semiauto._
 import io.circe.generic.auto._
-import io.circe.{parser, Decoder, DecodingFailure, Encoder, Json, KeyDecoder, KeyEncoder}
+import io.circe._
 import org.apache.jena.query.QuerySolution
-import org.apache.jena.rdf.model.{RDFNode, Resource}
-import org.http4s.{HttpRoutes, InvalidBodyException, Uri}
+import org.http4s.{HttpRoutes, Uri}
+import org.phenoscape.sparql.SPARQLInterpolation._
 import org.renci.cam.Biolink.{biolinkData, BiolinkData}
-import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
+import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.Server.EndpointEnv
 import org.renci.cam.Server.LocalTapirJsonCirce.jsonBody
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, LogEntry, TRAPIMessage, TRAPINode, TRAPIQuery, TRAPIQueryEdge, TRAPIQueryGraph, TRAPIQueryNode, TRAPIResponse}
-import sttp.tapir.Endpoint
-import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
-import sttp.tapir.ztapir.{endpoint, query, stringBody}
-import zio.{Has, RIO, Task, UIO, URIO, ZIO}
-import org.http4s.implicits._
-import org.renci.cam.HttpClient.HttpClient
-import zio.blocking.{effectBlockingIO, Blocking}
-import zio.config.ZConfig
 import org.renci.cam.Util.IterableSPARQLOps
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
+import sttp.tapir.Endpoint
+import sttp.tapir.generic.auto._
+import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
+import sttp.tapir.ztapir.{endpoint, query}
+import zio.config.ZConfig
+import zio.{Has, RIO, URIO, ZIO}
 
-import java.io.IOException
-import java.net.URL
-import scala.collection.immutable
-import scala.io.{BufferedSource, Source}
+import scala.io.Source
 import scala.language.implicitConversions
-import scala.util.Try
 
 /** The LookupService can be used to look up concepts within CAM-KP-API without needing to use either high-level TRAPI queries or low-level
   * SPARQL queries. It is intended to provide a middle path to interrogate the database and to identify cases where the TRAPI interface
