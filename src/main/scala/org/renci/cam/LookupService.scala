@@ -1,14 +1,15 @@
 package org.renci.cam
 
 import com.typesafe.scalalogging.LazyLogging
+import io.circe
 import sttp.tapir.generic.auto._
 import org.phenoscape.sparql.SPARQLInterpolation._
 import io.circe.generic.semiauto._
 import io.circe.generic.auto._
-import io.circe.{Decoder, Encoder, Json, KeyDecoder, KeyEncoder}
+import io.circe.{parser, Decoder, DecodingFailure, Encoder, Json, KeyDecoder, KeyEncoder}
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.rdf.model.{RDFNode, Resource}
-import org.http4s.{HttpRoutes, InvalidBodyException}
+import org.http4s.{HttpRoutes, InvalidBodyException, Uri}
 import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Server.EndpointEnv
@@ -17,14 +18,19 @@ import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, LogEntry, TRAP
 import sttp.tapir.Endpoint
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.ztapir.{endpoint, query, stringBody}
-import zio.{Has, RIO, URIO, ZIO}
+import zio.{Has, RIO, Task, UIO, URIO, ZIO}
 import org.http4s.implicits._
 import org.renci.cam.HttpClient.HttpClient
+import zio.blocking.{effectBlockingIO, Blocking}
 import zio.config.ZConfig
+import org.renci.cam.Util.IterableSPARQLOps
 
+import java.io.IOException
 import java.net.URL
 import scala.collection.immutable
+import scala.io.{BufferedSource, Source}
 import scala.language.implicitConversions
+import scala.util.Try
 
 /** The LookupService can be used to look up concepts within CAM-KP-API without needing to use either high-level TRAPI queries or low-level
   * SPARQL queries. It is intended to provide a middle path to interrogate the database and to identify cases where the TRAPI interface
@@ -104,7 +110,7 @@ object LookupService extends LazyLogging {
     */
   case class Result(
     queryId: String,
-    normalizedId: LabeledIRI,
+    normalizedIds: Set[LabeledIRI],
     biolinkPredicates: Set[BiolinkPredicate],
     relations: Seq[Relation],
     subjectTriples: Seq[ResultTriple],
@@ -239,9 +245,47 @@ object LookupService extends LazyLogging {
       }
     } yield relations
 
+  /* Node Norm result structures */
+  case class NodeNormIdentifier(
+    identifier: String,
+    label: Option[String]
+  ) {
+    val asLabeledIRI = LabeledIRI(identifier, label.toSet)
+  }
+
+  case class NodeNormResponse(
+    id: Option[NodeNormIdentifier],
+    equivalent_identifiers: List[NodeNormIdentifier],
+    `type`: List[BiolinkClass],
+    information_content: Option[Float]
+  )
+
+  def getQualifiedIdsFromNodeNorm(nodeNormURL: String, queryId: String) =
+    for {
+      nnUri <- ZIO.fromEither(Uri.fromString(nodeNormURL))
+      // TODO: convert this into ZIO, I guess.
+      strResult = {
+        val s = Source.fromURL(nnUri.+?("curie", queryId).toString())
+        val result = s.mkString
+        s.close()
+
+        result
+      }
+      jsonResult <- ZIO.fromEither(parser.parse(strResult))
+      qualifiedIds = jsonResult
+        .as[NodeNormResponse]
+        .fold(
+          cause => {
+            logger.warn(s"Could not parse server response as a NodeNormResponse (cause: ${cause}): ${strResult}.")
+            Set(LabeledIRI(queryId, Set()))
+          },
+          nnr => nnr.equivalent_identifiers.map(_.asLabeledIRI).toSet
+        )
+    } yield qualifiedIds
+
   /** Lookup a particular subject.
     *
-    * @param subject
+    * @param queryId
     *   The IRI of a subject to investigate.
     * @param nodeNormURL
     *   The URL of NodeNorm to call for normalization (should end with '/get_normalized_nodes'), or None if no normalization is required.
@@ -250,32 +294,42 @@ object LookupService extends LazyLogging {
     * @return
     *   A ZIO returning a Result to the user.
     */
-  def lookup(subject: String, nodeNormURL: Option[String], hopLimit: Int): ZIO[EndpointEnv, Throwable, Result] = for {
+  def lookup(queryId: String, nodeNormURL: Option[String], hopLimit: Int): ZIO[EndpointEnv, Throwable, Result] = for {
     biolinkData <- biolinkData
 
-    subjectIRI = {
+    // Retrieve id_prefixes we support.
+    defaultQualifiedIds: Set[LabeledIRI] = Set(LabeledIRI(queryId, Set()))
+    qualifiedIds <- nodeNormURL match {
+      case None      => ZIO.succeed(defaultQualifiedIds)
+      case Some(nnu) => getQualifiedIdsFromNodeNorm(nnu, queryId)
+    }
+
+    // Normalize subjectIRI using NodeNorm.
+    subjectIRIs = {
       implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
 
-      iriKeyDecoder(subject).get
+      logger.debug(s"Normalized identifier to ${qualifiedIds} using ${nodeNormURL}")
+
+      qualifiedIds map { qualifiedId => iriKeyDecoder(qualifiedId.iri).get }
     }
 
     // Get every triple that has the subject as a subject.
-    subjectTriplesQueryString = sparql"""SELECT DISTINCT ($subjectIRI AS ?s) ?p ?o ?g { GRAPH ?g { $subjectIRI ?p ?o }}"""
+    subjectTriplesQueryString = sparql"""SELECT DISTINCT ?s ?p ?o ?g { GRAPH ?g { ?s ?p ?o } . ?s VALUES ${subjectIRIs.asValues}}"""
     subjectTriples <- SPARQLQueryExecutor.runSelectQuery(subjectTriplesQueryString.toQuery)
     _ = logger.debug(s"SPARQL query for subjectTriples: ${subjectTriplesQueryString.toQuery}")
     _ = logger.debug(s"Results for subjectTriples: ${subjectTriples}")
 
     // Get every triple that has the subject as an object.
-    objectTriplesQueryString = sparql"""SELECT DISTINCT ?s ?p ($subjectIRI AS ?o) ?g { GRAPH ?g { ?s ?p $subjectIRI }}"""
+    objectTriplesQueryString = sparql"""SELECT DISTINCT ?s ?p ?o ?g { GRAPH ?g { ?s ?p ?o } . ?o VALUES ${subjectIRIs.asValues}}"""
     objectTriples <- SPARQLQueryExecutor.runSelectQuery(objectTriplesQueryString.toQuery)
     _ = logger.debug(s"SPARQL query for objectTriples: ${objectTriplesQueryString.toQuery}")
     _ = logger.debug(s"Results for objectTriples: ${objectTriples}")
 
     // Get every relation from this subject.
-    relations <- getRelations(subject, hopLimit - 1, Set(subject))
+    relations <- getRelations(queryId, hopLimit - 1, Set(queryId))
   } yield Result(
-    subject,
-    LabeledIRI(subject, Set()),
+    queryId,
+    qualifiedIds,
     Set(),
     relations.toSeq,
     subjectTriples.map(fromQuerySolution),
