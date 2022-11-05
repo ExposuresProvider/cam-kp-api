@@ -111,7 +111,7 @@ object LookupService extends LazyLogging {
   case class Result(
     queryId: String,
     normalizedIds: Set[LabeledIRI],
-    biolinkPredicates: Set[BiolinkPredicate],
+    biolinkPredicates: Map[String, Set[LabeledIRI]],
     relations: Seq[Relation],
     subjectTriples: Seq[ResultTriple],
     objectTriples: Seq[ResultTriple]
@@ -331,10 +331,13 @@ object LookupService extends LazyLogging {
 
     // Get every relation from this subject.
     relations <- getRelations(qualifiedIds.map(_.iri), hopLimit - 1, Set(queryId))
+    biolinkPredicates: Map[String, Set[LabeledIRI]] = relations.flatMap(_.biolinkPredicates).foldLeft(Map[String, Set[LabeledIRI]]()) {
+      case (map, entry) => map.updated(entry._1, map.getOrElse(entry._1, Set()) ++ entry._2)
+    }
   } yield Result(
     queryId,
     qualifiedIds,
-    Set(),
+    biolinkPredicates,
     relations.toSeq,
     subjectTriples.map(fromQuerySolution),
     objectTriples.map(fromQuerySolution)
