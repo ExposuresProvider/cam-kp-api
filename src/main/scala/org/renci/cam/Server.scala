@@ -155,7 +155,7 @@ object Server extends App with LazyLogging {
       lookupRoute = lookupRouteR(lookupEndpoint)
       routes = queryRoute <+> metaKnowledgeGraphRoute <+> lookupRoute
       openAPI: String = OpenAPIDocsInterpreter()
-        .toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint), "CAM-KP API", appConfig.version)
+        .toOpenAPI(List(queryEndpoint, metaKnowledgeGraphEndpoint, lookupEndpoint), "CAM-KP API", appConfig.version)
         .copy(
           info = Info(
             "CAM-KP API",
