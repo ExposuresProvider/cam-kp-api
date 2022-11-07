@@ -48,11 +48,24 @@ object LookupService extends LazyLogging {
     g: String
   )
 
+  /** A helper method for converting a QuerySolution with ?s, ?p, ?o, ?g into a ResultTriple. */
   def fromQuerySolution(result: QuerySolution): ResultTriple = ResultTriple(
     result.get("s").toString,
     result.get("p").toString,
     result.get("o").toString,
     result.get("g").toString
+  )
+
+  /** A labeled IRI is an IRI with an optional label.
+    *
+    * @param iri
+    *   An IRI.
+    * @param label
+    *   An optional label for this IRI.
+    */
+  case class LabeledIRI(
+    iri: String,
+    label: Set[String]
   )
 
   /** This case class represents a relation between the subject object and other objects in CAM-KP.
@@ -64,13 +77,13 @@ object LookupService extends LazyLogging {
     * @param preds
     *   The predicates connecting this subject to this object.
     * @param biolinkPredicates
-    *   The predicates in `pred` translated into Biolink predicates. The predicate IRIs are used as the keys.
+    *   The predicates in `preds` translated into Biolink predicates. The predicate IRIs are used as the keys.
     * @param obj
     *   The object of this relation.
     * @param objRelations
     *   The relations connected to the object of this relation. CAM-KP is designed so that this list is not necessary, since `subj` should
     *   be connected to every other entity in its graph (even if only by a `biolink:related_to` predicate); however, it is intended to test
-    *   whether this is in fact the case.
+    *   whether this is in fact the case. TODO: not yet implemented.
     * @param g
     *   The graph that this relation comes from.
     */
@@ -87,8 +100,9 @@ object LookupService extends LazyLogging {
     *
     * @param queryId
     *   The identifier queried with lookup.
-    * @param normalizedId
-    *   The identifier actually used for the query. This will be identical to queryId if normalization was not requested or
+    * @param normalizedIds
+    *   The list of normalized identifiers for the queryId with their labels. If the node could not be normalized, this will be a single
+    *   entry, which consists of queryId without any labels. All of these identifiers will be used in the query.
     * @param biolinkPredicates
     *   All predicates connected to the identifier being looked up.
     * @param relations
@@ -113,18 +127,6 @@ object LookupService extends LazyLogging {
     message: String
   )
 
-  /** A labeled IRI is an IRI with an optional label.
-    *
-    * @param iri
-    *   An IRI.
-    * @param label
-    *   An optional label for this IRI.
-    */
-  case class LabeledIRI(
-    iri: String,
-    label: Set[String]
-  )
-
   /* CONTROLLER */
   type LookupEndpointParams = (String, Int, Option[String], String)
   type LookupEndpoint = Endpoint[LookupEndpointParams, Error, Result, Any]
@@ -133,21 +135,13 @@ object LookupService extends LazyLogging {
 
   /** Returns a list of Relations for a particular subject.
     *
-    * This function is intended to be called recursively: it will call itself to get all the relations for every subject of a relation.
+    * TODO: in a future version, this will call itself recursively so we can fill in objRelations.
     *
-    * @param subject
-    *   The subject IRI to find relations for.
-    * @param hopLimit
-    *   The number of hops to find relations for. If equal to zero, this will return an empty Seq.
-    * @param subjectsPreviouslyQueried
-    *   Subject IRIs that have already been queried. We will not recurse into these subject IRIs.
-    * @return
-    *   A ZIO that returns a Relation, possibly containing multiple Relations in its objRelations field.
+    * @param qualifiedIds
+    *   The subject IRIs to find relations for.
     */
   def getRelations(
-    qualifiedIds: Set[String],
-    hopLimit: Int,
-    subjectsPreviouslyQueried: Set[String]): ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Iterable[Relation]] =
+    qualifiedIds: Set[String]): ZIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Iterable[Relation]] =
     for {
       biolinkData <- biolinkData
 
@@ -236,7 +230,11 @@ object LookupService extends LazyLogging {
       }
     } yield relations
 
+  /* Node Norm structures and functions */
+
   /* Node Norm result structures */
+
+  /** Node Norm identifier */
   case class NodeNormIdentifier(
     identifier: String,
     label: Option[String]
@@ -244,6 +242,7 @@ object LookupService extends LazyLogging {
     val asLabeledIRI = LabeledIRI(identifier, label.toSet)
   }
 
+  /** Node Norm response */
   case class NodeNormResponse(
     id: Option[NodeNormIdentifier],
     equivalent_identifiers: List[NodeNormIdentifier],
@@ -251,15 +250,24 @@ object LookupService extends LazyLogging {
     information_content: Option[Float]
   )
 
+  /** Retrieve a list of all equivalent identifiers for a queryId.
+    *
+    * @param queryId
+    *   The identifier being queried.
+    * @param nodeNormURL
+    *   The NodeNorm URL (ending with `/get_normalized_nodes`) to query.
+    * @param conflate
+    *   What to set in the `conflate` param to NodeNorm. Currently, may be `true` or `false`.
+    */
   def getQualifiedIdsFromNodeNorm(queryId: String,
                                   nodeNormURL: String,
-                                  conflation: String): ZIO[Has[BiolinkData], Exception, List[LabeledIRI]] =
+                                  conflate: String): ZIO[Has[BiolinkData], Exception, List[LabeledIRI]] =
     for {
       biolinkData <- biolinkData
       nnUri <- ZIO.fromEither(Uri.fromString(nodeNormURL))
-      // TODO: convert this into ZIO, I guess.
+      // TODO: we should replace this with effectBlockingIO()
       strResult = {
-        val uri = nnUri.+?("curie", queryId).+?("conflate", conflation).toString()
+        val uri = nnUri.+?("curie", queryId).+?("conflate", conflate).toString()
         val s = Source.fromURL(uri)
         val result = s.mkString
         s.close()
@@ -270,6 +278,7 @@ object LookupService extends LazyLogging {
       }
       jsonResult <- ZIO.fromEither(parser.parse(strResult))
       qualifiedIds = (jsonResult \\ queryId) flatMap { res =>
+        // Decode IRIs from NodeNorm into Biolink entities and IRIs.
         implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
         implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
 
@@ -300,15 +309,15 @@ object LookupService extends LazyLogging {
     * @param queryId
     *   The IRI of a subject to investigate.
     * @param nodeNormURL
-    *   The URL of NodeNorm to call for normalization (should end with '/get_normalized_nodes'), or None if no normalization is required.
+    *   The URL of NodeNorm to call for normalization (should end with '/get_normalized_nodes'), or None if we should not normalize.
     * @param hopLimit
-    *   The maximum number of hops to follow.
+    *   The maximum number of hops to follow. (TODO: implement this)
     * @return
     *   A ZIO returning a Result to the user.
     */
   def lookup(queryId: String, hopLimit: Int, nodeNormURL: Option[String], conflation: String): ZIO[EndpointEnv, Throwable, Result] = for {
     biolinkData <- biolinkData
-    _ = logger.info(s"lookup(${queryId}, ${hopLimit}, ${nodeNormURL}, ${conflation})")
+    _ = logger.debug(s"lookup(${queryId}, ${hopLimit}, ${nodeNormURL}, ${conflation})")
 
     // Retrieve id_prefixes we support.
     defaultQualifiedIds: Set[LabeledIRI] = Set(LabeledIRI(queryId, Set()))
@@ -339,7 +348,7 @@ object LookupService extends LazyLogging {
     _ = logger.debug(s"Results for objectTriples: ${objectTriples}")
 
     // Get every relation from this subject.
-    relations <- getRelations(qualifiedIds.map(_.iri).toSet, hopLimit - 1, Set(queryId))
+    relations <- getRelations(qualifiedIds.map(_.iri).toSet)
     biolinkPredicates: Map[String, Set[LabeledIRI]] = relations.flatMap(_.biolinkPredicates).foldLeft(Map[String, Set[LabeledIRI]]()) {
       case (map, entry) => map.updated(entry._1, map.getOrElse(entry._1, Set()) ++ entry._2)
     }
