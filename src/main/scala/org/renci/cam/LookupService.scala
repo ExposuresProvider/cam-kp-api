@@ -16,6 +16,7 @@ import sttp.tapir.Endpoint
 import sttp.tapir.generic.auto._
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.ztapir.{endpoint, query}
+import zio.blocking.{effectBlockingIO, Blocking}
 import zio.config.ZConfig
 import zio.{Has, RIO, URIO, ZIO}
 
@@ -261,20 +262,17 @@ object LookupService extends LazyLogging {
     */
   def getQualifiedIdsFromNodeNorm(queryId: String,
                                   nodeNormURL: String,
-                                  conflate: String): ZIO[Has[BiolinkData], Exception, List[LabeledIRI]] =
+                                  conflate: String): ZIO[Blocking with Has[BiolinkData], Exception, List[LabeledIRI]] =
     for {
       biolinkData <- biolinkData
       nnUri <- ZIO.fromEither(Uri.fromString(nodeNormURL))
-      // TODO: we should replace this with effectBlockingIO()
-      strResult = {
-        val uri = nnUri.+?("curie", queryId).+?("conflate", conflate).toString()
-        val s = Source.fromURL(uri)
-        val result = s.mkString
-        s.close()
+      uri = nnUri.+?("curie", queryId).+?("conflate", conflate).toString()
+      strResult <- effectBlockingIO(Source.fromURL(uri)).bracketAuto { src =>
+        val lines = src.getLines().mkString
 
-        logger.info(s"Queried ${uri}, got result: ${result}.")
+        logger.info(s"Queried ${uri}, got result: ${lines}.")
 
-        result
+        ZIO.succeed(lines)
       }
       jsonResult <- ZIO.fromEither(parser.parse(strResult))
       qualifiedIds = (jsonResult \\ queryId) flatMap { res =>
