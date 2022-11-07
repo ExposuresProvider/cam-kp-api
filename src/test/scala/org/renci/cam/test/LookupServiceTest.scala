@@ -16,10 +16,9 @@ import zio.config.typesafe.TypesafeConfig
 import zio.interop.catz.concurrentInstance
 import zio.stream.ZStream
 import zio.test.{assert, _}
-import zio.{Layer, Task, ZIO, ZLayer}
+import zio.{Layer, Task, ZIO, ZLayer, ZManaged}
 
 import java.io.{File, FileWriter, PrintWriter}
-import scala.io.Source
 
 /** Test the `/lookup` endpoint (implemented by LookupService)
   */
@@ -107,13 +106,13 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
   val testIdentifiersInFile: Spec[EndpointEnv, TestFailure[Throwable], TestSuccess] =
     suiteM(s"Test identifiers in ${lookupServiceIdFile}") {
       ZStream
-        .fromIteratorEffect(Task({
-          val src = Source.fromFile(lookupServiceIdFile)
-          val lines = src.getLines()
-          src.close()
-
-          lines
-        }))
+        .fromIteratorManaged(
+          ZManaged
+            .fromAutoCloseable(
+              Task(scala.io.Source.fromFile("file.txt"))
+            )
+            .map(_.getLines())
+        )
         .map(testIdentifier)
         .runCollect
         .mapError(TestFailure.fail)
