@@ -109,7 +109,7 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
         .fromIteratorManaged(
           ZManaged
             .fromAutoCloseable(
-              Task(scala.io.Source.fromFile("file.txt"))
+              Task(scala.io.Source.fromFile(lookupServiceIdFile))
             )
             .map(_.getLines())
         )
