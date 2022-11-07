@@ -25,7 +25,8 @@ import scala.io.Source
   */
 object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
 
-  /** Node normalization endpoint. Defaults to the production NodeNorm.
+  /** Node normalization endpoint. Defaults to the production NodeNorm, but can be overriden by setting the NODE_NORM_URL environmental
+    * variable.
     */
   val NODE_NORM_URL = sys.env.get("NODE_NORM_URL") match {
     case Some(url) => url
@@ -53,6 +54,17 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
       }
     }
 
+  /** Generate a test for a single identifier. We test whether the identifier returns a properly formed response, with subject and object
+    * triples. The lookup response is written to a file in the src/test/resources/lookup-service-test directory.
+    *
+    * Eventually, we would like to ensure that these identifiers return predicates and biolinkPredicates, but this isn't necessary yet, as
+    * this is not yet true for all identifiers.
+    *
+    * @param id
+    *   The identifier to test.
+    * @return
+    *   A ZSpec that will test the single identifier being queried.
+    */
   def testIdentifier(id: String): ZSpec[EndpointEnv, Throwable] =
     testM(s"Test whether we can retrieve results for identifier ${id}") {
       val idFilenameSafe = id.replaceAll("\\W", "_")
@@ -86,17 +98,28 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
         assert(fileWritten)(Assertion.isTrue)
     }
 
+  /* Generate tests for all the identifiers in the lookupServiceIdFile. */
+
+  /** A text file containing one identifier per line. */
   val lookupServiceIdFile = new File("./src/test/resources/lookup-service-test/ids.txt")
 
+  /** A spec made up of tests for every identifier in the lookupServiceIdFile. */
   val testIdentifiersInFile: Spec[EndpointEnv, TestFailure[Throwable], TestSuccess] =
     suiteM(s"Test identifiers in ${lookupServiceIdFile}") {
-      // noinspection SourceNotClosed
       ZStream
-        .fromIteratorEffect(Task(Source.fromFile(lookupServiceIdFile).getLines()))
+        .fromIteratorEffect(Task({
+          val src = Source.fromFile(lookupServiceIdFile)
+          val lines = src.getLines()
+          src.close()
+
+          lines
+        }))
         .map(testIdentifier)
         .runCollect
         .mapError(TestFailure.fail)
     }
+
+  /* Test configuration */
 
   val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
 
