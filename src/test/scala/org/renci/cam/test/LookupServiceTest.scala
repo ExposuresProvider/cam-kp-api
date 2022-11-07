@@ -25,12 +25,19 @@ import scala.io.Source
   */
 object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
 
+  /** Node normalization endpoint. Defaults to the production NodeNorm.
+    */
+  val NODE_NORM_URL = sys.env.get("NODE_NORM_URL") match {
+    case Some(url) => url
+    case None      => "https://nodenorm.transltr.io/1.3/get_normalized_nodes"
+  }
+
   /** We should be able to get some default results just by hitting the `/lookup` endpoint. */
   val testDefault =
     suite("testDefault") {
       testM("Check the default lookup") {
         for {
-          // Retrieve /docs/docs.yaml from the server.
+          // Retrieve /lookup from the server, without a NODE_NORM_URL or any other
           server <- Server.httpApp
           response <- server(Request(uri = Uri.unsafeFromString("/lookup")))
           content <- EntityDecoder.decodeText(response)
@@ -53,7 +60,12 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
 
       for {
         server <- Server.httpApp
-        response <- server(Request(GET, Uri.unsafeFromString("/lookup").withQueryParam("subject", id)))
+        uri = Uri
+          .unsafeFromString("/lookup")
+          .withQueryParam("subject", id)
+          .withQueryParam("nodeNormURL", NODE_NORM_URL)
+        _ = logger.info(s"GET ${uri}")
+        response <- server(Request(GET, uri))
         content <- EntityDecoder.decodeText(response)
         resultOrErrorJson <- ZIO.fromEither(io.circe.parser.parse(content))
         result <- ZIO.fromEither(resultOrErrorJson.as[LookupService.Result])

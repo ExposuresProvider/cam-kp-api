@@ -100,7 +100,7 @@ object LookupService extends LazyLogging {
     */
   case class Result(
     queryId: String,
-    normalizedIds: Set[LabeledIRI],
+    normalizedIds: List[LabeledIRI],
     biolinkPredicates: Map[String, Set[LabeledIRI]],
     relations: Seq[Relation],
     subjectTriples: Seq[ResultTriple],
@@ -251,8 +251,11 @@ object LookupService extends LazyLogging {
     information_content: Option[Float]
   )
 
-  def getQualifiedIdsFromNodeNorm(queryId: String, nodeNormURL: String, conflation: String) =
+  def getQualifiedIdsFromNodeNorm(queryId: String,
+                                  nodeNormURL: String,
+                                  conflation: String): ZIO[Has[BiolinkData], Exception, List[LabeledIRI]] =
     for {
+      biolinkData <- biolinkData
       nnUri <- ZIO.fromEither(Uri.fromString(nodeNormURL))
       // TODO: convert this into ZIO, I guess.
       strResult = {
@@ -261,20 +264,35 @@ object LookupService extends LazyLogging {
         val result = s.mkString
         s.close()
 
-        logger.warn(s"Queried ${uri}, got result: ${result}.")
+        logger.info(s"Queried ${uri}, got result: ${result}.")
 
         result
       }
       jsonResult <- ZIO.fromEither(parser.parse(strResult))
-      qualifiedIds = jsonResult
-        .as[NodeNormResponse]
-        .fold(
-          cause => {
-            logger.warn(s"Could not parse server response as a NodeNormResponse (cause: ${cause}): ${strResult}.")
-            Set(LabeledIRI(queryId, Set()))
-          },
-          nnr => nnr.equivalent_identifiers.map(_.asLabeledIRI).toSet
-        )
+      qualifiedIds = (jsonResult \\ queryId) flatMap { res =>
+        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
+        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
+
+        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
+        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+
+        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+        implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
+
+        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+        implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
+          Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
+
+        res
+          .as[NodeNormResponse]
+          .fold(
+            cause => {
+              logger.warn(s"Could not parse server response as a NodeNormResponse (cause: ${cause}): ${strResult}.")
+              Set(LabeledIRI(queryId, Set()))
+            },
+            nnr => nnr.equivalent_identifiers.map(_.asLabeledIRI)
+          )
+      }
     } yield qualifiedIds
 
   /** Lookup a particular subject.
@@ -290,6 +308,7 @@ object LookupService extends LazyLogging {
     */
   def lookup(queryId: String, hopLimit: Int, nodeNormURL: Option[String], conflation: String): ZIO[EndpointEnv, Throwable, Result] = for {
     biolinkData <- biolinkData
+    _ = logger.info(s"lookup(${queryId}, ${hopLimit}, ${nodeNormURL}, ${conflation})")
 
     // Retrieve id_prefixes we support.
     defaultQualifiedIds: Set[LabeledIRI] = Set(LabeledIRI(queryId, Set()))
@@ -320,13 +339,13 @@ object LookupService extends LazyLogging {
     _ = logger.debug(s"Results for objectTriples: ${objectTriples}")
 
     // Get every relation from this subject.
-    relations <- getRelations(qualifiedIds.map(_.iri), hopLimit - 1, Set(queryId))
+    relations <- getRelations(qualifiedIds.map(_.iri).toSet, hopLimit - 1, Set(queryId))
     biolinkPredicates: Map[String, Set[LabeledIRI]] = relations.flatMap(_.biolinkPredicates).foldLeft(Map[String, Set[LabeledIRI]]()) {
       case (map, entry) => map.updated(entry._1, map.getOrElse(entry._1, Set()) ++ entry._2)
     }
   } yield Result(
     queryId,
-    qualifiedIds,
+    qualifiedIds.toList,
     biolinkPredicates,
     relations.toSeq,
     subjectTriples.map(fromQuerySolution),
@@ -367,8 +386,9 @@ object LookupService extends LazyLogging {
         )
         .in(
           query[Option[String]]("nodeNormURL")
-            .description("The URL where the Translator NodeNormalizer can be found")
-            .default(Some("https://nodenorm.transltr.io/1.3/get_normalized_nodes"))
+            .description(
+              "The URL where the Translator NodeNormalizer can be found -- if blank or missing, no node normalization will occur")
+            .default(None)
             .example(Some("https://nodenorm.transltr.io/1.3/get_normalized_nodes"))
         )
         .in(
