@@ -31,14 +31,7 @@ object SerializationTest extends DefaultRunnableSpec with LazyLogging {
       for {
         biolinkData <- Biolink.biolinkData
       } yield {
-
-        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
-
-        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
+        import biolinkData.implicits._
 //        implicit val blClassKeyEncoder: KeyEncoder[BiolinkClass] = (blClass: BiolinkClass) => s"biolink:${blClass.shorthand}"
 //        implicit val blClassKeyDecoder: Decoder[TRAPIQueryNode] = new Decoder[TRAPIQueryNode] {
 //          final def apply(c: HCursor): Decoder.Result[TRAPIQueryNode] =

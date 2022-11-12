@@ -30,20 +30,7 @@ object MetaKnowledgeGraphServiceTest extends DefaultRunnableSpec with LazyLoggin
           .withHeaders(Accept(MediaType.application.json))
         response <- httpClient.expect[String](request)
       } yield {
-        implicit val iriKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder
-        implicit val iriKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
-
-//        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-//        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-
-//        logger.info("biolinkData.classes: {}", biolinkData.classes)
-        implicit val blClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-//        implicit val blClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-
-//        logger.info("biolinkData.predicates: {}", biolinkData.predicates)
-        implicit val biolinkPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-//        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
-
+        import biolinkData.implicits._
         val parsed = parser.parse(response).toOption.get
 //        logger.info("parsed: {}", parsed)
         val mkg = parsed.as[MetaKnowledgeGraph]
