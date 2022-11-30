@@ -431,8 +431,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
                                                                                 relationsToLabelAndBiolinkPredicate)
           _ = logger.warn(s"querySolutionsToEdgeBindings: $querySolutionsToEdgeBindings (length: ${querySolutionsToEdgeBindings.size})")
           trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
-            QueryService.getTRAPINodeBindings(queryGraph, querySolution) zip
-              Task.effect(querySolutionsToEdgeBindings(querySolution))
+            QueryService.getTRAPINodeBindings(queryGraph, querySolution).zip(Task.effect(querySolutionsToEdgeBindings(querySolution)))
           }
           results = trapiBindings.map { case (resultNodeBindings, resultEdgeBindings) =>
             TRAPIResult(resultNodeBindings, resultEdgeBindings)

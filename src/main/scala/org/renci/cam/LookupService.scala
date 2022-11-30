@@ -181,8 +181,8 @@ object LookupService extends LazyLogging {
       // We want to group these by object, so we don't return a gazillion predicates for each result.
       objectMap = relationsResults.groupBy(_.getResource("obj").getURI)
 
-      relations = objectMap map { case (obj, results) =>
-        val predResults = results map { res =>
+      relations = objectMap.map { case (obj, results) =>
+        val predResults = results.map { res =>
           val predIRI = res.getResource("p").getURI
 
           val pred = res.getLiteral("pLabel") match {
@@ -277,7 +277,7 @@ object LookupService extends LazyLogging {
         ZIO.succeed(lines)
       }
       jsonResult <- ZIO.fromEither(parser.parse(strResult))
-      qualifiedIds = (jsonResult \\ queryId) flatMap { res =>
+      qualifiedIds = (jsonResult \\ queryId).flatMap { res =>
         // Decode IRIs from NodeNorm into Biolink entities and IRIs.
         implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
         implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
@@ -332,7 +332,7 @@ object LookupService extends LazyLogging {
 
       logger.debug(s"Normalized identifier to ${qualifiedIds} using ${nodeNormURL}")
 
-      qualifiedIds map { qualifiedId => iriKeyDecoder(qualifiedId.iri).get }
+      qualifiedIds.map(qualifiedId => iriKeyDecoder(qualifiedId.iri).get)
     }
 
     // Get every triple that has the subject as a subject.

@@ -403,7 +403,7 @@ object QueryService extends LazyLogging {
       _ = logger.warn(
         s"querySolutionsToEdgeBindings: $querySolutionsToEdgeBindings (length: ${querySolutionsToEdgeBindings.size}, limit: $limit)")
       trapiBindings <- ZIO.foreach(initialQuerySolutions) { querySolution =>
-        getTRAPINodeBindings(queryGraph, querySolution) zip Task.effect(querySolutionsToEdgeBindings(querySolution))
+        getTRAPINodeBindings(queryGraph, querySolution).zip(Task.effect(querySolutionsToEdgeBindings(querySolution)))
       }
       _ = logger.warn(s"trapiBindings: ${trapiBindings.length} (limit: $limit)")
       _ <- ZIO.when(includeExtraEdges)(
