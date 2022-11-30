@@ -154,20 +154,20 @@ object LookupService extends LazyLogging {
 
       relationsQuery =
         sparql"""SELECT DISTINCT ?subj ?subjLabel ?p ?pLabel ?obj ?objLabel ?g {
-                  ?s <http://www.openrdf.org/schema/sesame#directType> ?subj .
-                  ?subj <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?subjClass .
+                  ?s ${QueryService.SesameDirectType} ?subj .
+                  ?subj ${QueryService.RDFSSubClassOf} ?subjClass .
                   VALUES ?subjClass { ${subjectIRIs.asValues} } .
                   
-                  ?o <http://www.openrdf.org/schema/sesame#directType> ?obj .
-                  ?obj <http://www.w3.org/2000/01/rdf-schema#subClassOf> <https://w3id.org/biolink/vocab/NamedThing> .
+                  ?o ${QueryService.SesameDirectType} ?obj .
+                  ?obj ${QueryService.RDFSSubClassOf} ${QueryService.BiolinkNamedThing} .
 
                   GRAPH ?g {
                     ?s ?p ?o
                   }
 
-                  OPTIONAL { ?subjClass <http://www.w3.org/2000/01/rdf-schema#label> ?subjLabel }
-                  OPTIONAL { ?p <http://www.w3.org/2000/01/rdf-schema#label> ?pLabel }
-                  OPTIONAL { ?obj <http://www.w3.org/2000/01/rdf-schema#label> ?objLabel }
+                  OPTIONAL { ?subjClass ${QueryService.RDFSLabel} ?subjLabel }
+                  OPTIONAL { ?p ${QueryService.RDFSLabel} ?pLabel }
+                  OPTIONAL { ?obj ${QueryService.RDFSLabel} ?objLabel }
                }"""
       relationsResults <- SPARQLQueryExecutor.runSelectQuery(relationsQuery.toQuery)
       preds = relationsResults.map(_.getResource("p").getURI).map(IRI(_))
