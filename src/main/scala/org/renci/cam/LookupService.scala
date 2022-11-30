@@ -153,10 +153,7 @@ object LookupService extends LazyLogging {
       }
 
       relationsQuery =
-        sparql"""PREFIX rdf: <http://www.w3.org/1999/02/22-rdf-syntax-ns#>
-               PREFIX rdfs: <http://www.w3.org/2000/01/rdf-schema#>
-
-               SELECT DISTINCT ?subj ?subjLabel ?p ?pLabel ?obj ?objLabel ?g {
+        sparql"""SELECT DISTINCT ?subj ?subjLabel ?p ?pLabel ?obj ?objLabel ?g {
                   ?s <http://www.openrdf.org/schema/sesame#directType> ?subj .
                   ?subj <http://www.w3.org/2000/01/rdf-schema#subClassOf> ?subjClass .
                   VALUES ?subjClass { ${subjectIRIs.asValues} } .
@@ -168,9 +165,9 @@ object LookupService extends LazyLogging {
                     ?s ?p ?o
                   }
 
-                  OPTIONAL { ?subjClass rdfs:label ?subjLabel }
-                  OPTIONAL { ?p rdfs:label ?pLabel }
-                  OPTIONAL { ?obj rdfs:label ?objLabel }
+                  OPTIONAL { ?subjClass <http://www.w3.org/2000/01/rdf-schema#label> ?subjLabel }
+                  OPTIONAL { ?p <http://www.w3.org/2000/01/rdf-schema#label> ?pLabel }
+                  OPTIONAL { ?obj <http://www.w3.org/2000/01/rdf-schema#label> ?objLabel }
                }"""
       relationsResults <- SPARQLQueryExecutor.runSelectQuery(relationsQuery.toQuery)
       preds = relationsResults.map(_.getResource("p").getURI).map(IRI(_))
