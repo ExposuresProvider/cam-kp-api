@@ -21,7 +21,6 @@ import zio.config.ZConfig
 import zio.{Has, RIO, URIO, ZIO}
 
 import scala.io.Source
-import scala.language.implicitConversions
 
 /** The LookupService can be used to look up concepts within CAM-KP-API without needing to use either high-level TRAPI queries or low-level
   * SPARQL queries. It is intended to provide a middle path to interrogate the database and to identify cases where the TRAPI interface
