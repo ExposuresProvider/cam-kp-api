@@ -47,6 +47,10 @@ object QueryService extends LazyLogging {
 
   /* Hints used to optimize the query (see https://github.com/blazegraph/database/wiki/QueryHints for details). */
 
+  val BigDataQueryHintQuery = IRI("http://www.bigdata.com/queryHints#Query")
+
+  val BigDataQueryHintFilterExists = IRI("http://www.bigdata.com/queryHints#filterExists")
+
   val BigDataQueryHintPrior = IRI("http://www.bigdata.com/queryHints#Prior")
 
   val BigDataQueryHintRunFirst = IRI("http://www.bigdata.com/queryHints#runFirst")
@@ -844,7 +848,7 @@ object QueryService extends LazyLogging {
           VALUES ?biolinkPredicate { ${predicates.asValues} }
           ?predicate $SlotMapping ?biolinkPredicate .
           FILTER EXISTS { ?s ?predicate ?o }
-          <http://www.bigdata.com/queryHints#Query> <http://www.bigdata.com/queryHints#filterExists> "SubQueryLimitOne"
+          $BigDataQueryHintQuery $BigDataQueryHintFilterExists "SubQueryLimitOne"
         }"""
     for {
       predicates <- SPARQLQueryExecutor.runSelectQueryWithCacheAs[Predicate](queryText.toQuery)
