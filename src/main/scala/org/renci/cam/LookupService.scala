@@ -152,7 +152,7 @@ object LookupService extends LazyLogging {
       biolinkData <- biolinkData
 
       subjectIRIs = {
-        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
+        import biolinkData.implicits._
 
         qualifiedIds.map(qualifiedId => iriKeyDecoder(qualifiedId).get)
       }
@@ -279,18 +279,7 @@ object LookupService extends LazyLogging {
       jsonResult <- ZIO.fromEither(parser.parse(strResult))
       qualifiedIds = (jsonResult \\ queryId).flatMap { res =>
         // Decode IRIs from NodeNorm into Biolink entities and IRIs.
-        implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-
-        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-        implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-
-        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-        implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-
-        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
-        implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
-          Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
+        import biolinkData.implicits._
 
         res
           .as[NodeNormResponse]
@@ -328,8 +317,7 @@ object LookupService extends LazyLogging {
 
     // Normalize subjectIRI using NodeNorm.
     subjectIRIs = {
-      implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-
+      import biolinkData.implicits._
       logger.debug(s"Normalized identifier to ${qualifiedIds} using ${nodeNormURL}")
 
       qualifiedIds.map(qualifiedId => iriKeyDecoder(qualifiedId.iri).get)
@@ -366,18 +354,7 @@ object LookupService extends LazyLogging {
     for {
       biolinkData <- biolinkData
     } yield {
-      implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-      implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-
-      implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-      implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-
-      implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-      implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-
-      implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
-      implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
-        Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
+      import biolinkData.implicits._
 
       // The encoded example asks what biological process or activities positively regulate GO:0004707
       // (MAP kinase activity, see http://purl.obolibrary.org/obo/GO_0004707)
