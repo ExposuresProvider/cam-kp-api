@@ -49,7 +49,12 @@ object LookupService extends LazyLogging {
     g: String
   )
 
-  /** A helper method for converting a QuerySolution with ?s, ?p, ?o, ?g into a ResultTriple. */
+  /** A helper method for converting a QuerySolution with ?s, ?p, ?o, ?g into a ResultTriple.
+    *
+    * If we were concerned about correctly formatting different kinds of RDF nodes (e.g. literals, IRIs, etc.), we would match their types
+    * and handle them differently here. However, a ResultTriple is just a series of strings to be sent back to the user as a JSON object, so
+    * it's a lot easier to just convert it into a string here.
+    */
   def fromQuerySolution(result: QuerySolution): ResultTriple = ResultTriple(
     result.get("s").toString,
     result.get("p").toString,
