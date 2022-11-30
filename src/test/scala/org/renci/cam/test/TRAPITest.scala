@@ -72,11 +72,7 @@ object TRAPITest extends DefaultRunnableSpec with LazyLogging {
 
           trapiResponse <- ZIO.fromEither(
             {
-              implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-              implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-              implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-              implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
-                Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+              import biolinkData.implicits._
               implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
 
               trapiResponseJson.as[TRAPIResponse]
@@ -152,13 +148,8 @@ object TRAPITest extends DefaultRunnableSpec with LazyLogging {
 
         trapiResponse <- ZIO.fromEither(
           {
-            implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-            implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-            implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-            implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
-              Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+            import biolinkData.implicits._
             implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
-
             trapiResponseJson.as[TRAPIResponse]
           }
         )

@@ -27,10 +27,7 @@ object QueryServiceTest extends DefaultRunnableSpec {
       httpClient <- HttpClient.client
       biolinkData <- Biolink.biolinkData
       encoded = {
-        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+        import biolinkData.implicits._
         trapiQuery.asJson.deepDropNullValues.noSpaces
       }
       _ = println("encoded: " + encoded)

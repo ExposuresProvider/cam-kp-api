@@ -28,7 +28,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
       for {
         bl <- biolinkData
       } yield {
-        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(bl.prefixes)
+        import bl.implicits._
         val json = iri.asJson.deepDropNullValues.noSpaces.replace("\"", "")
         assert(json)(equalTo("WB:WBGene00013878"))
       }
@@ -42,8 +42,7 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
       } yield {
         val dataAsList = """["biolink:participates_in","biolink:related_to"]"""
         val data = """"biolink:related_to""""
-        implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
-          Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
+        import biolinkData.implicits._
         val ret = decode[List[BiolinkPredicate]](data)
         val retWithListData = decode[List[BiolinkPredicate]](dataAsList)
         assert(ret.toOption.get)(contains(BiolinkPredicate("related_to"))) && assert(retWithListData.toOption.get)(

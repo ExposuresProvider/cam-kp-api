@@ -4,6 +4,7 @@ import cats.implicits._
 import com.typesafe.scalalogging.LazyLogging
 import io.circe._
 import io.circe.generic.auto._
+import io.circe.generic.semiauto.{deriveDecoder, deriveEncoder}
 import io.circe.yaml.syntax._
 import org.http4s._
 import org.http4s.blaze.server.BlazeServerBuilder
@@ -54,19 +55,7 @@ object Server extends App with LazyLogging {
       .errorOut(stringBody)
       .out(
         {
-
-          implicit val bcKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(biolinkData.classes)
-          implicit val bcKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder
-
-          implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-          implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-
-          implicit val blClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-          implicit val blClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-
-          implicit val blPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-          implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
-
+          import biolinkData.implicits._
           jsonBody[MetaKnowledgeGraph]
         }
       )
@@ -87,19 +76,7 @@ object Server extends App with LazyLogging {
     for {
       biolinkData <- biolinkData
     } yield {
-      implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-      implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-
-      implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-      implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-
-      implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-      implicit val biolinkClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-
-      implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
-      implicit val biolinkPredicateDecoder: Decoder[List[BiolinkPredicate]] =
-        Implicits.predicateOrPredicateListDecoder(biolinkData.predicates)
-
+      import biolinkData.implicits._
       val example = {
         // This example asks what biological process or activities positively regulate GO:0004707
         // (MAP kinase activity, see http://purl.obolibrary.org/obo/GO_0004707)

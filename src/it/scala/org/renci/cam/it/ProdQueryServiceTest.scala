@@ -29,10 +29,7 @@ object ProdQueryServiceTest extends DefaultRunnableSpec {
       httpClient <- HttpClient.client
       biolinkData <- Biolink.biolinkData
       encoded = {
-        implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-        implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-        implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-        implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
+        import biolinkData.implicits._
         trapiQuery.asJson.deepDropNullValues.noSpaces
       }
       _ = println("encoded: " + encoded)
@@ -57,10 +54,7 @@ object ProdQueryServiceTest extends DefaultRunnableSpec {
           .orElseFail(new Exception("failed to traverse down to context"))
 
       nodesMapResult = {
-        implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-        implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-        implicit val decoderTRAPINode: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-        implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
+        import biolinkData.implicits._
         knowledgeGraphNodesJson.as[Map[IRI, TRAPINode]]
       }
 
@@ -72,10 +66,7 @@ object ProdQueryServiceTest extends DefaultRunnableSpec {
           .orElseFail(new Exception("failed to traverse down to context"))
 
       edgesMapResult = {
-        implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-        implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-        implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-        implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(biolinkData.predicates)
+        import biolinkData.implicits._
         implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
         knowledgeGraphEdgesJson.as[Map[String, TRAPIEdge]]
       }

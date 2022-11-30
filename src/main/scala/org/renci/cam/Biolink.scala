@@ -7,7 +7,7 @@ import org.apache.commons.lang3.StringUtils
 import org.http4s.headers.Accept
 import org.http4s.implicits._
 import org.http4s.{MediaType, Method, Request}
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
 import zio._
 import zio.blocking.{effectBlockingIO, Blocking}
 import zio.interop.catz._
@@ -21,7 +21,22 @@ object Biolink extends LazyLogging {
   final case class BiolinkData(version: String,
                                prefixes: Map[String, String],
                                classes: List[BiolinkClass],
-                               predicates: List[BiolinkPredicate])
+                               predicates: List[BiolinkPredicate]) {
+
+    object implicits {
+      implicit val bcKeyDecoder: KeyDecoder[BiolinkClass] = Implicits.biolinkClassKeyDecoder(classes)
+      implicit val bcKeyEncoder: KeyEncoder[BiolinkClass] = Implicits.biolinkClassKeyEncoder
+      implicit val iriDecoder: Decoder[IRI] = Implicits.iriDecoder(prefixes)
+      implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(prefixes)
+      implicit val iriKeyDecoder: KeyDecoder[IRI] = Implicits.iriKeyDecoder(prefixes)
+      implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(prefixes)
+      implicit val blClassDecoder: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(classes)
+      implicit val blClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
+      implicit val blPredicateDecoder: Decoder[BiolinkPredicate] = Implicits.biolinkPredicateDecoder(predicates)
+      implicit val blPredicateEncoder: Encoder[BiolinkPredicate] = Implicits.biolinkPredicateEncoder(prefixes)
+    }
+
+  }
 
   def makeUtilitiesLayer: ZLayer[Any, Throwable, Has[BiolinkData]] = getBiolinkData.toLayer
 

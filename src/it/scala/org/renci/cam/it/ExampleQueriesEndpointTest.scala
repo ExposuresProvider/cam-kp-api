@@ -75,13 +75,7 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
               exampleJson <- ZIO.fromEither(io.circe.parser.parse(exampleText))
               example <- ZIO.fromEither(
                 {
-                  implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-                  implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-                  implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-                  implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
-                    Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-                  implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
-
+                  import biolinkData.implicits._
                   exampleJson.as[ExampleJsonFile]
                 }
               )
@@ -93,12 +87,7 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
 
               // Prepare request for the CAM-KP-API endpoint.
               messageText = {
-                implicit val iriEncoder: Encoder[IRI] = Implicits.iriEncoder(biolinkData.prefixes)
-                implicit val iriKeyEncoder: KeyEncoder[IRI] = Implicits.iriKeyEncoder(biolinkData.prefixes)
-                implicit val biolinkClassEncoder: Encoder[BiolinkClass] = Implicits.biolinkClassEncoder
-                implicit val biolinkPredicateEncoder: Encoder[BiolinkPredicate] =
-                  Implicits.biolinkPredicateEncoder(biolinkData.prefixes)
-
+                import biolinkData.implicits._
                 TRAPIQuery(message = example.message, log_level = None).asJson.deepDropNullValues.noSpaces
               }
               // _ = println(s"messageText = ${messageText}")
@@ -115,13 +104,7 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
               // Translate the response into a TRAPIResponse for testing.
               trapiResponse <- ZIO.fromEither(
                 {
-                  implicit val decoderIRI: Decoder[IRI] = Implicits.iriDecoder(biolinkData.prefixes)
-                  implicit val keyDecoderIRI: KeyDecoder[IRI] = Implicits.iriKeyDecoder(biolinkData.prefixes)
-                  implicit val decoderBiolinkClass: Decoder[BiolinkClass] = Implicits.biolinkClassDecoder(biolinkData.classes)
-                  implicit val decoderBiolinkPredicate: Decoder[BiolinkPredicate] =
-                    Implicits.biolinkPredicateDecoder(biolinkData.predicates)
-                  implicit lazy val decoderTRAPIAttribute: Decoder[TRAPIAttribute] = deriveDecoder[TRAPIAttribute]
-
+                  import biolinkData.implicits._
                   response.as[TRAPIResponse]
                 }
               )
