@@ -268,7 +268,7 @@ object LookupService extends LazyLogging {
     for {
       biolinkData <- biolinkData
       nnUri <- ZIO.fromEither(Uri.fromString(nodeNormURL))
-      uri = nnUri.+?("curie", queryId).+?("conflate", conflate).toString()
+      uri = nnUri.withQueryParam("curie", queryId).withQueryParam("conflate", conflate).toString()
       strResult <- effectBlockingIO(Source.fromURL(uri)).bracketAuto { src =>
         val lines = src.getLines().mkString
 
