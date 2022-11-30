@@ -163,7 +163,7 @@ object LookupService extends LazyLogging {
                   VALUES ?subjClass { ${subjectIRIs.asValues} } .
                   
                   ?o ${QueryService.SesameDirectType} ?obj .
-                  ?obj ${QueryService.RDFSSubClassOf} ${QueryService.BiolinkNamedThing} .
+                  ?obj ${QueryService.RDFSSubClassOf} ${QueryService.BiolinkNamedThing.iri} .
 
                   GRAPH ?g {
                     ?s ?p ?o
