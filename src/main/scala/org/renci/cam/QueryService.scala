@@ -45,6 +45,12 @@ object QueryService extends LazyLogging {
 
   val BiolinkNamedThing: BiolinkClass = BiolinkClass("NamedThing", IRI(s"${BiolinkTerm.namespace}NamedThing"))
 
+  /* Hints used to optimize the query (see https://github.com/blazegraph/database/wiki/QueryHints for details). */
+
+  val BigDataQueryHintPrior = IRI("http://www.bigdata.com/queryHints#Prior")
+
+  val BigDataQueryHintRunFirst = IRI("http://www.bigdata.com/queryHints#runFirst")
+
   final case class TRAPIEdgeKey(source_id: String, `type`: Option[BiolinkPredicate], target_id: String)
 
   final case class Triple(subj: IRI, pred: IRI, obj: IRI)
@@ -474,9 +480,7 @@ object QueryService extends LazyLogging {
     val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
     val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
     val queryString =
-      sparql"""PREFIX hint: <http://www.bigdata.com/queryHints#>
-
-          SELECT DISTINCT $typeProjections
+      sparql"""SELECT DISTINCT $typeProjections
                (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?graphs)
                (GROUP_CONCAT(DISTINCT ?d; SEPARATOR='|') AS ?derivedFrom)
           WHERE {
@@ -488,7 +492,7 @@ object QueryService extends LazyLogging {
                 $edgePatterns
               }
             }
-            hint:Prior hint:runFirst true .
+            ${BigDataQueryHintPrior} ${BigDataQueryHintRunFirst} true .
           }
           GROUP BY $typeProjections
           $limitSparql
