@@ -496,7 +496,7 @@ object QueryService extends LazyLogging {
                 $edgePatterns
               }
             }
-            ${BigDataQueryHintPrior} ${BigDataQueryHintRunFirst} true .
+            $BigDataQueryHintPrior $BigDataQueryHintRunFirst true .
           }
           GROUP BY $typeProjections
           $limitSparql
