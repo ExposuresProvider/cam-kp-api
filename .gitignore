@@ -6,3 +6,6 @@
 /.metals
 /.bloop
 /.vscode
+
+# Ignore files generated as part of the lookup-service-test.
+/src/test/resources/lookup-service-test/*.json
