@@ -45,6 +45,16 @@ object QueryService extends LazyLogging {
 
   val BiolinkNamedThing: BiolinkClass = BiolinkClass("NamedThing", IRI(s"${BiolinkTerm.namespace}NamedThing"))
 
+  /* Hints used to optimize the query (see https://github.com/blazegraph/database/wiki/QueryHints for details). */
+
+  val BigDataQueryHintQuery = IRI("http://www.bigdata.com/queryHints#Query")
+
+  val BigDataQueryHintFilterExists = IRI("http://www.bigdata.com/queryHints#filterExists")
+
+  val BigDataQueryHintPrior = IRI("http://www.bigdata.com/queryHints#Prior")
+
+  val BigDataQueryHintRunFirst = IRI("http://www.bigdata.com/queryHints#runFirst")
+
   final case class TRAPIEdgeKey(source_id: String, `type`: Option[BiolinkPredicate], target_id: String)
 
   final case class Triple(subj: IRI, pred: IRI, obj: IRI)
@@ -474,9 +484,7 @@ object QueryService extends LazyLogging {
     val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
     val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
     val queryString =
-      sparql"""PREFIX hint: <http://www.bigdata.com/queryHints#>
-
-          SELECT DISTINCT $typeProjections
+      sparql"""SELECT DISTINCT $typeProjections
                (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?graphs)
                (GROUP_CONCAT(DISTINCT ?d; SEPARATOR='|') AS ?derivedFrom)
           WHERE {
@@ -488,7 +496,7 @@ object QueryService extends LazyLogging {
                 $edgePatterns
               }
             }
-            hint:Prior hint:runFirst true .
+            $BigDataQueryHintPrior $BigDataQueryHintRunFirst true .
           }
           GROUP BY $typeProjections
           $limitSparql
@@ -840,7 +848,7 @@ object QueryService extends LazyLogging {
           VALUES ?biolinkPredicate { ${predicates.asValues} }
           ?predicate $SlotMapping ?biolinkPredicate .
           FILTER EXISTS { ?s ?predicate ?o }
-          <http://www.bigdata.com/queryHints#Query> <http://www.bigdata.com/queryHints#filterExists> "SubQueryLimitOne"
+          $BigDataQueryHintQuery $BigDataQueryHintFilterExists "SubQueryLimitOne"
         }"""
     for {
       predicates <- SPARQLQueryExecutor.runSelectQueryWithCacheAs[Predicate](queryText.toQuery)
