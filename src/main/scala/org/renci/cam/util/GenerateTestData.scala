@@ -9,9 +9,9 @@ import org.http4s.implicits._
 import org.renci.cam._
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, TRAPIQueryEdge, TRAPIQueryGraph, TRAPIQueryNode}
 import zio._
-import zio.blocking.{effectBlockingIO, Blocking}
+import zio.blocking.{Blocking, effectBlockingIO}
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{getConfig, ZConfig}
+import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio.stream.ZStream
@@ -118,7 +118,7 @@ object GenerateTestData extends zio.App with LazyLogging {
         .flatMap(predicateRecord =>
           ZStream.fromEffect(
             QueryService.run(
-              1,
+              100,
               TRAPIQueryGraph(
                 Map(
                   "n0" -> TRAPIQueryNode(None, Some(List(BiolinkClass(predicateRecord.get(0)))), None),
