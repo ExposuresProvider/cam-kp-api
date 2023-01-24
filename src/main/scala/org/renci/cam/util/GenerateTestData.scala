@@ -4,21 +4,22 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
-import org.apache.commons.lang3.StringUtils
-import org.http4s.headers.Accept
+import org.apache.commons.csv.CSVFormat
 import org.http4s.implicits._
-import org.http4s.{MediaType, Method, Request}
-import org.renci.cam.Biolink.BiolinkData
-import org.renci.cam.{AppConfig, HttpClient}
-import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate}
-import zio.blocking.Blocking
+import org.renci.cam._
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, TRAPIQueryEdge, TRAPIQueryGraph, TRAPIQueryNode}
+import zio._
+import zio.blocking.{effectBlockingIO, Blocking}
+import zio.config.typesafe.TypesafeConfig
+import zio.config.{getConfig, ZConfig}
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio._
+import zio.stream.ZStream
 
-import java.nio.file.{Files, Paths}
-import scala.collection.immutable.ListMap
+import java.io.StringReader
+import java.nio.charset.StandardCharsets
+import scala.io.Source
+import scala.jdk.javaapi.CollectionConverters
 
 /** The <a href="https://github.com/TranslatorSRI/SRI_testing">SRI Testing harness</a> requires test data to be generated. This utility is
   * designed to generate some test data. It uses the SPARQL endpoint configured in AppConfig as well as the files in src/main/resources to
@@ -100,12 +101,48 @@ object GenerateTestData extends zio.App with LazyLogging {
 
    */
 
-  override def run(args: List[String]): URIO[zio.ZEnv with AppConfig, ExitCode] = {
+  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
     val program = for {
-      conf <- AppConfig.config
-    } yield ()
+      conf <- getConfig[AppConfig]
 
-    program.provideCustomLayer(HttpClient.makeHttpClientLayer).exitCode
+      // Get a list of all the predicates in predicates.csv.
+      predicates <- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream("/predicates.csv"), StandardCharsets.UTF_8.name()))
+        .bracketAuto { source =>
+          effectBlockingIO(source.getLines().mkString("\n"))
+        }
+      predicateRecords <- Task.effect(CSVFormat.DEFAULT.parse(new StringReader(predicates)).getRecords)
+
+      // Generate a test record for each record.
+      results <- ZStream
+        .fromIterable(CollectionConverters.asScala(predicateRecords))
+        .flatMap(predicateRecord =>
+          ZStream.fromEffect(
+            QueryService.run(
+              1,
+              TRAPIQueryGraph(
+                Map(
+                  "n0" -> TRAPIQueryNode(None, Some(List(BiolinkClass(predicateRecord.get(0)))), None),
+                  "n1" -> TRAPIQueryNode(None, Some(List(BiolinkClass(predicateRecord.get(2)))), None)
+                ),
+                Map(
+                  "e0" -> TRAPIQueryEdge(Some(List(BiolinkPredicate("related_to"))), "n0", "n1", None)
+                )
+              )
+            )
+          ))
+        .tap { resp =>
+          logger.info(f"Found TRAPI Response: " + resp)
+          ZIO.succeed(resp)
+        }
+        .runCollect
+    } yield ({
+      logger.info(f"Found result: " + results)
+    })
+
+    val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
+    val camkpapiLayer = Blocking.live >>> HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
+
+    program.provideCustomLayer(configLayer ++ camkpapiLayer >+> SPARQLQueryExecutor.makeCache.toLayer).exitCode
   }
 
 }
