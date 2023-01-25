@@ -12,7 +12,7 @@ import org.renci.cam.QueryService.RDFSSubClassOf
 import org.renci.cam._
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIKnowledgeGraph, TRAPIMessage, TRAPIQueryEdge, TRAPIQueryGraph, TRAPIQueryNode, TRAPIResponse}
 import zio._
-import zio.blocking.{effectBlockingIO, Blocking}
+import zio.blocking.{Blocking, effectBlockingIO}
 import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
 import zio.interop.catz._
@@ -182,8 +182,8 @@ object GenerateTestData extends zio.App with LazyLogging {
                 1,
                 TRAPIQueryGraph(
                   Map(
-                    "n0" -> TRAPIQueryNode(None, Some(List(BiolinkClass(subj))), None),
-                    "n1" -> TRAPIQueryNode(None, Some(List(BiolinkClass(obj))), None)
+                    "n0" -> TRAPIQueryNode(None, Some(List(BiolinkClass(predicateRecord.get(0)))), None),
+                    "n1" -> TRAPIQueryNode(None, Some(List(BiolinkClass(predicateRecord.get(2)))), None)
                   ),
                   Map(
                     "e0" -> TRAPIQueryEdge(Some(List(BiolinkPredicate("related_to"))), "n0", "n1", None)
