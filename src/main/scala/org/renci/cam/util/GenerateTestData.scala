@@ -12,7 +12,7 @@ import org.renci.cam.QueryService.RDFSSubClassOf
 import org.renci.cam._
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIKnowledgeGraph, TRAPIMessage, TRAPIQueryEdge, TRAPIQueryGraph, TRAPIQueryNode, TRAPIResponse}
 import zio._
-import zio.blocking.{effectBlockingIO, Blocking}
+import zio.blocking.{Blocking, effectBlockingIO}
 import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
 import zio.interop.catz._
@@ -220,6 +220,10 @@ object GenerateTestData extends zio.App with LazyLogging {
               logger.info(f"TestEdge found: ${edge}")
               ZIO.succeed(edge)
             }
+        }
+        .mapError { err =>
+          val errMsg = f"Caught error in main loop: ${err}"
+          logger.error(errMsg)
         }
         .map { edge =>
           val edgeAsStr = edge.asJson.noSpaces
