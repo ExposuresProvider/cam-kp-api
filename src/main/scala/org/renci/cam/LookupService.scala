@@ -6,17 +6,17 @@ import io.circe._
 import org.apache.jena.query.QuerySolution
 import org.http4s.{HttpRoutes, Uri}
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{biolinkData, BiolinkData}
+import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.Server.EndpointEnv
 import org.renci.cam.Server.LocalTapirJsonCirce.jsonBody
 import org.renci.cam.Util.IterableSPARQLOps
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
+import org.renci.cam.domain.{Biolink3, BiolinkClass, BiolinkPredicate, IRI}
 import sttp.tapir.Endpoint
 import sttp.tapir.generic.auto._
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.ztapir.{endpoint, query}
-import zio.blocking.{effectBlockingIO, Blocking}
+import zio.blocking.{Blocking, effectBlockingIO}
 import zio.config.ZConfig
 import zio.{Has, RIO, URIO, ZIO}
 
@@ -175,7 +175,7 @@ object LookupService extends LazyLogging {
                }"""
       relationsResults <- SPARQLQueryExecutor.runSelectQuery(relationsQuery.toQuery)
       preds = relationsResults.map(_.getResource("p").getURI).map(IRI(_))
-      biolinkRelationMap <- QueryService.mapRelationsToLabelAndBiolink(preds.toSet)
+      biolinkRelationMap <- Biolink3.mapRelationsToLabelAndBiolink(preds.toSet)
 
       // We want to group these by object, so we don't return a gazillion predicates for each result.
       objectMap = relationsResults.groupBy(_.getResource("obj").getURI)

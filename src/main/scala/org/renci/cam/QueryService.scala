@@ -6,13 +6,13 @@ import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{biolinkData, BiolinkData}
+import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.{TRAPIAttribute, _}
-import zio.config.{getConfig, ZConfig}
-import zio.{config => _, Has, RIO, Task, UIO, ZIO}
+import zio.config.{ZConfig, getConfig}
+import zio.{Has, RIO, Task, UIO, ZIO, config => _}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -357,9 +357,9 @@ object QueryService extends LazyLogging {
 
         // Generate the relationsToLabelAndBiolinkPredicate.
         allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-        predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
+        predicatesToRelations <- Biolink3.mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
         allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-        relationsToLabelAndBiolinkPredicate <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+        relationsToLabelAndBiolinkPredicate <- Biolink3.mapRelationsToLabelAndBiolink(allRelationsInQuery)
 
         // Generate query solutions.
         _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
@@ -391,9 +391,9 @@ object QueryService extends LazyLogging {
       _ = logger.warn("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
       allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-      predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
+      predicatesToRelations <- Biolink3.mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-      relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+      relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- Biolink3.mapRelationsToLabelAndBiolink(allRelationsInQuery)
       _ = logger.warn(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
       _ = logger.warn(s"Initial query solutions: ${initialQuerySolutions.length} (limit: $limit): $initialQuerySolutions")
@@ -424,7 +424,7 @@ object QueryService extends LazyLogging {
           slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.to(List))
           extraKGNodes = getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, biolinkData)
           allPredicates = allCAMTriples.map(_.pred)
-          relationsToInfo <- mapRelationsToLabelAndBiolink(allPredicates)
+          relationsToInfo <- Biolink3.mapRelationsToLabelAndBiolink(allPredicates)
           extraKGEdges = allCAMTriples.flatMap { triple =>
             for {
               (relationLabelOpt, relationBiolinkPredicate) <- relationsToInfo.get(triple.pred)
@@ -817,42 +817,6 @@ object QueryService extends LazyLogging {
       node -> TRAPINode(labelOpt, Some(classes), None)
     }.toMap
     nodeMap
-  }
-
-  // TODO:
-  // - Change this to cached queries (see mapQueryBiolinkPredicatesToRelations for example)
-  def mapRelationsToLabelAndBiolink(relations: Set[IRI]): RIO[ZConfig[AppConfig] with HttpClient, Map[IRI, (Option[String], IRI)]] = {
-    final case class RelationInfo(relation: IRI, biolinkSlot: IRI, label: Option[String])
-    val queryText = sparql"""
-         SELECT DISTINCT ?relation ?biolinkSlot ?label
-         WHERE {
-           VALUES ?relation { ${relations.asValues} }
-           ?relation $SlotMapping ?biolinkSlot .
-           ?biolinkSlot a $BiolinkMLSlotDefinition .
-           OPTIONAL { ?relation $RDFSLabel ?label . }
-           FILTER NOT EXISTS {
-             ?relation $SlotMapping ?other .
-             ?other $BiolinkMLIsA+/$BiolinkMLMixins* ?biolinkSlot .
-           }
-         }"""
-    SPARQLQueryExecutor.runSelectQueryAs[RelationInfo](queryText.toQuery).map { res =>
-      res.groupMap(_.relation)(info => (info.label, info.biolinkSlot)).map { case (relationIRI, infos) => relationIRI -> infos.head }
-    }
-  }
-
-  def mapQueryBiolinkPredicatesToRelations(
-    predicates: Set[BiolinkPredicate]): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], Map[BiolinkPredicate, Set[IRI]]] = {
-    final case class Predicate(biolinkPredicate: BiolinkPredicate, predicate: IRI)
-    val queryText = sparql"""
-        SELECT DISTINCT ?biolinkPredicate ?predicate WHERE {
-          VALUES ?biolinkPredicate { ${predicates.asValues} }
-          ?predicate $SlotMapping ?biolinkPredicate .
-          FILTER EXISTS { ?s ?predicate ?o }
-          $BigDataQueryHintQuery $BigDataQueryHintFilterExists "SubQueryLimitOne"
-        }"""
-    for {
-      predicates <- SPARQLQueryExecutor.runSelectQueryWithCacheAs[Predicate](queryText.toQuery)
-    } yield predicates.to(Set).groupMap(_.biolinkPredicate)(_.predicate)
   }
 
 }
