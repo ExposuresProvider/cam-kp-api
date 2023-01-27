@@ -6,7 +6,7 @@ import io.circe._
 import org.apache.jena.query.QuerySolution
 import org.http4s.{HttpRoutes, Uri}
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{BiolinkData, biolinkData}
+import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.Server.EndpointEnv
 import org.renci.cam.Server.LocalTapirJsonCirce.jsonBody
@@ -16,7 +16,7 @@ import sttp.tapir.Endpoint
 import sttp.tapir.generic.auto._
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
 import sttp.tapir.ztapir.{endpoint, query}
-import zio.blocking.{Blocking, effectBlockingIO}
+import zio.blocking.{effectBlockingIO, Blocking}
 import zio.config.ZConfig
 import zio.{Has, RIO, URIO, ZIO}
 
