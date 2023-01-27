@@ -21,8 +21,15 @@ import zio.{Has, RIO}
   * RO predicates; if so, we can map them manually and rerun the pipeline.
   *
   * 3. Finally, we need a new piece of code that is capable of understanding qualified predicates and converting them into AND out of our RO
-  * predicates. Thus far, we have been relying on the database to do that, but at least in this initial release, this will need to be
-  * handled manually until we've gotten it right. Then we can figure out if it makes sense to move this back into the database.
+  * predicates. Thus far, we have been relying on the database to do that, but at least in this initial release, the quickest way to
+  * implement this will be to ingest predicate mappings from
+  * https://github.com/biolink/biolink-model/blob/ac69bb2dc94d62d50f5cfab3fa07414b0ca092b1/predicate_mapping.yaml and to use them to handle
+  * the conversion from Biolink2 predicates (as currently supported by the triplestore) and Biolink3 predicate+qualifier combinations.
+  *
+  * This new code needs to support two operations:
+  *   1. Given a TRAPI Edge (i.e. a Biolink predicate + qualifiers), produce a set of RO predicates that represents this edge.
+  *
+  * 2. Given a single RO predicate (which is what our SPARQL query should return), produce a single TRAPI Edge that represents this edge.
   *
   * This file is intended to store that interconversion code. It will replace some of our current SPARQL accessing code.
   *
