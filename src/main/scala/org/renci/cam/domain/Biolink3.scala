@@ -1,13 +1,19 @@
 package org.renci.cam.domain
 
+import io.circe.generic.auto._
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLStringContext
 import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.QueryService.{BigDataQueryHintFilterExists, BigDataQueryHintQuery, BiolinkMLIsA, BiolinkMLMixins, BiolinkMLSlotDefinition, RDFSLabel, SlotMapping}
-import org.renci.cam.{AppConfig, SPARQLQueryExecutor}
+import org.renci.cam.QueryService._
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
+import org.renci.cam.{AppConfig, SPARQLQueryExecutor}
+import zio.ZIO.ZIOAutoCloseableOps
+import zio.blocking.{effectBlockingIO, Blocking}
 import zio.config.ZConfig
-import zio.{Has, RIO}
+import zio.{Has, RIO, ZIO}
+
+import java.nio.charset.StandardCharsets
+import scala.io.Source
 
 /** Biolink 3 brings about pretty significant changes in way in which predicates work. For instance, the predicate
   * biolink:affects_activity_of has been deprecated, and replaced with biolink:affects with qualifiers indicating that what is being
@@ -42,6 +48,35 @@ import zio.{Has, RIO}
   *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/82
   */
 object Biolink3 {
+
+  /** A case class for predicate mappings. */
+  case class PredicateMapping(
+    mappedPredicate: String,
+    objectAspectQualifier: String,
+    objectDirectionQualified: Option[String],
+    predicate: String,
+    qualifiedPredicate: String,
+    exactMatches: Set[String]
+  )
+
+  case class PredicateMappings(
+    predicateMappings: List[PredicateMapping]
+  )
+
+  /** To initialize this object, we need to download and parse the predicate_mapping.yaml file from the Biolink model, which needs to be
+    * downloaded to the package resources (src/main/resources) from
+    * https://github.com/biolink/biolink-model/blob/master/predicate_mapping.yaml
+    */
+  val predicateMappings: RIO[Blocking, List[PredicateMapping]] =
+    for {
+      predicateMappingText <- effectBlockingIO(
+        Source.fromInputStream(getClass.getResourceAsStream("/predicates.csv"), StandardCharsets.UTF_8.name()))
+        .bracketAuto { source =>
+          effectBlockingIO(source.getLines().mkString("\n"))
+        }
+      predicateMappingsYaml <- ZIO.fromEither(io.circe.yaml.parser.parse(predicateMappingText))
+      predicateMappings <- ZIO.fromEither(predicateMappingsYaml.as[PredicateMappings])
+    } yield predicateMappings.predicateMappings
 
   def mapQueryBiolinkPredicatesToRelations(
     predicates: Set[BiolinkPredicate]): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], Map[BiolinkPredicate, Set[IRI]]] = {
