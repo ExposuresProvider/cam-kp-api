@@ -78,8 +78,12 @@ object Biolink3 {
       predicateMappings <- ZIO.fromEither(predicateMappingsYaml.as[PredicateMappings])
     } yield predicateMappings.predicateMappings
 
-  def mapQueryBiolinkPredicatesToRelations(
-    predicates: Set[BiolinkPredicate]): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], Map[BiolinkPredicate, Set[IRI]]] = {
+  def mapQueryBiolinkPredicatesToRelations(predicates: Set[BiolinkPredicate], queryGraph: TRAPIQueryGraph)
+    : RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], (Map[BiolinkPredicate, Set[IRI]], Seq[String])] = {
+    val allQualifierConstraints = queryGraph.edges.values
+      .flatMap(_.qualifier_constraints.getOrElse(List()))
+      .flatMap(_.qualifier_set.map(q => f"${q.qualifier_type_id}=${q.qualifier_value}"))
+
     final case class Predicate(biolinkPredicate: BiolinkPredicate, predicate: IRI)
     val queryText = sparql"""
         SELECT DISTINCT ?biolinkPredicate ?predicate WHERE {
@@ -90,7 +94,7 @@ object Biolink3 {
         }"""
     for {
       predicates <- SPARQLQueryExecutor.runSelectQueryWithCacheAs[Predicate](queryText.toQuery)
-    } yield predicates.to(Set).groupMap(_.biolinkPredicate)(_.predicate)
+    } yield (predicates.to(Set).groupMap(_.biolinkPredicate)(_.predicate), allQualifierConstraints.toSeq)
   }
 
   // TODO:

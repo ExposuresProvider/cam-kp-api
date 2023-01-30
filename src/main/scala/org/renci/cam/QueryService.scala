@@ -307,7 +307,6 @@ object QueryService extends LazyLogging {
 
     val allAttributeConstraints = submittedQueryGraph.nodes.values.flatMap(
       _.constraints.getOrElse(List())) ++ submittedQueryGraph.edges.values.flatMap(_.attribute_constraints.getOrElse(List()))
-    val allQualifierConstraints = submittedQueryGraph.edges.values.flatMap(_.qualifier_constraints.getOrElse(List()))
 
     if (allAttributeConstraints.nonEmpty) {
       ZIO.succeed(
@@ -327,61 +326,70 @@ object QueryService extends LazyLogging {
           )
         )
       )
-    } else if (allQualifierConstraints.nonEmpty) {
-      // Are there any qualifier constraints? If so, we can't match them, so we should return an empty list of results.
-      ZIO.succeed(
-        TRAPIResponse(
-          emptyTRAPIMessage,
-          Some("UnsupportedQualifierConstraint"),
-          None,
-          Some(
-            List(
-              LogEntry(
-                Some(java.time.Instant.now().toString),
-                Some("WARNING"),
-                Some("UnsupportedQualifierConstraint"),
-                Some(s"The following qualifier constraints are not supported: ${allQualifierConstraints}")
+    }
+
+    for {
+      // Get the Biolink data.
+      biolinkData <- biolinkData
+      _ = logger.debug("limit: {}", limit)
+
+      // Prepare the query graph for processing.
+      queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+
+      // Generate the relationsToLabelAndBiolinkPredicate.
+      allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
+      (predicatesToRelations, unmappedQualifiers) <- Biolink3.mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery, queryGraph)
+
+      response <- {
+        if (unmappedQualifiers.nonEmpty) {
+          // Are there any qualifier constraints? If so, we can't match them, so we should return an empty list of results.
+          ZIO.succeed(
+            TRAPIResponse(
+              emptyTRAPIMessage,
+              Some("UnsupportedQualifierConstraint"),
+              None,
+              Some(
+                List(
+                  LogEntry(
+                    Some(java.time.Instant.now().toString),
+                    Some("WARNING"),
+                    Some("UnsupportedQualifierConstraint"),
+                    Some(s"The following qualifier constraints are not supported: ${unmappedQualifiers}")
+                  )
+                )
               )
             )
           )
-        )
-      )
-    } else
-      for {
-        // Get the Biolink data.
-        biolinkData <- biolinkData
-        _ = logger.debug("limit: {}", limit)
+        } else {
+          for {
+            // Generate query solutions.
+            // _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
+            initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+            results = initialQuerySolutions.zipWithIndex.map { case (qs, index) =>
+              Result.fromQuerySolution(qs, index, queryGraph)
+            }
+            _ = logger.debug(s"Results: $results")
 
-        // Prepare the query graph for processing.
-        queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+            // In order to translate from relations to Biolink predicates, we need the reverse mapping.
+            allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
+            relationsToLabelAndBiolinkPredicate <- Biolink3.mapRelationsToLabelAndBiolink(allRelationsInQuery)
 
-        // Generate the relationsToLabelAndBiolinkPredicate.
-        allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-        predicatesToRelations <- Biolink3.mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
-        allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-        relationsToLabelAndBiolinkPredicate <- Biolink3.mapRelationsToLabelAndBiolink(allRelationsInQuery)
-
-        // Generate query solutions.
-        _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
-        initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
-        results = initialQuerySolutions.zipWithIndex.map { case (qs, index) =>
-          Result.fromQuerySolution(qs, index, queryGraph)
+            // From the results, generate the TRAPI nodes, edges and results.
+            nodes <- generateTRAPINodes(results)
+            _ = logger.debug(s"Nodes: $nodes")
+            edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
+            _ = logger.debug(s"Edges: $edges")
+            trapiResults = generateTRAPIResults(results)
+            _ = logger.debug(s"Results: $trapiResults")
+          } yield TRAPIResponse(
+            TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct)),
+            Some("Success"),
+            None,
+            None
+          )
         }
-        _ = logger.debug(s"Results: $results")
-
-        // From the results, generate the TRAPI nodes, edges and results.
-        nodes <- generateTRAPINodes(results)
-        _ = logger.debug(s"Nodes: $nodes")
-        edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
-        _ = logger.debug(s"Edges: $edges")
-        trapiResults = generateTRAPIResults(results)
-        _ = logger.debug(s"Results: $trapiResults")
-      } yield TRAPIResponse(
-        TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct)),
-        Some("Success"),
-        None,
-        None
-      )
+      }
+    } yield response
   }
 
   def oldRun(limit: Int, includeExtraEdges: Boolean, submittedQueryGraph: TRAPIQueryGraph)
@@ -391,7 +399,7 @@ object QueryService extends LazyLogging {
       _ = logger.warn("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
       allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-      predicatesToRelations <- Biolink3.mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
+      (predicatesToRelations, unmappedQualifiers) <- Biolink3.mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery, queryGraph)
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
       relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- Biolink3.mapRelationsToLabelAndBiolink(allRelationsInQuery)
       _ = logger.warn(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
