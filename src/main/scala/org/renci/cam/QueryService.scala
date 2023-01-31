@@ -6,13 +6,13 @@ import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{BiolinkData, biolinkData}
+import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.{TRAPIAttribute, _}
-import zio.config.{ZConfig, getConfig}
-import zio.{Has, RIO, Task, UIO, ZIO, config => _}
+import zio.config.{getConfig, ZConfig}
+import zio.{config => _, Has, RIO, Task, UIO, ZIO}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -44,6 +44,12 @@ object QueryService extends LazyLogging {
   val SlotMapping: IRI = IRI("http://cam.renci.org/biolink_slot")
 
   val BiolinkNamedThing: BiolinkClass = BiolinkClass("NamedThing", IRI(s"${BiolinkTerm.namespace}NamedThing"))
+
+  /** When no category is provided, we use the default Biolink category. */
+  val DefaultBiolinkCategory: BiolinkClass = BiolinkNamedThing
+
+  /** When no predicate is provided, we use the default Biolink predicate. */
+  val DefaultBiolinkPredicate: BiolinkPredicate = BiolinkPredicate("related_to")
 
   /* Hints used to optimize the query (see https://github.com/blazegraph/database/wiki/QueryHints for details). */
 
@@ -582,8 +588,8 @@ object QueryService extends LazyLogging {
   def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph, biolinkPredicates: List[BiolinkPredicate]): TRAPIQueryGraph = {
     val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
       val newPredicates = edge.predicates match {
-        case None       => Some(List(BiolinkPredicate("related_to")))
-        case Some(Nil)  => Some(List(BiolinkPredicate("related_to")))
+        case None       => Some(List(DefaultBiolinkPredicate))
+        case Some(Nil)  => Some(List(DefaultBiolinkPredicate))
         case predicates => predicates
       }
       val filteredPredicates = newPredicates.map(_.filter(pred => biolinkPredicates.contains(pred)))
@@ -591,8 +597,8 @@ object QueryService extends LazyLogging {
     }
     val improvedNodeMap = queryGraph.nodes.map { case (nodeID, node) =>
       val newCategories = node.categories match {
-        case None       => Some(List(BiolinkNamedThing))
-        case Some(Nil)  => Some(List(BiolinkNamedThing))
+        case None       => Some(List(DefaultBiolinkCategory))
+        case Some(Nil)  => Some(List(DefaultBiolinkCategory))
         case categories => categories
       }
       nodeID -> node.copy(categories = newCategories)
@@ -699,7 +705,7 @@ object QueryService extends LazyLogging {
               nodeIRI <- ZIO
                 .effect(querySolution.getResource(s"${queryNodeID}_type").getURI)
                 .orElseFail(new Exception(s"Missing node IRI: $queryNodeID"))
-              labelAndTypes = termToLabelAndTypes.getOrElse(IRI(nodeIRI), (None, List(BiolinkNamedThing)))
+              labelAndTypes = termToLabelAndTypes.getOrElse(IRI(nodeIRI), (None, List(DefaultBiolinkCategory)))
               (labelOpt, biolinkTypes) = labelAndTypes
               biolinkTypesSet = biolinkTypes.to(Set)
               nodeBiolinkTypes = bionlinkClasses.filter(c => biolinkTypesSet(c.iri))
@@ -819,7 +825,7 @@ object QueryService extends LazyLogging {
       term -> (labels.flatten.headOption, biolinkTypes)
     }
     val nodeMap = camNodes.map { node =>
-      val (labelOpt, biolinkTypes) = termToLabelAndTypes.getOrElse(node, (None, List(BiolinkNamedThing)))
+      val (labelOpt, biolinkTypes) = termToLabelAndTypes.getOrElse(node, (None, List(DefaultBiolinkCategory)))
       val biolinkTypesSet = biolinkTypes.to(Set)
       val classes = biolinkData.classes.filter(c => biolinkTypesSet(c.iri))
       node -> TRAPINode(labelOpt, Some(classes), None)
