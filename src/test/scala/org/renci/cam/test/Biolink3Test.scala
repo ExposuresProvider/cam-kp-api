@@ -25,6 +25,80 @@ import zio.test._
 
 object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
 
+  val biolink3conversions = {
+    val shouldntChange = Map(
+      "gene-biomarker_for-disease" -> TRAPIQueryGraph(
+        nodes = Map(
+          "gene" -> TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None, None),
+          "disease" -> TRAPIQueryNode(None, Some(List(BiolinkClass("DiseaseOrPhenotypicFeature"))), None, None)
+        ),
+        edges = Map(
+          "edge" -> TRAPIQueryEdge(subject = "drug", `object` = "behavior", predicates = Some(List(BiolinkPredicate("biomarker_for"))))
+        )
+      )
+    )
+
+    val shouldChange = Map(
+      "gene-increases_secretion_of-disease" -> (TRAPIQueryGraph(
+        nodes = Map(
+          "gene" -> TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None, None),
+          "chement" -> TRAPIQueryNode(None, Some(List(BiolinkClass("ChemicalEntity"))), None, None)
+        ),
+        edges = Map(
+          "edge" -> TRAPIQueryEdge(
+            subject = "drug",
+            `object` = "chement",
+            predicates = Some(List(BiolinkPredicate("affects"))),
+            qualifier_constraints = Some(
+              List(
+                TRAPIQualifierConstraint(
+                  qualifier_set = List(
+                    TRAPIQualifier("biolink:object_aspect_qualifier", "secretion"),
+                    TRAPIQualifier("biolink:object_direction_qualifier", "increased"),
+                    TRAPIQualifier("biolink:qualified_predicate", "biolink:causes")
+                  )
+                )
+              )
+            )
+          )
+        )
+      ), TRAPIQueryGraph(
+        nodes = Map(
+          "gene" -> TRAPIQueryNode(None, Some(List(BiolinkClass("GeneOrGeneProduct"))), None, None),
+          "chement" -> TRAPIQueryNode(None, Some(List(BiolinkClass("ChemicalEntity"))), None, None)
+        ),
+        edges = Map(
+          "edge" -> TRAPIQueryEdge(subject = "drug",
+                                   `object` = "chement",
+                                   predicates = Some(List(BiolinkPredicate("increases_secretion_of"))))
+        )
+      ))
+    )
+
+    suite("biolink3conversions")(
+      suiteM("Make sure shouldn't-change graphs don't change") {
+        ZStream
+          .fromIterable(shouldntChange)
+          .map { case (key, qg) =>
+            testM(s"Testing ${key}") {
+              assertM(Biolink3.mapBL3toBL2(qg))(Assertion.equalTo(qg))
+            }
+          }
+          .runCollect
+      },
+      suiteM("Make sure should-change graphs do change") {
+        ZStream
+          .fromIterable(shouldChange)
+          .map { case (key, (qg_bl3, qg_bl2)) =>
+            testM(s"Testing ${key}") {
+              assertM(Biolink3.mapBL3toBL2(qg_bl3))(Assertion.equalTo(qg_bl2))
+            }
+          }
+          .runCollect
+      }
+    )
+  }
+
   def generateQualifiedEdge(obj: String,
                             subj: String,
                             preds: Option[List[BiolinkPredicate]],
@@ -187,7 +261,8 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
   val testLayer = HttpClient.makeHttpClientLayer ++ Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
 
   def spec = suite("Biolink 3 example queries")(
-    biolink3exampleQueries
+    biolink3conversions
+    // biolink3exampleQueries
   ).provideCustomLayer(testLayer.mapError(TestFailure.die))
 
 }

@@ -8,11 +8,10 @@ import org.renci.cam.QueryService._
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.{AppConfig, QueryService, SPARQLQueryExecutor}
-import zio.ZIO.ZIOAutoCloseableOps
-import zio.blocking.{effectBlockingIO, Blocking}
+import zio.blocking.{blocking, Blocking}
 import zio.config.ZConfig
 import zio.stream.ZStream
-import zio.{Has, RIO, ZIO}
+import zio.{Has, RIO, Task, ZIO}
 
 import java.nio.charset.StandardCharsets
 import scala.io.Source
@@ -53,20 +52,28 @@ object Biolink3 extends LazyLogging {
 
   /** A case class for predicate mappings. */
   case class PredicateMapping(
-    mappedPredicate: String,
-    objectAspectQualifier: Option[String],
-    objectDirectionQualified: Option[String],
+    `mapped predicate`: String,
+    `object aspect qualifier`: Option[String],
+    `object direction qualified`: Option[String],
     predicate: String,
-    qualifiedPredicate: String,
-    exactMatches: Set[String]
+    `qualified predicate`: Option[String],
+    `exact matches`: Option[Set[String]]
   ) {
 
-    def qualifiers: Seq[TRAPIQualifier] = (objectAspectQualifier match {
-      case Some(aspect: String) => List(TRAPIQualifier(qualifier_type_id = "biolink:object_aspect_qualifier", qualifier_value = aspect))
-      case _                    => List()
-    }) ++ (objectDirectionQualified match {
+    def qualifiers: Seq[TRAPIQualifier] = (`object aspect qualifier` match {
+      case Some(aspect: String) =>
+        List(TRAPIQualifier(qualifier_type_id = "biolink:object_aspect_qualifier", qualifier_value = aspect.replace(' ', '_')))
+      case _ => List()
+    }) ++ (`object direction qualified` match {
       case Some(direction: String) =>
-        List(TRAPIQualifier(qualifier_type_id = "biolink:object_direction_qualifier", qualifier_value = direction))
+        List(TRAPIQualifier(qualifier_type_id = "biolink:object_direction_qualifier", qualifier_value = direction.replace(' ', '_')))
+      case _ => List()
+    }) ++ (`qualified predicate` match {
+      case Some(qualified_predicate: String) =>
+        List(
+          TRAPIQualifier(qualifier_type_id = "biolink:qualified_predicate",
+                         qualifier_value = BiolinkPredicate(qualified_predicate.replace(' ', '_')).withBiolinkPrefix)
+        )
       case _ => List()
     })
 
@@ -75,7 +82,7 @@ object Biolink3 extends LazyLogging {
   }
 
   case class PredicateMappings(
-    predicateMappings: List[PredicateMapping]
+    `predicate mappings`: List[PredicateMapping]
   )
 
   /** To initialize this object, we need to download and parse the predicate_mapping.yaml file from the Biolink model, which needs to be
@@ -84,15 +91,25 @@ object Biolink3 extends LazyLogging {
     */
   val predicateMappings: RIO[Blocking, List[PredicateMapping]] =
     for {
-      predicateMappingText <- effectBlockingIO(
-        Source.fromInputStream(getClass.getResourceAsStream("/predicates.csv"), StandardCharsets.UTF_8.name()))
-        .bracketAuto { source =>
-          effectBlockingIO(source.getLines().mkString("\n"))
-        }
+      predicateMappingText <- blocking(
+        Task.effect(
+          Source
+            .fromInputStream(getClass.getResourceAsStream("/predicate_mapping.yaml"), StandardCharsets.UTF_8.name())
+            .getLines()
+            .mkString("\n")))
       predicateMappingsYaml <- ZIO.fromEither(io.circe.yaml.parser.parse(predicateMappingText))
       predicateMappings <- ZIO.fromEither(predicateMappingsYaml.as[PredicateMappings])
-    } yield predicateMappings.predicateMappings
+    } yield predicateMappings.`predicate mappings`
 
+  /** Compares two qualifier lists. */
+  def compareQualifierConstraintLists(qcl1: List[TRAPIQualifierConstraint], qcl2: List[TRAPIQualifierConstraint]): Boolean = {
+    val set1 = qcl1.map(_.qualifier_set.map(q => (q.qualifier_value, q.qualifier_type_id)).toSet)
+    val set2 = qcl2.map(_.qualifier_set.map(q => (q.qualifier_value, q.qualifier_type_id)).toSet)
+
+    (set1 == set2)
+  }
+
+  /** Case class used to report that an unmapped predicate was found. */
   case class UnmappedPredicate(predicates: List[BiolinkPredicate], qualifierConstraints: List[TRAPIQualifierConstraint])
 
   /** Map Biolink 2 edges to Biolink 3 edges.
@@ -127,9 +144,9 @@ object Biolink3 extends LazyLogging {
                     .fromIterable(mps)
                     .map { mp =>
                       preds.flatMap { pred =>
-                        if (BiolinkPredicate(mp.predicate) == pred && mp.qualifierConstraintList == qcs) {
+                        if (pred == BiolinkPredicate(mp.predicate) && compareQualifierConstraintLists(qcs, mp.qualifierConstraintList)) {
                           logger.info(s"Found matching predicate for edge '${edgeName}' ${edge}: ${mp}")
-                          List((BiolinkPredicate(mp.predicate), BiolinkPredicate(mp.mappedPredicate)))
+                          List((pred, BiolinkPredicate(mp.`mapped predicate`)))
                         } else List()
                       }
                     }
@@ -137,7 +154,7 @@ object Biolink3 extends LazyLogging {
                 } yield mapping.toList.flatten
               )
 
-              val unmappedPredicates = preds.filter(mappings.toMap.keySet.contains)
+              val unmappedPredicates = preds.filterNot(mappings.toMap.keySet.contains)
               if (unmappedPredicates.nonEmpty) {
                 ZIO.fail(UnmappedPredicate(edge.predicates.get, qcs))
               } else {
