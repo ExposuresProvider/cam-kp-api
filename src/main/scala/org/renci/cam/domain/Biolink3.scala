@@ -118,8 +118,7 @@ object Biolink3 extends LazyLogging {
     * @param queryGraph
     *   A Biolink 3 query graph.
     * @return
-    *   A tuple. The first element is a query graph with Biolink 3 edges converted to Biolink 2 edges. The second is a list of
-    *   TRAPIQueryEdges that could not be mapped.
+    *   A Biolink 2 query graph.
     */
   def mapBL3toBL2(
     queryGraph: TRAPIQueryGraph): ZIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], UnmappedPredicate, TRAPIQueryGraph] =
@@ -137,7 +136,7 @@ object Biolink3 extends LazyLogging {
 
               val preds = edge.predicates.getOrElse(List(QueryService.DefaultBiolinkPredicate))
 
-              // TODO: figure out how to run this without
+              // TODO: figure out how to run this without unsafeRun().
               val mappings = zio.Runtime.default.unsafeRun(
                 for {
                   mps <- predicateMappings
@@ -178,6 +177,65 @@ object Biolink3 extends LazyLogging {
                 ZIO.succeed(List((edgeName, transformedQueryEdge)))
               }
           }
+        }
+        .runCollect
+    } yield TRAPIQueryGraph(
+      nodes = queryGraph.nodes,
+      edges = newEdges.toList.flatten.toMap
+    )
+
+  /** Map Biolink 2 edges to Biolink 3 edges.
+    *
+    * @param queryGraph
+    *   A Biolink 2 query graph.
+    * @return
+    *   A Biolink 3 query graph.
+    */
+  def mapBL2toBL3(
+    queryGraph: TRAPIQueryGraph): ZIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], UnmappedPredicate, TRAPIQueryGraph] =
+    for {
+      newEdges <- ZStream
+        .fromIterable(queryGraph.edges)
+        .mapM { case (edgeName, edge) =>
+          // To simplify this, let's assume that qualifier constraints don't qualify predicates -- which means we can
+          // leave all of them in when we do the mapping.
+
+          val preds = edge.predicates.getOrElse(List(QueryService.DefaultBiolinkPredicate))
+
+          // TODO: figure out how to run this without unsafeRun.
+          val predicatesWithQCLs = zio.Runtime.default
+            .unsafeRun(
+              for {
+                mps <- predicateMappings
+                mapping <- ZStream
+                  .fromIterable(preds)
+                  .flatMap { pred =>
+                    ZStream
+                      .fromIterable(mps)
+                      .map { mp =>
+                        logger.info(s"Comparing predicate ${pred} to ${mp}")
+                        if (pred == BiolinkPredicate(mp.`mapped predicate`.replace(' ', '_')))
+                          List((mp.biolinkPredicate, mp.qualifierConstraintList))
+                        else List()
+                      }
+                  }
+                  .runCollect
+              } yield mapping.toList
+            )
+            .flatten
+
+          val transformedQueryEdge = TRAPIQueryEdge(
+            Some(predicatesWithQCLs.map(_._1).distinct),
+            edge.subject,
+            edge.`object`,
+            edge.knowledge_type,
+            None,
+            Some((edge.qualifier_constraints ++ predicatesWithQCLs.map(_._2)).flatten.toSet.toList)
+          )
+
+          logger.info(f"Transformed ${edge} to ${transformedQueryEdge}")
+
+          ZIO.succeed(List((edgeName, transformedQueryEdge)))
         }
         .runCollect
     } yield TRAPIQueryGraph(

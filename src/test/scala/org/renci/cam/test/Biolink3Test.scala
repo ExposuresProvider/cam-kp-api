@@ -86,12 +86,22 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
           }
           .runCollect
       },
-      suiteM("Make sure should-change graphs do change") {
+      suiteM("Make sure we can transform BL3 graphs to BL2 graphs") {
         ZStream
           .fromIterable(shouldChange)
           .map { case (key, (qg_bl3, qg_bl2)) =>
             testM(s"Testing ${key}") {
               assertM(Biolink3.mapBL3toBL2(qg_bl3))(Assertion.equalTo(qg_bl2))
+            }
+          }
+          .runCollect
+      },
+      suiteM("Make sure we can transform BL2 graphs to BL3 graphs") {
+        ZStream
+          .fromIterable(shouldChange)
+          .map { case (key, (qg_bl3, qg_bl2)) =>
+            testM(s"Testing ${key}") {
+              assertM(Biolink3.mapBL2toBL3(qg_bl2))(Assertion.equalTo(qg_bl3))
             }
           }
           .runCollect
