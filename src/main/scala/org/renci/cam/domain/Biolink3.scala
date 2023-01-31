@@ -54,17 +54,18 @@ object Biolink3 extends LazyLogging {
   case class PredicateMapping(
     `mapped predicate`: String,
     `object aspect qualifier`: Option[String],
-    `object direction qualified`: Option[String],
+    `object direction qualifier`: Option[String],
     predicate: String,
     `qualified predicate`: Option[String],
     `exact matches`: Option[Set[String]]
   ) {
+    def biolinkPredicate: BiolinkPredicate = BiolinkPredicate(predicate)
 
     def qualifiers: Seq[TRAPIQualifier] = (`object aspect qualifier` match {
       case Some(aspect: String) =>
         List(TRAPIQualifier(qualifier_type_id = "biolink:object_aspect_qualifier", qualifier_value = aspect.replace(' ', '_')))
       case _ => List()
-    }) ++ (`object direction qualified` match {
+    }) ++ (`object direction qualifier` match {
       case Some(direction: String) =>
         List(TRAPIQualifier(qualifier_type_id = "biolink:object_direction_qualifier", qualifier_value = direction.replace(' ', '_')))
       case _ => List()
@@ -78,7 +79,7 @@ object Biolink3 extends LazyLogging {
     })
 
     def qualifierConstraint = TRAPIQualifierConstraint(qualifier_set = qualifiers.toList)
-    def qualifierConstraintList = List(TRAPIQualifierConstraint(qualifier_set = qualifiers.toList))
+    def qualifierConstraintList = List(qualifierConstraint)
   }
 
   case class PredicateMappings(
@@ -144,10 +145,13 @@ object Biolink3 extends LazyLogging {
                     .fromIterable(mps)
                     .map { mp =>
                       preds.flatMap { pred =>
-                        if (pred == BiolinkPredicate(mp.predicate) && compareQualifierConstraintLists(qcs, mp.qualifierConstraintList)) {
+                        if (pred == mp.biolinkPredicate && compareQualifierConstraintLists(qcs, mp.qualifierConstraintList)) {
                           logger.info(s"Found matching predicate for edge '${edgeName}' ${edge}: ${mp}")
-                          List((pred, BiolinkPredicate(mp.`mapped predicate`)))
-                        } else List()
+                          List((pred, BiolinkPredicate(mp.`mapped predicate`.replace(' ', '_'))))
+                        } else {
+                          logger.info(s"Edge ${edge} did not match ${mp.biolinkPredicate}:${mp.qualifierConstraintList}")
+                          List()
+                        }
                       }
                     }
                     .runCollect
@@ -159,7 +163,7 @@ object Biolink3 extends LazyLogging {
                 ZIO.fail(UnmappedPredicate(edge.predicates.get, qcs))
               } else {
                 val mappingsMap = mappings.groupMap(_._1)(_._2)
-                val transformedPredicates = preds.flatMap(pred => mappingsMap(pred))
+                val transformedPredicates = preds.flatMap(pred => mappingsMap(pred)).distinct
                 val transformedQueryEdge = TRAPIQueryEdge(
                   Some(transformedPredicates),
                   edge.subject,
