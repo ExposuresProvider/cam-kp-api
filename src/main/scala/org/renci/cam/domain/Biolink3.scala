@@ -1,15 +1,17 @@
 package org.renci.cam.domain
 
+import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLStringContext
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.QueryService._
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
-import org.renci.cam.{AppConfig, SPARQLQueryExecutor}
+import org.renci.cam.{AppConfig, QueryService, SPARQLQueryExecutor}
 import zio.ZIO.ZIOAutoCloseableOps
 import zio.blocking.{effectBlockingIO, Blocking}
 import zio.config.ZConfig
+import zio.stream.ZStream
 import zio.{Has, RIO, ZIO}
 
 import java.nio.charset.StandardCharsets
@@ -47,17 +49,30 @@ import scala.io.Source
   *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/81
   *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/82
   */
-object Biolink3 {
+object Biolink3 extends LazyLogging {
 
   /** A case class for predicate mappings. */
   case class PredicateMapping(
     mappedPredicate: String,
-    objectAspectQualifier: String,
+    objectAspectQualifier: Option[String],
     objectDirectionQualified: Option[String],
     predicate: String,
     qualifiedPredicate: String,
     exactMatches: Set[String]
-  )
+  ) {
+
+    def qualifiers: Seq[TRAPIQualifier] = (objectAspectQualifier match {
+      case Some(aspect: String) => List(TRAPIQualifier(qualifier_type_id = "biolink:object_aspect_qualifier", qualifier_value = aspect))
+      case _                    => List()
+    }) ++ (objectDirectionQualified match {
+      case Some(direction: String) =>
+        List(TRAPIQualifier(qualifier_type_id = "biolink:object_direction_qualifier", qualifier_value = direction))
+      case _ => List()
+    })
+
+    def qualifierConstraint = TRAPIQualifierConstraint(qualifier_set = qualifiers.toList)
+    def qualifierConstraintList = List(TRAPIQualifierConstraint(qualifier_set = qualifiers.toList))
+  }
 
   case class PredicateMappings(
     predicateMappings: List[PredicateMapping]
@@ -77,6 +92,77 @@ object Biolink3 {
       predicateMappingsYaml <- ZIO.fromEither(io.circe.yaml.parser.parse(predicateMappingText))
       predicateMappings <- ZIO.fromEither(predicateMappingsYaml.as[PredicateMappings])
     } yield predicateMappings.predicateMappings
+
+  case class UnmappedPredicate(predicates: List[BiolinkPredicate], qualifierConstraints: List[TRAPIQualifierConstraint])
+
+  /** Map Biolink 2 edges to Biolink 3 edges.
+    *
+    * @param queryGraph
+    *   A Biolink 3 query graph.
+    * @return
+    *   A tuple. The first element is a query graph with Biolink 3 edges converted to Biolink 2 edges. The second is a list of
+    *   TRAPIQueryEdges that could not be mapped.
+    */
+  def mapBL3toBL2(
+    queryGraph: TRAPIQueryGraph): ZIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], UnmappedPredicate, TRAPIQueryGraph] =
+    for {
+      newEdges <- ZStream
+        .fromIterable(queryGraph.edges)
+        .mapM { case (edgeName, edge) =>
+          edge.qualifier_constraints match {
+            // If the qualifier constraints are empty, we don't need to change anything.
+            case None         => ZIO.succeed(List((edgeName, edge)))
+            case Some(List()) => ZIO.succeed(List((edgeName, edge)))
+            case Some(qcs)    =>
+              // A TRAPIQueryEdge may have multiple predicates, or none at all. If there are none, we assume that it is
+              // the default Biolink predicate.
+
+              val preds = edge.predicates.getOrElse(List(QueryService.DefaultBiolinkPredicate))
+
+              // TODO: figure out how to run this without
+              val mappings = zio.Runtime.default.unsafeRun(
+                for {
+                  mps <- predicateMappings
+                  mapping <- ZStream
+                    .fromIterable(mps)
+                    .map { mp =>
+                      preds.flatMap { pred =>
+                        if (BiolinkPredicate(mp.predicate) == pred && mp.qualifierConstraintList == qcs) {
+                          logger.info(s"Found matching predicate for edge '${edgeName}' ${edge}: ${mp}")
+                          List((BiolinkPredicate(mp.predicate), BiolinkPredicate(mp.mappedPredicate)))
+                        } else List()
+                      }
+                    }
+                    .runCollect
+                } yield mapping.toList.flatten
+              )
+
+              val unmappedPredicates = preds.filter(mappings.toMap.keySet.contains)
+              if (unmappedPredicates.nonEmpty) {
+                ZIO.fail(UnmappedPredicate(edge.predicates.get, qcs))
+              } else {
+                val mappingsMap = mappings.groupMap(_._1)(_._2)
+                val transformedPredicates = preds.flatMap(pred => mappingsMap(pred))
+                val transformedQueryEdge = TRAPIQueryEdge(
+                  Some(transformedPredicates),
+                  edge.subject,
+                  edge.`object`,
+                  edge.knowledge_type,
+                  None,
+                  None
+                )
+
+                logger.info(f"Transformed ${edge} to ${transformedQueryEdge}")
+
+                ZIO.succeed(List((edgeName, transformedQueryEdge)))
+              }
+          }
+        }
+        .runCollect
+    } yield TRAPIQueryGraph(
+      nodes = queryGraph.nodes,
+      edges = newEdges.toList.flatten.toMap
+    )
 
   def mapQueryBiolinkPredicatesToRelations(predicates: Set[BiolinkPredicate], queryGraph: TRAPIQueryGraph)
     : RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], (Map[BiolinkPredicate, Set[IRI]], Seq[String])] = {
