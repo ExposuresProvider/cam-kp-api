@@ -62,7 +62,7 @@ libraryDependencies ++= {
     "org.apache.jena"              % "apache-jena-libs"               % "4.5.0",
     "org.phenoscape"              %% "sparql-utils"                   % "1.3.1",
     "org.apache.commons"           % "commons-text"                   % "1.9",
-    "org.apache.commons"           % "commons-csv"                    % "1.9.0",
+    "org.apache.commons"           % "commons-csv"                    % "1.10.0",
     "io.circe"                    %% "circe-core"                     % circeVersion,
     "io.circe"                    %% "circe-generic"                  % circeVersion,
     "io.circe"                    %% "circe-parser"                   % circeVersion,
