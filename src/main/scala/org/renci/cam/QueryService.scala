@@ -485,6 +485,7 @@ object QueryService extends LazyLogging {
     val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
     val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
     val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
+    val innerLimit = if (limit == 0) INNER_LIMIT_MULTIPLIER else (INNER_LIMIT_MULTIPLIER * limit)
     val queryString =
       sparql"""SELECT DISTINCT $typeProjections
                (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?graphs)
@@ -496,7 +497,7 @@ object QueryService extends LazyLogging {
               SELECT $nodeProjections ?g
               WHERE {
                 $edgePatterns
-              } LIMIT ${if (limit == 0) INNER_LIMIT_MULTIPLIER else INNER_LIMIT_MULTIPLIER * limit}
+              } LIMIT ${innerLimit}
             }
             $BigDataQueryHintPrior $BigDataQueryHintRunFirst true .
           }
