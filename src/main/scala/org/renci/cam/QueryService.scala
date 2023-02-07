@@ -21,7 +21,7 @@ import scala.jdk.CollectionConverters._
 
 object QueryService extends LazyLogging {
 
-  val INNER_LIMIT_MULTIPLIER = 1000
+  val INNER_LIMIT_MULTIPLIER = 100
 
   val ProvWasDerivedFrom: IRI = IRI("http://www.w3.org/ns/prov#wasDerivedFrom")
 
@@ -499,7 +499,8 @@ object QueryService extends LazyLogging {
     val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
     val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
     val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
-    val innerLimit = if (limit == 0) INNER_LIMIT_MULTIPLIER else (INNER_LIMIT_MULTIPLIER * limit)
+    val innerLimit = INNER_LIMIT_MULTIPLIER * limit
+    val innerLimitSparql = if (limit > 0) sparql" LIMIT $innerLimit" else sparql""
     val queryString =
       sparql"""SELECT DISTINCT $typeProjections
                (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?graphs)
@@ -511,7 +512,7 @@ object QueryService extends LazyLogging {
               SELECT $nodeProjections ?g
               WHERE {
                 $edgePatterns
-              } LIMIT ${innerLimit}
+              } ${innerLimitSparql}
             }
             $BigDataQueryHintPrior $BigDataQueryHintRunFirst true .
           }
