@@ -12,7 +12,7 @@ import org.renci.cam.QueryService.RDFSSubClassOf
 import org.renci.cam._
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIKnowledgeGraph, TRAPIMessage, TRAPIQueryEdge, TRAPIQueryGraph, TRAPIQueryNode, TRAPIResponse}
 import zio._
-import zio.blocking.{Blocking, effectBlockingIO}
+import zio.blocking.{effectBlockingIO, Blocking}
 import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
 import zio.interop.catz._
