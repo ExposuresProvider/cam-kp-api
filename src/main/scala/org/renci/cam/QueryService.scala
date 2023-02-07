@@ -21,6 +21,8 @@ import scala.jdk.CollectionConverters._
 
 object QueryService extends LazyLogging {
 
+  val INNER_LIMIT = 1000
+
   val ProvWasDerivedFrom: IRI = IRI("http://www.w3.org/ns/prov#wasDerivedFrom")
 
   val RDFSSubClassOf: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#subClassOf")
@@ -494,7 +496,7 @@ object QueryService extends LazyLogging {
               SELECT $nodeProjections ?g
               WHERE {
                 $edgePatterns
-              }
+              } LIMIT ${INNER_LIMIT}
             }
             $BigDataQueryHintPrior $BigDataQueryHintRunFirst true .
           }
