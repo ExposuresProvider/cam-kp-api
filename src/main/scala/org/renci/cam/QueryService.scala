@@ -21,7 +21,7 @@ import scala.jdk.CollectionConverters._
 
 object QueryService extends LazyLogging {
 
-  val INNER_LIMIT_MULTIPLIER = 10000
+  val INNER_LIMIT_MULTIPLIER = 1000
 
   val ProvWasDerivedFrom: IRI = IRI("http://www.w3.org/ns/prov#wasDerivedFrom")
 
