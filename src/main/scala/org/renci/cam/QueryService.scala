@@ -342,11 +342,11 @@ object QueryService extends LazyLogging {
       _ = logger.debug("limit: {}", limit)
 
       // Prepare the query graph for processing.
-      queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+      queryGraphBL3 = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+      queryGraph <- Biolink3.mapBL3toBL2(queryGraphBL3)
 
       // Generate the relationsToLabelAndBiolinkPredicate.
       allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-      (predicatesToRelations, unmappedQualifiers) <- Biolink3.mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery, queryGraph)
 
       response <- {
         if (unmappedQualifiers.nonEmpty) {
