@@ -21,6 +21,8 @@ import scala.jdk.CollectionConverters._
 
 object QueryService extends LazyLogging {
 
+  val INNER_LIMIT_MULTIPLIER = 100
+
   val ProvWasDerivedFrom: IRI = IRI("http://www.w3.org/ns/prov#wasDerivedFrom")
 
   val RDFSSubClassOf: IRI = IRI("http://www.w3.org/2000/01/rdf-schema#subClassOf")
@@ -44,6 +46,12 @@ object QueryService extends LazyLogging {
   val SlotMapping: IRI = IRI("http://cam.renci.org/biolink_slot")
 
   val BiolinkNamedThing: BiolinkClass = BiolinkClass("NamedThing", IRI(s"${BiolinkTerm.namespace}NamedThing"))
+
+  /** When no category is provided, we use the default Biolink category. */
+  val DefaultBiolinkCategory: BiolinkClass = BiolinkNamedThing
+
+  /** When no predicate is provided, we use the default Biolink predicate. */
+  val DefaultBiolinkPredicate: BiolinkPredicate = BiolinkPredicate("related_to")
 
   /* Hints used to optimize the query (see https://github.com/blazegraph/database/wiki/QueryHints for details). */
 
@@ -307,7 +315,6 @@ object QueryService extends LazyLogging {
 
     val allAttributeConstraints = submittedQueryGraph.nodes.values.flatMap(
       _.constraints.getOrElse(List())) ++ submittedQueryGraph.edges.values.flatMap(_.attribute_constraints.getOrElse(List()))
-    val allQualifierConstraints = submittedQueryGraph.edges.values.flatMap(_.qualifier_constraints.getOrElse(List()))
 
     if (allAttributeConstraints.nonEmpty) {
       ZIO.succeed(
@@ -327,61 +334,70 @@ object QueryService extends LazyLogging {
           )
         )
       )
-    } else if (allQualifierConstraints.nonEmpty) {
-      // Are there any qualifier constraints? If so, we can't match them, so we should return an empty list of results.
-      ZIO.succeed(
-        TRAPIResponse(
-          emptyTRAPIMessage,
-          Some("Success"),
-          None,
-          Some(
-            List(
-              LogEntry(
-                Some(java.time.Instant.now().toString),
-                Some("WARNING"),
-                Some("UnsupportedQualifierConstraint"),
-                Some(s"The following qualifier constraints are not supported: ${allQualifierConstraints}")
+    }
+
+    for {
+      // Get the Biolink data.
+      biolinkData <- biolinkData
+      _ = logger.debug("limit: {}", limit)
+
+      // Prepare the query graph for processing.
+      queryGraphBL3 = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+      queryGraph <- Biolink3.mapBL3toBL2(queryGraphBL3)
+
+      // Generate the relationsToLabelAndBiolinkPredicate.
+      allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
+
+      response <- {
+        if (unmappedQualifiers.nonEmpty) {
+          // Are there any qualifier constraints? If so, we can't match them, so we should return an empty list of results.
+          ZIO.succeed(
+            TRAPIResponse(
+              emptyTRAPIMessage,
+              Some("UnsupportedQualifierConstraint"),
+              None,
+              Some(
+                List(
+                  LogEntry(
+                    Some(java.time.Instant.now().toString),
+                    Some("WARNING"),
+                    Some("UnsupportedQualifierConstraint"),
+                    Some(s"The following qualifier constraints are not supported: ${unmappedQualifiers}")
+                  )
+                )
               )
             )
           )
-        )
-      )
-    } else
-      for {
-        // Get the Biolink data.
-        biolinkData <- biolinkData
-        _ = logger.debug("limit: {}", limit)
+        } else {
+          for {
+            // Generate query solutions.
+            // _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
+            initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+            results = initialQuerySolutions.zipWithIndex.map { case (qs, index) =>
+              Result.fromQuerySolution(qs, index, queryGraph)
+            }
+            _ = logger.debug(s"Results: $results")
 
-        // Prepare the query graph for processing.
-        queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+            // In order to translate from relations to Biolink predicates, we need the reverse mapping.
+            allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
+            relationsToLabelAndBiolinkPredicate <- Biolink3.mapRelationsToLabelAndBiolink(allRelationsInQuery)
 
-        // Generate the relationsToLabelAndBiolinkPredicate.
-        allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-        predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
-        allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-        relationsToLabelAndBiolinkPredicate <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
-
-        // Generate query solutions.
-        _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
-        initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
-        results = initialQuerySolutions.zipWithIndex.map { case (qs, index) =>
-          Result.fromQuerySolution(qs, index, queryGraph)
+            // From the results, generate the TRAPI nodes, edges and results.
+            nodes <- generateTRAPINodes(results)
+            _ = logger.debug(s"Nodes: $nodes")
+            edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
+            _ = logger.debug(s"Edges: $edges")
+            trapiResults = generateTRAPIResults(results)
+            _ = logger.debug(s"Results: $trapiResults")
+          } yield TRAPIResponse(
+            TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct)),
+            Some("Success"),
+            None,
+            None
+          )
         }
-        _ = logger.debug(s"Results: $results")
-
-        // From the results, generate the TRAPI nodes, edges and results.
-        nodes <- generateTRAPINodes(results)
-        _ = logger.debug(s"Nodes: $nodes")
-        edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
-        _ = logger.debug(s"Edges: $edges")
-        trapiResults = generateTRAPIResults(results)
-        _ = logger.debug(s"Results: $trapiResults")
-      } yield TRAPIResponse(
-        TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct)),
-        Some("Success"),
-        None,
-        None
-      )
+      }
+    } yield response
   }
 
   def oldRun(limit: Int, includeExtraEdges: Boolean, submittedQueryGraph: TRAPIQueryGraph)
@@ -391,9 +407,9 @@ object QueryService extends LazyLogging {
       _ = logger.warn("limit: {}, includeExtraEdges: {}", limit, includeExtraEdges)
       queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
       allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-      predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
+      (predicatesToRelations, unmappedQualifiers) <- Biolink3.mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery, queryGraph)
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-      relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
+      relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- Biolink3.mapRelationsToLabelAndBiolink(allRelationsInQuery)
       _ = logger.warn(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
       initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
       _ = logger.warn(s"Initial query solutions: ${initialQuerySolutions.length} (limit: $limit): $initialQuerySolutions")
@@ -424,7 +440,7 @@ object QueryService extends LazyLogging {
           slotStuffNodeDetails <- getTRAPINodeDetails(allTripleNodes.to(List))
           extraKGNodes = getExtraKGNodes(allTripleNodes, slotStuffNodeDetails, biolinkData)
           allPredicates = allCAMTriples.map(_.pred)
-          relationsToInfo <- mapRelationsToLabelAndBiolink(allPredicates)
+          relationsToInfo <- Biolink3.mapRelationsToLabelAndBiolink(allPredicates)
           extraKGEdges = allCAMTriples.flatMap { triple =>
             for {
               (relationLabelOpt, relationBiolinkPredicate) <- relationsToInfo.get(triple.pred)
@@ -483,6 +499,8 @@ object QueryService extends LazyLogging {
     val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
     val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
     val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
+    val innerLimit = INNER_LIMIT_MULTIPLIER * limit
+    val innerLimitSparql = if (limit > 0) sparql" LIMIT $innerLimit" else sparql""
     val queryString =
       sparql"""SELECT DISTINCT $typeProjections
                (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?graphs)
@@ -494,7 +512,7 @@ object QueryService extends LazyLogging {
               SELECT $nodeProjections ?g
               WHERE {
                 $edgePatterns
-              }
+              } ${innerLimitSparql}
             }
             $BigDataQueryHintPrior $BigDataQueryHintRunFirst true .
           }
@@ -574,8 +592,8 @@ object QueryService extends LazyLogging {
   def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph, biolinkPredicates: List[BiolinkPredicate]): TRAPIQueryGraph = {
     val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
       val newPredicates = edge.predicates match {
-        case None       => Some(List(BiolinkPredicate("related_to")))
-        case Some(Nil)  => Some(List(BiolinkPredicate("related_to")))
+        case None       => Some(List(DefaultBiolinkPredicate))
+        case Some(Nil)  => Some(List(DefaultBiolinkPredicate))
         case predicates => predicates
       }
       val filteredPredicates = newPredicates.map(_.filter(pred => biolinkPredicates.contains(pred)))
@@ -583,8 +601,8 @@ object QueryService extends LazyLogging {
     }
     val improvedNodeMap = queryGraph.nodes.map { case (nodeID, node) =>
       val newCategories = node.categories match {
-        case None       => Some(List(BiolinkNamedThing))
-        case Some(Nil)  => Some(List(BiolinkNamedThing))
+        case None       => Some(List(DefaultBiolinkCategory))
+        case Some(Nil)  => Some(List(DefaultBiolinkCategory))
         case categories => categories
       }
       nodeID -> node.copy(categories = newCategories)
@@ -691,7 +709,7 @@ object QueryService extends LazyLogging {
               nodeIRI <- ZIO
                 .effect(querySolution.getResource(s"${queryNodeID}_type").getURI)
                 .orElseFail(new Exception(s"Missing node IRI: $queryNodeID"))
-              labelAndTypes = termToLabelAndTypes.getOrElse(IRI(nodeIRI), (None, List(BiolinkNamedThing)))
+              labelAndTypes = termToLabelAndTypes.getOrElse(IRI(nodeIRI), (None, List(DefaultBiolinkCategory)))
               (labelOpt, biolinkTypes) = labelAndTypes
               biolinkTypesSet = biolinkTypes.to(Set)
               nodeBiolinkTypes = bionlinkClasses.filter(c => biolinkTypesSet(c.iri))
@@ -811,48 +829,12 @@ object QueryService extends LazyLogging {
       term -> (labels.flatten.headOption, biolinkTypes)
     }
     val nodeMap = camNodes.map { node =>
-      val (labelOpt, biolinkTypes) = termToLabelAndTypes.getOrElse(node, (None, List(BiolinkNamedThing)))
+      val (labelOpt, biolinkTypes) = termToLabelAndTypes.getOrElse(node, (None, List(DefaultBiolinkCategory)))
       val biolinkTypesSet = biolinkTypes.to(Set)
       val classes = biolinkData.classes.filter(c => biolinkTypesSet(c.iri))
       node -> TRAPINode(labelOpt, Some(classes), None)
     }.toMap
     nodeMap
-  }
-
-  // TODO:
-  // - Change this to cached queries (see mapQueryBiolinkPredicatesToRelations for example)
-  def mapRelationsToLabelAndBiolink(relations: Set[IRI]): RIO[ZConfig[AppConfig] with HttpClient, Map[IRI, (Option[String], IRI)]] = {
-    final case class RelationInfo(relation: IRI, biolinkSlot: IRI, label: Option[String])
-    val queryText = sparql"""
-         SELECT DISTINCT ?relation ?biolinkSlot ?label
-         WHERE {
-           VALUES ?relation { ${relations.asValues} }
-           ?relation $SlotMapping ?biolinkSlot .
-           ?biolinkSlot a $BiolinkMLSlotDefinition .
-           OPTIONAL { ?relation $RDFSLabel ?label . }
-           FILTER NOT EXISTS {
-             ?relation $SlotMapping ?other .
-             ?other $BiolinkMLIsA+/$BiolinkMLMixins* ?biolinkSlot .
-           }
-         }"""
-    SPARQLQueryExecutor.runSelectQueryAs[RelationInfo](queryText.toQuery).map { res =>
-      res.groupMap(_.relation)(info => (info.label, info.biolinkSlot)).map { case (relationIRI, infos) => relationIRI -> infos.head }
-    }
-  }
-
-  def mapQueryBiolinkPredicatesToRelations(
-    predicates: Set[BiolinkPredicate]): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], Map[BiolinkPredicate, Set[IRI]]] = {
-    final case class Predicate(biolinkPredicate: BiolinkPredicate, predicate: IRI)
-    val queryText = sparql"""
-        SELECT DISTINCT ?biolinkPredicate ?predicate WHERE {
-          VALUES ?biolinkPredicate { ${predicates.asValues} }
-          ?predicate $SlotMapping ?biolinkPredicate .
-          FILTER EXISTS { ?s ?predicate ?o }
-          $BigDataQueryHintQuery $BigDataQueryHintFilterExists "SubQueryLimitOne"
-        }"""
-    for {
-      predicates <- SPARQLQueryExecutor.runSelectQueryWithCacheAs[Predicate](queryText.toQuery)
-    } yield predicates.to(Set).groupMap(_.biolinkPredicate)(_.predicate)
   }
 
 }
