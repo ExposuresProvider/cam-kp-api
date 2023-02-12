@@ -47,10 +47,10 @@ object KnowledgeSourceTest extends DefaultRunnableSpec with LazyLogging {
           selectedOKGs = selectedAttribs.filter(_.attribute_type_id == BiolinkPredicate("original_knowledge_source").iri).flatMap(_.value)
 
         } yield assert(response.message.results)(Assertion.isSome(Assertion.isNonEmpty)) &&
-        assert(sourcesById.values.flatten)(Assertion.contains("infores:cam-kp")) &&
-        assert(selectedAttribs)(Assertion.isNonEmpty) &&
-        assert(selectedSources)(Assertion.forall(Assertion.equalTo("infores:cam-kp"))) &&
-        assert(selectedOKGs)(Assertion.forall(Assertion.equalTo("infores:go-cam")))
+          assert(sourcesById.values.flatten)(Assertion.contains("infores:cam-kp")) &&
+          assert(selectedAttribs)(Assertion.isNonEmpty) &&
+          assert(selectedSources)(Assertion.forall(Assertion.equalTo("infores:cam-kp"))) &&
+          assert(selectedOKGs)(Assertion.forall(Assertion.equalTo("infores:go-cam")))
       }
     )
   }
@@ -92,10 +92,10 @@ object KnowledgeSourceTest extends DefaultRunnableSpec with LazyLogging {
           selectedOKGs = selectedAttribs.filter(_.attribute_type_id == BiolinkPredicate("original_knowledge_source").iri).flatMap(_.value)
 
         } yield assert(response.message.results)(Assertion.isSome(Assertion.isNonEmpty)) &&
-        assert(sourcesById.values.flatten)(Assertion.contains("infores:cam-kp")) &&
-        assert(selectedAttribs)(Assertion.isNonEmpty) &&
-        assert(selectedSources)(Assertion.forall(Assertion.equalTo("infores:cam-kp"))) &&
-        assert(selectedOKGs)(Assertion.forall(Assertion.equalTo("infores:ctd")))
+          assert(sourcesById.values.flatten)(Assertion.contains("infores:cam-kp")) &&
+          assert(selectedAttribs)(Assertion.isNonEmpty) &&
+          assert(selectedSources)(Assertion.forall(Assertion.equalTo("infores:cam-kp"))) &&
+          assert(selectedOKGs)(Assertion.forall(Assertion.equalTo("infores:ctd")))
       }
     )
   }
