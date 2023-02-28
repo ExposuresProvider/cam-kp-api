@@ -5,6 +5,7 @@ import zio.{Has, RIO, Task, ZIO}
 import zio.blocking.{blocking, Blocking}
 import zio.config.{getConfig, ZConfig}
 import io.circe.generic.auto._
+import org.phenoscape.sparql.SPARQLInterpolation.SPARQLStringContext
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.LookupService.LabeledIRI
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
