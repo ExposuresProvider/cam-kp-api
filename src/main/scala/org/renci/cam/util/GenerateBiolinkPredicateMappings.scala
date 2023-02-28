@@ -31,7 +31,7 @@ import scala.io.Source
   * It also generates warnings for predicates not mapped.
   */
 object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
-  override lazy val logger = Logger(GenerateBiolinkPredicateMappings.getClass.getSimpleName);
+  override lazy val logger: Logger = Logger(GenerateBiolinkPredicateMappings.getClass.getSimpleName);
 
   case class PredicateMapping(
     predicate: LabeledIRI,
@@ -126,7 +126,7 @@ object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
       case _ => List()
     })
 
-    def qualifierConstraint = TRAPIQualifierConstraint(qualifier_set = qualifiers.toList)
+    def qualifierConstraint: TRAPIQualifierConstraint = TRAPIQualifierConstraint(qualifier_set = qualifiers.toList)
 
     def qualifierConstraintList = List(qualifierConstraint)
   }
@@ -197,23 +197,22 @@ object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
           case Some(mp) => transformPredicateWithMappedPredicateInfo(pred, mp)
         }
       }
-      qualifiedPreds: Seq[PredicateMapping] = predsMappedByExactMatch.map(pred =>
-        pred match {
-          /* For each predicate, we need to check to see if this is a "mapped predicate". If so, we transform it
-           into a qualified predicate as per the predicate mapping.
-           */
-          case PredicateMapping(_, Some(biolinkPredicate: BiolinkPredicate), _) =>
-            // In some cases, we might be able to find the mappings by Biolink predicate.
-            val foundByBiolinkPredicate = mappedPredicates.find(mp => mp.biolinkMappedPredicate == biolinkPredicate)
+      qualifiedPreds: Seq[PredicateMapping] = predsMappedByExactMatch.map {
+        /* For each predicate, we need to check to see if this is a "mapped predicate". If so, we transform it
+         into a qualified predicate as per the predicate mapping.
+         */
+        case pred @ PredicateMapping(_, Some(biolinkPredicate: BiolinkPredicate), _) =>
+          // In some cases, we might be able to find the mappings by Biolink predicate.
+          val foundByBiolinkPredicate = mappedPredicates.find(mp => mp.biolinkMappedPredicate == biolinkPredicate)
 
-            foundByBiolinkPredicate match {
-              case None     => pred
-              case Some(mp) => transformPredicateWithMappedPredicateInfo(pred, mp)
-            }
+          foundByBiolinkPredicate match {
+            case None     => pred
+            case Some(mp) => transformPredicateWithMappedPredicateInfo(pred, mp)
+          }
 
-          // If we haven't matched it, don't transform it.
-          case _ => pred
-        })
+        // If we haven't matched it, don't transform it.
+        case pred => pred
+      }
     } yield {
       logger.info(f"Found ${preds.size} predicates:")
       preds.foreach(pred => logger.info(f" - ${pred}"))
