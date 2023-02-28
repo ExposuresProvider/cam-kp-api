@@ -12,6 +12,7 @@ import zio.config.{ZConfig, getConfig}
 import zio.stream.ZStream
 import zio.{Has, RIO, Task, ZIO}
 
+import java.io.{File, FileInputStream}
 import scala.io.Source
 
 object PredicateMappings {
@@ -152,7 +153,9 @@ object PredicateMappings {
   // TODO: there's some hacky code here for handling the case where biolink/predicates.json doesn't exist. It should
   // generally always exist, since it's included in the repository. But we should still test this so it's better.
   // TODO:
-  val predicateMappingsStream = PredicateMappings.getClass.getResourceAsStream("biolink/predicates.json")
+  val predicateMappingsStream = if (PredicateMappings.getClass.getResourceAsStream("biolink/predicates.json") != null)
+    PredicateMappings.getClass.getResourceAsStream("biolink/predicates.json") else
+    new FileInputStream(new File("src/main/resources/biolink/predicates.json"))
 
   val predicatesDataAsString = if(predicateMappingsStream == null) "" else Source
     .fromInputStream(predicateMappingsStream)
@@ -167,13 +170,16 @@ object PredicateMappings {
     val biolinkPredicates = predicates.toList.flatten.toSet
     val qualifierConstraint = qualifier_constraints.toList.flatten.flatMap(_.qualifier_set)
 
+    logger.info(s"Searching for ${predicates} with ${qualifier_constraints} in ${predicatesData}")
+
     val relations = predicatesData.filter {
-      case PredicateMapping(_, Some(biolinkPredicate), qualifierOpt) =>
+      case pred@PredicateMapping(_, Some(biolinkPredicate), qualifierOpt) =>
+        logger.info(f"Check if ${biolinkPredicate} matches ${pred}: ${biolinkPredicates.contains(biolinkPredicate)}")
         if (!biolinkPredicates.contains(biolinkPredicate)) false
         else
           qualifierOpt match {
-            case None             => if (qualifierOpt.isEmpty) true else false
-            case Some(constraint) => if (compareQualifierConstraints(qualifierConstraint, constraint.qualifier_set)) true else false
+            case None             => true
+            case Some(constraint) => compareQualifierConstraints(qualifierConstraint, constraint.qualifier_set)
           }
       case _ => false
     }
@@ -193,6 +199,9 @@ object PredicateMappings {
           }
       case _ => None
     }
+
+    // TODO: this is trickier than it looks, since we need to find the most specific Biolink predicate here, not the
+    // highest one. Hmm.
 
     if (biolinkPredicates.isEmpty) {
       logger.error(f"Could not find Biolink predicates for relation ${relationIRI}")
