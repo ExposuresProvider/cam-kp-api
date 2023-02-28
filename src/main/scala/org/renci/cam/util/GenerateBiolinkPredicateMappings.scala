@@ -1,7 +1,10 @@
 package org.renci.cam.util
 
 import com.typesafe.scalalogging.{LazyLogging, Logger}
+import io.circe._
 import io.circe.generic.auto._
+import io.circe.parser._
+import io.circe.syntax._
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLStringContext
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.LookupService.LabeledIRI
@@ -9,11 +12,12 @@ import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.domain.{BiolinkPredicate, IRI, TRAPIQualifier, TRAPIQualifierConstraint}
 import org.renci.cam.{AppConfig, HttpClient, QueryService, SPARQLQueryExecutor}
 import zio._
-import zio.blocking.{blocking, Blocking}
+import zio.blocking.{Blocking, blocking}
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{getConfig, ZConfig}
+import zio.config.{ZConfig, getConfig}
 import zio.stream.ZStream
 
+import java.nio.file.{Files, Paths}
 import scala.io.Source
 
 /** This class can generate Biolink predicate mappings in the src/main/resources/biolink directory, based on two input sources:
@@ -32,6 +36,9 @@ import scala.io.Source
   */
 object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
   override lazy val logger: Logger = Logger(GenerateBiolinkPredicateMappings.getClass.getSimpleName);
+
+  /** Where should we save the predicates.json files? */
+  val PredicateJsonFilePath = Paths.get("src/main/resources/biolink/predicates.json")
 
   case class PredicateMapping(
     predicate: LabeledIRI,
@@ -213,6 +220,8 @@ object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
         // If we haven't matched it, don't transform it.
         case pred => pred
       }
+      uniquePreds: Set[PredicateMapping] = qualifiedPreds.toSet
+      predsOutput = uniquePreds.asJson.deepDropNullValues.spaces2SortKeys
     } yield {
       logger.info(f"Found ${preds.size} predicates:")
       preds.foreach(pred => logger.info(f" - ${pred}"))
@@ -222,6 +231,9 @@ object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
 
       logger.info(f"Transformed to ${qualifiedPreds.size} predicates:")
       qualifiedPreds.foreach(pred => logger.info(f" - ${pred}"))
+
+      Files.writeString(PredicateJsonFilePath, predsOutput)
+      logger.info(f"Wrote predicate output (${predsOutput.size}) to ${PredicateJsonFilePath}")
     }
 
     val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
