@@ -1,0 +1,5008 @@
+[
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004008",
+      "label" : [
+        "has primary output"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002497",
+      "label" : [
+        "end stage"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002087",
+      "label" : [
+        "immediately_preceded_by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.org/dc/terms/contributor",
+      "label" : [
+        "contributor"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002019",
+      "label" : [
+        "has ligand"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of"
+      },
+      "shorthand" : "acts_upstream_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004034",
+      "label" : [
+        "acts upstream of, positive effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000050",
+      "label" : [
+        "part_of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#created_by",
+      "label" : [
+        "created_by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002162",
+      "label" : [
+        "in taxon"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002496",
+      "label" : [
+        "existence starts during or after"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002608",
+      "label" : [
+        "process has causal agent"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004034",
+      "label" : [
+        "acts upstream of, positive effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002215",
+      "label" : [
+        "capable_of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/participates_in"
+      },
+      "shorthand" : "participates_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002216",
+      "label" : [
+        "capable of part of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0000425",
+      "label" : [
+        "expand assertion to"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002174",
+      "label" : [
+        "dubious_for_taxon"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002296",
+      "label" : [
+        "results in development of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasOBONamespace",
+      "label" : [
+        "has_obo_namespace"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/positively_regulates"
+      },
+      "shorthand" : "positively_regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004032",
+      "label" : [
+        "acts upstream of or within, positive effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002597",
+      "label" : [
+        "capable of negatively regulating"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/ECO_9000002",
+      "label" : [
+        "has GO evidence code"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000015",
+      "label" : [
+        "location_notes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002338",
+      "label" : [
+        "has target start location"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002423",
+      "label" : [
+        "logical macro assertion on an annotation property"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0011002",
+      "label" : [
+        "regulates activity of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of"
+      },
+      "shorthand" : "acts_upstream_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004035",
+      "label" : [
+        "acts upstream of, negative effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000202",
+      "label" : [
+        "fma_set_term"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0017001",
+      "label" : [
+        "device utilizes material"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004035",
+      "label" : [
+        "acts upstream of, negative effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002163",
+      "label" : [
+        "spatially disjoint from"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_output"
+      },
+      "shorthand" : "has_output"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004008",
+      "label" : [
+        "has primary output"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#inSubset",
+      "label" : [
+        "in_subset"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002412",
+      "label" : [
+        "immediately causally upstream of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/participates_in"
+      },
+      "shorthand" : "participates_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002215",
+      "label" : [
+        "capable of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_output"
+      },
+      "shorthand" : "has_output"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002299",
+      "label" : [
+        "results in maturation of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004046",
+      "label" : [
+        "causally upstream of or within, negative effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002581",
+      "label" : [
+        "is a defining property chain axiom"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_input"
+      },
+      "shorthand" : "has_input"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002590",
+      "label" : [
+        "results in disassembly of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002333",
+      "label" : [
+        "enabled by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002431",
+      "label" : [
+        "involved in or involved in regulation of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/overlaps"
+      },
+      "shorthand" : "overlaps"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000050",
+      "label" : [
+        "part of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002087",
+      "label" : [
+        "starts_at_end_of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002454",
+      "label" : [
+        "has host"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002087",
+      "label" : [
+        "starts_at_end_of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002175",
+      "label" : [
+        "present in taxon"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym",
+      "label" : [
+        "has related synonym"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002093",
+      "label" : [
+        "ends during"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002174",
+      "label" : [
+        "dubious for taxon"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002501",
+      "label" : [
+        "causal relation between processes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://translator.renci.org/ubergraph-axioms.ofn#acts_upstream_of_o_enabled_by",
+      "label" : [
+        "acts_upstream_of_o_enabled_by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+      "label" : [
+        "has_exact_synonym"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012006",
+      "label" : [
+        "is small molecule inhibitor of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002298",
+      "label" : [
+        "results in morphogenesis of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#creation_date",
+      "label" : [
+        "creation_date"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000010",
+      "label" : [
+        "structure_notes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002295",
+      "label" : [
+        "results in developmental progression of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0000232",
+      "label" : [
+        "curator notes"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0040042",
+      "label" : [
+        "is homeomorphic for"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012003",
+      "label" : [
+        "acts on population of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002211",
+      "label" : [
+        "regulates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002590",
+      "label" : [
+        "results in disassembly of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.org/dc/elements/1.1/contributor",
+      "label" : [
+        "contributor"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/preceded_by"
+      },
+      "shorthand" : "preceded_by"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002087",
+      "label" : [
+        "starts_at_end_of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002409",
+      "label" : [
+        "indirectly negatively regulates"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/emapa#has_part",
+      "label" : [
+        "has_part"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_output"
+      },
+      "shorthand" : "has_output"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002298",
+      "label" : [
+        "results in morphogenesis of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002221",
+      "label" : [
+        "surrounds"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002086",
+      "label" : [
+        "ends after"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002264",
+      "label" : [
+        "acts upstream of or within"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002344",
+      "label" : [
+        "results in transport to from or in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004032",
+      "label" : [
+        "acts upstream of or within, positive effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002436",
+      "label" : [
+        "molecularly interacts with"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_input"
+      },
+      "shorthand" : "has_input"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002233",
+      "label" : [
+        "has input"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002492",
+      "label" : [
+        "existence ends during"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002092",
+      "label" : [
+        "happens during"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002175",
+      "label" : [
+        "present_in_taxon"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000008",
+      "label" : [
+        "taxon_notes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002131",
+      "label" : [
+        "overlaps"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/overlaps"
+      },
+      "shorthand" : "overlaps"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0001019",
+      "label" : [
+        "contains"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/coexists_with"
+      },
+      "shorthand" : "coexists_with"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002220",
+      "label" : [
+        "adjacent to"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/process_regulates_process"
+      },
+      "shorthand" : "process_regulates_process"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002211",
+      "label" : [
+        "regulates"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym",
+      "label" : [
+        "has_narrow_synonym"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002334",
+      "label" : [
+        "regulated by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002223",
+      "label" : [
+        "starts"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/enabled_by"
+      },
+      "shorthand" : "enabled_by"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002333",
+      "label" : [
+        "enabled by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002475",
+      "label" : [
+        "has no connections with"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000004",
+      "label" : [
+        "provenance_notes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002432",
+      "label" : [
+        "is active in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000056",
+      "label" : [
+        "participates in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002331",
+      "label" : [
+        "involved in"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002487",
+      "label" : [
+        "relation between physical entity and a process or stage"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "biolinkQualifiers" : {
+      "qualifier_set" : [
+        {
+          "qualifier_type_id" : "biolink:object_direction_qualifier",
+          "qualifier_value" : "downregulated"
+        }
+      ]
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002449",
+      "label" : [
+        "directly negatively regulates activity of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002500",
+      "label" : [
+        "causal agent in process"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002629",
+      "label" : [
+        "directly positively regulates"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002173",
+      "label" : [
+        "ambiguous_for_taxon"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002586",
+      "label" : [
+        "results in breakdown of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/causes"
+      },
+      "shorthand" : "causes"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002315",
+      "label" : [
+        "results in acquisition of features of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/preceded_by"
+      },
+      "shorthand" : "preceded_by"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002087",
+      "label" : [
+        "immediately preceded by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/produced_by"
+      },
+      "shorthand" : "produced_by"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0003001",
+      "label" : [
+        "produced by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0001025",
+      "label" : [
+        "located in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002087",
+      "label" : [
+        "immediately preceded by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0000112",
+      "label" : [
+        "example of usage"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012001",
+      "label" : [
+        "has small molecule activator"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002092",
+      "label" : [
+        "happens during"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/participates_in"
+      },
+      "shorthand" : "participates_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000056",
+      "label" : [
+        "participates in"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0000116",
+      "label" : [
+        "editor note"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/description"
+      },
+      "shorthand" : "description"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0000115",
+      "label" : [
+        "definition"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/process_regulates_process"
+      },
+      "shorthand" : "process_regulates_process"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002211",
+      "label" : [
+        "regulates (processual)"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000107",
+      "label" : [
+        "vertebra number"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0000424",
+      "label" : [
+        "expand expression to"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002411",
+      "label" : [
+        "causally upstream of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000014",
+      "label" : [
+        "actions_notes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002592",
+      "label" : [
+        "results in organization of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004007",
+      "label" : [
+        "has primary input or output"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/GOREL_0001006",
+      "label" : [
+        "acts_on_population_of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/opposite_of"
+      },
+      "shorthand" : "opposite_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002604",
+      "label" : [
+        "is_opposite_of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002491",
+      "label" : [
+        "existence starts and ends during"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002502",
+      "label" : [
+        "depends on"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "predicate" : {
+      "iri" : "http://translator.renci.org/ubergraph-axioms.ofn#acts_upstream_of_o_enabled_by",
+      "label" : [
+        "acts_upstream_of_o_enabled_by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002296",
+      "label" : [
+        "results in development of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/occurs_in"
+      },
+      "shorthand" : "occurs_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002231",
+      "label" : [
+        "has start location"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004009",
+      "label" : [
+        "has primary input"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002588",
+      "label" : [
+        "results in assembly of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002354",
+      "label" : [
+        "formed as result of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/part_of"
+      },
+      "shorthand" : "part_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000050",
+      "label" : [
+        "part_of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.org/dc/elements/1.1/description",
+      "label" : [
+        "description"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0008506",
+      "label" : [
+        "ecologically co-occurs with"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/caused_by"
+      },
+      "shorthand" : "caused_by"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002608",
+      "label" : [
+        "process has causal agent"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002229",
+      "label" : [
+        "ends"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_input"
+      },
+      "shorthand" : "has_input"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004009",
+      "label" : [
+        "has primary input"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002327",
+      "label" : [
+        "enables"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/consumes"
+      },
+      "shorthand" : "consumes"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004009",
+      "label" : [
+        "has primary input"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0000119",
+      "label" : [
+        "definition source"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/interacts_with"
+      },
+      "shorthand" : "interacts_with"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002436",
+      "label" : [
+        "molecularly interacts with"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/contributes_to"
+      },
+      "shorthand" : "contributes_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002326",
+      "label" : [
+        "contributes to"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of_positive_effect"
+      },
+      "shorthand" : "acts_upstream_of_positive_effect"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004034",
+      "label" : [
+        "acts upstream of, positive effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of_or_within_negative_effect"
+      },
+      "shorthand" : "acts_upstream_of_or_within_negative_effect"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004033",
+      "label" : [
+        "acts upstream of or within, negative effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_output"
+      },
+      "shorthand" : "has_output"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002297",
+      "label" : [
+        "results in formation of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/preceded_by"
+      },
+      "shorthand" : "preceded_by"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002087",
+      "label" : [
+        "immediately_preceded_by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000051",
+      "label" : [
+        "has_part"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/overlaps"
+      },
+      "shorthand" : "overlaps"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002131",
+      "label" : [
+        "overlaps"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/participates_in"
+      },
+      "shorthand" : "participates_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002327",
+      "label" : [
+        "enables"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002598",
+      "label" : [
+        "capable of positively regulating"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000052",
+      "label" : [
+        "characteristic of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002406",
+      "label" : [
+        "obsolete directly activates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002497",
+      "label" : [
+        "end stage"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/mondo#excluded_subClassOf",
+      "label" : [
+        "excluded subClassOf"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000009",
+      "label" : [
+        "function_notes"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0100001",
+      "label" : [
+        "term replaced by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/participates_in"
+      },
+      "shorthand" : "participates_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002565",
+      "label" : [
+        "results in movement of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/overlaps"
+      },
+      "shorthand" : "overlaps"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000051",
+      "label" : [
+        "has part"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0003000",
+      "label" : [
+        "produces"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002578",
+      "label" : [
+        "directly regulates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of_or_within"
+      },
+      "shorthand" : "acts_upstream_of_or_within"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004032",
+      "label" : [
+        "acts upstream of or within, positive effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002205",
+      "label" : [
+        "has gene product"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002264",
+      "label" : [
+        "acts upstream of or within"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002479",
+      "label" : [
+        "has part that occurs in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/precedes"
+      },
+      "shorthand" : "precedes"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002411",
+      "label" : [
+        "causally upstream of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/participates_in"
+      },
+      "shorthand" : "participates_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002432",
+      "label" : [
+        "is active in"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000085",
+      "label" : [
+        "has function"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002348",
+      "label" : [
+        "results in commitment to"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002575",
+      "label" : [
+        "is direct form of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012003",
+      "label" : [
+        "acts on population of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/OMO_0002000",
+      "label" : [
+        "defined by construct"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002488",
+      "label" : [
+        "existence starts during"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/enables"
+      },
+      "shorthand" : "enables"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002327",
+      "label" : [
+        "enables"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+      "label" : [
+        "see also"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000111",
+      "label" : [
+        "rhombomere number"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of"
+      },
+      "shorthand" : "acts_upstream_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002263",
+      "label" : [
+        "acts upstream of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/produces"
+      },
+      "shorthand" : "produces"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0003000",
+      "label" : [
+        "produces"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000104",
+      "label" : [
+        "ray number"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002427",
+      "label" : [
+        "causally downstream of or within"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/preceded_by"
+      },
+      "shorthand" : "preceded_by"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000062",
+      "label" : [
+        "preceded by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002234",
+      "label" : [
+        "has output"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002233",
+      "label" : [
+        "has input"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002315",
+      "label" : [
+        "results in acquisition of features of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004032",
+      "label" : [
+        "acts upstream of or within, positive effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/molecularly_interacts_with"
+      },
+      "shorthand" : "molecularly_interacts_with"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002436",
+      "label" : [
+        "molecularly interacts with"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002326",
+      "label" : [
+        "contributes to"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_part"
+      },
+      "shorthand" : "has_part"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000051",
+      "label" : [
+        "has_part"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/actively_involves"
+      },
+      "shorthand" : "actively_involves"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002331",
+      "label" : [
+        "involved in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004008",
+      "label" : [
+        "has primary output"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002614",
+      "label" : [
+        "is evidence with support from"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000057",
+      "label" : [
+        "has_participant"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012000",
+      "label" : [
+        "has small molecule regulator"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002604",
+      "label" : [
+        "is opposite of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002496",
+      "label" : [
+        "start stage"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002161",
+      "label" : [
+        "never_in_taxon"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasSynonymType",
+      "label" : [
+        "has_synonym_type"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004033",
+      "label" : [
+        "acts upstream of or within, negative effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002410",
+      "label" : [
+        "causally related to"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002448",
+      "label" : [
+        "directly regulates activity of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/part_of"
+      },
+      "shorthand" : "part_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000050",
+      "label" : [
+        "part of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002579",
+      "label" : [
+        "is indirect form of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000012",
+      "label" : [
+        "external_ontology_notes"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002171",
+      "label" : [
+        "mutually spatially disjoint with"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.org/dc/elements/1.1/source",
+      "label" : [
+        "derived from resource"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.org/dc/elements/1.1/creator",
+      "label" : [
+        "creator"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/positively_regulates"
+      },
+      "shorthand" : "positively_regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002629",
+      "label" : [
+        "directly positively regulates"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002429",
+      "label" : [
+        "involved in positive regulation of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002434",
+      "label" : [
+        "interacts with"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasBroadSynonym",
+      "label" : [
+        "has_broad_synonym"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000066",
+      "label" : [
+        "occurs in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_output"
+      },
+      "shorthand" : "has_output"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002588",
+      "label" : [
+        "results in assembly of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000062",
+      "label" : [
+        "preceded_by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/opposite_of"
+      },
+      "shorthand" : "opposite_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002604",
+      "label" : [
+        "is opposite of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002447",
+      "label" : [
+        "phosphorylates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002087",
+      "label" : [
+        "immediately preceded by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002590",
+      "label" : [
+        "results in disassembly of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002211",
+      "label" : [
+        "regulates (processual)"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002333",
+      "label" : [
+        "enabled by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002085",
+      "label" : [
+        "encompasses"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002490",
+      "label" : [
+        "existence overlaps"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0001015",
+      "label" : [
+        "location of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002298",
+      "label" : [
+        "results in morphogenesis of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000101",
+      "label" : [
+        "preceding element is"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_output"
+      },
+      "shorthand" : "has_output"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002296",
+      "label" : [
+        "results in development of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012004",
+      "label" : [
+        "is small molecule regulator of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_output"
+      },
+      "shorthand" : "has_output"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002234",
+      "label" : [
+        "has output"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/in_taxon"
+      },
+      "shorthand" : "in_taxon"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002160",
+      "label" : [
+        "only in taxon"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002216",
+      "label" : [
+        "capable of part of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/precedes"
+      },
+      "shorthand" : "precedes"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000063",
+      "label" : [
+        "precedes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_gene_product"
+      },
+      "shorthand" : "has_gene_product"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002205",
+      "label" : [
+        "has gene product"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/actively_involved_in"
+      },
+      "shorthand" : "actively_involved_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002331",
+      "label" : [
+        "involved in"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002407",
+      "label" : [
+        "indirectly positively regulates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/participates_in"
+      },
+      "shorthand" : "participates_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000056",
+      "label" : [
+        "participates_in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002230",
+      "label" : [
+        "ends with"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000052",
+      "label" : [
+        "inheres in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/precedes"
+      },
+      "shorthand" : "precedes"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002412",
+      "label" : [
+        "immediately causally upstream of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002088",
+      "label" : [
+        "during which starts"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0003001",
+      "label" : [
+        "produced by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002411",
+      "label" : [
+        "causally upstream of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002414",
+      "label" : [
+        "transitively provides input for"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#consider",
+      "label" : [
+        "consider"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004009",
+      "label" : [
+        "has primary input"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/physically_interacts_with"
+      },
+      "shorthand" : "physically_interacts_with"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002436",
+      "label" : [
+        "molecularly interacts with"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004047",
+      "label" : [
+        "causally upstream of or within, positive effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000011",
+      "label" : [
+        "development_notes"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004036",
+      "label" : [
+        "nominally disjoint with"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#date",
+      "label" : [
+        "date"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/participates_in"
+      },
+      "shorthand" : "participates_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002331",
+      "label" : [
+        "involved in"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002304",
+      "label" : [
+        "causally upstream of, positive effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/entity_regulates_entity"
+      },
+      "shorthand" : "entity_regulates_entity"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002448",
+      "label" : [
+        "directly regulates activity of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002325",
+      "label" : [
+        "colocalizes with"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000050",
+      "label" : [
+        "part of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002089",
+      "label" : [
+        "starts before"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002349",
+      "label" : [
+        "results in determination of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/preceded_by"
+      },
+      "shorthand" : "preceded_by"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000062",
+      "label" : [
+        "preceded_by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002011",
+      "label" : [
+        "regulates transport of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/precedes"
+      },
+      "shorthand" : "precedes"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002090",
+      "label" : [
+        "immediately precedes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002356",
+      "label" : [
+        "results in specification of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002565",
+      "label" : [
+        "results in movement of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002012",
+      "label" : [
+        "occurrent part of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000002",
+      "label" : [
+        "axiom_lost_from_external_ontology"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "biolinkQualifiers" : {
+      "qualifier_set" : [
+        {
+          "qualifier_type_id" : "biolink:object_direction_qualifier",
+          "qualifier_value" : "upregulated"
+        }
+      ]
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002213",
+      "label" : [
+        "positively regulates"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000003",
+      "label" : [
+        "homology_notes"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasRelatedSynonym",
+      "label" : [
+        "has_related_synonym"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002418",
+      "label" : [
+        "causally upstream of or within"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012002",
+      "label" : [
+        "has small molecule inhibitor"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002506",
+      "label" : [
+        "causal relation between entities"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002087",
+      "label" : [
+        "immediately_preceded_by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002582",
+      "label" : [
+        "is a defining property chain axiom where second argument is reflexive"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0000233",
+      "label" : [
+        "term tracker item"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of_negative_effect"
+      },
+      "shorthand" : "acts_upstream_of_negative_effect"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004035",
+      "label" : [
+        "acts upstream of, negative effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0000234",
+      "label" : [
+        "ontology term requester"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002324",
+      "label" : [
+        "developmentally related to"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002211",
+      "label" : [
+        "regulates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002604",
+      "label" : [
+        "is_opposite_of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002222",
+      "label" : [
+        "temporally related to"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002488",
+      "label" : [
+        "existence starts during"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_part"
+      },
+      "shorthand" : "has_part"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0001019",
+      "label" : [
+        "contains"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002313",
+      "label" : [
+        "transports or maintains localization of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002224",
+      "label" : [
+        "starts with"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002337",
+      "label" : [
+        "related via localization to"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/active_in"
+      },
+      "shorthand" : "active_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002432",
+      "label" : [
+        "is active in"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000007",
+      "label" : [
+        "has_relational_adjective"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/actively_involved_in"
+      },
+      "shorthand" : "actively_involved_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002215",
+      "label" : [
+        "capable_of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasExactSynonym",
+      "label" : [
+        "has exact synonym"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002595",
+      "label" : [
+        "causal relation between material entity and a process"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002230",
+      "label" : [
+        "ends with"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/overlaps"
+      },
+      "shorthand" : "overlaps"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000051",
+      "label" : [
+        "has_part"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002353",
+      "label" : [
+        "output of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002412",
+      "label" : [
+        "immediately causally upstream of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.org/dc/terms/license",
+      "label" : [
+        "license"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/emapa#located_in",
+      "label" : [
+        "located_in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/actively_involved_in"
+      },
+      "shorthand" : "actively_involved_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002500",
+      "label" : [
+        "causal agent in process"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002448",
+      "label" : [
+        "directly regulates activity of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004049",
+      "label" : [
+        "is positive form of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002405",
+      "label" : [
+        "immediately causally downstream of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://xmlns.com/foaf/0.1/depicted_by",
+      "label" : [
+        "depicted by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#id",
+      "label" : [
+        "id"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002497",
+      "label" : [
+        "existence ends during or before"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002497",
+      "label" : [
+        "existence ends during or before"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000056",
+      "label" : [
+        "participates_in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/participates_in"
+      },
+      "shorthand" : "participates_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002215",
+      "label" : [
+        "capable_of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000063",
+      "label" : [
+        "precedes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of_or_within_positive_effect"
+      },
+      "shorthand" : "acts_upstream_of_or_within_positive_effect"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002264",
+      "label" : [
+        "acts upstream of or within"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002329",
+      "label" : [
+        "part of structure that is capable of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#shorthand",
+      "label" : [
+        "shorthand"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasNarrowSynonym",
+      "label" : [
+        "has narrow synonym"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002496",
+      "label" : [
+        "existence starts during or after"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002305",
+      "label" : [
+        "causally upstream of, negative effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_part"
+      },
+      "shorthand" : "has_part"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000051",
+      "label" : [
+        "has part"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002024",
+      "label" : [
+        "directly positively regulated by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "biolinkQualifiers" : {
+      "qualifier_set" : [
+        {
+          "qualifier_type_id" : "biolink:object_direction_qualifier",
+          "qualifier_value" : "upregulated"
+        }
+      ]
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002450",
+      "label" : [
+        "directly positively regulates activity of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012009",
+      "label" : [
+        "constitutively upstream of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/contributes_to"
+      },
+      "shorthand" : "contributes_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002315",
+      "label" : [
+        "results in acquisition of features of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002328",
+      "label" : [
+        "functionally related to"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012010",
+      "label" : [
+        "removes input for"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "biolinkQualifiers" : {
+      "qualifier_set" : [
+        {
+          "qualifier_type_id" : "biolink:object_aspect_qualifier",
+          "qualifier_value" : "activity"
+        }
+      ]
+    },
+    "predicate" : {
+      "iri" : "http://translator.renci.org/ubergraph-axioms.ofn#acts_upstream_of_o_enabled_by",
+      "label" : [
+        "acts_upstream_of_o_enabled_by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000108",
+      "label" : [
+        "somite number"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000100",
+      "label" : [
+        "is count of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "biolinkQualifiers" : {
+      "qualifier_set" : [
+        {
+          "qualifier_type_id" : "biolink:object_aspect_qualifier",
+          "qualifier_value" : "transport"
+        }
+      ]
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002313",
+      "label" : [
+        "transports or maintains localization of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002352",
+      "label" : [
+        "input of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002211",
+      "label" : [
+        "regulates (processual)"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of"
+      },
+      "shorthand" : "acts_upstream_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002264",
+      "label" : [
+        "acts upstream of or within"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000005",
+      "label" : [
+        "external_comment"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002233",
+      "label" : [
+        "has input"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000105",
+      "label" : [
+        "phalanx number"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002400",
+      "label" : [
+        "has direct input"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/capable_of"
+      },
+      "shorthand" : "capable_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002215",
+      "label" : [
+        "capable of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002588",
+      "label" : [
+        "results in assembly of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#is_inferred",
+      "label" : [
+        "is_inferred"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002091",
+      "label" : [
+        "starts during"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002224",
+      "label" : [
+        "starts with"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000057",
+      "label" : [
+        "has_participant"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002339",
+      "label" : [
+        "has target end location"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002160",
+      "label" : [
+        "only in taxon"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/IAO_0000117",
+      "label" : [
+        "term editor"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002475",
+      "label" : [
+        "has_no_connections_with"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000057",
+      "label" : [
+        "has participant at some time"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0001019",
+      "label" : [
+        "contains"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000106",
+      "label" : [
+        "rib number"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002161",
+      "label" : [
+        "never in taxon"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002009",
+      "label" : [
+        "cell expresses"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002323",
+      "label" : [
+        "mereotopologically related to"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002223",
+      "label" : [
+        "starts"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000063",
+      "label" : [
+        "precedes"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0001018",
+      "label" : [
+        "contained in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002211",
+      "label" : [
+        "regulates (processual)"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004007",
+      "label" : [
+        "has primary input or output"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002093",
+      "label" : [
+        "ends during"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002173",
+      "label" : [
+        "ambiguous for taxon"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasAlternativeId",
+      "label" : [
+        "has_alternative_id"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002320",
+      "label" : [
+        "evolutionarily related to"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002404",
+      "label" : [
+        "causally downstream of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/location_of"
+      },
+      "shorthand" : "location_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0001015",
+      "label" : [
+        "location of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#SubsetProperty",
+      "label" : [
+        "subset_property"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002220",
+      "label" : [
+        "adjacent to"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002299",
+      "label" : [
+        "results in maturation of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000001",
+      "label" : [
+        "external_definition"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000057",
+      "label" : [
+        "has participant"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002023",
+      "label" : [
+        "directly negatively regulated by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002413",
+      "label" : [
+        "provides input for"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002566",
+      "label" : [
+        "causally influences"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002171",
+      "label" : [
+        "mutually_spatially_disjoint_with"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#SynonymTypeProperty",
+      "label" : [
+        "synonym_type_property"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002335",
+      "label" : [
+        "negatively regulated by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002313",
+      "label" : [
+        "transports or maintains localization of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002492",
+      "label" : [
+        "existence ends during"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004034",
+      "label" : [
+        "acts upstream of, positive effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002299",
+      "label" : [
+        "results in maturation of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000112",
+      "label" : [
+        "tooth number"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012005",
+      "label" : [
+        "is small molecule activator of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002084",
+      "label" : [
+        "during which ends"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002559",
+      "label" : [
+        "causally influenced by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002022",
+      "label" : [
+        "directly regulated by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012011",
+      "label" : [
+        "indirectly causally upstream of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000201",
+      "label" : [
+        "source atlas"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002584",
+      "label" : [
+        "has part structure that is capable of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0040036",
+      "label" : [
+        "results in changes to anatomical or cellular structure"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002430",
+      "label" : [
+        "involved in negative regulation of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002219",
+      "label" : [
+        "surrounded by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002232",
+      "label" : [
+        "has end location"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/negatively_regulates"
+      },
+      "shorthand" : "negatively_regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002630",
+      "label" : [
+        "directly negatively regulates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/capable_of"
+      },
+      "shorthand" : "capable_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002500",
+      "label" : [
+        "causal agent in process"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000006",
+      "label" : [
+        "implements_design_pattern"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/GOREL_0001006",
+      "label" : [
+        "acts_on_population_of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002428",
+      "label" : [
+        "involved in regulation of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/capable_of"
+      },
+      "shorthand" : "capable_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002215",
+      "label" : [
+        "capable_of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/occurs_in"
+      },
+      "shorthand" : "occurs_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000066",
+      "label" : [
+        "occurs in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002211",
+      "label" : [
+        "regulates"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://xmlns.com/foaf/0.1/depicted_by",
+      "label" : [
+        "depicted_by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004035",
+      "label" : [
+        "acts upstream of, negative effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002379",
+      "label" : [
+        "spatially coextensive with"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasScope",
+      "label" : [
+        "has_scope"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002408",
+      "label" : [
+        "obsolete directly inhibits"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://xmlns.com/foaf/0.1/page",
+      "label" : [
+        "page"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/overlaps"
+      },
+      "shorthand" : "overlaps"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000050",
+      "label" : [
+        "part_of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002596",
+      "label" : [
+        "capable of regulating"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.w3.org/2000/01/rdf-schema#seeAlso",
+      "label" : [
+        "seeAlso"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/hp#is_observable_through",
+      "label" : [
+        "is_observable_through"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/interacts_with"
+      },
+      "shorthand" : "interacts_with"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002434",
+      "label" : [
+        "interacts with"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/coexists_with"
+      },
+      "shorthand" : "coexists_with"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002219",
+      "label" : [
+        "surrounded by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002297",
+      "label" : [
+        "results in formation of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002229",
+      "label" : [
+        "ends"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002090",
+      "label" : [
+        "immediately precedes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002297",
+      "label" : [
+        "results in formation of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004031",
+      "label" : [
+        "enables subfunction"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002336",
+      "label" : [
+        "positively regulated by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000103",
+      "label" : [
+        "pharyngeal arch number"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002630",
+      "label" : [
+        "directly negatively regulates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "biolinkQualifiers" : {
+      "qualifier_set" : [
+        {
+          "qualifier_type_id" : "biolink:object_direction_qualifier",
+          "qualifier_value" : "upregulated"
+        }
+      ]
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002212",
+      "label" : [
+        "negatively regulates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000051",
+      "label" : [
+        "has part"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000062",
+      "label" : [
+        "preceded by"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000067",
+      "label" : [
+        "contains process"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/coexists_with"
+      },
+      "shorthand" : "coexists_with"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002221",
+      "label" : [
+        "surrounds"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002090",
+      "label" : [
+        "immediately precedes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of"
+      },
+      "shorthand" : "acts_upstream_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004033",
+      "label" : [
+        "acts upstream of or within, negative effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.org/dc/elements/1.1/title",
+      "label" : [
+        "title"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000062",
+      "label" : [
+        "preceded by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/temporally_related_to"
+      },
+      "shorthand" : "temporally_related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002496",
+      "label" : [
+        "start stage"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/UBPROP_0000013",
+      "label" : [
+        "terminology_notes"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002234",
+      "label" : [
+        "has output"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002263",
+      "label" : [
+        "acts upstream of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/located_in"
+      },
+      "shorthand" : "located_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0001025",
+      "label" : [
+        "located in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002231",
+      "label" : [
+        "has start location"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/acts_upstream_of"
+      },
+      "shorthand" : "acts_upstream_of"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004032",
+      "label" : [
+        "acts upstream of or within, positive effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0012012",
+      "label" : [
+        "indirectly regulates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002263",
+      "label" : [
+        "acts upstream of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002592",
+      "label" : [
+        "results in organization of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/actively_involved_in"
+      },
+      "shorthand" : "actively_involved_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002215",
+      "label" : [
+        "capable of"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.org/dc/terms/date",
+      "label" : [
+        "date"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/participates_in"
+      },
+      "shorthand" : "participates_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002500",
+      "label" : [
+        "causal agent in process"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/actively_involved_in"
+      },
+      "shorthand" : "actively_involved_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002432",
+      "label" : [
+        "is active in"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/BFO_0000062",
+      "label" : [
+        "preceded_by"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/occurs_in"
+      },
+      "shorthand" : "occurs_in"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002232",
+      "label" : [
+        "has end location"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/positively_regulates"
+      },
+      "shorthand" : "positively_regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004034",
+      "label" : [
+        "acts upstream of, positive effect"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://www.geneontology.org/formats/oboInOwl#hasDbXref",
+      "label" : [
+        "database_cross_reference"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/negatively_regulates"
+      },
+      "shorthand" : "negatively_regulates"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004035",
+      "label" : [
+        "acts upstream of, negative effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/related_to"
+      },
+      "shorthand" : "related_to"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002215",
+      "label" : [
+        "capable of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/has_participant"
+      },
+      "shorthand" : "has_participant"
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0000057",
+      "label" : [
+        "has participant"
+      ]
+    }
+  },
+  {
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0004050",
+      "label" : [
+        "is negative form of"
+      ]
+    }
+  }
+]
