@@ -1,0 +1,13 @@
+# Biolink mappings
+
+CAM-KP needs Biolink information in both the triplestore backend as well as the 
+frontend. This is frustrating -- if only one of them needed to know about the
+Biolink model, that would greatly simplify what we need to do here.
+
+At the moment, we have files outside this directory that I don't want to clean up
+tonight, but that I will get to this soon.
+
+This directory represents a separate attempt at doing this: taking all of our predicate
+mapping logic and putting it into one place, and attempting to set it up so that this
+entire thing can be queried from the triplestore in such a way that we can change Biolink
+versions in the triplestore without affecting the front end at all.
