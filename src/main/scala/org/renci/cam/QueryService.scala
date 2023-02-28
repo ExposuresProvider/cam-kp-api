@@ -10,7 +10,7 @@ import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
-import org.renci.cam.domain.PredicateMappings.mapQueryEdgePredicates
+import org.renci.cam.domain.PredicateMappings.{getBiolinkQualifiedPredicate, mapQueryEdgePredicates}
 import org.renci.cam.domain.{TRAPIAttribute, _}
 import zio.config.{getConfig, ZConfig}
 import zio.{config => _, Has, RIO, Task, UIO, ZIO}
@@ -45,6 +45,7 @@ object QueryService extends LazyLogging {
   val SlotMapping: IRI = IRI("http://cam.renci.org/biolink_slot")
 
   val BiolinkNamedThing: BiolinkClass = BiolinkClass("NamedThing", IRI(s"${BiolinkTerm.namespace}NamedThing"))
+  val BiolinkRelatedTo: BiolinkPredicate = BiolinkPredicate("related_to")
 
   /* Hints used to optimize the query (see https://github.com/blazegraph/database/wiki/QueryHints for details). */
 
@@ -189,8 +190,7 @@ object QueryService extends LazyLogging {
     * @see
     *   org.renci.cam.QueryService#getTRAPIEdges
     */
-  def generateTRAPIEdges(results: List[Result], relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)])
-    : RIO[ZConfig[AppConfig] with ZConfig[BiolinkData], Map[String, TRAPIEdge]] =
+  def generateTRAPIEdges(results: List[Result]): RIO[ZConfig[AppConfig] with ZConfig[BiolinkData], Map[String, TRAPIEdge]] =
     for {
       // Get some data we need to generate the TRAPI edges.
       biolinkData <- biolinkData
@@ -213,10 +213,7 @@ object QueryService extends LazyLogging {
           key <- result.edges.keys
 
           // Generate the pieces of this TRAPIEdge.
-          iri = result.edges(key)
-          labelAndBiolinkPredicate = relationsToLabelAndBiolinkPredicate.get(iri)
-          biolinkPredicateIRI = labelAndBiolinkPredicate.map(_._2)
-          biolinkPred = biolinkData.predicates.find(a => biolinkPredicateIRI.forall(_.equals(a.iri)))
+          relationIRI = result.edges(key)
           queryEdge = result.queryGraph.edges(key)
           subjectIRI = result.nodes(queryEdge.subject)
           objectIRI = result.nodes(queryEdge.`object`)
@@ -248,7 +245,8 @@ object QueryService extends LazyLogging {
           attributes = aggregatorKSAttribute +: originalKSAttributes.toList
 
           // Generate the TRAPIEdge and its edge key.
-          trapiEdge = TRAPIEdge(biolinkPred, subjectIRI, objectIRI, Some(attributes))
+          (biolinkPred, qualifiers) = getBiolinkQualifiedPredicate(relationIRI)
+          trapiEdge = TRAPIEdge(Some(biolinkPred), subjectIRI, objectIRI, Some(attributes), qualifiers)
           // edgeKey = getTRAPIEdgeKey(queryEdge.subject, biolinkPred, queryEdge.`object`)
           edgeKey = result.getEdgeKey(key)
         } yield (edgeKey, trapiEdge))
@@ -554,8 +552,8 @@ object QueryService extends LazyLogging {
   def enforceQueryEdgeTypes(queryGraph: TRAPIQueryGraph, biolinkPredicates: List[BiolinkPredicate]): TRAPIQueryGraph = {
     val improvedEdgeMap = queryGraph.edges.map { case (edgeID, edge) =>
       val newPredicates = edge.predicates match {
-        case None       => Some(List(BiolinkPredicate("related_to")))
-        case Some(Nil)  => Some(List(BiolinkPredicate("related_to")))
+        case None       => Some(List(BiolinkRelatedTo))
+        case Some(Nil)  => Some(List(BiolinkRelatedTo))
         case predicates => predicates
       }
       val filteredPredicates = newPredicates.map(_.filter(pred => biolinkPredicates.contains(pred)))

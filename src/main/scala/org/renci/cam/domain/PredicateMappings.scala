@@ -175,4 +175,29 @@ object PredicateMappings {
     relations.map(pred => IRI(pred.predicate.iri)).toSet
   }
 
+  def getBiolinkQualifiedPredicate(relationIRI: IRI): (BiolinkPredicate, Option[List[TRAPIQualifier]]) = {
+    val biolinkPredicates = predicatesData.flatMap {
+      case PredicateMapping(relation, Some(biolinkPredicate), qualifierOpt) =>
+        if (relation.iri != relationIRI.value) None
+        else
+          qualifierOpt match {
+            case None                                                 => Some((biolinkPredicate, None))
+            case Some(constraint) if constraint.qualifier_set.isEmpty => Some((biolinkPredicate, None))
+            case Some(constraint)                                     => Some((biolinkPredicate, Some(constraint.qualifier_set)))
+          }
+      case _ => None
+    }
+
+    if (biolinkPredicates.isEmpty) {
+      logger.error(f"Could not find Biolink predicates for relation ${relationIRI}")
+      (QueryService.BiolinkRelatedTo, None)
+    } else if (biolinkPredicates.size > 1) {
+      logger.error(f"Found multiple Biolink predicates for relation ${relationIRI}: ${biolinkPredicates}")
+      logger.error(f"Using the first one: ${biolinkPredicates.head}")
+      biolinkPredicates.head
+    } else {
+      biolinkPredicates.head
+    }
+  }
+
 }
