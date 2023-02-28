@@ -1,10 +1,7 @@
 package org.renci.cam.util
 
 import com.typesafe.scalalogging.{LazyLogging, Logger}
-import io.circe._
 import io.circe.generic.auto._
-import io.circe.syntax._
-import org.http4s.implicits._
 import org.phenoscape.sparql.SPARQLInterpolation.SPARQLStringContext
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.LookupService.LabeledIRI
@@ -12,11 +9,9 @@ import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.domain.{BiolinkPredicate, IRI, TRAPIQualifier, TRAPIQualifierConstraint}
 import org.renci.cam.{AppConfig, HttpClient, QueryService, SPARQLQueryExecutor}
 import zio._
-import zio.blocking.{Blocking, blocking}
+import zio.blocking.{blocking, Blocking}
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{ZConfig, getConfig}
-import zio.interop.catz._
-import zio.interop.catz.implicits._
+import zio.config.{getConfig, ZConfig}
 import zio.stream.ZStream
 
 import scala.io.Source
@@ -111,7 +106,8 @@ object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
     `qualified predicate`: Option[String],
     `exact matches`: Option[Set[String]]
   ) {
-    def biolinkPredicate: BiolinkPredicate = BiolinkPredicate(predicate)
+    def biolinkPredicate: BiolinkPredicate = BiolinkPredicate(predicate.replace(' ', '_'))
+    def biolinkMappedPredicate: BiolinkPredicate = BiolinkPredicate(`mapped predicate`.replace(' ', '_'))
 
     def qualifiers: Seq[TRAPIQualifier] = (`object aspect qualifier` match {
       case Some(aspect: String) =>
@@ -144,7 +140,7 @@ object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
     * https://github.com/biolink/biolink-model/blob/${biolinkVersion}/predicate_mapping.yaml (the raw version is available from
     * https://raw.githubusercontent.com/biolink/biolink-model/v3.2.1/predicate_mapping.yaml)
     */
-  val predicateMappings: RIO[ZConfig[AppConfig] with Blocking, List[PredicateMappingRow]] =
+  val getPredicateMappingsFromGitHub: RIO[ZConfig[AppConfig] with Blocking, List[PredicateMappingRow]] =
     for {
       appConfig <- getConfig[AppConfig]
       predicateMappingText <- blocking(
@@ -168,17 +164,65 @@ object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
   }
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
+    def transformPredicateWithMappedPredicateInfo(pred: PredicateMapping, mp: PredicateMappingRow): PredicateMapping = {
+      val predReplaced = PredicateMapping(
+        pred.predicate,
+        Some(mp.biolinkPredicate),
+        Some(mp.qualifierConstraint)
+      )
+
+      logger.error(f"Replacing ${pred} with ${predReplaced} with information from ${mp}")
+
+      predReplaced
+    }
+
     val program = for {
-      // preds <- getPredicatesFromSPARQL
-      predMaps <- predicateMappings
+      preds <- getPredicatesFromSPARQL
+      mappedPredicates <- getPredicateMappingsFromGitHub
+      predsMappedByExactMatch = preds.map { pred =>
+        val foundByExactMatch = mappedPredicates.find(
+          { mp =>
+            val exactMatches = mp.`exact matches`.toList.flatten.toSet
+
+            // These are in CURIEs. Normally I would write some very complicated code to un-CURIE-fy it, but
+            // instead...
+            exactMatches
+              .map(_.replaceFirst(raw"^RO:", "http://purl.obolibrary.org/obo/RO_"))
+              .contains(pred.predicate.iri)
+          }
+        )
+
+        foundByExactMatch match {
+          case None     => pred
+          case Some(mp) => transformPredicateWithMappedPredicateInfo(pred, mp)
+        }
+      }
+      qualifiedPreds: Seq[PredicateMapping] = predsMappedByExactMatch.map(pred =>
+        pred match {
+          /* For each predicate, we need to check to see if this is a "mapped predicate". If so, we transform it
+           into a qualified predicate as per the predicate mapping.
+           */
+          case PredicateMapping(_, Some(biolinkPredicate: BiolinkPredicate), _) =>
+            // In some cases, we might be able to find the mappings by Biolink predicate.
+            val foundByBiolinkPredicate = mappedPredicates.find(mp => mp.biolinkMappedPredicate == biolinkPredicate)
+
+            foundByBiolinkPredicate match {
+              case None     => pred
+              case Some(mp) => transformPredicateWithMappedPredicateInfo(pred, mp)
+            }
+
+          // If we haven't matched it, don't transform it.
+          case _ => pred
+        })
     } yield {
-      /*
       logger.info(f"Found ${preds.size} predicates:")
       preds.foreach(pred => logger.info(f" - ${pred}"))
 
-       */
-      logger.info(f"Found ${predMaps.size} predicate mappings:")
-      predMaps.foreach(predMap => logger.info(f" - ${predMap}"))
+      logger.info(f"Found ${mappedPredicates.size} predicate mappings:")
+      mappedPredicates.foreach(predMap => logger.info(f" - ${predMap}"))
+
+      logger.info(f"Transformed to ${qualifiedPreds.size} predicates:")
+      qualifiedPreds.foreach(pred => logger.info(f" - ${pred}"))
     }
 
     val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
