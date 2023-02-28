@@ -139,11 +139,40 @@ object PredicateMappings {
     } yield predicateMappings.`predicate mappings`
 
   /** Compares two qualifier lists. */
-  def compareQualifierConstraintLists(qcl1: List[TRAPIQualifierConstraint], qcl2: List[TRAPIQualifierConstraint]): Boolean = {
-    val set1 = qcl1.map(_.qualifier_set.map(q => (q.qualifier_value, q.qualifier_type_id)).toSet)
-    val set2 = qcl2.map(_.qualifier_set.map(q => (q.qualifier_value, q.qualifier_type_id)).toSet)
+  def compareQualifierConstraints(ql1: List[TRAPIQualifier], ql2: List[TRAPIQualifier]): Boolean = {
+
+    val set1 = ql1.map(q => (q.qualifier_value, q.qualifier_type_id)).toSet
+    val set2 = ql2.map(q => (q.qualifier_value, q.qualifier_type_id)).toSet
 
     (set1 == set2)
+  }
+
+  /** Load the predicates data so we can use it subsequently. */
+  val predicatesDataAsString = Source
+    .fromInputStream(PredicateMappings.getClass.getResourceAsStream("biolink/predicates.json"))
+    .getLines()
+    .mkString("\n")
+
+  val predicatesData = io.circe.parser.parse(predicatesDataAsString).toTry.get.as[Seq[PredicateMapping]].toTry.get
+
+  def mapQueryEdgePredicates(predicates: Option[List[BiolinkPredicate]],
+                             qualifier_constraints: Option[List[TRAPIQualifierConstraint]]): Set[IRI] = {
+    // predicatesData consists of unique mappings between relations and (biolinkPredicate, biolinkQualifier) pairs.
+    val biolinkPredicates = predicates.toList.flatten.toSet
+    val qualifierConstraint = qualifier_constraints.toList.flatten.flatMap(_.qualifier_set)
+
+    val relations = predicatesData.filter {
+      case PredicateMapping(_, Some(biolinkPredicate), qualifierOpt) =>
+        if (!biolinkPredicates.contains(biolinkPredicate)) false
+        else
+          qualifierOpt match {
+            case None             => if (qualifierOpt.isEmpty) true else false
+            case Some(constraint) => if (compareQualifierConstraints(qualifierConstraint, constraint.qualifier_set)) true else false
+          }
+      case _ => false
+    }
+
+    relations.map(pred => IRI(pred.predicate.iri)).toSet
   }
 
 }

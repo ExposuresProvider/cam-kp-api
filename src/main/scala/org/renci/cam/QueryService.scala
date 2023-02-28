@@ -10,6 +10,7 @@ import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
+import org.renci.cam.domain.PredicateMappings.mapQueryEdgePredicates
 import org.renci.cam.domain.{TRAPIAttribute, _}
 import zio.config.{getConfig, ZConfig}
 import zio.{config => _, Has, RIO, Task, UIO, ZIO}
@@ -327,25 +328,6 @@ object QueryService extends LazyLogging {
           )
         )
       )
-    } else if (allQualifierConstraints.nonEmpty) {
-      // Are there any qualifier constraints? If so, we can't match them, so we should return an empty list of results.
-      ZIO.succeed(
-        TRAPIResponse(
-          emptyTRAPIMessage,
-          Some("Success"),
-          None,
-          Some(
-            List(
-              LogEntry(
-                Some(java.time.Instant.now().toString),
-                Some("WARNING"),
-                Some("UnsupportedQualifierConstraint"),
-                Some(s"The following qualifier constraints are not supported: ${allQualifierConstraints}")
-              )
-            )
-          )
-        )
-      )
     } else
       for {
         // Get the Biolink data.
@@ -355,15 +337,9 @@ object QueryService extends LazyLogging {
         // Prepare the query graph for processing.
         queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
 
-        // Generate the relationsToLabelAndBiolinkPredicate.
-        allPredicatesInQuery = queryGraph.edges.values.flatMap(_.predicates.getOrElse(Nil)).to(Set)
-        predicatesToRelations <- mapQueryBiolinkPredicatesToRelations(allPredicatesInQuery)
-        allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
-        relationsToLabelAndBiolinkPredicate <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
-
         // Generate query solutions.
-        _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
-        initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+        _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $limit)")
+        initialQuerySolutions <- findInitialQuerySolutions(queryGraph, limit)
         results = initialQuerySolutions.zipWithIndex.map { case (qs, index) =>
           Result.fromQuerySolution(qs, index, queryGraph)
         }
@@ -372,7 +348,7 @@ object QueryService extends LazyLogging {
         // From the results, generate the TRAPI nodes, edges and results.
         nodes <- generateTRAPINodes(results)
         _ = logger.debug(s"Nodes: $nodes")
-        edges <- generateTRAPIEdges(results, relationsToLabelAndBiolinkPredicate)
+        edges <- generateTRAPIEdges(results)
         _ = logger.debug(s"Edges: $edges")
         trapiResults = generateTRAPIResults(results)
         _ = logger.debug(s"Results: $trapiResults")
@@ -384,6 +360,7 @@ object QueryService extends LazyLogging {
       )
   }
 
+  /*
   def oldRun(limit: Int, includeExtraEdges: Boolean, submittedQueryGraph: TRAPIQueryGraph)
     : RIO[ZConfig[AppConfig] with HttpClient with Has[BiolinkData] with Has[SPARQLCache], TRAPIMessage] =
     for {
@@ -395,7 +372,7 @@ object QueryService extends LazyLogging {
       allRelationsInQuery = predicatesToRelations.values.flatten.to(Set)
       relationsToLabelAndBiolinkPredicate: Map[IRI, (Option[String], IRI)] <- mapRelationsToLabelAndBiolink(allRelationsInQuery)
       _ = logger.warn(s"findInitialQuerySolutions($queryGraph, $predicatesToRelations, $limit)")
-      initialQuerySolutions <- findInitialQuerySolutions(queryGraph, predicatesToRelations, limit)
+      initialQuerySolutions <- findInitialQuerySolutions(queryGraph, limit)
       _ = logger.warn(s"Initial query solutions: ${initialQuerySolutions.length} (limit: $limit): $initialQuerySolutions")
       _ = logger.warn(s"extractCoreTriples($initialQuerySolutions, $queryGraph)")
       solutionTriples = extractCoreTriples(initialQuerySolutions, queryGraph)
@@ -441,6 +418,7 @@ object QueryService extends LazyLogging {
       _ = logger.warn(s"results: $results (length: ${results.length}, limit: $limit)")
       _ = logger.warn(s"results distinct: ${results.distinct} (length: ${results.distinct.length}, limit: $limit)")
     } yield TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(initialKGNodes, initialKGEdges)), Some(results.distinct))
+   */
 
   /** Construct and execute a SPARQL query based on the provided query graph in the triplestore.
     *
@@ -456,15 +434,17 @@ object QueryService extends LazyLogging {
     *   org.renci.cam.QueryService#Result for a more human-readable version of the query solution.
     */
   def findInitialQuerySolutions(queryGraph: TRAPIQueryGraph,
-                                predicatesToRelations: Map[BiolinkPredicate, Set[IRI]],
                                 limit: Int): ZIO[ZConfig[AppConfig] with HttpClient, Throwable, List[QuerySolution]] = {
+
     val queryEdgeSparql = queryGraph.edges.map { case (queryEdgeID, queryEdge) =>
-      val relationsForEdge = queryEdge.predicates.getOrElse(Nil).flatMap(predicatesToRelations.getOrElse(_, Set.empty)).to(Set)
-      val predicatesQueryText = relationsForEdge.asSPARQLList
       val edgeIDVar = Var(queryEdgeID)
       val edgeSourceVar = Var(queryEdge.subject)
       val edgeTargetVar = Var(queryEdge.`object`)
-      val predicatesValuesClause = sparql""" FILTER( $edgeIDVar IN ( $predicatesQueryText ) )"""
+      val predicatesValuesClause = {
+        // To calculate this, we need to map every predicate using the predicate mapping information.
+        val mappedPredicates = mapQueryEdgePredicates(queryEdge.predicates, queryEdge.qualifier_constraints)
+        sparql""" FILTER( $edgeIDVar IN ( ${mappedPredicates.asSPARQLList} ) )"""
+      }
       val subjectNode = queryGraph.nodes(queryEdge.subject)
       val subjectNodeValuesClauses = getNodeValuesClauses(subjectNode.ids, subjectNode.categories, edgeSourceVar)
       val objectNode = queryGraph.nodes(queryEdge.`object`)
@@ -817,42 +797,6 @@ object QueryService extends LazyLogging {
       node -> TRAPINode(labelOpt, Some(classes), None)
     }.toMap
     nodeMap
-  }
-
-  // TODO:
-  // - Change this to cached queries (see mapQueryBiolinkPredicatesToRelations for example)
-  def mapRelationsToLabelAndBiolink(relations: Set[IRI]): RIO[ZConfig[AppConfig] with HttpClient, Map[IRI, (Option[String], IRI)]] = {
-    final case class RelationInfo(relation: IRI, biolinkSlot: IRI, label: Option[String])
-    val queryText = sparql"""
-         SELECT DISTINCT ?relation ?biolinkSlot ?label
-         WHERE {
-           VALUES ?relation { ${relations.asValues} }
-           ?relation $SlotMapping ?biolinkSlot .
-           ?biolinkSlot a $BiolinkMLSlotDefinition .
-           OPTIONAL { ?relation $RDFSLabel ?label . }
-           FILTER NOT EXISTS {
-             ?relation $SlotMapping ?other .
-             ?other $BiolinkMLIsA+/$BiolinkMLMixins* ?biolinkSlot .
-           }
-         }"""
-    SPARQLQueryExecutor.runSelectQueryAs[RelationInfo](queryText.toQuery).map { res =>
-      res.groupMap(_.relation)(info => (info.label, info.biolinkSlot)).map { case (relationIRI, infos) => relationIRI -> infos.head }
-    }
-  }
-
-  def mapQueryBiolinkPredicatesToRelations(
-    predicates: Set[BiolinkPredicate]): RIO[ZConfig[AppConfig] with HttpClient with Has[SPARQLCache], Map[BiolinkPredicate, Set[IRI]]] = {
-    final case class Predicate(biolinkPredicate: BiolinkPredicate, predicate: IRI)
-    val queryText = sparql"""
-        SELECT DISTINCT ?biolinkPredicate ?predicate WHERE {
-          VALUES ?biolinkPredicate { ${predicates.asValues} }
-          ?predicate $SlotMapping ?biolinkPredicate .
-          FILTER EXISTS { ?s ?predicate ?o }
-          $BigDataQueryHintQuery $BigDataQueryHintFilterExists "SubQueryLimitOne"
-        }"""
-    for {
-      predicates <- SPARQLQueryExecutor.runSelectQueryWithCacheAs[Predicate](queryText.toQuery)
-    } yield predicates.to(Set).groupMap(_.biolinkPredicate)(_.predicate)
   }
 
 }
