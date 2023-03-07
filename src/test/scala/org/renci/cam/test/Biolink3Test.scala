@@ -11,43 +11,138 @@ import zio.test.Assertion._
 import zio.test._
 
 /** This test suite tests that CAM-KP can handle Biolink 3 queries. Biolink 3 shifted from having single predicates to qualified predicates.
- * The examples in this file are based on the example queries provided in the GitHub issues listed in the references and inline comments
- * below.
- *
- * References:
- *   - https://github.com/biolink/biolink-model/blob/ac69bb2dc94d62d50f5cfab3fa07414b0ca092b1/Migration_3.0_Guide.md
- *   - https://github.com/biolink/biolink-model/blob/ac69bb2dc94d62d50f5cfab3fa07414b0ca092b1/predicate_mapping.yaml
- *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/79
- *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/80
- *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/81
- *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/82
- */
+  * The examples in this file are based on the example queries provided in the GitHub issues listed in the references and inline comments
+  * below.
+  *
+  * References:
+  *   - https://github.com/biolink/biolink-model/blob/ac69bb2dc94d62d50f5cfab3fa07414b0ca092b1/Migration_3.0_Guide.md
+  *   - https://github.com/biolink/biolink-model/blob/ac69bb2dc94d62d50f5cfab3fa07414b0ca092b1/predicate_mapping.yaml
+  *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/79
+  *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/80
+  *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/81
+  *   - https://github.com/NCATSTranslator/TranslatorArchitecture/issues/82
+  */
 
 object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
 
   val biolink3conversions = {
-  case class ConversionTest(
-                             biolinkPredicates: Option[List[BiolinkPredicate]],
-                             trapiQualifierConstraints: Option[List[TRAPIQualifierConstraint]],
-                             predicates: Set[IRI]
-                           )
+    case class ConversionTest(
+      biolinkPredicates: Option[List[BiolinkPredicate]],
+      trapiQualifierConstraints: Option[List[TRAPIQualifierConstraint]],
+      predicates: Set[IRI]
+    )
 
-  val biolink3conversions: Seq[ConversionTest] = Seq(
-    ConversionTest(Some(List(BiolinkPredicate("related_to"))), None, Set(IRI("https://example.org"))),
-    ConversionTest(Some(List(BiolinkPredicate("biomarker_for"))), None, Set(IRI("https://example.org"))),
-    ConversionTest(Some(List(BiolinkPredicate("affects"))), Some(
-      List(
-        TRAPIQualifierConstraint(
-          qualifier_set = List(
-            TRAPIQualifier("biolink:object_aspect_qualifier", "secretion"),
-            TRAPIQualifier("biolink:object_direction_qualifier", "increased"),
-            TRAPIQualifier("biolink:qualified_predicate", "biolink:causes")
-          )
+    val biolink3conversions: Seq[ConversionTest] = Seq(
+      // related_to should include all possible predicates.
+      ConversionTest(
+        Some(List(BiolinkPredicate("related_to"))),
+        None,
+        Set(
+          IRI("http://purl.obolibrary.org/obo/RO_0002565"),
+          IRI("http://purl.obolibrary.org/obo/RO_0000057"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002224"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002087"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002500"),
+          IRI("http://purl.obolibrary.org/obo/RO_0004007"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002131"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002436"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002160"),
+          IRI("http://purl.obolibrary.org/obo/RO_0001025"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002093"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002356"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002216"),
+          IRI("http://purl.obolibrary.org/obo/BFO_0000063"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002432"),
+          IRI("http://purl.obolibrary.org/obo/BFO_0000051"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002349"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002488"),
+          IRI("http://purl.obolibrary.org/obo/RO_0004034"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002497"),
+          IRI("http://purl.obolibrary.org/obo/RO_0004033"),
+          IRI("http://purl.obolibrary.org/obo/RO_0001015"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002434"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002263"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002496"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002331"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002608"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002333"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002298"),
+          IRI("http://purl.obolibrary.org/obo/RO_0000056"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002229"),
+          IRI("http://purl.obolibrary.org/obo/RO_0004032"),
+          IRI("http://translator.renci.org/ubergraph-axioms.ofn#acts_upstream_of_o_enabled_by"),
+          IRI("http://purl.obolibrary.org/obo/RO_0000052"),
+          IRI("http://purl.obolibrary.org/obo/BFO_0000066"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002348"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002588"),
+          IRI("http://purl.obolibrary.org/obo/BFO_0000062"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002211"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002205"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002604"),
+          IRI("http://purl.obolibrary.org/obo/RO_0003001"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002448"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002344"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002232"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002338"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002592"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002315"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002234"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002327"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002492"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002090"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002412"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002296"),
+          IRI("http://purl.obolibrary.org/obo/GOREL_0001006"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002230"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002299"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002264"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002092"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002084"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002297"),
+          IRI("http://purl.obolibrary.org/obo/RO_0003000"),
+          IRI("http://purl.obolibrary.org/obo/RO_0004009"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002223"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002219"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002339"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002221"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002313"),
+          IRI("http://purl.obolibrary.org/obo/RO_0004008"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002326"),
+          IRI("http://purl.obolibrary.org/obo/BFO_0000050"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002220"),
+          IRI("http://purl.obolibrary.org/obo/RO_0001019"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002215"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002231"),
+          IRI("http://purl.obolibrary.org/obo/RO_0012003"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002411"),
+          IRI("http://purl.obolibrary.org/obo/RO_0004035"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002590"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002328"),
+          IRI("http://purl.obolibrary.org/obo/RO_0002233")
         )
-      )
-    ), Set(IRI("https://example.org"))
-  ))
+      ),
 
+      // biomarker_for isn't present in our triplestore, so it should return an empty set.
+      ConversionTest(Some(List(BiolinkPredicate("biomarker_for"))), None, Set()),
+
+      // "increases expression of" should be mapped to http://purl.obolibrary.org/obo/RO_0003003, since this is what
+      // predicate_mapping.yaml tells us.
+      ConversionTest(
+        Some(List(BiolinkPredicate("increases_expression_of"))),
+        Some(
+          List(
+            TRAPIQualifierConstraint(
+              qualifier_set = List(
+                TRAPIQualifier("biolink:object_aspect_qualifier", "secretion"),
+                TRAPIQualifier("biolink:object_direction_qualifier", "increased"),
+                TRAPIQualifier("biolink:qualified_predicate", "biolink:causes")
+              )
+            )
+          )
+        ),
+        Set(IRI("http://purl.obolibrary.org/obo/RO_0003003"))
+      )
+    )
 
     suite("biolink3conversions")(
       suiteM("Test whether we can map predicates to relations") {
@@ -55,7 +150,8 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
           .fromIterable(biolink3conversions)
           .map { ct: ConversionTest =>
             test(s"Testing ${ct.biolinkPredicates} with ${ct.trapiQualifierConstraints} to ${ct.predicates}") {
-              assert(PredicateMappings.mapQueryEdgePredicates(ct.biolinkPredicates, ct.trapiQualifierConstraints))(Assertion.equalTo(ct.predicates))
+              assert(PredicateMappings.mapQueryEdgePredicates(ct.biolinkPredicates, ct.trapiQualifierConstraints))(
+                Assertion.equalTo(ct.predicates))
             }
           }
           .runCollect
@@ -64,18 +160,21 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
         ZStream
           .fromIterable(biolink3conversions)
           .flatMap { ct: ConversionTest =>
-            ZStream.fromIterable(ct.predicates).map({ pred =>
-            test(s"Testing ${pred} to ${ct.biolinkPredicates} with ${ct.trapiQualifierConstraints}") {
-              val (biolinkPred, qualifiers) = PredicateMappings.getBiolinkQualifiedPredicate(pred)
-              val qualifierConstraintOpt = qualifiers match {
-                case None => None
-                case Some(List()) => None
-                case Some(qualifiers) => Some(List(TRAPIQualifierConstraint(qualifiers)))
-              }
+            ZStream
+              .fromIterable(ct.predicates)
+              .map(
+                { pred =>
+                  test(s"Testing ${pred} to ${ct.biolinkPredicates} with ${ct.trapiQualifierConstraints}") {
+                    val preds = PredicateMappings.getBiolinkQualifiedPredicates(pred)
 
-              assert(Some(List(biolinkPred)))(Assertion.equalTo(ct.biolinkPredicates)) &&
-                assert(qualifierConstraintOpt)(Assertion.equalTo(ct.trapiQualifierConstraints))
-            }})
+                    val qualifiersActual = preds.flatMap(_._2).flatten.toSet
+                    val qualifiersExpected = ct.trapiQualifierConstraints.getOrElse(List()).flatMap(_.qualifier_set).toSet
+
+                    assert(preds.map(_._1).toSet)(Assertion.equalTo(ct.biolinkPredicates.getOrElse(List()).toSet)) &&
+                    assert(qualifiersActual)(Assertion.equalTo(qualifiersExpected))
+                  }
+                }
+              )
           }
           .runCollect
       }
@@ -179,9 +278,9 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
       nodes = Map(
         "gene" -> TRAPIQueryNode(None, Some(List(BiolinkClass("Gene"))), None, None),
         "chemical" -> TRAPIQueryNode(ids = Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_39867"))),
-          categories = Some(List(BiolinkClass("ChemicalEntity"))),
-          None,
-          None)
+                                     categories = Some(List(BiolinkClass("ChemicalEntity"))),
+                                     None,
+                                     None)
       ),
       edges = Map(
         "t_edge" -> generateQualifiedEdge(
@@ -205,9 +304,9 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
       nodes = Map(
         "gene" -> TRAPIQueryNode(None, Some(List(BiolinkClass("Gene"))), None, None),
         "chemical" -> TRAPIQueryNode(ids = Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_39867"))),
-          categories = Some(List(BiolinkClass("ChemicalEntity"))),
-          None,
-          None)
+                                     categories = Some(List(BiolinkClass("ChemicalEntity"))),
+                                     None,
+                                     None)
       ),
       edges = Map(
         "t_edge" -> generateQualifiedEdge(
@@ -234,7 +333,7 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
           } yield (
             assert(response.status)(Assertion.isSome(Assertion.equalTo("Success"))) &&
               assert(response.message.results)(Assertion.isSome(Assertion.isNonEmpty))
-            )
+          )
         }
       }
       .runCollect
