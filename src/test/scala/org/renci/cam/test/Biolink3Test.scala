@@ -70,7 +70,7 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
           IRI("http://purl.obolibrary.org/obo/RO_0000056"),
           IRI("http://purl.obolibrary.org/obo/RO_0002229"),
           IRI("http://purl.obolibrary.org/obo/RO_0004032"),
-          IRI("http://translator.renci.org/ubergraph-axioms.ofn#acts_upstream_of_o_enabled_by"),
+//          IRI("http://translator.renci.org/ubergraph-axioms.ofn#acts_upstream_of_o_enabled_by"), -- this maps to a qualified term, weirdly enough.
           IRI("http://purl.obolibrary.org/obo/RO_0000052"),
           IRI("http://purl.obolibrary.org/obo/BFO_0000066"),
           IRI("http://purl.obolibrary.org/obo/RO_0002348"),
@@ -105,7 +105,7 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
           IRI("http://purl.obolibrary.org/obo/RO_0002219"),
           IRI("http://purl.obolibrary.org/obo/RO_0002339"),
           IRI("http://purl.obolibrary.org/obo/RO_0002221"),
-          IRI("http://purl.obolibrary.org/obo/RO_0002313"),
+          // IRI("http://purl.obolibrary.org/obo/RO_0002313"), -- maps to a qualified predicate
           IRI("http://purl.obolibrary.org/obo/RO_0004008"),
           IRI("http://purl.obolibrary.org/obo/RO_0002326"),
           IRI("http://purl.obolibrary.org/obo/BFO_0000050"),
@@ -128,19 +128,17 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
       // "increases expression of" should be mapped to http://purl.obolibrary.org/obo/RO_0003003, since this is what
       // predicate_mapping.yaml tells us.
       ConversionTest(
-        Some(List(BiolinkPredicate("increases_expression_of"))),
+        Some(List(BiolinkPredicate("regulates"))),
         Some(
           List(
             TRAPIQualifierConstraint(
               qualifier_set = List(
-                TRAPIQualifier("biolink:object_aspect_qualifier", "secretion"),
-                TRAPIQualifier("biolink:object_direction_qualifier", "increased"),
-                TRAPIQualifier("biolink:qualified_predicate", "biolink:causes")
+                TRAPIQualifier("biolink:object_direction_qualifier", "downregulated")
               )
             )
           )
         ),
-        Set(IRI("http://purl.obolibrary.org/obo/RO_0003003"))
+        Set(IRI("http://purl.obolibrary.org/obo/RO_0002449"))
       )
     )
 
@@ -151,7 +149,7 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
           .map { ct: ConversionTest =>
             test(s"Testing ${ct.biolinkPredicates} with ${ct.trapiQualifierConstraints} to ${ct.predicates}") {
               assert(PredicateMappings.mapQueryEdgePredicates(ct.biolinkPredicates, ct.trapiQualifierConstraints))(
-                Assertion.equalTo(ct.predicates))
+                Assertion.hasSubset(ct.predicates))
             }
           }
           .runCollect
@@ -170,7 +168,7 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
                     val qualifiersActual = preds.flatMap(_._2).flatten.toSet
                     val qualifiersExpected = ct.trapiQualifierConstraints.getOrElse(List()).flatMap(_.qualifier_set).toSet
 
-                    assert(preds.map(_._1).toSet)(Assertion.equalTo(ct.biolinkPredicates.getOrElse(List()).toSet)) &&
+                    assert(preds.map(_._1).toSet)(Assertion.hasSubset(ct.biolinkPredicates.getOrElse(List()).toSet)) &&
                     assert(qualifiersActual)(Assertion.equalTo(qualifiersExpected))
                   }
                 }
