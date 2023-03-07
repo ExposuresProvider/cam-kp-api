@@ -10,8 +10,8 @@ import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
-import org.renci.cam.domain.PredicateMappings.{getBiolinkQualifiedPredicate, mapQueryEdgePredicates}
-import org.renci.cam.domain.{TRAPIAttribute, _}
+import org.renci.cam.domain.PredicateMappings.{getBiolinkQualifiedPredicates, mapQueryEdgePredicates}
+import org.renci.cam.domain._
 import zio.config.{ZConfig, getConfig}
 import zio.{Has, RIO, Task, UIO, ZIO, config => _}
 
@@ -210,48 +210,51 @@ object QueryService extends LazyLogging {
         .orElseFail(new Exception("could not get biolink:InformationResource"))
 
       // Generate the edges.
-      edges = results.flatMap(result =>
-        for {
-          key <- result.edges.keys
+      edges = results
+        .flatMap(result =>
+          for {
+            key <- result.edges.keys
 
-          // Generate the pieces of this TRAPIEdge.
-          relationIRI = result.edges(key)
-          queryEdge = result.queryGraph.edges(key)
-          subjectIRI = result.nodes(queryEdge.subject)
-          objectIRI = result.nodes(queryEdge.`object`)
-          derivedFroms = result.derivedFrom
+            // Generate the pieces of this TRAPIEdge.
+            relationIRI = result.edges(key)
+            queryEdge = result.queryGraph.edges(key)
+            subjectIRI = result.nodes(queryEdge.subject)
+            objectIRI = result.nodes(queryEdge.`object`)
+            derivedFroms = result.derivedFrom
 
-          // Generate the attributes for this edge.
-          aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
-                                                 aggregatorKS.iri,
-                                                 None,
-                                                 List("infores:cam-kp"),
-                                                 Some(infoResBiolinkClass.iri),
-                                                 Some(appConfig.location),
-                                                 None,
-                                                 None)
-          originalKnowledgeSources = derivedFroms.map {
-            case df @ ctd if ctd.value.contains("ctdbase.org") => (df, "infores:ctd")
-            case df                                            => (df, "infores:go-cam")
-          }
-          originalKSAttributes = originalKnowledgeSources.map { case (derivedFrom, inforesKS) =>
-            TRAPIAttribute(Some("infores:cam-kp"),
-                           originalKS.iri,
-                           None,
-                           List(inforesKS),
-                           Some(infoResBiolinkClass.iri),
-                           Some(derivedFrom.value),
-                           None,
-                           None)
-          }
-          attributes = aggregatorKSAttribute +: originalKSAttributes.toList
+            // Generate the attributes for this edge.
+            aggregatorKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
+                                                   aggregatorKS.iri,
+                                                   None,
+                                                   List("infores:cam-kp"),
+                                                   Some(infoResBiolinkClass.iri),
+                                                   Some(appConfig.location),
+                                                   None,
+                                                   None)
+            originalKnowledgeSources = derivedFroms.map {
+              case df @ ctd if ctd.value.contains("ctdbase.org") => (df, "infores:ctd")
+              case df                                            => (df, "infores:go-cam")
+            }
+            originalKSAttributes = originalKnowledgeSources.map { case (derivedFrom, inforesKS) =>
+              TRAPIAttribute(Some("infores:cam-kp"),
+                             originalKS.iri,
+                             None,
+                             List(inforesKS),
+                             Some(infoResBiolinkClass.iri),
+                             Some(derivedFrom.value),
+                             None,
+                             None)
+            }
+            attributes = aggregatorKSAttribute +: originalKSAttributes.toList
 
-          // Generate the TRAPIEdge and its edge key.
-          (biolinkPred, qualifiers) = getBiolinkQualifiedPredicate(relationIRI)
-          trapiEdge = TRAPIEdge(Some(biolinkPred), subjectIRI, objectIRI, Some(attributes), qualifiers)
-          // edgeKey = getTRAPIEdgeKey(queryEdge.subject, biolinkPred, queryEdge.`object`)
-          edgeKey = result.getEdgeKey(key)
-        } yield (edgeKey, trapiEdge))
+            // Generate the TRAPIEdge and its edge key.
+            biolinkPreds = getBiolinkQualifiedPredicates(relationIRI)
+            trapiEdges = biolinkPreds.zipWithIndex.map { case ((bpred, optQualifiers), index) =>
+              (key + "_pred_" + index, TRAPIEdge(Some(bpred), subjectIRI, objectIRI, Some(attributes), optQualifiers))
+            }
+            // edgeKey = getTRAPIEdgeKey(queryEdge.subject, biolinkPred, queryEdge.`object`)
+          } yield trapiEdges)
+        .flatten
     } yield edges.toMap
 
   /** Generate TRAPI results from a list of Results.

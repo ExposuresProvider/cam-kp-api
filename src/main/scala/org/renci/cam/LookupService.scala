@@ -188,10 +188,10 @@ object LookupService extends LazyLogging {
             case lit  => LabeledIRI(predIRI, Set(lit.getString))
           }
 
-          val biolinkRes = PredicateMappings.getBiolinkQualifiedPredicate(IRI(predIRI))
+          val biolinkPreds = PredicateMappings.getBiolinkQualifiedPredicates(IRI(predIRI))
 
           // TODO: add support for qualified predicates.
-          (pred, Set(LabeledIRI(biolinkRes._1.iri.value, Set())))
+          (pred, biolinkPreds.map(bp => LabeledIRI(bp._1.iri.value, Set())).toSet)
         }
 
         val objLabeled = results

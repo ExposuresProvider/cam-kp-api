@@ -7,8 +7,8 @@ import org.renci.cam.LookupService.LabeledIRI
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.util.GenerateBiolinkPredicateMappings.logger
 import org.renci.cam.{AppConfig, QueryService, SPARQLQueryExecutor}
-import zio.blocking.{Blocking, blocking}
-import zio.config.{ZConfig, getConfig}
+import zio.blocking.{blocking, Blocking}
+import zio.config.{getConfig, ZConfig}
 import zio.stream.ZStream
 import zio.{Has, RIO, Task, ZIO}
 
@@ -153,16 +153,23 @@ object PredicateMappings {
   // TODO: there's some hacky code here for handling the case where biolink/predicates.json doesn't exist. It should
   // generally always exist, since it's included in the repository. But we should still test this so it's better.
   // TODO:
-  val predicateMappingsStream = if (PredicateMappings.getClass.getResourceAsStream("biolink/predicates.json") != null)
-    PredicateMappings.getClass.getResourceAsStream("biolink/predicates.json") else
-    new FileInputStream(new File("src/main/resources/biolink/predicates.json"))
+  val predicateMappingsStream =
+    if (PredicateMappings.getClass.getResourceAsStream("biolink/predicates.json") != null)
+      PredicateMappings.getClass.getResourceAsStream("biolink/predicates.json")
+    else
+      new FileInputStream(new File("src/main/resources/biolink/predicates.json"))
 
-  val predicatesDataAsString = if(predicateMappingsStream == null) "" else Source
-    .fromInputStream(predicateMappingsStream)
-    .getLines()
-    .mkString("\n")
+  val predicatesDataAsString =
+    if (predicateMappingsStream == null) ""
+    else
+      Source
+        .fromInputStream(predicateMappingsStream)
+        .getLines()
+        .mkString("\n")
 
-  val predicatesData = if(predicateMappingsStream == null) Seq() else io.circe.parser.parse(predicatesDataAsString).toTry.get.as[Seq[PredicateMapping]].toTry.get
+  val predicatesData =
+    if (predicateMappingsStream == null) Seq()
+    else io.circe.parser.parse(predicatesDataAsString).toTry.get.as[Seq[PredicateMapping]].toTry.get
 
   def mapQueryEdgePredicates(predicates: Option[List[BiolinkPredicate]],
                              qualifier_constraints: Option[List[TRAPIQualifierConstraint]]): Set[IRI] = {
@@ -173,7 +180,7 @@ object PredicateMappings {
     logger.info(s"Searching for ${predicates} with ${qualifier_constraints} in ${predicatesData}")
 
     val relations = predicatesData.filter {
-      case pred@PredicateMapping(_, Some(biolinkPredicate), qualifierOpt) =>
+      case pred @ PredicateMapping(_, Some(biolinkPredicate), qualifierOpt) =>
         logger.info(f"Check if ${biolinkPredicate} matches ${pred}: ${biolinkPredicates.contains(biolinkPredicate)}")
         if (!biolinkPredicates.contains(biolinkPredicate)) false
         else
@@ -187,8 +194,8 @@ object PredicateMappings {
     relations.map(pred => IRI(pred.predicate.iri)).toSet
   }
 
-  def getBiolinkQualifiedPredicate(relationIRI: IRI): (BiolinkPredicate, Option[List[TRAPIQualifier]]) = {
-    val biolinkPredicates = predicatesData.flatMap {
+  def getBiolinkQualifiedPredicates(relationIRI: IRI): Seq[(BiolinkPredicate, Option[List[TRAPIQualifier]])] =
+    predicatesData.flatMap {
       case PredicateMapping(relation, Some(biolinkPredicate), qualifierOpt) =>
         if (relation.iri != relationIRI.value) None
         else
@@ -199,20 +206,5 @@ object PredicateMappings {
           }
       case _ => None
     }
-
-    // TODO: this is trickier than it looks, since we need to find the most specific Biolink predicate here, not the
-    // highest one. Hmm.
-
-    if (biolinkPredicates.isEmpty) {
-      logger.error(f"Could not find Biolink predicates for relation ${relationIRI}")
-      (QueryService.BiolinkRelatedTo, None)
-    } else if (biolinkPredicates.size > 1) {
-      logger.error(f"Found multiple Biolink predicates for relation ${relationIRI}: ${biolinkPredicates}")
-      logger.error(f"Using the first one: ${biolinkPredicates.head}")
-      biolinkPredicates.head
-    } else {
-      biolinkPredicates.head
-    }
-  }
 
 }
