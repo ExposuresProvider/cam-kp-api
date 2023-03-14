@@ -1,0 +1,27 @@
+{
+  "description": "Half the genetic pathway 'positive control' from the June 2022 Relay at https://docs.google.com/presentation/d/1V_K_bgyLWEP2neTdM0TD7Bs-GtJUmqCt8p6BzWTv96s/edit?pli=1#slide=id.p",
+  "message": {
+    "query_graph": {
+      "nodes": {
+        "n0": {
+          "ids": [
+            "NCBIGene:5468"
+          ]
+        },
+        "n1": {
+          "categories": [
+            "biolink:BiologicalProcess"
+          ]
+        }
+      },
+      "edges": {
+        "e01": {
+          "object": "n0",
+          "subject": "n1"
+        }
+      }
+    }
+  },
+  "limit": 100000,
+  "minExpectedResults": 1035
+}
