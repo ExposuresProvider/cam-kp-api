@@ -152,20 +152,18 @@ object PredicateMappings {
   /** Load the predicates data so we can use it subsequently. */
   // TODO: there's some hacky code here for handling the case where biolink/predicates.json doesn't exist. It should
   // generally always exist, since it's included in the repository. But we should still test this so it's better.
-  // TODO:
+  // TODO: Source.fromResource() is probably better here.
   val predicateMappingsStream =
-    if (PredicateMappings.getClass.getResourceAsStream("biolink/predicates.json") != null)
-      PredicateMappings.getClass.getResourceAsStream("biolink/predicates.json")
+    if (PredicateMappings.getClass.getResourceAsStream("/biolink/predicates.json") != null)
+      PredicateMappings.getClass.getResourceAsStream("/biolink/predicates.json")
     else
       new FileInputStream(new File("src/main/resources/biolink/predicates.json"))
 
   val predicatesDataAsString =
-    if (predicateMappingsStream == null) ""
-    else
-      Source
-        .fromInputStream(predicateMappingsStream)
-        .getLines()
-        .mkString("\n")
+    Source
+      .fromInputStream(predicateMappingsStream)
+      .getLines()
+      .mkString("\n")
 
   val predicatesData =
     if (predicateMappingsStream == null) Seq()
