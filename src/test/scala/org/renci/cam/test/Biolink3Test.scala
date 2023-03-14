@@ -213,11 +213,13 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
      *
      * We know via /lookup that we know that this protein participates in http://purl.obolibrary.org/obo/GO_0007204
      * ("positive regulation of cytosolic calcium ion concentration"), so we would expect calcium ions to appear here.
+     *
+     * We don't have NCBIGene:2859, but we do have NCBIGene:768206 ("photoreceptor disc component")
      */
-    "GRP35-increases-chemical" -> TRAPIQueryGraph(
+    "PRCD-increases-chemical" -> TRAPIQueryGraph(
       nodes = Map(
         "gene" -> TRAPIQueryNode(
-          ids = Some(List(IRI("http://identifiers.org/uniprot/Q9HC97"))),
+          ids = Some(List(IRI("http://identifiers.org/ncbigene/768206"))),
           categories = Some(List(BiolinkClass("Gene"))),
           None,
           None
@@ -243,11 +245,13 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
      *
      * We know via /lookup that we know that this protein participates in http://purl.obolibrary.org/obo/GO_0007204
      * ("positive regulation of cytosolic calcium ion concentration"), so we would expect calcium ions to appear here.
+     *
+     * We don't have NCBIGene:2859, but we do have NCBIGene:768206 ("photoreceptor disc component")
      */
-    "GRP35-decreases-chemical" -> TRAPIQueryGraph(
+    "PRCD-decreases-chemical" -> TRAPIQueryGraph(
       nodes = Map(
         "gene" -> TRAPIQueryNode(
-          ids = Some(List(IRI("http://identifiers.org/uniprot/Q9HC97"))),
+          ids = Some(List(IRI("http://identifiers.org/ncbigene/768206"))),
           categories = Some(List(BiolinkClass("Gene"))),
           None,
           None
@@ -270,12 +274,14 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
      * Example Biolink 3 query from https://github.com/NCATSTranslator/TranslatorArchitecture/issues/81
      * using valproic acid (PUBCHEM.COMPOUND:88111 = CHEBI:39867).
      *
-     * (Another one we could use is pyruvate (http://purl.obolibrary.org/obo/CHEBI_15361).
+     * Okay, we don't seem to have this information, but we do have it for CHEBI:51143 ("nitrogen molecular entity"),
+     * so let's include that instead.
+     *
      */
-    "valproic-acid-increases-chemical" -> TRAPIQueryGraph(
+    "pyruvate-increases-chemical" -> TRAPIQueryGraph(
       nodes = Map(
         "gene" -> TRAPIQueryNode(None, Some(List(BiolinkClass("Gene"))), None, None),
-        "chemical" -> TRAPIQueryNode(ids = Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_39867"))),
+        "chemical" -> TRAPIQueryNode(ids = Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_51143"))),
                                      categories = Some(List(BiolinkClass("ChemicalEntity"))),
                                      None,
                                      None)
@@ -297,11 +303,14 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
      * using valproic acid (PUBCHEM.COMPOUND:88111 = CHEBI:39867).
      *
      * (Another one we could use is pyruvate (http://purl.obolibrary.org/obo/CHEBI_15361).
+     *
+     * Okay, we don't seem to have this information, but we do have it for CHEBI:51143 ("nitrogen molecular entity"),
+     * so let's include that instead.
      */
     "valproic-acid-decreases-chemical" -> TRAPIQueryGraph(
       nodes = Map(
         "gene" -> TRAPIQueryNode(None, Some(List(BiolinkClass("Gene"))), None, None),
-        "chemical" -> TRAPIQueryNode(ids = Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_39867"))),
+        "chemical" -> TRAPIQueryNode(ids = Some(List(IRI("http://purl.obolibrary.org/obo/CHEBI_51143"))),
                                      categories = Some(List(BiolinkClass("ChemicalEntity"))),
                                      None,
                                      None)
@@ -341,8 +350,8 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
   val testLayer = HttpClient.makeHttpClientLayer ++ Biolink.makeUtilitiesLayer ++ configLayer >+> SPARQLQueryExecutor.makeCache.toLayer
 
   def spec = suite("Biolink 3 example queries")(
-    biolink3conversions
-    // biolink3exampleQueries
+    biolink3conversions,
+    biolink3exampleQueries
   ).provideCustomLayer(testLayer.mapError(TestFailure.die))
 
 }
