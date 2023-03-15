@@ -13,8 +13,10 @@ import zio.blocking.effectBlockingIO
 import zio.cache.Cache
 import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
+import zio.duration.durationInt
 import zio.interop.catz.concurrentInstance
 import zio.stream.ZStream
+import zio.test.environment.Live
 import zio.test.{assert, _}
 import zio.{Layer, Task, ZIO, ZLayer, ZManaged}
 
@@ -23,6 +25,9 @@ import java.io.{File, FileWriter, PrintWriter}
 /** Test the `/lookup` endpoint (implemented by LookupService)
   */
 object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
+
+  /** The time limit for an individual lookup query (in testIdentifier()). */
+  val LOOKUP_TIME_LIMIT = 60.second
 
   /** Node normalization endpoint. Defaults to the production NodeNorm, but can be overriden by setting the NODE_NORM_URL environmental
     * variable.
@@ -64,7 +69,7 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
     * @return
     *   A ZSpec that will test the single identifier being queried.
     */
-  def testIdentifier(id: String): ZSpec[EndpointEnv, Throwable] =
+  def testIdentifier(id: String): ZSpec[Live with EndpointEnv, Throwable] =
     testM(s"Test whether we can retrieve results for identifier ${id}") {
       val idFilenameSafe = id.replaceAll("\\W", "_")
       val outputFile = new File(s"./src/test/resources/lookup-service-test/${idFilenameSafe}.json")
@@ -95,7 +100,7 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
         // assert(result.relations)(Assertion.isNonEmpty) &&
         // assert(result.biolinkPredicates)(Assertion.isNonEmpty) &&
         assert(fileWritten)(Assertion.isTrue)
-    }
+    } @@ TestAspect.timeout(LOOKUP_TIME_LIMIT)
 
   /* Generate tests for all the identifiers in the lookupServiceIdFile. */
 
@@ -103,7 +108,7 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
   val lookupServiceIdFile = new File("./src/test/resources/lookup-service-test/ids.txt")
 
   /** A spec made up of tests for every identifier in the lookupServiceIdFile. */
-  val testIdentifiersInFile: Spec[EndpointEnv, TestFailure[Throwable], TestSuccess] =
+  val testIdentifiersInFile: Spec[Live with EndpointEnv, TestFailure[Throwable], TestSuccess] =
     suiteM(s"Test identifiers in ${lookupServiceIdFile}") {
       ZStream
         .fromIteratorManaged(
