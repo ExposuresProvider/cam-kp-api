@@ -179,7 +179,7 @@ object PredicateMappings {
 
     val relations = predicatesData.filter {
       case pred @ PredicateMapping(_, Some(biolinkPredicate), qualifierOpt) =>
-        logger.info(f"Check if ${biolinkPredicate} matches ${pred}: ${biolinkPredicates.contains(biolinkPredicate)}")
+        logger.debug(f"Check if ${biolinkPredicates} contains ${biolinkPredicate} from ${pred}: ${biolinkPredicates.contains(biolinkPredicate)}")
         if (!biolinkPredicates.contains(biolinkPredicate)) false
         else
           qualifierOpt match {
