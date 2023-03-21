@@ -11,7 +11,7 @@ import org.renci.cam.Biolink.biolinkData
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.Server.EndpointEnv
 import org.renci.cam._
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, LogEntry, TRAPIAttribute, TRAPIResponse}
+import org.renci.cam.domain.{LogEntry, TRAPIAttribute, TRAPIResponse}
 import zio.cache.Cache
 import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
@@ -121,7 +121,7 @@ object TRAPITest extends DefaultRunnableSpec with LazyLogging {
                                  "qualifier_value": "abundance"
                                }, {
                                  "qualifier_type_id": "biolink:subject_direction_qualifier",
-                                 "qualifier_value": "decreased"
+                                 "qualifier_value": "exactly-the-same"
                                }]
                              }]
                            }
@@ -157,13 +157,19 @@ object TRAPITest extends DefaultRunnableSpec with LazyLogging {
         logs = trapiResponse.logs
         logWarningOfQualifierConstraints = logs.getOrElse(List()).filter {
           // We've made this up ourselves.
-          case LogEntry(_, Some("WARNING"), Some("UnsupportedQualifierConstraint"), _) => true
-          case _                                                                       => false
+          case LogEntry(
+                _,
+                Some("ERROR"),
+                Some("UnsupportedEdge"),
+                Some(
+                  "Edge e0 could not be mapped to a predicate, and so cannot be matched: TRAPIQueryEdge(Some(List(BiolinkPredicate(part_of,IRI(https://w3id.org/biolink/vocab/part_of)))),n0,n1,None,None,Some(List(TRAPIQualifierConstraint(List(TRAPIQualifier(biolink:subject_aspect_qualifier,abundance), TRAPIQualifier(biolink:subject_direction_qualifier,exactly-the-same))))))")) =>
+            true
+          case _ => false
         }
       } yield assert(response.status)(Assertion.hasField("isSuccess", _.isSuccess, Assertion.isTrue)) &&
         assert(content)(Assertion.isNonEmptyString) &&
-        // Should return an overall status of Success
-        assert(trapiResponse.status)(Assertion.isSome(Assertion.equalTo("Success"))) &&
+        // Should return an overall status of Error (because an edge couldn't be interpreted)
+        assert(trapiResponse.status)(Assertion.isSome(Assertion.equalTo("ERROR"))) &&
         // ... and in the logs
         assert(logs)(Assertion.isSome(Assertion.isNonEmpty)) &&
         assert(logWarningOfQualifierConstraints)(Assertion.isNonEmpty) &&

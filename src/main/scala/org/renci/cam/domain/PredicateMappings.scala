@@ -179,13 +179,16 @@ object PredicateMappings {
 
     val relations = predicatesData.filter {
       case pred @ PredicateMapping(_, Some(biolinkPredicate), qualifierOpt) =>
-        logger.debug(f"Check if ${biolinkPredicates} contains ${biolinkPredicate} from ${pred}: ${biolinkPredicates.contains(biolinkPredicate)}")
+        logger.debug(
+          f"Check if ${biolinkPredicates} contains ${biolinkPredicate} from ${pred}: ${biolinkPredicates.contains(biolinkPredicate)}")
         if (!biolinkPredicates.contains(biolinkPredicate)) false
-        else
+        else {
+          // qualifierOpt should match qualifierConstraint, whether empty or not.
           qualifierOpt match {
-            case None             => true
+            case None             => qualifierConstraint.isEmpty
             case Some(constraint) => compareQualifierConstraints(qualifierConstraint, constraint.qualifier_set)
           }
+        }
       case _ => false
     }
 

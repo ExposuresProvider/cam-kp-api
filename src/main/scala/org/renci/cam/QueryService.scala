@@ -313,6 +313,13 @@ object QueryService extends LazyLogging {
       _.constraints.getOrElse(List())) ++ submittedQueryGraph.edges.values.flatMap(_.attribute_constraints.getOrElse(List()))
     val allQualifierConstraints = submittedQueryGraph.edges.values.flatMap(_.qualifier_constraints.getOrElse(List()))
 
+    // Try mapping all predicates. If any fail, we should produce appropriate errors.
+    // TODO: we shouldn't just discard these mappings! We should use them.
+    val unmappedEdges = submittedQueryGraph.edges.flatMap { case (key, edge) =>
+      val mappedPreds = mapQueryEdgePredicates(edge.predicates, edge.qualifier_constraints)
+      if (mappedPreds.isEmpty) Seq((key, edge)) else Seq()
+    }
+
     if (allAttributeConstraints.nonEmpty) {
       ZIO.succeed(
         TRAPIResponse(
@@ -328,6 +335,31 @@ object QueryService extends LazyLogging {
                 Some(s"The following attributes are not supported: ${allAttributeConstraints}")
               )
             )
+          )
+        )
+      )
+    } else if (unmappedEdges.nonEmpty) {
+      // Generate a list of all the edges that couldn't be mapped.
+      val errorList = unmappedEdges.map { case (key, edge) =>
+        val warning = s"Edge ${key} could not be mapped to a predicate, and so cannot be matched: ${edge}"
+        logger.warn(warning)
+
+        LogEntry(
+          Some(java.time.Instant.now().toString),
+          Some("ERROR"),
+          Some("UnsupportedEdge"),
+          Some(warning)
+        )
+      }
+
+      // Are there any unmapped edges? If so, we should return them as errors.
+      ZIO.succeed(
+        TRAPIResponse(
+          emptyTRAPIMessage,
+          Some("ERROR"),
+          None,
+          Some(
+            errorList.toList
           )
         )
       )
