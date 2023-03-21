@@ -332,6 +332,16 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
     )
   )
 
+  /** The new Biolink3 code has an error in it -- the knowledge graph edge names don't match with the result edge names. To test for that,
+    * we'll make sure that all the queries we make here have no knowledge graph edge results that are not also present in the results.
+    */
+  def checkKnowledgeGraphIDs(message: TRAPIMessage): TestResult = {
+    val kgEdgeIds: Set[String] = message.knowledge_graph.map(_.edges.keySet).toSet.flatten
+    val resultEdgeIds: Set[String] = message.results.map(_.flatMap(_.edge_bindings.keySet)).toList.flatten.toSet
+
+    assert(kgEdgeIds)(Assertion.equalTo(resultEdgeIds))
+  }
+
   val biolink3exampleQueries = suiteM("biolink3exampleQueries") {
     ZStream
       .fromIterable(queries)
@@ -343,7 +353,8 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
             _ = logger.info(s"Response: ${response}")
           } yield (
             assert(response.status)(Assertion.isSome(Assertion.equalTo("Success"))) &&
-              assert(response.message.results)(Assertion.isSome(Assertion.isNonEmpty))
+              assert(response.message.results)(Assertion.isSome(Assertion.isNonEmpty)) &&
+              checkKnowledgeGraphIDs(response.message)
           )
         }
       }
