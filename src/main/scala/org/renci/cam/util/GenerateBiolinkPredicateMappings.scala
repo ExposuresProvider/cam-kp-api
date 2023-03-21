@@ -33,7 +33,7 @@ object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
   /* Manual annotations. */
   val manualPredicateMappings = Seq(
     PredicateMapping(
-      predicate = LabeledIRI("http://purl.obolibrary.org/obo/RO_0002450", Set("http://purl.obolibrary.org/obo/RO_0002450")),
+      predicate = LabeledIRI("http://purl.obolibrary.org/obo/RO_0002450", Set("directly positively regulates activity of")),
       biolinkPredicate = Some(BiolinkPredicate("affects")),
       biolinkQualifiers = Some(
         TRAPIQualifierConstraint(

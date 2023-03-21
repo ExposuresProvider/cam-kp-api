@@ -128,12 +128,13 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
       // "increases expression of" should be mapped to http://purl.obolibrary.org/obo/RO_0003003, since this is what
       // predicate_mapping.yaml tells us.
       ConversionTest(
-        Some(List(BiolinkPredicate("regulates"))),
+        Some(List(BiolinkPredicate("affects"))),
         Some(
           List(
             TRAPIQualifierConstraint(
               qualifier_set = List(
-                TRAPIQualifier("biolink:object_direction_qualifier", "downregulated")
+                TRAPIQualifier("biolink:object_aspect_qualifier", "activity_or_abundance"),
+                TRAPIQualifier("biolink:object_direction_qualifier", "decreased")
               )
             )
           )
@@ -155,9 +156,12 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
           .runCollect
       },
       suiteM("Make sure we can map relations to predicates") {
+
         ZStream
           .fromIterable(biolink3conversions)
           .flatMap { ct: ConversionTest =>
+            val biolinkPreds = ct.biolinkPredicates.toList.flatten.toSet
+
             ZStream
               .fromIterable(ct.predicates)
               .map(
@@ -165,7 +169,7 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
                   test(s"Testing ${pred} to ${ct.biolinkPredicates} with ${ct.trapiQualifierConstraints}") {
                     val preds = PredicateMappings.getBiolinkQualifiedPredicates(pred)
 
-                    val qualifiersActual = preds.flatMap(_._2).flatten.toSet
+                    val qualifiersActual = preds.filter(p => biolinkPreds.contains(p._1)).flatMap(_._2).flatten.toSet
                     val qualifiersExpected = ct.trapiQualifierConstraints.getOrElse(List()).flatMap(_.qualifier_set).toSet
 
                     assert(preds.map(_._1).toSet)(Assertion.hasSubset(ct.biolinkPredicates.getOrElse(List()).toSet)) &&
@@ -214,12 +218,12 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
      * We know via /lookup that we know that this protein participates in http://purl.obolibrary.org/obo/GO_0007204
      * ("positive regulation of cytosolic calcium ion concentration"), so we would expect calcium ions to appear here.
      *
-     * We don't have NCBIGene:2859, but we do have NCBIGene:768206 ("photoreceptor disc component")
+     * We don't have NCBIGene:2859, but we do have NCBIGene:340061 ("stimulator of interferon response cGAMP interactor 1")
      */
-    "PRCD-increases-chemical" -> TRAPIQueryGraph(
+    "STING1-increases-chemical" -> TRAPIQueryGraph(
       nodes = Map(
         "gene" -> TRAPIQueryNode(
-          ids = Some(List(IRI("http://identifiers.org/ncbigene/768206"))),
+          ids = Some(List(IRI("http://identifiers.org/ncbigene/340061"))),
           categories = Some(List(BiolinkClass("Gene"))),
           None,
           None
@@ -246,12 +250,12 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
      * We know via /lookup that we know that this protein participates in http://purl.obolibrary.org/obo/GO_0007204
      * ("positive regulation of cytosolic calcium ion concentration"), so we would expect calcium ions to appear here.
      *
-     * We don't have NCBIGene:2859, but we do have NCBIGene:768206 ("photoreceptor disc component")
+     * We don't have NCBIGene:2859, but we do have NCBIGene:598 ("BCL2 like 1")
      */
-    "PRCD-decreases-chemical" -> TRAPIQueryGraph(
+    "BCL2L1-decreases-chemical" -> TRAPIQueryGraph(
       nodes = Map(
         "gene" -> TRAPIQueryNode(
-          ids = Some(List(IRI("http://identifiers.org/ncbigene/768206"))),
+          ids = Some(List(IRI("http://identifiers.org/ncbigene/598"))),
           categories = Some(List(BiolinkClass("Gene"))),
           None,
           None
