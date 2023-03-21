@@ -337,7 +337,7 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
     */
   def checkKnowledgeGraphIDs(message: TRAPIMessage): TestResult = {
     val kgEdgeIds: Set[String] = message.knowledge_graph.map(_.edges.keySet).toSet.flatten
-    val resultEdgeIds: Set[String] = message.results.map(_.flatMap(_.edge_bindings.keySet)).toList.flatten.toSet
+    val resultEdgeIds: Set[String] = message.results.map(_.flatMap(_.edge_bindings.values.flatMap(_.map(_.id)))).toList.flatten.toSet
 
     assert(kgEdgeIds)(Assertion.equalTo(resultEdgeIds))
   }

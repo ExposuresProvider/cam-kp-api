@@ -6,14 +6,14 @@ import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{BiolinkData, biolinkData}
+import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.PredicateMappings.{getBiolinkQualifiedPredicates, mapQueryEdgePredicates}
 import org.renci.cam.domain._
-import zio.config.{ZConfig, getConfig}
-import zio.{Has, RIO, Task, UIO, ZIO, config => _}
+import zio.config.{getConfig, ZConfig}
+import zio.{config => _, Has, RIO, Task, UIO, ZIO}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -250,7 +250,7 @@ object QueryService extends LazyLogging {
             // Generate the TRAPIEdge and its edge key.
             biolinkPreds = getBiolinkQualifiedPredicates(relationIRI)
             trapiEdges = biolinkPreds.zipWithIndex.map { case ((bpred, optQualifiers), index) =>
-              (key + "_pred_" + index, TRAPIEdge(Some(bpred), subjectIRI, objectIRI, Some(attributes), optQualifiers))
+              (result.getEdgeKey(key) + "_pred_" + index, TRAPIEdge(Some(bpred), subjectIRI, objectIRI, Some(attributes), optQualifiers))
             }
             // edgeKey = getTRAPIEdgeKey(queryEdge.subject, biolinkPred, queryEdge.`object`)
           } yield trapiEdges)
@@ -267,7 +267,7 @@ object QueryService extends LazyLogging {
     * @return
     *   An UIO that generates the list of TRAPI Results.
     */
-  def generateTRAPIResults(results: List[Result]): List[TRAPIResult] =
+  def generateTRAPIResults(results: List[Result], edges: Map[String, TRAPIEdge]): List[TRAPIResult] =
     for {
       result <- results
 
@@ -291,9 +291,23 @@ object QueryService extends LazyLogging {
             }
           ))
         .map(p => (p._1, p._2.toList))
-      edgeBindings = result.edges.keys
-        .map(key => (key, List(TRAPIEdgeBinding(result.getEdgeKey(key)))))
-        .toMap
+
+      edgeBindings = result.edges.keys.map { key =>
+        // This is a pretty dumb way to do this, but it should be error-proof.
+        val fullEdgeId = result.getEdgeKey(key)
+        val allPreds = edges.keySet.flatMap { p =>
+          val rMatchPreds = """^(.*)_pred_(\d+)$""".r
+          p match {
+            case rMatchPreds(edgeId, _) if edgeId == fullEdgeId => Some(p)
+            case _                                              => None
+          }
+        }
+
+        if (allPreds.isEmpty)
+          (key, List(TRAPIEdgeBinding(fullEdgeId)))
+        else
+          (key, allPreds.map(pred => TRAPIEdgeBinding(pred)).toList)
+      }.toMap
     } yield TRAPIResult(node_bindings = nodeBindings, edge_bindings = edgeBindings)
 
   /** Query the triplestore with a TRAPIQuery and return a TRAPIMessage with the result.
@@ -385,7 +399,7 @@ object QueryService extends LazyLogging {
         _ = logger.debug(s"Nodes: $nodes")
         edges <- generateTRAPIEdges(results)
         _ = logger.debug(s"Edges: $edges")
-        trapiResults = generateTRAPIResults(results)
+        trapiResults = generateTRAPIResults(results, edges)
         _ = logger.debug(s"Results: $trapiResults")
       } yield TRAPIResponse(
         TRAPIMessage(Some(queryGraph), Some(TRAPIKnowledgeGraph(nodes, edges)), Some(trapiResults.distinct)),
