@@ -3,7 +3,8 @@ package org.renci.cam.util
 import com.typesafe.scalalogging.{LazyLogging, Logger}
 import io.circe.generic.auto._
 import io.circe.syntax._
-import org.renci.cam.domain.BiolinkPredicate
+import org.renci.cam.LookupService.LabeledIRI
+import org.renci.cam.domain.{BiolinkPredicate, TRAPIQualifier, TRAPIQualifierConstraint}
 import org.renci.cam.domain.PredicateMappings.{getPredicateMappingsFromGitHub, getPredicatesFromSPARQL, PredicateMapping, PredicateMappingRow}
 import org.renci.cam.{AppConfig, HttpClient, SPARQLQueryExecutor}
 import zio._
@@ -28,6 +29,32 @@ import java.nio.file.{Files, Paths}
   */
 object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
   override lazy val logger: Logger = Logger(GenerateBiolinkPredicateMappings.getClass.getSimpleName);
+
+  /* Manual annotations. */
+  val manualPredicateMappings = Seq(
+    PredicateMapping(
+      predicate = LabeledIRI("http://purl.obolibrary.org/obo/RO_0002450", Set("http://purl.obolibrary.org/obo/RO_0002450")),
+      biolinkPredicate = Some(BiolinkPredicate("affects")),
+      biolinkQualifiers = Some(
+        TRAPIQualifierConstraint(
+          List(
+            TRAPIQualifier("biolink:object_aspect_qualifier", "activity_or_abundance"),
+            TRAPIQualifier("biolink:object_direction_qualifier", "increased")
+          ))
+      )
+    ),
+    PredicateMapping(
+      predicate = LabeledIRI("http://purl.obolibrary.org/obo/RO_0002449", Set("directly negatively regulates activity of")),
+      biolinkPredicate = Some(BiolinkPredicate("affects")),
+      biolinkQualifiers = Some(
+        TRAPIQualifierConstraint(
+          List(
+            TRAPIQualifier("biolink:object_aspect_qualifier", "activity_or_abundance"),
+            TRAPIQualifier("biolink:object_direction_qualifier", "decreased")
+          ))
+      )
+    )
+  )
 
   /** Where should we save the predicates.json files? */
   val PredicateJsonFilePath = Paths.get("src/main/resources/biolink/predicates.json")
@@ -82,7 +109,7 @@ object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
         // If we haven't matched it, don't transform it.
         case pred => pred
       }
-      uniquePreds: Set[PredicateMapping] = qualifiedPreds.toSet
+      uniquePreds: Set[PredicateMapping] = (manualPredicateMappings ++ qualifiedPreds).toSet
       predsOutput = uniquePreds.asJson.deepDropNullValues.spaces2SortKeys
     } yield {
       logger.info(f"Found ${preds.size} predicates:")
