@@ -2778,6 +2778,54 @@
   {
     "biolinkPredicate" : {
       "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "biolinkQualifiers" : {
+      "qualifier_set" : [
+        {
+          "qualifier_type_id" : "biolink:object_direction_qualifier",
+          "qualifier_value" : "downregulated"
+        }
+      ]
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002305",
+      "label" : [
+        "causally upstream of, negative effect"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/affects"
+      },
+      "shorthand" : "affects"
+    },
+    "biolinkQualifiers" : {
+      "qualifier_set" : [
+        {
+          "qualifier_type_id" : "biolink:object_aspect_qualifier",
+          "qualifier_value" : "activity_or_abundance"
+        },
+        {
+          "qualifier_type_id" : "biolink:object_direction_qualifier",
+          "qualifier_value" : "increased"
+        }
+      ]
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002450",
+      "label" : [
+        "directly positively regulates activity of"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
         "value" : "https://w3id.org/biolink/vocab/related_to"
       },
       "shorthand" : "related_to"
@@ -4914,32 +4962,6 @@
       "iri" : "http://purl.obolibrary.org/obo/RO_0002500",
       "label" : [
         "causal agent in process"
-      ]
-    }
-  },
-  {
-    "biolinkPredicate" : {
-      "iri" : {
-        "value" : "https://w3id.org/biolink/vocab/affects"
-      },
-      "shorthand" : "affects"
-    },
-    "biolinkQualifiers" : {
-      "qualifier_set" : [
-        {
-          "qualifier_type_id" : "biolink:object_aspect_qualifier",
-          "qualifier_value" : "activity_or_abundance"
-        },
-        {
-          "qualifier_type_id" : "biolink:object_direction_qualifier",
-          "qualifier_value" : "increased"
-        }
-      ]
-    },
-    "predicate" : {
-      "iri" : "http://purl.obolibrary.org/obo/RO_0002450",
-      "label" : [
-        "http://purl.obolibrary.org/obo/RO_0002450"
       ]
     }
   },

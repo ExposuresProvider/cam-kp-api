@@ -71,9 +71,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
       } yield assert(nodeBindings.keys)(
         contains("n0") && contains("n1")
       ) && assertTrue(
-        nodeBindings
-          .get("n0")
-          .get
+        nodeBindings("n0")
           .map(a => a.id)
           .contains(IRI("http://purl.obolibrary.org/obo/go/extensions/reacto.owl#REACTO_R-HSA-166103")))
     }
@@ -459,7 +457,10 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
                                   e0: TRAPIQueryEdge = TRAPIQueryEdge(
                                     subject = "n0",
                                     `object` = "n1",
-                                    predicates = Some(List(BiolinkPredicate("positively_regulates")))
+                                    predicates = Some(List(BiolinkPredicate("regulates"))),
+                                    qualifier_constraints = Some(
+                                      List(TRAPIQualifierConstraint(
+                                        List(TRAPIQualifier("biolink:object_direction_qualifier", "downregulated")))))
                                   )) =
       TRAPIQueryGraph(Map("n0" -> n0, "n1" -> n1), Map("e0" -> e0))
 

@@ -53,6 +53,16 @@ object GenerateBiolinkPredicateMappings extends zio.App with LazyLogging {
             TRAPIQualifier("biolink:object_direction_qualifier", "decreased")
           ))
       )
+    ),
+    PredicateMapping(
+      predicate = LabeledIRI("http://purl.obolibrary.org/obo/RO_0002305", Set("causally upstream of, negative effect")),
+      biolinkPredicate = Some(BiolinkPredicate("regulates")),
+      biolinkQualifiers = Some(
+        TRAPIQualifierConstraint(
+          List(
+            TRAPIQualifier("biolink:object_direction_qualifier", "downregulated")
+          ))
+      )
     )
   )
 
