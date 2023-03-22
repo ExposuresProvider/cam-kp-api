@@ -175,7 +175,7 @@ object PredicateMappings {
     val biolinkPredicates = predicates.toList.flatten.toSet
     val qualifierConstraint = qualifier_constraints.toList.flatten.flatMap(_.qualifier_set)
 
-    logger.info(s"Searching for ${predicates} with ${qualifier_constraints} in ${predicatesData}")
+    logger.debug(s"Searching for ${predicates} with ${qualifier_constraints} in ${predicatesData}")
 
     val relations = predicatesData.filter {
       case pred @ PredicateMapping(_, Some(biolinkPredicate), qualifierOpt) =>

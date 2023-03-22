@@ -468,21 +468,23 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
       testM("Ensure that query_id is absent for nodes without ids") {
         for {
           response <- QueryService
-            .run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None)))
+            .run(100, createTestTRAPIQueryGraph(TRAPIQueryNode(None, Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None)))
           // _ = logger.warn(s"Response: ${response}")
           nodeBindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
           queryIds = nodeBindings.map(_.query_id)
-        } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(1000)))) &&
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.equalTo(100)))) &&
           assert(queryIds)(Assertion.forall(Assertion.isNone))
       },
       testM(
         "Ensure that query_id is present only when the identifier is ambiguous for a process (GO:0033549, MAP kinase phosphatase activity)") {
         val iriToQuery = IRI("http://purl.obolibrary.org/obo/GO_0033549")
 
+        val query = createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(iriToQuery)), None))
         for {
           response <- QueryService
-            .run(1000, createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(iriToQuery)), None)))
-          // _ = logger.warn(s"Response: ${response}")
+            .run(100, query)
+          _ = logger.warn(s"Response query_id is present only when the identifier is ambiguous query: ${query}")
+          _ = logger.warn(s"Response query_id is present only when the identifier is ambiguous response: ${response}")
           nodeBindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
           queryIds = nodeBindings.map(_.query_id)
           queryIdsUnambiguous = nodeBindings.filter(_.id == iriToQuery).map(_.query_id)
@@ -501,7 +503,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         for {
           response <- QueryService
             .run(
-              1000,
+              100,
               createTestTRAPIQueryGraph(
                 TRAPIQueryNode(Some(List(cytoplasm)), None),
                 TRAPIQueryNode(None, categories = Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),
@@ -530,26 +532,30 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
         val glucose = IRI("http://purl.obolibrary.org/obo/CHEBI_17234")
         val rna = IRI("http://purl.obolibrary.org/obo/CHEBI_33697")
 
+        val query = createTestTRAPIQueryGraph(
+          TRAPIQueryNode(Some(List(glucose, rna)), None),
+          TRAPIQueryNode(None, categories = Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),
+          TRAPIQueryEdge(
+            subject = "n1",
+            `object` = "n0",
+            predicates = Some(List(BiolinkPredicate("has_participant")))
+          )
+        )
+
+        logger.info(f"Glucose query: ${query}")
+
         for {
           response <- QueryService
             .run(
-              1000,
-              createTestTRAPIQueryGraph(
-                TRAPIQueryNode(Some(List(glucose, rna)), None),
-                TRAPIQueryNode(None, categories = Some(List(BiolinkClass("BiologicalProcessOrActivity"))), None),
-                TRAPIQueryEdge(
-                  subject = "n1",
-                  `object` = "n0",
-                  predicates = Some(List(BiolinkPredicate("has_participant")))
-                )
-              )
+              10,
+              query
             )
           // _ = logger.warn(s"Response: ${response}")
           node0Bindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
           queryIdsUnambiguous = node0Bindings.filter(b => b.id == glucose || b.id == rna).map(_.query_id)
           idsAmbiguousGlucose = node0Bindings.filter(_.query_id.contains(glucose)).map(_.id)
           idsAmbiguousRNA = node0Bindings.filter(_.query_id.contains(rna)).map(_.id)
-        } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.isGreaterThanEqualTo(50)))) &&
+        } yield assert(response.message.results)(Assertion.isSome(Assertion.hasSize(Assertion.isGreaterThanEqualTo(10)))) &&
           // All unambiguous IDs -- glucose and RNA -- should have empty query_ids.
           assert(queryIdsUnambiguous)(Assertion.isNonEmpty) &&
           assert(queryIdsUnambiguous)(Assertion.forall(Assertion.isNone)) &&

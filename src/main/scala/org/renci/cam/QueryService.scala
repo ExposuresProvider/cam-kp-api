@@ -272,24 +272,47 @@ object QueryService extends LazyLogging {
       result <- results
 
       nodeBindings = result.nodes
-        .groupMap(_._1)(p =>
-          TRAPINodeBinding(
-            id = p._2,
-            query_id = result.queryGraph.nodes.get(p._1) match {
-              // If no nodes IDs were provided, query_id MUST be null or absent.
-              case None                                => None
-              case Some(TRAPIQueryNode(None, _, _, _)) => None
-              case Some(TRAPIQueryNode(Some(List()), _, _, _)) =>
-                None
-              case Some(TRAPIQueryNode(Some(ids), _, _, _)) =>
-                result.originalNodes.get(p._1) match {
-                  // According to the TRAPI 1.3 spec, we SHOULD NOT provide a query_id if it is the
-                  // same as the id.
-                  case Some(p._2) => None
-                  case x          => x
-                }
+        .groupMap(_._1) { p =>
+          val node_id = p._1
+          val node_iri = p._2
+
+          logger.info(f"Searching through nodes: ${result.queryGraph.nodes}")
+          logger.info(f"And then translating using: ${result.originalNodes}")
+
+          val nb = TRAPINodeBinding(
+            id = node_iri,
+            query_id = {
+              logger.info(
+                f"Looking for node binding for ${node_id} (${node_iri}) using query graph node ${result.queryGraph.nodes.get(node_id)}")
+
+              val query_id = result.queryGraph.nodes.get(node_id) match {
+                // If no nodes IDs were provided, query_id MUST be null or absent.
+                case None                                => None
+                case Some(TRAPIQueryNode(None, _, _, _)) => None
+                case Some(TRAPIQueryNode(Some(List()), _, _, _)) =>
+                  None
+                case Some(TRAPIQueryNode(Some(ids), _, _, _)) =>
+                  logger.info(f"Translating from ${node_iri} to ${ids} with original nodes: ${result.originalNodes.get(node_id)}")
+
+                  val query_id = result.originalNodes.get(node_id) match {
+                    // According to the TRAPI 1.3 spec, we SHOULD NOT provide a query_id if it is the
+                    // same as the id.
+                    case Some(ni) if ni == node_iri => None
+                    case x                          => x
+                  }
+
+                  logger.info(f"Query ID is ${query_id}")
+
+                  query_id
+              }
+              query_id
             }
-          ))
+          )
+
+          logger.info(f"TRAPINodeBinding generated for result ${result.index}: ${nb}")
+
+          nb
+        }
         .map(p => (p._1, p._2.toList))
 
       edgeBindings = result.edges.keys.map { key =>
@@ -385,6 +408,8 @@ object QueryService extends LazyLogging {
 
         // Prepare the query graph for processing.
         queryGraph = enforceQueryEdgeTypes(submittedQueryGraph, biolinkData.predicates)
+        _ = logger.debug(s"Transformed the submitted query graph: ${submittedQueryGraph}")
+        _ = logger.debug(s"Submitted query graph transformed to: ${queryGraph}")
 
         // Generate query solutions.
         _ = logger.debug(s"findInitialQuerySolutions($queryGraph, $limit)")
