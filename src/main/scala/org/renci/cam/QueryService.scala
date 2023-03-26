@@ -6,13 +6,13 @@ import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{biolinkData, BiolinkData}
+import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.{TRAPIAttribute, _}
-import zio.config.{getConfig, ZConfig}
-import zio.{config => _, Has, RIO, Task, UIO, ZIO}
+import zio.config.{ZConfig, getConfig}
+import zio.{Has, RIO, Task, UIO, ZIO, config => _}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -20,6 +20,8 @@ import java.security.MessageDigest
 import scala.jdk.CollectionConverters._
 
 object QueryService extends LazyLogging {
+
+  val INNER_LIMIT_MULTIPLIER = 100
 
   val ProvWasDerivedFrom: IRI = IRI("http://www.w3.org/ns/prov#wasDerivedFrom")
 
@@ -483,6 +485,8 @@ object QueryService extends LazyLogging {
     val nodesToDirectTypes = getNodesToDirectTypes(queryGraph.nodes)
     val edgePatterns = queryEdgeSparql.fold(sparql"")(_ + _)
     val limitSparql = if (limit > 0) sparql" LIMIT $limit" else sparql""
+    val innerLimit = INNER_LIMIT_MULTIPLIER * limit
+    val innerLimitSparql = if (limit > 0) sparql" LIMIT $innerLimit" else sparql""
     val queryString =
       sparql"""SELECT DISTINCT $typeProjections
                (GROUP_CONCAT(DISTINCT ?g; SEPARATOR='|') AS ?graphs)
@@ -494,7 +498,7 @@ object QueryService extends LazyLogging {
               SELECT $nodeProjections ?g
               WHERE {
                 $edgePatterns
-              }
+              } ${innerLimitSparql}
             }
             $BigDataQueryHintPrior $BigDataQueryHintRunFirst true .
           }
@@ -565,7 +569,6 @@ object QueryService extends LazyLogging {
   def getProjections(queryGraph: TRAPIQueryGraph, typesInsteadOfNodes: Boolean = false): QueryText = {
     val projectionVariableNames =
       queryGraph.edges.keys ++
-        queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_class") ++
         (if (typesInsteadOfNodes) queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_type")
          else queryGraph.edges.flatMap(e => List(e._2.subject, e._2.`object`)))
     projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
