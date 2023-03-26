@@ -6,13 +6,13 @@ import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{biolinkData, BiolinkData}
+import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.{TRAPIAttribute, _}
-import zio.config.{getConfig, ZConfig}
-import zio.{config => _, Has, RIO, Task, UIO, ZIO}
+import zio.config.{ZConfig, getConfig}
+import zio.{Has, RIO, Task, UIO, ZIO, config => _}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -569,7 +569,6 @@ object QueryService extends LazyLogging {
   def getProjections(queryGraph: TRAPIQueryGraph, typesInsteadOfNodes: Boolean = false): QueryText = {
     val projectionVariableNames =
       queryGraph.edges.keys ++
-        queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_class") ++
         (if (typesInsteadOfNodes) queryGraph.nodes.keys.map(queryNodeID => s"${queryNodeID}_type")
          else queryGraph.edges.flatMap(e => List(e._2.subject, e._2.`object`)))
     projectionVariableNames.map(Var(_)).map(v => sparql" $v ").fold(sparql"")(_ + _)
