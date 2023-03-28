@@ -120,7 +120,7 @@ object LookupService extends LazyLogging {
   case class Result(
     queryId: String,
     normalizedIds: List[LabeledIRI],
-    biolinkQualifiedPredicates: Set[QualifiedBiolinkPredicate],
+    qualifiedBiolinkPredicates: Set[QualifiedBiolinkPredicate],
     relations: Seq[Relation],
     subjectTriples: Seq[ResultTriple],
     objectTriples: Seq[ResultTriple]
