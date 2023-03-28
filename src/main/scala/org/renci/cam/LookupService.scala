@@ -11,7 +11,7 @@ import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.Server.EndpointEnv
 import org.renci.cam.Server.LocalTapirJsonCirce.jsonBody
 import org.renci.cam.Util.IterableSPARQLOps
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, PredicateMappings}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, PredicateMappings, QualifiedBiolinkPredicate}
 import sttp.tapir.Endpoint
 import sttp.tapir.generic.auto._
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
@@ -95,7 +95,7 @@ object LookupService extends LazyLogging {
   case class Relation(
     subj: Set[LabeledIRI],
     preds: Set[LabeledIRI],
-    biolinkPredicates: Map[String, Set[LabeledIRI]],
+    biolinkQualifiedPredicates: Map[String, Set[QualifiedBiolinkPredicate]],
     obj: Set[LabeledIRI],
     objRelations: Seq[Relation],
     g: Set[String]
@@ -120,7 +120,7 @@ object LookupService extends LazyLogging {
   case class Result(
     queryId: String,
     normalizedIds: List[LabeledIRI],
-    biolinkPredicates: Map[String, Set[LabeledIRI]],
+    biolinkQualifiedPredicates: Set[QualifiedBiolinkPredicate],
     relations: Seq[Relation],
     subjectTriples: Seq[ResultTriple],
     objectTriples: Seq[ResultTriple]
@@ -180,7 +180,7 @@ object LookupService extends LazyLogging {
       objectMap = relationsResults.groupBy(_.getResource("obj").getURI)
 
       relations = objectMap.map { case (obj, results) =>
-        val predResults = results.map { res =>
+        val predResults = results.flatMap { res =>
           val predIRI = res.getResource("p").getURI
 
           val pred = res.getLiteral("pLabel") match {
@@ -188,10 +188,10 @@ object LookupService extends LazyLogging {
             case lit  => LabeledIRI(predIRI, Set(lit.getString))
           }
 
-          val biolinkPreds = PredicateMappings.getBiolinkQualifiedPredicates(IRI(predIRI))
+          val biolinkQualifiedPreds = PredicateMappings.getBiolinkQualifiedPredicates(IRI(predIRI))
 
           // TODO: add support for qualified predicates.
-          (pred, biolinkPreds.map(bp => LabeledIRI(bp._1.iri.value, Set())).toSet)
+          biolinkQualifiedPreds.map(bp => (pred, bp.biolinkPredicate, bp.qualifier_constraints))
         }
 
         val objLabeled = results
@@ -219,7 +219,7 @@ object LookupService extends LazyLogging {
         Relation(
           subjLabeled,
           predResults.map(_._1).toSet,
-          predResults.map(kv => (kv._1.iri, kv._2)).toMap,
+          predResults.map(kv => (kv._1.iri, QualifiedBiolinkPredicate(kv._2, kv._3))).groupMapReduce(_._1)(p => Set(p._2))(_ ++ _),
           objLabeled,
           Seq[Relation](), // TODO: recurse!
           results.map(_.getResource("g").getURI).toSet
@@ -331,9 +331,7 @@ object LookupService extends LazyLogging {
 
     // Get every relation from this subject.
     relations <- getRelations(qualifiedIds.map(_.iri).toSet)
-    biolinkPredicates: Map[String, Set[LabeledIRI]] = relations.flatMap(_.biolinkPredicates).foldLeft(Map[String, Set[LabeledIRI]]()) {
-      case (map, entry) => map.updated(entry._1, map.getOrElse(entry._1, Set()) ++ entry._2)
-    }
+    biolinkPredicates: Set[QualifiedBiolinkPredicate] = relations.flatMap(_.biolinkQualifiedPredicates.values).flatten
   } yield Result(
     queryId,
     qualifiedIds.toList,
