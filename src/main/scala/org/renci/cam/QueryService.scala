@@ -6,14 +6,14 @@ import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{BiolinkData, biolinkData}
+import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.PredicateMappings.{getBiolinkQualifiedPredicates, mapQueryEdgePredicates}
 import org.renci.cam.domain._
-import zio.config.{ZConfig, getConfig}
-import zio.{Has, RIO, Task, UIO, ZIO, config => _}
+import zio.config.{getConfig, ZConfig}
+import zio.{config => _, Has, RIO, Task, UIO, ZIO}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -200,8 +200,8 @@ object QueryService extends LazyLogging {
 
       // Generate the attributes we will need to produce the edge output.
       originalKS <- ZIO
-        .fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source"))
-        .orElseFail(new Exception("could not get biolink:original_knowledge_source"))
+        .fromOption(biolinkData.predicates.find(p => p.shorthand == "primary_knowledge_source"))
+        .orElseFail(new Exception("could not get biolink:primary_knowledge_source"))
       aggregatorKS <- ZIO
         .fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source"))
         .orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
@@ -674,9 +674,9 @@ object QueryService extends LazyLogging {
               predicate = querySolution.getResource(queryEdgeID).getURI
               predicateIRI = IRI(predicate)
               tripleString = TripleString(source, predicate, target)
-              originalKS <- ZIO
-                .fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source"))
-                .orElseFail(new Exception("could not get biolink:original_knowledge_source"))
+              primaryKS <- ZIO
+                .fromOption(biolinkData.predicates.find(p => p.shorthand == "primary_knowledge_source"))
+                .orElseFail(new Exception("could not get biolink:primary_knowledge_source"))
               aggregatorKS <- ZIO
                 .fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source"))
                 .orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
@@ -693,19 +693,19 @@ object QueryService extends LazyLogging {
                                                      Some(appConfig.location),
                                                      None,
                                                      None)
-              originalKSstr = provValue match {
+              primaryKSstr = provValue match {
                 case ctd if provValue.contains("ctdbase.org") => "infores:ctd"
                 case _                                        => "infores:go-cam"
               }
-              originalKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
-                                                   originalKS.iri,
-                                                   None,
-                                                   List(originalKSstr),
-                                                   Some(infoResBiolinkClass.iri),
-                                                   Some(provValue),
-                                                   None,
-                                                   None)
-              attributes = List(aggregatorKSAttribute, originalKSAttribute)
+              primaryKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
+                                                  primaryKS.iri,
+                                                  None,
+                                                  List(primaryKSstr),
+                                                  Some(infoResBiolinkClass.iri),
+                                                  Some(provValue),
+                                                  None,
+                                                  None)
+              attributes = List(aggregatorKSAttribute, primaryKSAttribute)
               relationLabelAndBiolinkPredicate <- ZIO
                 .fromOption(relationsMap.get(predicateIRI))
                 .orElseFail(new Exception("Unexpected edge relation"))
