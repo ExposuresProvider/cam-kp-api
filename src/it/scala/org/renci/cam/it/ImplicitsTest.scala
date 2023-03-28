@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.LazyLogging
 import io.circe.generic.auto._
 import io.circe.parser._
 import io.circe.syntax._
-import io.circe.{Decoder, Encoder, KeyDecoder, KeyEncoder}
+import io.circe.{KeyDecoder, KeyEncoder}
 import org.renci.cam.Biolink.BiolinkData
 import org.renci.cam.domain._
 import org.renci.cam.{AppConfig, Biolink, HttpClient, Implicits}
@@ -39,15 +39,23 @@ object ImplicitsTest extends DefaultRunnableSpec with LazyLogging {
     testM("test Implicits.predicateOrPredicateListDecoder") {
       for {
         biolinkData <- Biolink.biolinkData
-      } yield {
-        val dataAsList = """["biolink:participates_in","biolink:related_to"]"""
-        val data = """"biolink:related_to""""
-        import biolinkData.implicits._
-        val ret = decode[List[BiolinkPredicate]](data)
-        val retWithListData = decode[List[BiolinkPredicate]](dataAsList)
-        assert(ret.toOption.get)(contains(BiolinkPredicate("related_to"))) && assert(retWithListData.toOption.get)(
-          contains(BiolinkPredicate("related_to")))
-      }
+        data = """"biolink:related_to""""
+        dataAsJson = {
+          import biolinkData.implicits._
+          decode[BiolinkPredicate](data)
+        }
+
+        dataAsList = """["biolink:participates_in","biolink:related_to"]"""
+        dataAsListAsJson = {
+          import biolinkData.implicits._
+          decode[List[BiolinkPredicate]](dataAsList)
+        }
+      } yield assert(dataAsJson)(Assertion.isRight(Assertion.equalTo(BiolinkPredicate("related_to")))) &&
+        assert(dataAsListAsJson)(
+          Assertion.isRight(
+            Assertion.contains(BiolinkPredicate("participates_in")) &&
+              Assertion.contains(BiolinkPredicate("related_to"))
+          ))
     }
   )
 
