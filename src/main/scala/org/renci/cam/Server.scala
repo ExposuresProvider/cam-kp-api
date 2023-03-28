@@ -155,6 +155,9 @@ object Server extends App with LazyLogging {
         .toYaml
       openAPIJson <- ZIO.fromEither(io.circe.yaml.parser.parse(openAPI))
       info: String =
+        // TODO: note that the development URL is a reference to a file on a branch. It should be replaced with
+        // a file on a tag or something more stable.
+        // TODO: we should figure out how to separate URLs for development, production, etc.
         s"""
              {
                 "info": {
@@ -166,7 +169,12 @@ object Server extends App with LazyLogging {
                   },
                   "x-trapi": {
                     "version": "${appConfig.trapiVersion}",
-                    "operations": [ "lookup" ]
+                    "operations": [ "lookup" ],
+                    "test_data_location": {
+                      "default": {
+                        "url": "https://raw.githubusercontent.com/ExposuresProvider/cam-kp-api/generate-test-data/src/main/resources/sri-testing.json"
+                      }
+                    }
                   }
                 }
              }
