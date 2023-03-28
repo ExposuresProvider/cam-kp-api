@@ -12,15 +12,16 @@ import org.renci.cam.QueryService.RDFSSubClassOf
 import org.renci.cam._
 import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIKnowledgeGraph, TRAPIMessage, TRAPIQueryEdge, TRAPIQueryGraph, TRAPIQueryNode, TRAPIResponse}
 import zio._
-import zio.blocking.{effectBlockingIO, Blocking}
+import zio.blocking.{Blocking, effectBlockingIO}
 import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio.stream.{ZSink, ZStream}
+import zio.stream.ZStream
 
-import java.io.{File, StringReader}
+import java.io.StringReader
 import java.nio.charset.StandardCharsets
+import java.nio.file.{Files, Path}
 import scala.io.Source
 import scala.jdk.javaapi.CollectionConverters
 
@@ -111,20 +112,27 @@ object GenerateTestData extends zio.App with LazyLogging {
     child: String
   )
 
+  case class TestEdge(
+    subject_category: String,
+    object_category: String,
+    predicate: String,
+    subject: String,
+    `object`: String
+  )
+
+  val sriTestingFilePath: Path = Path.of("src/main/resources/sri-testing.json")
+
+  case class SRITestingFile(
+    source_type: String,
+    infores: String,
+    exclude_tests: List[String],
+    edges: List[TestEdge]
+  )
+
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
     if (args.length > 1) {
       throw new RuntimeException("Only a single argument is allowed: the test-edges JSONL file to write.")
     }
-
-    val testEdgesFile = if (args.length == 1) args(1) else "src/main/resources/test-edges.jsonl"
-
-    case class TestEdge(
-      subject_category: String,
-      object_category: String,
-      predicate: String,
-      subject: String,
-      `object`: String
-    )
 
     val program = for {
       biolinkData <- biolinkData
@@ -225,17 +233,11 @@ object GenerateTestData extends zio.App with LazyLogging {
           val errMsg = f"Caught error in main loop: ${err}"
           logger.error(errMsg)
         }
-        .map { edge =>
-          val edgeAsStr = edge.asJson.noSpaces
+        .runCollect
 
-          logger.info(f"Converted test edge to JSON: ${edgeAsStr}")
-
-          edgeAsStr
-        }
-        .intersperse("\n")
-        .run(ZSink
-          .fromFile(new File(testEdgesFile).toPath)
-          .contramapChunks[String](_.flatMap(_.getBytes)))
+      sriTestingFile = SRITestingFile("aggregator", "cam-kp", List(), results.toList)
+      sriTestingFileJson = sriTestingFile.asJson
+      _ = Files.writeString(sriTestingFilePath, sriTestingFileJson.deepDropNullValues.spaces2SortKeys)
     } yield ({
       logger.info(f"Found result: " + results)
     })
