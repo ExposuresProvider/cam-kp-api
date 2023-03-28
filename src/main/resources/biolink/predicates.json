@@ -3054,6 +3054,28 @@
       "qualifier_set" : [
         {
           "qualifier_type_id" : "biolink:object_direction_qualifier",
+          "qualifier_value" : "downregulated"
+        }
+      ]
+    },
+    "predicate" : {
+      "iri" : "http://purl.obolibrary.org/obo/RO_0002212",
+      "label" : [
+        "negatively regulates"
+      ]
+    }
+  },
+  {
+    "biolinkPredicate" : {
+      "iri" : {
+        "value" : "https://w3id.org/biolink/vocab/regulates"
+      },
+      "shorthand" : "regulates"
+    },
+    "biolinkQualifiers" : {
+      "qualifier_set" : [
+        {
+          "qualifier_type_id" : "biolink:object_direction_qualifier",
           "qualifier_value" : "upregulated"
         }
       ]
@@ -4676,28 +4698,6 @@
       "iri" : "http://purl.obolibrary.org/obo/RO_0002630",
       "label" : [
         "directly negatively regulates"
-      ]
-    }
-  },
-  {
-    "biolinkPredicate" : {
-      "iri" : {
-        "value" : "https://w3id.org/biolink/vocab/regulates"
-      },
-      "shorthand" : "regulates"
-    },
-    "biolinkQualifiers" : {
-      "qualifier_set" : [
-        {
-          "qualifier_type_id" : "biolink:object_direction_qualifier",
-          "qualifier_value" : "upregulated"
-        }
-      ]
-    },
-    "predicate" : {
-      "iri" : "http://purl.obolibrary.org/obo/RO_0002212",
-      "label" : [
-        "negatively regulates"
       ]
     }
   },
