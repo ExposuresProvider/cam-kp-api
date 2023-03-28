@@ -191,7 +191,7 @@ object LookupService extends LazyLogging {
           val biolinkQualifiedPreds = PredicateMappings.getBiolinkQualifiedPredicates(IRI(predIRI))
 
           // TODO: add support for qualified predicates.
-          biolinkQualifiedPreds.map(bp => (pred, bp.biolinkPredicate, bp.qualifier_constraints))
+          biolinkQualifiedPreds.map(bp => (pred, bp.biolinkPredicate, bp.qualifierList))
         }
 
         val objLabeled = results
@@ -331,11 +331,11 @@ object LookupService extends LazyLogging {
 
     // Get every relation from this subject.
     relations <- getRelations(qualifiedIds.map(_.iri).toSet)
-    biolinkPredicates: Set[QualifiedBiolinkPredicate] = relations.flatMap(_.biolinkQualifiedPredicates.values).flatten
+    biolinkPredicates = relations.flatMap(_.biolinkQualifiedPredicates.values).flatten
   } yield Result(
     queryId,
     qualifiedIds.toList,
-    biolinkPredicates,
+    biolinkPredicates.toSet,
     relations.toSeq,
     subjectTriples.map(fromQuerySolution),
     objectTriples.map(fromQuerySolution)

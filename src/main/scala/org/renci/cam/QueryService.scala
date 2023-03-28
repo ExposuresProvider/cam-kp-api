@@ -249,8 +249,9 @@ object QueryService extends LazyLogging {
 
             // Generate the TRAPIEdge and its edge key.
             biolinkPreds = getBiolinkQualifiedPredicates(relationIRI)
-            trapiEdges = biolinkPreds.zipWithIndex.map { case ((bpred, optQualifiers), index) =>
-              (result.getEdgeKey(key) + "_pred_" + index, TRAPIEdge(Some(bpred), subjectIRI, objectIRI, Some(attributes), optQualifiers))
+            trapiEdges = biolinkPreds.zipWithIndex.map { case (qualifiedPred, index) =>
+              (result.getEdgeKey(key) + "_pred_" + index,
+               TRAPIEdge(Some(qualifiedPred.biolinkPredicate), subjectIRI, objectIRI, Some(attributes), qualifiedPred.asQualifierList))
             }
             // edgeKey = getTRAPIEdgeKey(queryEdge.subject, biolinkPred, queryEdge.`object`)
           } yield trapiEdges)

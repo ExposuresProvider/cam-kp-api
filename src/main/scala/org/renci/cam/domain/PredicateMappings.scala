@@ -195,15 +195,15 @@ object PredicateMappings {
     relations.map(pred => IRI(pred.predicate.iri)).toSet
   }
 
-  def getBiolinkQualifiedPredicates(relationIRI: IRI): Seq[(BiolinkPredicate, Option[List[TRAPIQualifier]])] =
+  def getBiolinkQualifiedPredicates(relationIRI: IRI): Seq[QualifiedBiolinkPredicate] =
     predicatesData.flatMap {
       case PredicateMapping(relation, Some(biolinkPredicate), qualifierOpt) =>
         if (relation.iri != relationIRI.value) None
         else
           qualifierOpt match {
-            case None                                                 => Some((biolinkPredicate, None))
-            case Some(constraint) if constraint.qualifier_set.isEmpty => Some((biolinkPredicate, None))
-            case Some(constraint)                                     => Some((biolinkPredicate, Some(constraint.qualifier_set)))
+            case None                                                 => Some(QualifiedBiolinkPredicate(biolinkPredicate, List()))
+            case Some(constraint) if constraint.qualifier_set.isEmpty => Some(QualifiedBiolinkPredicate(biolinkPredicate, List()))
+            case Some(constraint) => Some(QualifiedBiolinkPredicate(biolinkPredicate, constraint.qualifier_set))
           }
       case _ => None
     }

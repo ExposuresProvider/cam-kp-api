@@ -144,10 +144,19 @@ package object domain {
     *
     * @param biolinkPredicate
     *   A Biolink predicate
-    * @param qualifier_constraints
+    * @param qualifierList
     *   A list of qualifiers that qualify them.
     */
-  final case class QualifiedBiolinkPredicate(biolinkPredicate: BiolinkPredicate, qualifier_constraints: Option[List[TRAPIQualifier]] = None)
+  final case class QualifiedBiolinkPredicate(biolinkPredicate: BiolinkPredicate, qualifierList: List[TRAPIQualifier] = List.empty) {
+
+    val asQualifierList: Option[List[TRAPIQualifier]] = if (qualifierList.isEmpty) None else Some(qualifierList)
+
+    val asQualifierConstraint: Option[List[TRAPIQualifierConstraint]] =
+      if (qualifierList.isEmpty) None
+      else
+        Some(List(TRAPIQualifierConstraint(qualifierList)))
+
+  }
 
   final case class TRAPIAttributeConstraint(id: IRI,
                                             name: String,
