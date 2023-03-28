@@ -138,6 +138,17 @@ package object domain {
                                   attribute_constraints: Option[List[TRAPIAttributeConstraint]] = None,
                                   qualifier_constraints: Option[List[TRAPIQualifierConstraint]] = None)
 
+  /** A case class representing a combination of a BiolinkPredicate and the qualifiers that qualify it.
+    *
+    * At some point we might need to add attributes to this, but not at the moment.
+    *
+    * @param biolinkPredicate
+    *   A Biolink predicate
+    * @param qualifier_constraints
+    *   A list of qualifiers that qualify them.
+    */
+  final case class QualifiedBiolinkPredicate(biolinkPredicate: BiolinkPredicate, qualifier_constraints: Option[List[TRAPIQualifier]] = None)
+
   final case class TRAPIAttributeConstraint(id: IRI,
                                             name: String,
                                             not: Option[Boolean],
