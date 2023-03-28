@@ -84,8 +84,9 @@ object LookupServiceTest extends DefaultRunnableSpec with LazyLogging {
         response <- server(Request(GET, uri))
         content <- EntityDecoder.decodeText(response)
         resultOrErrorJson <- ZIO.fromEither(io.circe.parser.parse(content))
+        _ = logger.debug(s"Raw JSON results for identifier ${id}: ${resultOrErrorJson.deepDropNullValues.spaces2SortKeys}")
         result <- ZIO.fromEither(resultOrErrorJson.as[LookupService.Result])
-        _ = logger.debug(s"Results for identifier ${id}: ${result.asJson.deepDropNullValues.spaces2SortKeys}")
+        // _ = logger.debug(s"Results for identifier ${id}: ${result.asJson.deepDropNullValues.spaces2SortKeys}")
         fileWritten <- effectBlockingIO(new PrintWriter(new FileWriter(outputFile)))
           .bracketAuto { pw =>
             pw.println(result.asJson.deepDropNullValues.spaces2SortKeys)

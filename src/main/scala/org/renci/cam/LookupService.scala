@@ -216,10 +216,13 @@ object LookupService extends LazyLogging {
           )
           .toSet
 
+        val qualifiedBiolinkPredicates =
+          predResults.map(kv => (kv._1.iri, QualifiedBiolinkPredicate(kv._2, kv._3))).groupMapReduce(_._1)(p => Set(p._2))(_ ++ _)
+
         Relation(
           subjLabeled,
           predResults.map(_._1).toSet,
-          predResults.map(kv => (kv._1.iri, QualifiedBiolinkPredicate(kv._2, kv._3))).groupMapReduce(_._1)(p => Set(p._2))(_ ++ _),
+          qualifiedBiolinkPredicates,
           objLabeled,
           Seq[Relation](), // TODO: recurse!
           results.map(_.getResource("g").getURI).toSet
