@@ -169,10 +169,10 @@ object Biolink3Test extends DefaultRunnableSpec with LazyLogging {
                   test(s"Testing ${pred} to ${ct.biolinkPredicates} with ${ct.trapiQualifierConstraints}") {
                     val preds = PredicateMappings.getBiolinkQualifiedPredicates(pred)
 
-                    val qualifiersActual = preds.filter(p => biolinkPreds.contains(p._1)).flatMap(_._2).flatten.toSet
+                    val qualifiersActual = preds.filter(p => biolinkPreds.contains(p.biolinkPredicate)).flatMap(_.qualifierList).toSet
                     val qualifiersExpected = ct.trapiQualifierConstraints.getOrElse(List()).flatMap(_.qualifier_set).toSet
 
-                    assert(preds.map(_._1).toSet)(Assertion.hasSubset(ct.biolinkPredicates.getOrElse(List()).toSet)) &&
+                    assert(preds.map(_.biolinkPredicate).toSet)(Assertion.hasSubset(ct.biolinkPredicates.getOrElse(List()).toSet)) &&
                     assert(qualifiersActual)(Assertion.equalTo(qualifiersExpected))
                   }
                 }
