@@ -95,7 +95,7 @@ object LookupService extends LazyLogging {
   case class Relation(
     subj: Set[LabeledIRI],
     preds: Set[LabeledIRI],
-    biolinkQualifiedPredicates: Map[String, Set[QualifiedBiolinkPredicate]],
+    qualifiedBiolinkPredicates: Map[String, Set[QualifiedBiolinkPredicate]],
     obj: Set[LabeledIRI],
     objRelations: Seq[Relation],
     g: Set[String]
@@ -161,7 +161,7 @@ object LookupService extends LazyLogging {
                   ?s ${QueryService.SesameDirectType} ?subj .
                   ?subj ${QueryService.RDFSSubClassOf} ?subjClass .
                   VALUES ?subjClass { ${subjectIRIs.asValues} } .
-                  
+
                   ?o ${QueryService.SesameDirectType} ?obj .
                   ?obj ${QueryService.RDFSSubClassOf} ${QueryService.BiolinkNamedThing.iri} .
 
@@ -331,7 +331,7 @@ object LookupService extends LazyLogging {
 
     // Get every relation from this subject.
     relations <- getRelations(qualifiedIds.map(_.iri).toSet)
-    biolinkPredicates = relations.flatMap(_.biolinkQualifiedPredicates.values).flatten
+    biolinkPredicates = relations.flatMap(_.qualifiedBiolinkPredicates.values).flatten
   } yield Result(
     queryId,
     qualifiedIds.toList,
