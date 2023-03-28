@@ -235,7 +235,7 @@ object GenerateTestData extends zio.App with LazyLogging {
         }
         .runCollect
 
-      sriTestingFile = SRITestingFile("aggregator", "cam-kp", List(), results.toList)
+      sriTestingFile = SRITestingFile("aggregator", "cam-kp", List(), results.toSet.toList)
       sriTestingFileJson = sriTestingFile.asJson
       _ = Files.writeString(sriTestingFilePath, sriTestingFileJson.deepDropNullValues.spaces2SortKeys)
     } yield ({
