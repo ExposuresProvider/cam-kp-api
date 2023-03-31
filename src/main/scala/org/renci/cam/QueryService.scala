@@ -199,9 +199,9 @@ object QueryService extends LazyLogging {
       appConfig <- getConfig[AppConfig]
 
       // Generate the attributes we will need to produce the edge output.
-      originalKS <- ZIO
-        .fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source"))
-        .orElseFail(new Exception("could not get biolink:original_knowledge_source"))
+      primaryKS <- ZIO
+        .fromOption(biolinkData.predicates.find(p => p.shorthand == "primary_knowledge_source"))
+        .orElseFail(new Exception("could not get biolink:primary_knowledge_source"))
       aggregatorKS <- ZIO
         .fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source"))
         .orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
@@ -237,7 +237,7 @@ object QueryService extends LazyLogging {
             }
             originalKSAttributes = originalKnowledgeSources.map { case (derivedFrom, inforesKS) =>
               TRAPIAttribute(Some("infores:cam-kp"),
-                             originalKS.iri,
+                             primaryKS.iri,
                              None,
                              List(inforesKS),
                              Some(infoResBiolinkClass.iri),
@@ -674,9 +674,9 @@ object QueryService extends LazyLogging {
               predicate = querySolution.getResource(queryEdgeID).getURI
               predicateIRI = IRI(predicate)
               tripleString = TripleString(source, predicate, target)
-              originalKS <- ZIO
-                .fromOption(biolinkData.predicates.find(p => p.shorthand == "original_knowledge_source"))
-                .orElseFail(new Exception("could not get biolink:original_knowledge_source"))
+              primaryKS <- ZIO
+                .fromOption(biolinkData.predicates.find(p => p.shorthand == "primary_knowledge_source"))
+                .orElseFail(new Exception("could not get biolink:primary_knowledge_source"))
               aggregatorKS <- ZIO
                 .fromOption(biolinkData.predicates.find(p => p.shorthand == "aggregator_knowledge_source"))
                 .orElseFail(new Exception("could not get biolink:aggregator_knowledge_source"))
@@ -693,19 +693,19 @@ object QueryService extends LazyLogging {
                                                      Some(appConfig.location),
                                                      None,
                                                      None)
-              originalKSstr = provValue match {
+              primaryKSstr = provValue match {
                 case ctd if provValue.contains("ctdbase.org") => "infores:ctd"
                 case _                                        => "infores:go-cam"
               }
-              originalKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
-                                                   originalKS.iri,
-                                                   None,
-                                                   List(originalKSstr),
-                                                   Some(infoResBiolinkClass.iri),
-                                                   Some(provValue),
-                                                   None,
-                                                   None)
-              attributes = List(aggregatorKSAttribute, originalKSAttribute)
+              primaryKSAttribute = TRAPIAttribute(Some("infores:cam-kp"),
+                                                  primaryKS.iri,
+                                                  None,
+                                                  List(primaryKSstr),
+                                                  Some(infoResBiolinkClass.iri),
+                                                  Some(provValue),
+                                                  None,
+                                                  None)
+              attributes = List(aggregatorKSAttribute, primaryKSAttribute)
               relationLabelAndBiolinkPredicate <- ZIO
                 .fromOption(relationsMap.get(predicateIRI))
                 .orElseFail(new Exception("Unexpected edge relation"))
