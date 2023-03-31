@@ -6,14 +6,14 @@ import io.circe.syntax._
 import org.apache.jena.query.QuerySolution
 import org.apache.jena.rdf.model.Resource
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{biolinkData, BiolinkData}
+import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.SPARQLQueryExecutor.SPARQLCache
 import org.renci.cam.Util.IterableSPARQLOps
 import org.renci.cam.domain.PredicateMappings.{getBiolinkQualifiedPredicates, mapQueryEdgePredicates}
 import org.renci.cam.domain._
-import zio.config.{getConfig, ZConfig}
-import zio.{config => _, Has, RIO, Task, UIO, ZIO}
+import zio.config.{ZConfig, getConfig}
+import zio.{Has, RIO, Task, UIO, ZIO, config => _}
 
 import java.math.BigInteger
 import java.nio.charset.StandardCharsets
@@ -199,7 +199,7 @@ object QueryService extends LazyLogging {
       appConfig <- getConfig[AppConfig]
 
       // Generate the attributes we will need to produce the edge output.
-      originalKS <- ZIO
+      primaryKS <- ZIO
         .fromOption(biolinkData.predicates.find(p => p.shorthand == "primary_knowledge_source"))
         .orElseFail(new Exception("could not get biolink:primary_knowledge_source"))
       aggregatorKS <- ZIO
@@ -237,7 +237,7 @@ object QueryService extends LazyLogging {
             }
             originalKSAttributes = originalKnowledgeSources.map { case (derivedFrom, inforesKS) =>
               TRAPIAttribute(Some("infores:cam-kp"),
-                             originalKS.iri,
+                             primaryKS.iri,
                              None,
                              List(inforesKS),
                              Some(infoResBiolinkClass.iri),
