@@ -530,7 +530,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
           assert(node0Bindings)(Assertion.contains(TRAPINodeBinding(id = germplasm, query_id = Some(cytoplasm))))
       },
       testM("Ensure that two different identifiers can be provided for the same node, to be disambiguated by query_id") {
-        val glucose = IRI("http://purl.obolibrary.org/obo/CHEBI_17234")
+        val glucose = IRI("http://purl.obolibrary.org/obo/CHEBI_17925")
         val rna = IRI("http://purl.obolibrary.org/obo/CHEBI_33697")
 
         val query = createTestTRAPIQueryGraph(
