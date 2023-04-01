@@ -4,26 +4,21 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
-import org.apache.commons.csv.CSVFormat
 import org.http4s.implicits._
 import org.phenoscape.sparql.SPARQLInterpolation._
 import org.renci.cam.Biolink.biolinkData
-import org.renci.cam.QueryService.RDFSSubClassOf
+import org.renci.cam.QueryService.{BiolinkNamedThing, RDFSSubClassOf}
 import org.renci.cam._
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIKnowledgeGraph, TRAPIMessage, TRAPIQueryEdge, TRAPIQueryGraph, TRAPIQueryNode, TRAPIResponse}
+import org.renci.cam.domain.{BiolinkPredicate, IRI, PredicateMappings}
 import zio._
-import zio.blocking.{Blocking, effectBlockingIO}
+import zio.blocking.Blocking
 import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
 import zio.interop.catz._
 import zio.interop.catz.implicits._
 import zio.stream.ZStream
 
-import java.io.StringReader
-import java.nio.charset.StandardCharsets
 import java.nio.file.{Files, Path}
-import scala.io.Source
-import scala.jdk.javaapi.CollectionConverters
 
 /** The <a href="https://github.com/TranslatorSRI/SRI_testing">SRI Testing harness</a> requires test data to be generated. This utility is
   * designed to generate some test data. It uses the SPARQL endpoint configured in AppConfig as well as the files in src/main/resources to
@@ -137,97 +132,96 @@ object GenerateTestData extends zio.App with LazyLogging {
     val program = for {
       biolinkData <- biolinkData
 
-      // Get a list of all the Biolink parent-child relationships we know about.
-      parent_child_query =
-        sparql"""SELECT ?parent ?child WHERE {
-            ?child ${RDFSSubClassOf} ?parent .
-            FILTER(?child != ?parent)
+      // Get a list of all the Biolink classes (and their parents) that we know about.
+      biolink_classes_query = sparql"""
+      SELECT ?biolinkClass (GROUP_CONCAT(DISTINCT ?parentClass; SEPARATOR="|") AS ?parents) WHERE {
+        ?biolinkClass ${RDFSSubClassOf} ${BiolinkNamedThing.iri} .
+        ?biolinkClass a ${LinkMLClassDefinition} .
 
-            ?child a ${LinkMLClassDefinition} .
-            ?parent a ${LinkMLClassDefinition} .
-          }
-          """
-      parent_child_relations_solutions <- SPARQLQueryExecutor.runSelectQuery(parent_child_query.toQuery)
-      parent_child_relations = parent_child_relations_solutions
+        OPTIONAL {
+          ?biolinkClass ${RDFSSubClassOf} ?parentClass .
+          FILTER(?biolinkClass != ?parentClass) .
+          ?parentClass a ${LinkMLClassDefinition}
+        }
+      } GROUP BY ?biolinkClass"""
+
+      biolink_classes_solutions <- SPARQLQueryExecutor.runSelectQuery(biolink_classes_query.toQuery)
+      biolink_classes_parents = biolink_classes_solutions
         .map { qs =>
           (
-            qs.getResource("parent").getURI.replaceFirst("https://w3id.org/biolink/vocab/", "biolink:"),
-            qs.getResource("child").getURI.replaceFirst("https://w3id.org/biolink/vocab/", "biolink:")
+            qs.getResource("biolinkClass").getURI,
+            qs.getLiteral("parents").getString.split('|').toSet
           )
         }
-        .groupMap(_._1)(_._2)
-      _ = logger.info(f"Parent-child relations: ${parent_child_relations}")
+        .groupMapReduce(_._1)(_._2)(_ ++ _)
+      _ = logger.info(f"Biolink classes with parents: ${biolink_classes_parents}")
 
-      // Get a list of all the predicates in predicates.csv.
-      predicates <- effectBlockingIO(Source.fromInputStream(getClass.getResourceAsStream("/predicates.csv"), StandardCharsets.UTF_8.name()))
-        .bracketAuto { source =>
-          effectBlockingIO(source.getLines().mkString("\n"))
-        }
-      predicateRecords <- Task.effect(CollectionConverters.asScala(CSVFormat.DEFAULT.parse(new StringReader(predicates)).getRecords))
+      // Generate a list of biolink class - biolink class pairs.
+      biolink_classes_pairs = for {
+        x <- biolink_classes_parents.keySet
+        y <- biolink_classes_parents.keySet
+      } yield (x, y)
 
-      // Generate a test record for each record.
+      // All our relations should be part of biolink:related_to.
+      relationsSet = PredicateMappings.mapQueryEdgePredicates(Some(List(BiolinkPredicate("related_to"))), None)
+
+      // Generate test records for each Biolink pair.
       results <- ZStream
-        .fromIterable(predicateRecords)
-        .filter { predicateRecord =>
-          val subj = s"biolink:${predicateRecord.get(0)}"
-          val obj = s"biolink:${predicateRecord.get(2)}"
+        .fromIterable(biolink_classes_pairs)
+        .mapM { biolinkPair =>
+          val subj = IRI(biolinkPair._1)
+          val obj = IRI(biolinkPair._2)
 
-          if (parent_child_relations.contains(subj)) {
-            logger.info(f"Skipping ${predicateRecord}, as subject has children: ${parent_child_relations.getOrElse(subj, List())}")
-            false
-          } else if (parent_child_relations.contains(obj)) {
-            logger.info(f"Skipping ${predicateRecord}, as object has children: ${parent_child_relations.getOrElse(obj, List())}")
-            false
-          } else true
-        }
-        .flatMap { predicateRecord =>
-          val subj = s"biolink:${predicateRecord.get(0)}"
-          val obj = s"biolink:${predicateRecord.get(2)}"
+          if (relationsSet.isEmpty) {
+            throw new RuntimeException("Biolink predicate `biolink:related_to` could not be mapped to any Biolink predicates.")
+          }
 
-          ZStream
-            .fromEffect(
-              QueryService.run(
-                1,
-                TRAPIQueryGraph(
-                  Map(
-                    "n0" -> TRAPIQueryNode(None, Some(List(BiolinkClass(predicateRecord.get(0)))), None),
-                    "n1" -> TRAPIQueryNode(None, Some(List(BiolinkClass(predicateRecord.get(2)))), None)
-                  ),
-                  Map(
-                    "e0" -> TRAPIQueryEdge(Some(List(BiolinkPredicate("related_to"))), "n0", "n1", None)
-                  )
-                )
-              )
-            )
-            .mapError { err =>
-              val errMsg = f"Caught error while querying ${predicateRecord}: ${err}"
-              logger.error(errMsg)
-              TRAPIResponse(TRAPIMessage(None, None, None), Some("Error"), Some(errMsg), None)
+          val relationsAsSPARQL = relationsSet.map(n => sparql" $n ").fold(sparql"")(_ + _)
+          val relationsQuery =
+            sparql"""
+            SELECT DISTINCT ?relation WHERE {
+              ?aClass ${RDFSSubClassOf} ${subj} .
+              ?bClass ${RDFSSubClassOf} ${obj} .
+              VALUES ?relation { ${relationsAsSPARQL} } .
+              ?aClass ?relation ?bClass .
+            }"""
+
+          logger.debug(s"Querying database with: ${relationsQuery}")
+
+          val edges = for {
+            results <- SPARQLQueryExecutor.runSelectQuery(relationsQuery.toQuery)
+            relations = results.map(qs => qs.getResource("relation").getURI)
+            _ = {
+              if (relations.isEmpty) {
+                logger.warn(f"Found ${relations.size} relations from ${subj} to ${obj}: ${relations}")
+              } else {
+                logger.info(f"Found ${relations.size} relations from ${subj} to ${obj}: ${relations}")
+              }
             }
-            .tap { resp =>
-              logger.info(f"TRAPI Response: ${resp}")
+            testEdges <- ZStream
+              .fromIterable(relations)
+              .mapM { relation =>
+                val relationIRI = IRI(relation)
+                val singleTestRecordQuery =
+                  sparql"""
+                    SELECT ?aClass ?bClass WHERE {
+                      ?aClass ${RDFSSubClassOf} ${subj} .
+                      ?bClass ${RDFSSubClassOf} ${obj} .
+                      ?aClass ${relationIRI} ?bClass .
+                    } LIMIT 1"""
 
-              val results = resp.message.results.getOrElse(List())
-              logger.info(f"TRAPI results contains ${results.size}: ${results}")
+                for {
+                  singleTestRecordResult <- SPARQLQueryExecutor.runSelectQuery(singleTestRecordQuery.toQuery)
+                  singleTestRecords = singleTestRecordResult.map(qs => (qs.getResource("aClass").getURI, qs.getResource("bClass").getURI))
+                  testEdges = singleTestRecords.map(singleTestRecord =>
+                    TestEdge(subj.value, obj.value, relation, singleTestRecord._1, singleTestRecord._2))
+                  _ = logger.info(f"- Found test edges for ${subj.value} --${relation}--> ${obj.value}: ${testEdges}")
+                } yield testEdges
+              }
+              .runCollect
+          } yield testEdges
 
-              ZIO.succeed(resp)
-            }
-            .flatMap(resp =>
-              ZStream.fromIterable(
-                resp.message.knowledge_graph.getOrElse(TRAPIKnowledgeGraph(Map(), Map())).edges.values.map { edge =>
-                  TestEdge(
-                    subj,
-                    obj,
-                    Implicits.compactIRIIfPossible(edge.predicate.getOrElse(BiolinkPredicate("example:error")).iri, biolinkData.prefixes),
-                    Implicits.compactIRIIfPossible(edge.subject, biolinkData.prefixes),
-                    Implicits.compactIRIIfPossible(edge.`object`, biolinkData.prefixes)
-                  )
-                }
-              ))
-            .tap { edge =>
-              logger.info(f"TestEdge found: ${edge}")
-              ZIO.succeed(edge)
-            }
+          edges.map(r => r.toList.flatten)
         }
         .mapError { err =>
           val errMsg = f"Caught error in main loop: ${err}"
@@ -235,7 +229,7 @@ object GenerateTestData extends zio.App with LazyLogging {
         }
         .runCollect
 
-      sriTestingFile = SRITestingFile("aggregator", "cam-kp", List(), results.toSet.toList)
+      sriTestingFile = SRITestingFile("aggregator", "cam-kp", List(), results.toList.flatten.distinct)
       sriTestingFileJson = sriTestingFile.asJson
       _ = Files.writeString(sriTestingFilePath, sriTestingFileJson.deepDropNullValues.spaces2SortKeys)
     } yield ({
