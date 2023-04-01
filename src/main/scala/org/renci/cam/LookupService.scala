@@ -189,8 +189,6 @@ object LookupService extends LazyLogging {
           }
 
           val biolinkQualifiedPreds = PredicateMappings.getBiolinkQualifiedPredicates(IRI(predIRI))
-
-          // TODO: add support for qualified predicates.
           biolinkQualifiedPreds.map(bp => (pred, bp.biolinkPredicate, bp.qualifierList))
         }
 
