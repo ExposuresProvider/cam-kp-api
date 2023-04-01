@@ -477,7 +477,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
       },
       testM(
         "Ensure that query_id is present only when the identifier is ambiguous for a process (GO:0033549, MAP kinase phosphatase activity)") {
-        val iriToQuery = IRI("http://purl.obolibrary.org/obo/GO_0033549")
+        val iriToQuery = IRI("http://purl.obolibrary.org/obo/GO_0017017")
 
         val query = createTestTRAPIQueryGraph(TRAPIQueryNode(Some(List(iriToQuery)), None))
         for {
@@ -516,6 +516,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
             )
           // _ = logger.warn(s"Response: ${response}")
           node0Bindings = response.message.results.get.flatMap(_.node_bindings.getOrElse("n0", List()))
+          // _ = logger.warn(s"Node bindings for n0 in GO:0005737, cytoplasm query: ${node0Bindings}")
           queryIds = node0Bindings.map(_.query_id)
           queryIdsUnambiguous = node0Bindings.filter(_.id == cytoplasm).map(_.query_id)
           queryIdsAmbiguous = node0Bindings.filter(_.id != cytoplasm).map(_.query_id)
