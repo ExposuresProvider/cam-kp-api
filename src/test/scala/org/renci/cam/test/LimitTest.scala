@@ -18,10 +18,10 @@ object LimitTest extends DefaultRunnableSpec with LazyLogging {
     * from 1..50 return the correct number of expected results.
     */
   val testQueryWithExpectedResults = {
-    // Expected results as of 2022-may-18 for the test query
-    val queryGraphExpectedResults = 30
+    // Expected results as of 2023-mar-17 for the test query
+    val queryGraphExpectedResults = 1583
     // The limits to test -- this should be set up to go neatly within
-    val limitsToTest = Seq(1, 2, 3, 4, 5, 10, 20, 30, 40, 50)
+    val limitsToTest = Seq(1, 2, 3, 4, 5, 10, 20, 30, 60, 90, 150, 300, 500, 700, 1000, 1200, 1500, 1583)
     // The test query: pyruvate related_to $[NamedThing]
     val testQueryGraph = TRAPIQueryGraph(
       Map(

@@ -11,7 +11,7 @@ import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.Server.EndpointEnv
 import org.renci.cam.Server.LocalTapirJsonCirce.jsonBody
 import org.renci.cam.Util.IterableSPARQLOps
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI}
+import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, PredicateMappings, QualifiedBiolinkPredicate}
 import sttp.tapir.Endpoint
 import sttp.tapir.generic.auto._
 import sttp.tapir.server.http4s.ztapir.ZHttp4sServerInterpreter
@@ -95,7 +95,7 @@ object LookupService extends LazyLogging {
   case class Relation(
     subj: Set[LabeledIRI],
     preds: Set[LabeledIRI],
-    biolinkPredicates: Map[String, Set[LabeledIRI]],
+    qualifiedBiolinkPredicates: Map[String, Set[QualifiedBiolinkPredicate]],
     obj: Set[LabeledIRI],
     objRelations: Seq[Relation],
     g: Set[String]
@@ -120,7 +120,7 @@ object LookupService extends LazyLogging {
   case class Result(
     queryId: String,
     normalizedIds: List[LabeledIRI],
-    biolinkPredicates: Map[String, Set[LabeledIRI]],
+    qualifiedBiolinkPredicates: Set[QualifiedBiolinkPredicate],
     relations: Seq[Relation],
     subjectTriples: Seq[ResultTriple],
     objectTriples: Seq[ResultTriple]
@@ -161,7 +161,7 @@ object LookupService extends LazyLogging {
                   ?s ${QueryService.SesameDirectType} ?subj .
                   ?subj ${QueryService.RDFSSubClassOf} ?subjClass .
                   VALUES ?subjClass { ${subjectIRIs.asValues} } .
-                  
+
                   ?o ${QueryService.SesameDirectType} ?obj .
                   ?obj ${QueryService.RDFSSubClassOf} ${QueryService.BiolinkNamedThing.iri} .
 
@@ -175,13 +175,12 @@ object LookupService extends LazyLogging {
                }"""
       relationsResults <- SPARQLQueryExecutor.runSelectQuery(relationsQuery.toQuery)
       preds = relationsResults.map(_.getResource("p").getURI).map(IRI(_))
-      biolinkRelationMap <- QueryService.mapRelationsToLabelAndBiolink(preds.toSet)
 
       // We want to group these by object, so we don't return a gazillion predicates for each result.
       objectMap = relationsResults.groupBy(_.getResource("obj").getURI)
 
       relations = objectMap.map { case (obj, results) =>
-        val predResults = results.map { res =>
+        val predResults = results.flatMap { res =>
           val predIRI = res.getResource("p").getURI
 
           val pred = res.getLiteral("pLabel") match {
@@ -189,14 +188,8 @@ object LookupService extends LazyLogging {
             case lit  => LabeledIRI(predIRI, Set(lit.getString))
           }
 
-          val biolinkRes = biolinkRelationMap.get(IRI(predIRI))
-          val biolink = biolinkRes match {
-            case None                     => Set[LabeledIRI]()
-            case Some((None, iri))        => Set(LabeledIRI(iri.value, Set()))
-            case Some((Some(label), iri)) => Set(LabeledIRI(iri.value, Set(label)))
-          }
-
-          (pred, biolink)
+          val biolinkQualifiedPreds = PredicateMappings.getBiolinkQualifiedPredicates(IRI(predIRI))
+          biolinkQualifiedPreds.map(bp => (pred, bp.biolinkPredicate, bp.qualifierList))
         }
 
         val objLabeled = results
@@ -221,10 +214,13 @@ object LookupService extends LazyLogging {
           )
           .toSet
 
+        val qualifiedBiolinkPredicates =
+          predResults.map(kv => (kv._1.iri, QualifiedBiolinkPredicate(kv._2, kv._3))).groupMapReduce(_._1)(p => Set(p._2))(_ ++ _)
+
         Relation(
           subjLabeled,
           predResults.map(_._1).toSet,
-          predResults.map(kv => (kv._1.iri, kv._2)).toMap,
+          qualifiedBiolinkPredicates,
           objLabeled,
           Seq[Relation](), // TODO: recurse!
           results.map(_.getResource("g").getURI).toSet
@@ -336,13 +332,11 @@ object LookupService extends LazyLogging {
 
     // Get every relation from this subject.
     relations <- getRelations(qualifiedIds.map(_.iri).toSet)
-    biolinkPredicates: Map[String, Set[LabeledIRI]] = relations.flatMap(_.biolinkPredicates).foldLeft(Map[String, Set[LabeledIRI]]()) {
-      case (map, entry) => map.updated(entry._1, map.getOrElse(entry._1, Set()) ++ entry._2)
-    }
+    biolinkPredicates = relations.flatMap(_.qualifiedBiolinkPredicates.values).flatten
   } yield Result(
     queryId,
     qualifiedIds.toList,
-    biolinkPredicates,
+    biolinkPredicates.toSet,
     relations.toSeq,
     subjectTriples.map(fromQuerySolution),
     objectTriples.map(fromQuerySolution)
