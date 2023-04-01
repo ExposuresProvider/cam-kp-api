@@ -542,9 +542,7 @@ object QueryServiceTest extends DefaultRunnableSpec with LazyLogging {
             predicates = Some(List(BiolinkPredicate("has_participant")))
           )
         )
-
-        logger.info(f"Glucose query: ${query}")
-
+        logger.debug(f"Glucose/RNA query: ${query}")
         for {
           response <- QueryService
             .run(
