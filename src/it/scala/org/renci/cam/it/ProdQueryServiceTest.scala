@@ -12,7 +12,7 @@ import org.renci.cam._
 import org.renci.cam.domain._
 import zio.blocking.Blocking
 import zio.config.typesafe.TypesafeConfig
-import zio.config.{getConfig, ZConfig}
+import zio.config.{ZConfig, getConfig}
 import zio.interop.catz._
 import zio.test.Assertion._
 import zio.test._
@@ -34,9 +34,9 @@ object ProdQueryServiceTest extends DefaultRunnableSpec {
       }
       _ = println("encoded: " + encoded)
       // TODO: this should probably be in the AppConfig somewhere.
-      uri = Uri.fromString(s"https://cam-kp-api.renci.org/${appConfig.trapiVersion}/query").toOption.get
+      uri = Uri.fromString(s"https://automat-dev.apps.renci.org/cam-kp/1.3/query").toOption.get
       _ = println("uri: " + uri)
-      uriWithQueryParams = uri.withQueryParam("limit", limit)
+      uriWithQueryParams = uri // .withQueryParam("limit", limit)
       request = Request[Task](Method.POST, uriWithQueryParams)
         .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
         .withEntity(encoded)

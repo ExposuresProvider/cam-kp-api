@@ -6,12 +6,12 @@ import io.circe.generic.semiauto._
 import io.circe.syntax.EncoderOps
 import org.http4s._
 import org.http4s.circe.CirceEntityCodec.circeEntityDecoder
-import org.http4s.headers.{`Content-Type`, Accept}
+import org.http4s.headers.{Accept, `Content-Type`}
 import org.http4s.implicits._
 import org.renci.cam.Biolink.biolinkData
 import org.renci.cam.HttpClient.HttpClient
-import org.renci.cam.domain.{BiolinkClass, BiolinkPredicate, IRI, TRAPIAttribute, TRAPIMessage, TRAPIQuery, TRAPIResponse}
-import org.renci.cam.{AppConfig, Biolink, HttpClient, Implicits}
+import org.renci.cam.domain.{TRAPIMessage, TRAPIQuery, TRAPIResponse}
+import org.renci.cam.{AppConfig, Biolink, HttpClient}
 import zio.blocking.Blocking
 import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
@@ -90,8 +90,8 @@ object ExampleQueriesEndpointTest extends DefaultRunnableSpec {
                 import biolinkData.implicits._
                 TRAPIQuery(message = example.message, log_level = None).asJson.deepDropNullValues.noSpaces
               }
-              // _ = println(s"messageText = ${messageText}")
-              request = Request[Task](Method.POST, endpointToTest.withQueryParam("limit", limit.toString))
+              _ = println(s"messageText = ${messageText}")
+              request = Request[Task](Method.POST, endpointToTest) // .withQueryParam("limit", limit.toString))
                 .withHeaders(Accept(MediaType.application.json), `Content-Type`(MediaType.application.json))
                 .withEntity(messageText)
               response <- httpClient.expect[Json](request)
