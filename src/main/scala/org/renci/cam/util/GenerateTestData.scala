@@ -156,6 +156,19 @@ object GenerateTestData extends zio.App with LazyLogging {
         .groupMapReduce(_._1)(_._2)(_ ++ _)
       _ = logger.info(f"Biolink classes with parents: ${biolink_classes_parents}")
 
+      // Invert this map so we get a Map[String,
+      biolink_classes_children =
+        biolink_classes_parents
+          .flatMap { case (concept, parents) =>
+            parents.map { parent =>
+              (parent, concept)
+            }
+          }
+          .groupMap(_._1)(_._2)
+          .view
+          .mapValues(_.toSet)
+          .toMap
+
       // Generate a list of biolink class - biolink class pairs.
       biolink_classes_pairs = for {
         x <- biolink_classes_parents.keySet
@@ -168,6 +181,21 @@ object GenerateTestData extends zio.App with LazyLogging {
       // Generate test records for each Biolink pair.
       results <- ZStream
         .fromIterable(biolink_classes_pairs)
+        .filter { biolinkPair =>
+          val subj = (biolinkPair._1)
+          val obj = (biolinkPair._2)
+
+          // For generating this test data, we only want the leaf nodes. So any class with
+          // children should be eliminated here.
+          val subj_is_leaf = biolink_classes_children.getOrElse(subj, Set()).isEmpty
+          val obj_is_leaf = biolink_classes_children.getOrElse(subj, Set()).isEmpty
+
+          if (subj_is_leaf && obj_is_leaf) true
+          else {
+            logger.info(s"Skipping ${subj} (Is leaf? ${subj_is_leaf}) -> ${obj} (Is leaf? ${obj_is_leaf})")
+            false
+          }
+        }
         .mapM { biolinkPair =>
           val subj = IRI(biolinkPair._1)
           val obj = IRI(biolinkPair._2)
@@ -186,7 +214,7 @@ object GenerateTestData extends zio.App with LazyLogging {
               ?aClass ?relation ?bClass .
             }"""
 
-          logger.debug(s"Querying database with: ${relationsQuery}")
+          logger.info(s"Querying database for relations between ${subj} and ${obj} with: ${relationsQuery}")
 
           val edges = for {
             results <- SPARQLQueryExecutor.runSelectQuery(relationsQuery.toQuery)
