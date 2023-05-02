@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{biolinkData, BiolinkData}
+import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.QueryService.{BiolinkNamedThing, RDFSSubClassOf, SesameDirectType}
 import org.renci.cam._
