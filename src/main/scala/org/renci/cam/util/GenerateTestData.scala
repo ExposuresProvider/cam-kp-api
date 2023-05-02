@@ -4,6 +4,7 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.phenoscape.sparql.SPARQLInterpolation._
+import org.renci.cam.Biolink.{BiolinkData, biolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.QueryService.{BiolinkNamedThing, RDFSSubClassOf, SesameDirectType}
 import org.renci.cam._
@@ -45,11 +46,11 @@ object GenerateTestData extends zio.App with LazyLogging {
     *   The identifier of the object (e.g. `MESH:D001249`).
     */
   case class TestEdge(
-    subject_category: String,
-    object_category: String,
-    predicate: String,
-    subject_id: String,
-    object_id: String,
+    subject_category: IRI,
+    object_category: IRI,
+    predicate: IRI,
+    subject_id: IRI,
+    object_id: IRI,
     qualifiers: List[domain.TRAPIQualifier] = List()
   )
 
@@ -65,7 +66,8 @@ object GenerateTestData extends zio.App with LazyLogging {
   val LinkMLClassDefinition: IRI = IRI("https://w3id.org/linkml/ClassDefinition")
   override lazy val logger: Logger = Logger(GenerateTestData.getClass.getSimpleName);
 
-  private def generateJSONLFile(jsonlPath: Path): ZIO[Blocking with ZConfig[AppConfig] with HttpClient, Throwable, Long] = {
+  private def generateJSONLFile(
+    jsonlPath: Path): ZIO[Blocking with ZConfig[AppConfig] with HttpClient with Has[BiolinkData], Throwable, Long] = {
     // Get a list of all the Biolink classes (and their parents) that we know about.
     val biolink_classes_query =
       sparql"""
@@ -81,6 +83,8 @@ object GenerateTestData extends zio.App with LazyLogging {
     } GROUP BY ?biolinkClass"""
 
     for {
+      biolinkData <- biolinkData
+
       biolink_classes_solutions <- SPARQLQueryExecutor.runSelectQuery(biolink_classes_query.toQuery)
       biolink_classes_parents = biolink_classes_solutions
         .map { qs =>
@@ -217,11 +221,13 @@ object GenerateTestData extends zio.App with LazyLogging {
                         logger.info(
                           f"- Found test edge for ${subj.value} --${relation} (${qualifiedPred.biolinkPredicate.shorthand})--> ${obj.value} (predicates: ${qualifiedPred.qualifierList})"
                         )
-                        TestEdge(subj.value,
-                                 obj.value,
-                                 "biolink:" + qualifiedPred.biolinkPredicate.shorthand,
-                                 singleTestRecord._1,
-                                 singleTestRecord._2,
+
+                        // So hacky as all heck.
+                        TestEdge(IRI(subj.value),
+                                 IRI(obj.value),
+                                 qualifiedPred.biolinkPredicate.iri,
+                                 IRI(singleTestRecord._1),
+                                 IRI(singleTestRecord._2),
                                  qualifiedPred.qualifierList)
                       }
                     }
@@ -233,7 +239,12 @@ object GenerateTestData extends zio.App with LazyLogging {
             edges.map(r => r.flatten)
           }
         }
-        .flatMap(value => ZStream.fromIterable(value.map(v => v.asJson.deepDropNullValues.noSpacesSortKeys)))
+        .flatMap(value =>
+          ZStream.fromIterable(value.map { v =>
+            import biolinkData.implicits._
+
+            v.asJson.deepDropNullValues.noSpacesSortKeys
+          }))
         .intersperse("\n")
         .run(ZSink.fromFile(jsonlPath).contramapChunks[String](_.flatMap(_.getBytes)))
     } yield results
@@ -277,8 +288,8 @@ object GenerateTestData extends zio.App with LazyLogging {
     // Set up layers and return program.
     val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
     val camkpapiLayer: ZLayer[Any, Throwable, HttpClient] = Blocking.live >>> HttpClient.makeHttpClientLayer
-    val layer: ZLayer[Any, Throwable, Blocking with ZConfig[AppConfig] with HttpClient] =
-      configLayer ++ camkpapiLayer ++ Blocking.live >+> SPARQLQueryExecutor.makeCache.toLayer
+    val layer: ZLayer[Any, Throwable, Blocking with ZConfig[AppConfig] with HttpClient with Has[BiolinkData]] =
+      configLayer ++ camkpapiLayer ++ Biolink.makeUtilitiesLayer ++ Blocking.live >+> SPARQLQueryExecutor.makeCache.toLayer
 
     program.provideCustomLayer(layer).exitCode
   }
