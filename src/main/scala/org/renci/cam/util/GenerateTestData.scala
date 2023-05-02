@@ -7,7 +7,7 @@ import io.circe.syntax._
 import org.http4s.implicits._
 import org.phenoscape.sparql.SPARQLInterpolation._
 import org.renci.cam.Biolink.biolinkData
-import org.renci.cam.QueryService.{BiolinkNamedThing, RDFSSubClassOf}
+import org.renci.cam.QueryService.{BiolinkNamedThing, RDFSSubClassOf, SesameDirectType}
 import org.renci.cam._
 import org.renci.cam.domain.{BiolinkPredicate, IRI, PredicateMappings}
 import zio._
@@ -16,9 +16,9 @@ import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
 import zio.interop.catz._
 import zio.interop.catz.implicits._
-import zio.stream.ZStream
+import zio.stream.{ZSink, ZStream}
 
-import java.nio.file.{Files, Path}
+import java.nio.file.Path
 
 /** The <a href="https://github.com/TranslatorSRI/SRI_testing">SRI Testing harness</a> requires test data to be generated. This utility is
   * designed to generate some test data. It uses the SPARQL endpoint configured in AppConfig as well as the files in src/main/resources to
@@ -115,8 +115,6 @@ object GenerateTestData extends zio.App with LazyLogging {
     `object`: String
   )
 
-  val sriTestingFilePath: Path = Path.of("src/main/resources/sri-testing.json")
-
   case class SRITestingFile(
     source_type: String,
     infores: String,
@@ -125,9 +123,14 @@ object GenerateTestData extends zio.App with LazyLogging {
   )
 
   override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
+    if (args.isEmpty) {
+      throw new RuntimeException("A single argument is required: the test-edges JSONL file to write.")
+    }
     if (args.length > 1) {
       throw new RuntimeException("Only a single argument is allowed: the test-edges JSONL file to write.")
     }
+
+    val jsonl_file = Path.of(args.head)
 
     val program = for {
       biolinkData <- biolinkData
@@ -204,26 +207,83 @@ object GenerateTestData extends zio.App with LazyLogging {
             throw new RuntimeException("Biolink predicate `biolink:related_to` could not be mapped to any Biolink predicates.")
           }
 
+          // Skip any pairs where the subj or obj contain more than one hash, because this causes Jena to error.
+          if (subj.value.matches(".*#.*#.*") || obj.value.matches(".*#.*#.*")) {
+            logger.warn(s"Skipping pair $subj and $obj as one of them contains more than one '#' character.")
+          }
+
+          val subjEntitiesQuery =
+            sparql"""
+              SELECT ?a {
+                ?aClass <http://www.w3.org/2000/01/rdf-schema#subClassOf> ${subj} .
+                ?a <http://www.openrdf.org/schema/sesame#directType> ?aClass .
+              } LIMIT 1000
+            """
+
+          val objEntitiesQuery =
+            sparql"""
+              SELECT ?b {
+                ?bClass <http://www.w3.org/2000/01/rdf-schema#subClassOf> ${obj} .
+                ?b <http://www.openrdf.org/schema/sesame#directType> ?bClass .
+              } LIMIT 1000
+            """
+
+          /*
+
           val relationsAsSPARQL = relationsSet.map(n => sparql" $n ").fold(sparql"")(_ + _)
           val relationsQuery =
             sparql"""
-            SELECT DISTINCT ?relation WHERE {
-              ?aClass ${RDFSSubClassOf} ${subj} .
-              ?bClass ${RDFSSubClassOf} ${obj} .
-              VALUES ?relation { ${relationsAsSPARQL} } .
-              ?aClass ?relation ?bClass .
-            }"""
+            SELECT ?relation WHERE {
+              {
+                SELECT ?aClass {
+                  ?aClass ${RDFSSubClassOf} ${subj}
+                } LIMIT 1000
+              }
+              {
+                SELECT ?bClass {
+                  ?bClass ${RDFSSubClassOf} ${obj}
+                } LIMIT 1000
+              }
+              ?a ${SesameDirectType} ?aClass .
+              ?b ${SesameDirectType} ?bClass .
+              ?a ?relation ?b .
+            } LIMIT 1000"""
 
           logger.info(s"Querying database for relations between ${subj} and ${obj} with: ${relationsQuery}")
 
+           */
+
           val edges = for {
-            results <- SPARQLQueryExecutor.runSelectQuery(relationsQuery.toQuery)
-            relations = results.map(qs => qs.getResource("relation").getURI)
+            subjEntitiesResult <- SPARQLQueryExecutor.runSelectQuery(subjEntitiesQuery.toQuery).orElse(ZIO(Seq()))
+            subjEntities = subjEntitiesResult
+              .map(qs => qs.getResource("a").getURI)
+              // We have IRIs with multiple '#'s, which causes a Jena exception later. Let's filter those out.
+              .filterNot(_.matches(".*#.*#.*"))
+            _ = logger.info(s"Found ${subjEntities.length} subject entities for ${subj}: ${subjEntities}")
+            objEntitiesResult <- SPARQLQueryExecutor.runSelectQuery(objEntitiesQuery.toQuery).orElse(ZIO(Seq()))
+            objEntities = objEntitiesResult
+              .map(qs => qs.getResource("b").getURI)
+              // We have IRIs with multiple '#'s, which causes a Jena exception later. Let's filter those out.
+              .filterNot(_.matches(".*#.*#.*"))
+            _ = logger.info(s"Found ${objEntities.length} object entities for ${obj}: ${objEntities}")
+            relationsQuery =
+              sparql"""
+                SELECT DISTINCT ?relation WHERE {
+                  VALUES ?a { ${subjEntities.map(IRI(_)).map(n => sparql" $n ").fold(sparql"")(_ + _)} } .
+                  VALUES ?b { ${objEntities.map(IRI(_)).map(n => sparql" $n ").fold(sparql"")(_ + _)} } .
+                  FILTER (?a != ?b) .
+                  ?a ?relation ?b
+                }
+              """
+            _ = logger.info(s"Prepared relations query: ${relationsQuery.toQuery}")
+            relationsResult <- SPARQLQueryExecutor.runSelectQuery(relationsQuery.toQuery).orElse(ZIO(Seq()))
+            _ = logger.info(s"Relations result obtained: ${relationsResult}")
+            relations = relationsResult.map(qs => qs.getResource("relation").getURI)
             _ = {
               if (relations.isEmpty) {
-                logger.warn(f"Found ${relations.size} relations from ${subj} to ${obj}: ${relations}")
+                logger.warn(f"Did not find any relations from ${subj} to ${obj}: ${relations}")
               } else {
-                logger.info(f"Found ${relations.size} relations from ${subj} to ${obj}: ${relations}")
+                logger.info(f"Found relations: ${relations.size} from ${subj} to ${obj}: ${relations}")
               }
             }
             testEdges <- ZStream
@@ -235,7 +295,9 @@ object GenerateTestData extends zio.App with LazyLogging {
                     SELECT ?aClass ?bClass WHERE {
                       ?aClass ${RDFSSubClassOf} ${subj} .
                       ?bClass ${RDFSSubClassOf} ${obj} .
-                      ?aClass ${relationIRI} ?bClass .
+                      ?a ${SesameDirectType} ?aClass .
+                      ?b ${SesameDirectType} ?bClass .
+                      ?a ${relationIRI} ?b .
                     } LIMIT 1"""
 
                 for {
@@ -243,7 +305,8 @@ object GenerateTestData extends zio.App with LazyLogging {
                   singleTestRecords = singleTestRecordResult.map(qs => (qs.getResource("aClass").getURI, qs.getResource("bClass").getURI))
                   testEdges = singleTestRecords.map(singleTestRecord =>
                     TestEdge(subj.value, obj.value, relation, singleTestRecord._1, singleTestRecord._2))
-                  _ = logger.info(f"- Found test edges for ${subj.value} --${relation}--> ${obj.value}: ${testEdges}")
+                  _ = logger.info(
+                    f"- Found ${testEdges.length} test edges for ${subj.value} --${relation}--> ${obj.value}: ${testEdges.take(100)}")
                 } yield testEdges
               }
               .runCollect
@@ -255,11 +318,16 @@ object GenerateTestData extends zio.App with LazyLogging {
           val errMsg = f"Caught error in main loop: ${err}"
           logger.error(errMsg)
         }
-        .runCollect
+        .flatMap(value => ZStream.fromIterable(value.map(v => v.asJson.deepDropNullValues.noSpacesSortKeys)))
+        .intersperse("\n")
+        .run(ZSink.fromFile(jsonl_file).contramapChunks[String](_.flatMap(_.getBytes)))
 
+      /*
       sriTestingFile = SRITestingFile("aggregator", "cam-kp", List(), results.toList.flatten.distinct)
       sriTestingFileJson = sriTestingFile.asJson
       _ = Files.writeString(sriTestingFilePath, sriTestingFileJson.deepDropNullValues.spaces2SortKeys)
+
+       */
     } yield ({
       logger.info(f"Found result: " + results)
     })
