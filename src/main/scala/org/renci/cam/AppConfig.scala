@@ -9,6 +9,7 @@ final case class AppConfig(host: String,
                            location: String,
                            sparqlEndpoint: Uri,
                            trapiVersion: String,
+                           biolinkVersion: String,
                            maturity: String,
                            version: String)
 

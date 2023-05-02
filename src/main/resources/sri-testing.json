@@ -1,0 +1,8 @@
+{
+  "edges" : [
+  ],
+  "exclude_tests" : [
+  ],
+  "infores" : "cam-kp",
+  "source_type" : "aggregator"
+}
