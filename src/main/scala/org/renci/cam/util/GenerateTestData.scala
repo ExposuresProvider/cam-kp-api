@@ -214,15 +214,15 @@ object GenerateTestData extends zio.App with LazyLogging {
                   testEdges = singleTestRecords.flatMap { singleTestRecord =>
                     val qualifiedPreds = PredicateMappings.getBiolinkQualifiedPredicates(relationIRI)
                     qualifiedPreds.map { qualifiedPred =>
-                      TestEdge(subj.value,
-                               obj.value,
-                               qualifiedPred.biolinkPredicate.shorthand,
-                               singleTestRecord._1,
-                               singleTestRecord._2,
-                               qualifiedPred.qualifierList)
                       logger.info(
                         f"- Found test edge for ${subj.value} --${relation} (${qualifiedPred.biolinkPredicate.shorthand})--> ${obj.value} (predicates: ${qualifiedPred.qualifierList})"
                       )
+                      TestEdge(subj.value,
+                               obj.value,
+                               "biolink:" + qualifiedPred.biolinkPredicate.shorthand,
+                               singleTestRecord._1,
+                               singleTestRecord._2,
+                               qualifiedPred.qualifierList)
                     }
                   }
                 } yield testEdges
