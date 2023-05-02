@@ -4,7 +4,7 @@ import com.typesafe.scalalogging.{LazyLogging, Logger}
 import io.circe.generic.auto._
 import io.circe.syntax._
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.{BiolinkData, biolinkData}
+import org.renci.cam.Biolink.{biolinkData, BiolinkData}
 import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.QueryService.{BiolinkNamedThing, RDFSSubClassOf, SesameDirectType}
 import org.renci.cam._
@@ -121,6 +121,7 @@ object GenerateTestData extends zio.App with LazyLogging {
       // Generate test records for each Biolink pair.
       results <- ZStream
         .fromIterable(biolink_classes_pairs)
+        /*
         .filter { biolinkPair =>
           val subj = (biolinkPair._1)
           val obj = (biolinkPair._2)
@@ -135,7 +136,7 @@ object GenerateTestData extends zio.App with LazyLogging {
             logger.info(s"Skipping ${subj} (Is leaf? ${subj_is_leaf}) -> ${obj} (Is leaf? ${obj_is_leaf})")
             false
           }
-        }
+        } */
         .mapM { biolinkPair =>
           val subj = IRI(biolinkPair._1)
           val obj = IRI(biolinkPair._2)
