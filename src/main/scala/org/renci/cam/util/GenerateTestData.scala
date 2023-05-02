@@ -210,6 +210,7 @@ object GenerateTestData extends zio.App with LazyLogging {
                       ?a ${SesameDirectType} ?aClass .
                       ?b ${SesameDirectType} ?bClass .
                       ?a ${relationIRI} ?b .
+                      FILTER (?a != ?b) .
                     } LIMIT 1"""
 
                   for {
