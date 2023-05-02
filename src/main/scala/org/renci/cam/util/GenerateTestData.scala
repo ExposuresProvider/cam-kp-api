@@ -124,7 +124,7 @@ object GenerateTestData extends zio.App with LazyLogging {
           // For generating this test data, we only want the leaf nodes. So any class with
           // children should be eliminated here.
           val subj_is_leaf = biolink_classes_children.getOrElse(subj, Set()).isEmpty
-          val obj_is_leaf = biolink_classes_children.getOrElse(subj, Set()).isEmpty
+          val obj_is_leaf = biolink_classes_children.getOrElse(obj, Set()).isEmpty
 
           if (subj_is_leaf && obj_is_leaf) true
           else {
@@ -143,39 +143,39 @@ object GenerateTestData extends zio.App with LazyLogging {
           // Skip any pairs where the subj or obj contain more than one hash, because this causes Jena to error.
           if (subj.value.matches(".*#.*#.*") || obj.value.matches(".*#.*#.*")) {
             logger.warn(s"Skipping pair $subj and $obj as one of them contains more than one '#' character.")
-          }
-
-          val subjEntitiesQuery =
-            sparql"""
+            ZIO.succeed(Seq())
+          } else {
+            val subjEntitiesQuery =
+              sparql"""
               SELECT ?a {
                 ?aClass <http://www.w3.org/2000/01/rdf-schema#subClassOf> ${subj} .
                 ?a <http://www.openrdf.org/schema/sesame#directType> ?aClass .
               } LIMIT 1000
             """
 
-          val objEntitiesQuery =
-            sparql"""
+            val objEntitiesQuery =
+              sparql"""
               SELECT ?b {
                 ?bClass <http://www.w3.org/2000/01/rdf-schema#subClassOf> ${obj} .
                 ?b <http://www.openrdf.org/schema/sesame#directType> ?bClass .
               } LIMIT 1000
             """
 
-          val edges = for {
-            subjEntitiesResult <- SPARQLQueryExecutor.runSelectQuery(subjEntitiesQuery.toQuery).orElse(ZIO(Seq()))
-            subjEntities = subjEntitiesResult
-              .map(qs => qs.getResource("a").getURI)
-              // We have IRIs with multiple '#'s, which causes a Jena exception later. Let's filter those out.
-              .filterNot(_.matches(".*#.*#.*"))
-            _ = logger.info(s"Found ${subjEntities.length} subject entities for ${subj}: ${subjEntities}")
-            objEntitiesResult <- SPARQLQueryExecutor.runSelectQuery(objEntitiesQuery.toQuery).orElse(ZIO(Seq()))
-            objEntities = objEntitiesResult
-              .map(qs => qs.getResource("b").getURI)
-              // We have IRIs with multiple '#'s, which causes a Jena exception later. Let's filter those out.
-              .filterNot(_.matches(".*#.*#.*"))
-            _ = logger.info(s"Found ${objEntities.length} object entities for ${obj}: ${objEntities}")
-            relationsQuery =
-              sparql"""
+            val edges = for {
+              subjEntitiesResult <- SPARQLQueryExecutor.runSelectQuery(subjEntitiesQuery.toQuery).orElse(ZIO(Seq()))
+              subjEntities = subjEntitiesResult
+                .map(qs => qs.getResource("a").getURI)
+                // We have IRIs with multiple '#'s, which causes a Jena exception later. Let's filter those out.
+                .filterNot(_.matches(".*#.*#.*"))
+              _ = logger.info(s"Found ${subjEntities.length} subject entities for ${subj}: ${subjEntities}")
+              objEntitiesResult <- SPARQLQueryExecutor.runSelectQuery(objEntitiesQuery.toQuery).orElse(ZIO(Seq()))
+              objEntities = objEntitiesResult
+                .map(qs => qs.getResource("b").getURI)
+                // We have IRIs with multiple '#'s, which causes a Jena exception later. Let's filter those out.
+                .filterNot(_.matches(".*#.*#.*"))
+              _ = logger.info(s"Found ${objEntities.length} object entities for ${obj}: ${objEntities}")
+              relationsQuery =
+                sparql"""
                 SELECT DISTINCT ?relation WHERE {
                   VALUES ?a { ${subjEntities.map(IRI(_)).map(n => sparql" $n ").fold(sparql"")(_ + _)} } .
                   VALUES ?b { ${objEntities.map(IRI(_)).map(n => sparql" $n ").fold(sparql"")(_ + _)} } .
@@ -183,23 +183,23 @@ object GenerateTestData extends zio.App with LazyLogging {
                   ?a ?relation ?b
                 }
               """
-            _ = logger.info(s"Prepared relations query: ${relationsQuery.toQuery}")
-            relationsResult <- SPARQLQueryExecutor.runSelectQuery(relationsQuery.toQuery).orElse(ZIO(Seq()))
-            _ = logger.info(s"Relations result obtained: ${relationsResult}")
-            relations = relationsResult.map(qs => qs.getResource("relation").getURI)
-            _ = {
-              if (relations.isEmpty) {
-                logger.warn(f"Did not find any relations from ${subj} to ${obj}: ${relations}")
-              } else {
-                logger.info(f"Found relations: ${relations.size} from ${subj} to ${obj}: ${relations}")
+              _ = logger.info(s"Prepared relations query: ${relationsQuery.toQuery}")
+              relationsResult <- SPARQLQueryExecutor.runSelectQuery(relationsQuery.toQuery).orElse(ZIO(Seq()))
+              _ = logger.info(s"Relations result obtained: ${relationsResult}")
+              relations = relationsResult.map(qs => qs.getResource("relation").getURI)
+              _ = {
+                if (relations.isEmpty) {
+                  logger.warn(f"Did not find any relations from ${subj} to ${obj}: ${relations}")
+                } else {
+                  logger.info(f"Found relations: ${relations.size} from ${subj} to ${obj}: ${relations}")
+                }
               }
-            }
-            testEdges <- ZStream
-              .fromIterable(relations)
-              .mapM { relation =>
-                val relationIRI = IRI(relation)
-                val singleTestRecordQuery =
-                  sparql"""
+              testEdges <- ZStream
+                .fromIterable(relations)
+                .mapM { relation =>
+                  val relationIRI = IRI(relation)
+                  val singleTestRecordQuery =
+                    sparql"""
                     SELECT ?aClass ?bClass WHERE {
                       ?aClass ${RDFSSubClassOf} ${subj} .
                       ?bClass ${RDFSSubClassOf} ${obj} .
@@ -208,29 +208,30 @@ object GenerateTestData extends zio.App with LazyLogging {
                       ?a ${relationIRI} ?b .
                     } LIMIT 1"""
 
-                for {
-                  singleTestRecordResult <- SPARQLQueryExecutor.runSelectQuery(singleTestRecordQuery.toQuery)
-                  singleTestRecords = singleTestRecordResult.map(qs => (qs.getResource("aClass").getURI, qs.getResource("bClass").getURI))
-                  testEdges = singleTestRecords.flatMap { singleTestRecord =>
-                    val qualifiedPreds = PredicateMappings.getBiolinkQualifiedPredicates(relationIRI)
-                    qualifiedPreds.map { qualifiedPred =>
-                      logger.info(
-                        f"- Found test edge for ${subj.value} --${relation} (${qualifiedPred.biolinkPredicate.shorthand})--> ${obj.value} (predicates: ${qualifiedPred.qualifierList})"
-                      )
-                      TestEdge(subj.value,
-                               obj.value,
-                               "biolink:" + qualifiedPred.biolinkPredicate.shorthand,
-                               singleTestRecord._1,
-                               singleTestRecord._2,
-                               qualifiedPred.qualifierList)
+                  for {
+                    singleTestRecordResult <- SPARQLQueryExecutor.runSelectQuery(singleTestRecordQuery.toQuery)
+                    singleTestRecords = singleTestRecordResult.map(qs => (qs.getResource("aClass").getURI, qs.getResource("bClass").getURI))
+                    testEdges = singleTestRecords.flatMap { singleTestRecord =>
+                      val qualifiedPreds = PredicateMappings.getBiolinkQualifiedPredicates(relationIRI)
+                      qualifiedPreds.map { qualifiedPred =>
+                        logger.info(
+                          f"- Found test edge for ${subj.value} --${relation} (${qualifiedPred.biolinkPredicate.shorthand})--> ${obj.value} (predicates: ${qualifiedPred.qualifierList})"
+                        )
+                        TestEdge(subj.value,
+                                 obj.value,
+                                 "biolink:" + qualifiedPred.biolinkPredicate.shorthand,
+                                 singleTestRecord._1,
+                                 singleTestRecord._2,
+                                 qualifiedPred.qualifierList)
+                      }
                     }
-                  }
-                } yield testEdges
-              }
-              .runCollect
-          } yield testEdges
+                  } yield testEdges
+                }
+                .runCollect
+            } yield testEdges
 
-          edges.map(r => r.toList.flatten)
+            edges.map(r => r.toList.flatten)
+          }
         }
         .flatMap(value => ZStream.fromIterable(value.map(v => v.asJson.deepDropNullValues.noSpacesSortKeys)))
         .intersperse("\n")
