@@ -161,31 +161,6 @@ object GenerateTestData extends zio.App with LazyLogging {
               } LIMIT 1000
             """
 
-          /*
-
-          val relationsAsSPARQL = relationsSet.map(n => sparql" $n ").fold(sparql"")(_ + _)
-          val relationsQuery =
-            sparql"""
-            SELECT ?relation WHERE {
-              {
-                SELECT ?aClass {
-                  ?aClass ${RDFSSubClassOf} ${subj}
-                } LIMIT 1000
-              }
-              {
-                SELECT ?bClass {
-                  ?bClass ${RDFSSubClassOf} ${obj}
-                } LIMIT 1000
-              }
-              ?a ${SesameDirectType} ?aClass .
-              ?b ${SesameDirectType} ?bClass .
-              ?a ?relation ?b .
-            } LIMIT 1000"""
-
-          logger.info(s"Querying database for relations between ${subj} and ${obj} with: ${relationsQuery}")
-
-           */
-
           val edges = for {
             subjEntitiesResult <- SPARQLQueryExecutor.runSelectQuery(subjEntitiesQuery.toQuery).orElse(ZIO(Seq()))
             subjEntities = subjEntitiesResult
@@ -236,10 +211,19 @@ object GenerateTestData extends zio.App with LazyLogging {
                 for {
                   singleTestRecordResult <- SPARQLQueryExecutor.runSelectQuery(singleTestRecordQuery.toQuery)
                   singleTestRecords = singleTestRecordResult.map(qs => (qs.getResource("aClass").getURI, qs.getResource("bClass").getURI))
-                  testEdges = singleTestRecords.map(singleTestRecord =>
-                    TestEdge(subj.value, obj.value, relation, singleTestRecord._1, singleTestRecord._2))
-                  _ = logger.info(
-                    f"- Found ${testEdges.length} test edges for ${subj.value} --${relation}--> ${obj.value}: ${testEdges.take(100)}")
+                  testEdges = singleTestRecords.flatMap { singleTestRecord =>
+                    val qualifiedPreds = PredicateMappings.getBiolinkQualifiedPredicates(relationIRI)
+                    qualifiedPreds.map { qualifiedPred =>
+                      TestEdge(subj.value,
+                               obj.value,
+                               qualifiedPred.biolinkPredicate.shorthand,
+                               singleTestRecord._1,
+                               singleTestRecord._2,
+                               qualifiedPred.qualifierList)
+                      logger.info(
+                        f"- Found test edge for ${subj.value} --${relation} (${qualifiedPred.biolinkPredicate})--> ${obj.value} (predicates: ${qualifiedPred.qualifierList})")
+                    }
+                  }
                 } yield testEdges
               }
               .runCollect
@@ -277,13 +261,18 @@ object GenerateTestData extends zio.App with LazyLogging {
 
     val jsonlPath = Path.of(args.head)
     val program = for {
+      // Generate JSONL file.
       linesGenerated <- generateJSONLFile(jsonlPath)
         .onError { cause =>
           logger.error(s"Could not generate JSONL file ${jsonlPath}: $cause")
           ZIO.succeed(ExitCode.failure)
         }
-    } yield ExitCode.success
+    } yield {
+      logger.info(s"Successfully wrote ${linesGenerated} to ${jsonlPath}")
+      ExitCode.success
+    }
 
+    // Set up layers and return program.
     val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
     val camkpapiLayer: ZLayer[Any, Throwable, HttpClient] = Blocking.live >>> HttpClient.makeHttpClientLayer
     val layer: ZLayer[Any, Throwable, Blocking with ZConfig[AppConfig] with HttpClient] =
