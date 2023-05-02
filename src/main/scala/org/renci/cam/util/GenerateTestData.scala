@@ -228,9 +228,9 @@ object GenerateTestData extends zio.App with LazyLogging {
                   } yield testEdges
                 }
                 .runCollect
-            } yield testEdges
+            } yield testEdges.toSet.toList
 
-            edges.map(r => r.toList.flatten)
+            edges.map(r => r.flatten)
           }
         }
         .flatMap(value => ZStream.fromIterable(value.map(v => v.asJson.deepDropNullValues.noSpacesSortKeys)))
