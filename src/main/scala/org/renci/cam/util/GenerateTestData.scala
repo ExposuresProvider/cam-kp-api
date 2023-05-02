@@ -221,7 +221,8 @@ object GenerateTestData extends zio.App with LazyLogging {
                                singleTestRecord._2,
                                qualifiedPred.qualifierList)
                       logger.info(
-                        f"- Found test edge for ${subj.value} --${relation} (${qualifiedPred.biolinkPredicate})--> ${obj.value} (predicates: ${qualifiedPred.qualifierList})")
+                        f"- Found test edge for ${subj.value} --${relation} (${qualifiedPred.biolinkPredicate.shorthand})--> ${obj.value} (predicates: ${qualifiedPred.qualifierList})"
+                      )
                     }
                   }
                 } yield testEdges
