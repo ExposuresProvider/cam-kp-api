@@ -169,6 +169,16 @@ object PredicateMappings {
     if (predicateMappingsStream == null) Seq()
     else io.circe.parser.parse(predicatesDataAsString).toTry.get.as[Seq[PredicateMapping]].toTry.get
 
+  /** Convert predicate data into a list of QualifiedBiolinkPredicates in case anyone wants a list of all the predicates we understand.
+    */
+  val qualifiedPredicatesData: Seq[QualifiedBiolinkPredicate] = predicatesData
+    .flatMap {
+      case PredicateMapping(_, Some(biolinkPredicate), None) => Some(QualifiedBiolinkPredicate(biolinkPredicate))
+      case PredicateMapping(_, Some(biolinkPredicate), Some(TRAPIQualifierConstraint(qualifierList))) =>
+        Some(QualifiedBiolinkPredicate(biolinkPredicate, qualifierList))
+      case _ => None
+    }
+
   def mapQueryEdgePredicates(predicates: Option[List[BiolinkPredicate]],
                              qualifier_constraints: Option[List[TRAPIQualifierConstraint]]): Set[IRI] = {
     // predicatesData consists of unique mappings between relations and (biolinkPredicate, biolinkQualifier) pairs.
