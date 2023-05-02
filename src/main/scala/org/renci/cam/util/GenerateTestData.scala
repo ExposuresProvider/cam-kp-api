@@ -1,12 +1,10 @@
 package org.renci.cam.util
 
 import com.typesafe.scalalogging.{LazyLogging, Logger}
-import io.circe._
 import io.circe.generic.auto._
 import io.circe.syntax._
-import org.http4s.implicits._
 import org.phenoscape.sparql.SPARQLInterpolation._
-import org.renci.cam.Biolink.biolinkData
+import org.renci.cam.HttpClient.HttpClient
 import org.renci.cam.QueryService.{BiolinkNamedThing, RDFSSubClassOf, SesameDirectType}
 import org.renci.cam._
 import org.renci.cam.domain.{BiolinkPredicate, IRI, PredicateMappings}
@@ -14,8 +12,6 @@ import zio._
 import zio.blocking.Blocking
 import zio.config.ZConfig
 import zio.config.typesafe.TypesafeConfig
-import zio.interop.catz._
-import zio.interop.catz.implicits._
 import zio.stream.{ZSink, ZStream}
 
 import java.nio.file.Path
@@ -25,96 +21,39 @@ import java.nio.file.Path
   * generate this data.
   */
 object GenerateTestData extends zio.App with LazyLogging {
+  /* Helper classes. */
 
-  val LinkMLClassDefinition = IRI("https://w3id.org/linkml/ClassDefinition")
-
-  override lazy val logger = Logger(GenerateTestData.getClass.getSimpleName);
-
-  /*
-
-  def downloadBiolinkContextJsonLD: ZIO[HttpClient, Throwable, Unit] =
-    for {
-      httpClient <- HttpClient.client
-      uri = uri"https://biolink.github.io/biolink-model/context.jsonld"
-      request = Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`ld+json`))
-      response <- httpClient.expect[String](request)
-      _ = Files.writeString(Paths.get("src/main/resources/context.jsonld"), response)
-      _ = logger.info("downloaded context.jsonld")
-    } yield ()
-
-  def parseBiolinkContext: ZIO[Blocking, Throwable, Map[String, String]] =
-    for {
-      contextData <- ZIO.effectTotal(Files.readString(Paths.get("src/main/resources/context.jsonld")))
-      biolinkContextJson <- ZIO.fromEither(io.circe.parser.parse(contextData))
-      contextJson <-
-        ZIO
-          .fromOption(biolinkContextJson.hcursor.downField("@context").focus)
-          .orElseFail(new Exception("failed to traverse down to context"))
-      contextJsonObject <- ZIO.fromOption(contextJson.asObject).orElseFail(new Exception("failed to get json object from context"))
-      firstPass = contextJsonObject.toIterable
-        .filter(entry => entry._2.isObject && entry._2.asObject.get.contains("@id") && entry._2.asObject.get.contains("@prefix"))
-        .map { entry =>
-          entry._1 -> entry._2.hcursor.downField("@id").focus.get.toString().replaceAll("\"", "")
-        }
-        .toMap
-      secondPass = contextJsonObject.toIterable
-        .filter(entry => entry._2.isString && !entry._1.equals("@vocab") && !entry._1.equals("id"))
-        .map { entry =>
-          entry._1 -> entry._2.toString().replaceAll("\"", "")
-        }
-        .toMap
-      map = firstPass ++ secondPass
-      _ = logger.info("parsed context.jsonld")
-    } yield map
-
-  def downloadBiolinkModelYaml: ZIO[HttpClient, Throwable, Unit] =
-    for {
-      httpClient <- HttpClient.client
-      uri = uri"https://biolink.github.io/biolink-model/biolink-model.yaml"
-      request = Request[Task](Method.GET, uri).withHeaders(Accept(MediaType.application.`raml+yaml`))
-      response <- httpClient.expect[String](request)
-      _ = Files.writeString(Paths.get("src/main/resources/biolink-model.yaml"), response)
-      _ = logger.info("downloaded biolink-model.yaml")
-    } yield ()
-
-  def parseBiolinkModelYaml: ZIO[Blocking, Throwable, (Map[String, String], List[BiolinkClass], List[BiolinkPredicate], String)] =
-    for {
-      biolinkYamlData <- ZIO.effectTotal(Files.readString(Paths.get("src/main/resources/biolink-model.yaml")))
-      json <- ZIO.fromEither(io.circe.yaml.parser.parse(biolinkYamlData))
-      classesKeys <- ZIO.fromOption(json.hcursor.downField("classes").keys).orElseFail(throw new Exception("couldn't get classes"))
-      classes = classesKeys.map(a => a.split(" ").toList.map(a => StringUtils.capitalize(a)).mkString).map(a => BiolinkClass(a)).toList
-      predicateKeys <- ZIO.fromOption(json.hcursor.downField("slots").keys).orElseFail(throw new Exception("couldn't get slots"))
-      predicates = predicateKeys.map(a => BiolinkPredicate(a.replaceAll(",", "_").replaceAll(" ", "_"))).toList
-      prefixes <- ZIO.fromOption(json.hcursor.downField("prefixes").focus).orElseFail(throw new Exception("couldn't get prefixes"))
-      prefixesMap <- ZIO.fromEither(prefixes.as[Map[String, String]])
-      versionJson <- ZIO.fromOption(json.hcursor.downField("version").focus).orElseFail(throw new Exception("couldn't get version"))
-      version <- ZIO.fromEither(versionJson.as[String])
-      _ = logger.info("parsed biolink-model.yaml")
-    } yield (prefixesMap, classes, predicates, version)
-
-  def getPrefixOverrides: ZIO[Any, Throwable, Map[String, String]] =
-    for {
-      prefixesStr <- ZIO.effectTotal(Files.readString(Paths.get("src/main/resources/prefixes.json")))
-      _ = logger.info("read prefixes.json")
-      prefixesJson <- Task.effect(io.circe.parser.parse(prefixesStr).getOrElse(Json.Null))
-      mappings <- ZIO.fromEither(prefixesJson.as[Map[String, String]])
-    } yield mappings
-
-   */
-
+  /** Model a parent-to-child relationship between two Biolink classes. For example, biolink:MolecularEntity is a child of
+    * biolink:ChemicalEntity.
+    */
   case class ParentChildRelation(
     parent: String,
     child: String
   )
 
+  /** A single test edge to be generated in the output JSONL file, as documented at
+    * https://github.com/TranslatorSRI/SRI_testing/blob/83358cb18bdebd5a45b8f4c4671cb027328df700/tests/onehop/README.md#biolink-3-revisions
+    * @param subject_category
+    *   The Biolink class of the subject (e.g. `biolink:SmallMolecule`).
+    * @param object_category
+    *   The Biolink class of the object (e.g. `biolink:Disease`).
+    * @param predicate
+    *   The Biolink predicate of the relation (e.g. `biolink:treats`).
+    * @param subject_id
+    *   The identifier of the subject (e.g. `CHEBI:3002`).
+    * @param object_id
+    *   The identifier of the object (e.g. `MESH:D001249`).
+    */
   case class TestEdge(
     subject_category: String,
     object_category: String,
     predicate: String,
-    subject: String,
-    `object`: String
+    subject_id: String,
+    object_id: String,
+    qualifiers: List[domain.TRAPIQualifier] = List()
   )
 
+  /** The structure of the final JSON file to generate. */
   case class SRITestingFile(
     source_type: String,
     infores: String,
@@ -122,32 +61,26 @@ object GenerateTestData extends zio.App with LazyLogging {
     edges: List[TestEdge]
   )
 
-  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
-    if (args.isEmpty) {
-      throw new RuntimeException("A single argument is required: the test-edges JSONL file to write.")
-    }
-    if (args.length > 1) {
-      throw new RuntimeException("Only a single argument is allowed: the test-edges JSONL file to write.")
-    }
+  /* Object variables. */
+  val LinkMLClassDefinition: IRI = IRI("https://w3id.org/linkml/ClassDefinition")
+  override lazy val logger: Logger = Logger(GenerateTestData.getClass.getSimpleName);
 
-    val jsonl_file = Path.of(args.head)
+  private def generateJSONLFile(jsonlPath: Path): ZIO[Blocking with ZConfig[AppConfig] with HttpClient, Throwable, Long] = {
+    // Get a list of all the Biolink classes (and their parents) that we know about.
+    val biolink_classes_query =
+      sparql"""
+    SELECT ?biolinkClass (GROUP_CONCAT(DISTINCT ?parentClass; SEPARATOR="|") AS ?parents) WHERE {
+      ?biolinkClass ${RDFSSubClassOf} ${BiolinkNamedThing.iri} .
+      ?biolinkClass a ${LinkMLClassDefinition} .
 
-    val program = for {
-      biolinkData <- biolinkData
+      OPTIONAL {
+        ?biolinkClass ${RDFSSubClassOf} ?parentClass .
+        FILTER(?biolinkClass != ?parentClass) .
+        ?parentClass a ${LinkMLClassDefinition}
+      }
+    } GROUP BY ?biolinkClass"""
 
-      // Get a list of all the Biolink classes (and their parents) that we know about.
-      biolink_classes_query = sparql"""
-      SELECT ?biolinkClass (GROUP_CONCAT(DISTINCT ?parentClass; SEPARATOR="|") AS ?parents) WHERE {
-        ?biolinkClass ${RDFSSubClassOf} ${BiolinkNamedThing.iri} .
-        ?biolinkClass a ${LinkMLClassDefinition} .
-
-        OPTIONAL {
-          ?biolinkClass ${RDFSSubClassOf} ?parentClass .
-          FILTER(?biolinkClass != ?parentClass) .
-          ?parentClass a ${LinkMLClassDefinition}
-        }
-      } GROUP BY ?biolinkClass"""
-
+    for {
       biolink_classes_solutions <- SPARQLQueryExecutor.runSelectQuery(biolink_classes_query.toQuery)
       biolink_classes_parents = biolink_classes_solutions
         .map { qs =>
@@ -314,28 +247,49 @@ object GenerateTestData extends zio.App with LazyLogging {
 
           edges.map(r => r.toList.flatten)
         }
-        .mapError { err =>
-          val errMsg = f"Caught error in main loop: ${err}"
-          logger.error(errMsg)
-        }
         .flatMap(value => ZStream.fromIterable(value.map(v => v.asJson.deepDropNullValues.noSpacesSortKeys)))
         .intersperse("\n")
-        .run(ZSink.fromFile(jsonl_file).contramapChunks[String](_.flatMap(_.getBytes)))
+        .run(ZSink.fromFile(jsonlPath).contramapChunks[String](_.flatMap(_.getBytes)))
+    } yield results
+  }
 
-      /*
-      sriTestingFile = SRITestingFile("aggregator", "cam-kp", List(), results.toList.flatten.distinct)
-      sriTestingFileJson = sriTestingFile.asJson
-      _ = Files.writeString(sriTestingFilePath, sriTestingFileJson.deepDropNullValues.spaces2SortKeys)
+  /** Process the command line arguments and return a ZIO program that generates the test data.
+    *
+    * @param args
+    *   The command line arguments to generate.
+    * @return
+    *   A ZIO program that generates an ExitCode.
+    */
+  override def run(args: List[String]): URIO[zio.ZEnv, ExitCode] = {
+    if (args.isEmpty) {
+      throw new RuntimeException("A single argument is required: the test-edges JSONL file to write.")
+    }
+    if (args.length > 1) {
+      throw new RuntimeException("Only a single argument is allowed: the test-edges JSONL file to write.")
+    }
 
-       */
-    } yield ({
-      logger.info(f"Found result: " + results)
-    })
+    /*
+    sriTestingFile = SRITestingFile("aggregator", "cam-kp", List(), results.toList.flatten.distinct)
+    sriTestingFileJson = sriTestingFile.asJson
+    _ = Files.writeString(sriTestingFilePath, sriTestingFileJson.deepDropNullValues.spaces2SortKeys)
+
+     */
+
+    val jsonlPath = Path.of(args.head)
+    val program = for {
+      linesGenerated <- generateJSONLFile(jsonlPath)
+        .onError { cause =>
+          logger.error(s"Could not generate JSONL file ${jsonlPath}: $cause")
+          ZIO.succeed(ExitCode.failure)
+        }
+    } yield ExitCode.success
 
     val configLayer: Layer[Throwable, ZConfig[AppConfig]] = TypesafeConfig.fromDefaultLoader(AppConfig.config)
-    val camkpapiLayer = Blocking.live >>> HttpClient.makeHttpClientLayer >+> Biolink.makeUtilitiesLayer
+    val camkpapiLayer: ZLayer[Any, Throwable, HttpClient] = Blocking.live >>> HttpClient.makeHttpClientLayer
+    val layer: ZLayer[Any, Throwable, Blocking with ZConfig[AppConfig] with HttpClient] =
+      configLayer ++ camkpapiLayer ++ Blocking.live >+> SPARQLQueryExecutor.makeCache.toLayer
 
-    program.provideCustomLayer(configLayer ++ camkpapiLayer >+> SPARQLQueryExecutor.makeCache.toLayer).exitCode
+    program.provideCustomLayer(layer).exitCode
   }
 
 }
