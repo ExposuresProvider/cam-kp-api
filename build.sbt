@@ -61,7 +61,7 @@ libraryDependencies ++= {
     "org.http4s"                  %% "http4s-circe"                   % http4sVersion,
     "org.apache.jena"              % "apache-jena-libs"               % "4.5.0",
     "org.phenoscape"              %% "sparql-utils"                   % "1.3.1",
-    "org.apache.commons"           % "commons-text"                   % "1.9",
+    "org.apache.commons"           % "commons-text"                   % "1.11.0",
     "org.apache.commons"           % "commons-csv"                    % "1.9.0",
     "io.circe"                    %% "circe-core"                     % circeVersion,
     "io.circe"                    %% "circe-generic"                  % circeVersion,
