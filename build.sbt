@@ -2,7 +2,7 @@ import com.typesafe.sbt.packager.docker._
 
 enablePlugins(JavaAppPackaging, DockerPlugin, ScoverageSbtPlugin)
 
-addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.2" cross CrossVersion.full)
+addCompilerPlugin("org.typelevel" % "kind-projector" % "0.13.3" cross CrossVersion.full)
 
 organization := "org.renci"
 
